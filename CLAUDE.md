@@ -27,7 +27,7 @@ to remember** box. Built for quick brush-up before an interview, not for deep st
    `.hl` highlight spans, logos, colourful breadcrumb pills, eyebrow badges.
 6. **Do the work** — add/edit pages following those docs.
 7. **Update the tier index row** (flip `planned` → a real link) **and** add the page to
-   [`assets/search-index.json`](assets/search-index.json) — see
+   [`assets/search-index.js`](assets/search-index.js) — see
    [`docs/rules/search.md`](docs/rules/search.md). A topic page is not done until both happen.
 
 ## Rules
@@ -37,6 +37,7 @@ to remember** box. Built for quick brush-up before an interview, not for deep st
 - **Diagrams:** [`docs/rules/diagram-style.md`](docs/rules/diagram-style.md)
 - **Visual style (fonts, highlights, logos, breadcrumb):** [`docs/rules/visual-style.md`](docs/rules/visual-style.md)
 - **Global search:** [`docs/rules/search.md`](docs/rules/search.md)
+- **"Say this in the interview" box:** [`docs/rules/keypoints.md`](docs/rules/keypoints.md)
 
 ## Quick reminders
 
@@ -47,7 +48,7 @@ to remember** box. Built for quick brush-up before an interview, not for deep st
   separate `.svg` file), placed right next to the part of the explanation it supports.
 - **Very simple words only**, and genuinely short — 2-3 tight paragraphs. "Why it matters" is
   2-3 bullets, not a paragraph. One real-world example, one breath long.
-- **Every new written page needs an entry in `assets/search-index.json`** — the site-wide search
+- **Every new written page needs an entry in `assets/search-index.js`** — the site-wide search
   box depends on it.
 - **Never commit, push, or open a PR without being asked that turn** — same rule as every other
   repo this user works in. Ask once the requested pages are done.

@@ -171,8 +171,11 @@ main{ padding:36px 0 80px; }
 }
 .hero h1 .hl:nth-of-type(2)::before{ transform:rotate(1.2deg); }
 
-.hero .hero-top{ display:flex; align-items:center; gap:16px; }
-.tech-logo{ width:56px; height:56px; flex:0 0 auto; filter:drop-shadow(0 3px 6px rgba(17,24,39,.12)); }
+/* visually hidden but present for screen readers/SEO, for genuine a11y-only text */
+.sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
 
 /* pride blurb — 2-3 punchy lines about the track itself, on the track home page */
 .pride{ font-size:16.5px; color:var(--ink); margin-top:14px; max-width:640px; }
@@ -191,18 +194,38 @@ main{ padding:36px 0 80px; }
   border-radius:var(--radius);
   padding:20px;
   box-shadow:var(--shadow);
-  display:flex; flex-direction:column; gap:8px;
+  display:flex; flex-direction:column; gap:10px;
   border-top:4px solid var(--tile-color, var(--accent));
   transition:transform .12s ease, box-shadow .12s ease;
 }
 .tile:hover{ transform:translateY(-2px); box-shadow:0 4px 10px rgba(17,24,39,.08), 0 14px 28px rgba(17,24,39,.09); }
-.tile .icon{ font-size:26px; }
-.tile h3{ font-size:17px; color:var(--tile-color, var(--ink)); }
+
+/* Header: click the logo/name to go to that track's home page. If the icon is a real,
+   self-labelled logo (e.g. the C# hexagon), skip the extra text name — showing "C#" twice
+   right next to each other reads as a mistake, not emphasis. */
+.tile-head{ display:inline-flex; align-items:center; gap:10px; }
+.tile-head .icon{ font-size:26px; line-height:1; color:var(--tile-color, inherit); font-weight:800; }
+.tile-head .tname{ font-family:'Poppins'; font-weight:700; font-size:17px; color:var(--tile-color, var(--ink)); }
+
 .tile p{ color:var(--ink-soft); font-size:13.5px; margin:0; flex:1 1 auto; }
-.tile .status{
-  font-family:'Fira Code'; font-size:11px; color:var(--ink-soft);
+
+/* Direct tier links — Basic/Intermediate/Advanced, one click from the home page, no detour
+   through the track page. Colour is by TIER (green/amber/purple), same as the tier-bulletins on
+   the track page and everywhere else — never the track's own brand colour, so Basic always
+   reads as Basic no matter which track's tile it's on. Enabled = that tier has ≥1 written topic. */
+.tile-tiers{ display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
+.ttier{
+  font-family:'Fira Code'; font-size:11px; font-weight:700; letter-spacing:.02em;
+  border-radius:20px; padding:4px 10px; white-space:nowrap;
 }
-.tile.soon{ opacity:.6; }
+.ttier.basic{ --t-bg:var(--basic-bg); --t-ink:var(--basic); }
+.ttier.inter{ --t-bg:var(--inter-bg); --t-ink:var(--inter); }
+.ttier.adv{ --t-bg:var(--adv-bg); --t-ink:var(--adv); }
+a.ttier{ background:var(--t-bg); color:var(--t-ink); }
+a.ttier:hover{ text-decoration:none; filter:brightness(0.94); }
+span.ttier{ background:var(--t-bg); color:var(--t-ink); opacity:.5; }
+
+.tile.soon{ opacity:.75; }
 .tile.soon .ribbon{
   align-self:flex-start;
   font-family:'Fira Code'; font-size:10.5px; letter-spacing:.04em; text-transform:uppercase;
@@ -294,7 +317,23 @@ a.tier-bulletin:hover{ transform:translateY(-2px); text-decoration:none; }
 .qgroup-body .topic-row:first-child{ border-top:none; padding-top:14px; }
 
 /* ---------- Topic page ---------- */
-.topic-hook{ font-size:16.5px; color:var(--ink-soft); margin:14px 0 26px; max-width:640px; }
+/* Shared accordion mechanics for the OPTIONAL sections (why-it-matters, explanation,
+   real-world example) — collapsed by default. The diagram and "say this" keypoints are the
+   quick-refresh payoff and are NEVER wrapped in one of these; they stay always visible. */
+details.toggle{
+  border-radius:var(--radius); margin:14px 0; box-shadow:var(--shadow); overflow:hidden;
+}
+details.toggle summary{
+  cursor:pointer; list-style:none; display:flex; align-items:center; gap:8px;
+  font-family:'Poppins'; font-weight:700; font-size:14px; padding:14px 20px;
+}
+details.toggle summary::-webkit-details-marker{ display:none; }
+details.toggle summary .chev{
+  margin-left:auto; font-size:13px; transition:transform .15s ease; color:var(--ink-soft);
+}
+details.toggle[open] summary .chev{ transform:rotate(180deg); }
+details.toggle .toggle-body{ padding:0 20px 18px; }
+
 .diagram-card{
   background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
   box-shadow:var(--shadow);
@@ -304,16 +343,17 @@ a.tier-bulletin:hover{ transform:translateY(-2px); text-decoration:none; }
 .diagram-card svg.topic-diagram{ width:100%; height:auto; max-width:620px; }
 .diagram-card figcaption{ font-size:12.5px; color:var(--ink-soft); text-align:center; }
 
-.explain{ font-size:15.5px; }
-.explain h2{
-  font-size:19px; margin:26px 0 12px;
+.explain{ font-size:15.5px; background:var(--surface); border:1px solid var(--border); }
+.explain .toggle-body h2{
+  font-size:17px; margin:20px 0 12px;
   display:flex; align-items:center; gap:9px; color:var(--ink);
 }
-.explain h2::before{ content:""; width:9px; height:9px; border-radius:50%; background:var(--accent); flex:0 0 auto; }
-.explain p{ margin:0 0 14px; }
+.explain .toggle-body h2::before{ content:""; width:9px; height:9px; border-radius:50%; background:var(--accent); flex:0 0 auto; }
+.explain .toggle-body p{ margin:0 0 14px; }
+.explain .toggle-body p:first-child{ margin-top:0; }
 .explain b{ color:var(--accent-ink); }
-.explain ul{ margin:0 0 14px; padding-left:20px; }
-.explain li{ margin-bottom:6px; }
+.explain .toggle-body ul{ margin:0 0 14px; padding-left:20px; }
+.explain .toggle-body li{ margin-bottom:6px; }
 
 .keypoints{
   background:linear-gradient(155deg, var(--accent-bg) 0%, #ffffff 130%);
@@ -347,28 +387,23 @@ a.tier-bulletin:hover{ transform:translateY(-2px); text-decoration:none; }
 .keypoints li .kp-line{ display:block; }
 .keypoints li .kp-line + .kp-line{ margin-top:5px; }
 
-/* topic-hook: "why it matters" — short bullets, not an article */
-.topic-hook{ margin:14px 0 26px; }
-.topic-hook .why-label{
-  font-family:'Poppins'; font-size:13px; font-weight:700; color:var(--accent-ink);
-  text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px; display:block;
-}
-.topic-hook ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px; max-width:640px; }
-.topic-hook li{
+/* topic-hook: "why it matters" — collapsed by default; short bullets, not an article */
+.topic-hook{ background:var(--surface); border:1px solid var(--border); }
+.topic-hook summary{ color:var(--accent-ink); }
+.topic-hook .toggle-body ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px; max-width:640px; }
+.topic-hook .toggle-body li{
   font-size:15px; color:var(--ink); padding-left:18px; position:relative;
 }
-.topic-hook li::before{ content:"—"; position:absolute; left:0; color:var(--accent); }
+.topic-hook .toggle-body li::before{ content:"—"; position:absolute; left:0; color:var(--accent); }
 
-/* real-world example callout */
+/* real-world example callout — collapsed by default */
 .realworld{
   background:var(--basic-bg); border:1px solid color-mix(in srgb, var(--basic) 30%, transparent);
-  border-radius:var(--radius); padding:18px 22px; margin:26px 0;
 }
-.realworld h2{
-  font-family:'Poppins'; font-size:14px; text-transform:uppercase; letter-spacing:.05em;
-  color:var(--basic); margin-bottom:8px; display:flex; align-items:center; gap:8px;
+.realworld summary{
+  color:var(--basic); text-transform:uppercase; letter-spacing:.05em; font-size:14px;
 }
-.realworld p{ margin:0; font-size:14.5px; color:#14532d; }
+.realworld .toggle-body p{ margin:0; font-size:14.5px; color:#14532d; }
 
 .pager{
   display:flex; justify-content:space-between; align-items:center; gap:12px;

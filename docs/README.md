@@ -9,13 +9,15 @@
 - [`rules/visual-style.md`](rules/visual-style.md) — fonts, highlight spans, logos, eyebrow
   badges.
 - [`rules/search.md`](rules/search.md) — the site-wide search box: how it works, and the one
-  rule (update `search-index.json`) that keeps it working.
+  rule (update `search-index.js`) that keeps it working.
+- [`rules/keypoints.md`](rules/keypoints.md) — the "Say this in the interview" box: highlight
+  every bullet's main point, plain professional wording, the "when do I use X vs. Y" pattern.
 
 ## Status (update this table as tracks/tiers are built)
 
 | Track | Basic | Intermediate | Advanced |
 |---|---|---|---|
-| C# | 🟡 1 of 14 written (roadmap listed) | ⬜ not started | ⬜ not started |
+| C# | 🟡 10 of 14 written (roadmap listed) | ⬜ not started | ⬜ not started |
 | OOP's | ⬜ not started (no pages yet) | ⬜ not started | ⬜ not started |
 | .NET Framework | ⬜ not started | ⬜ not started | ⬜ not started |
 | SQL | ⬜ not started | ⬜ not started | ⬜ not started |

@@ -8,7 +8,7 @@ Locked decisions from the working session that set this project up. Don't re-der
 /index.html                     ← site home: tile grid, one tile per track
 /assets/style.css                ← one shared stylesheet, used by every page
 /assets/site.js                  ← one shared script: global search/autosuggest (see rules/search.md)
-/assets/search-index.json        ← one entry per WRITTEN page — update it every time a page is added
+/assets/search-index.js        ← one entry per WRITTEN page — update it every time a page is added
 
 /<track>/index.html              ← track home: pride blurb + 3 tier bulletins (Basic/Intermediate/Advanced)
 /<track>/basic/index.html        ← tier index: FULL topic roadmap, grouped in 10s (see below)
@@ -32,16 +32,21 @@ Locked decisions from the working session that set this project up. Don't re-der
   home page must never 404.
 - **Every page that exists must have a `data-root` attribute on `<body>`** — the relative path
   back to site root (`""` at the root, `"../"` one level down, `"../../"` two levels down, etc.).
-  This is what lets the shared search script find `assets/search-index.json` and build result
+  This is what lets the shared search script find `assets/search-index.js` and build result
   links correctly from any depth. See [search.md](search.md).
 
 ## Site home (`/index.html`)
 
 - One tile per track, all tiles the same size/shape (grid, not a list).
-- A track with no content yet still gets a tile, visually muted, with a "Coming soon" ribbon —
-  it links to the track's `index.html`, which explains what's coming rather than 404ing.
-- Every tile: track name + one-line description + which tiers are ready (e.g. "Basic ready ·
-  Intermediate & Advanced coming").
+- A track with no content yet still gets a tile, visually muted, with a "Coming soon" ribbon.
+- **Tile header = `.tile-head`, a link to that track's `index.html`: a plain emoji icon + a
+  visible `<span class="tname">` name, always.** See [visual-style.md](visual-style.md) — no
+  hand-drawn brand logos, plain emoji only, same pattern for every track including C#.
+- **Tile body = one short description line, then `.tile-tiers` — direct Basic / Intermediate /
+  Advanced links, one click from the home page** (no detour through the track page first). A
+  tier is `<a class="ttier">` (enabled, colour-coded) once it has at least one *written* topic;
+  otherwise it's `<span class="ttier">` (muted, no link) — flip it the moment that tier's first
+  page goes live, same trigger as everywhere else in this project.
 
 ## Track home (`/<track>/index.html`)
 

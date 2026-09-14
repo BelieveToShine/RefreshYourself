@@ -1,4 +1,6 @@
-/* RefreshYourself — shared site script. Global search + autosuggest. See docs/rules/search.md. */
+/* RefreshYourself — shared site script. Global search + autosuggest. See docs/rules/search.md.
+   Reads window.SEARCH_INDEX (set by assets/search-index.js, loaded via <script src> before this
+   file) — NOT fetch(), so it works whether the page is opened from disk (file://) or hosted. */
 
 (function () {
   var root = document.body.getAttribute("data-root") || "";
@@ -7,28 +9,24 @@
   var wrap = document.querySelector(".gsearch");
   if (!input || !resultsBox || !wrap) return;
 
-  var index = null;
   var activeIndex = -1;
   var currentItems = [];
 
-  function loadIndex() {
-    if (index) return Promise.resolve(index);
-    return fetch(root + "assets/search-index.json")
-      .then(function (r) { return r.json(); })
-      .then(function (data) { index = data; return data; })
-      .catch(function () { index = []; return []; });
+  function getIndex() {
+    return window.SEARCH_INDEX || [];
   }
 
+  // Substring match anywhere in the word — start, middle, or end all count.
   function scoreItem(item, q) {
     var title = item.title.toLowerCase();
     var track = (item.track || "").toLowerCase();
     var tier = (item.tier || "").toLowerCase();
     var kw = (item.keywords || "").toLowerCase();
-    if (title.indexOf(q) === 0) return 4;
-    if (title.indexOf(q) > -1) return 3;
-    if (track.indexOf(q) === 0 || tier.indexOf(q) === 0) return 2.5;
-    if (kw.split(" ").some(function (w) { return w.indexOf(q) === 0; })) return 2;
-    if (track.indexOf(q) > -1 || tier.indexOf(q) > -1 || kw.indexOf(q) > -1) return 1;
+    if (title.indexOf(q) === 0) return 5;               // title starts with query
+    if (title.indexOf(q) > -1) return 4;                // query anywhere in title
+    if (track.indexOf(q) > -1 || tier.indexOf(q) > -1) return 3; // matches the track/tier name
+    if (kw.split(" ").some(function (w) { return w.indexOf(q) === 0; })) return 2; // keyword starts with query
+    if (kw.indexOf(q) > -1) return 1;                   // query anywhere in keywords
     return 0;
   }
 
@@ -92,15 +90,13 @@
   input.addEventListener("input", function () {
     var q = input.value.trim().toLowerCase();
     if (!q) { render([], ""); return; }
-    loadIndex().then(function (data) {
-      var scored = data
-        .map(function (item) { return { item: item, score: scoreItem(item, q) }; })
-        .filter(function (s) { return s.score > 0; })
-        .sort(function (a, b) { return b.score - a.score || a.item.title.localeCompare(b.item.title); })
-        .slice(0, 8)
-        .map(function (s) { return s.item; });
-      render(scored, q);
-    });
+    var scored = getIndex()
+      .map(function (item) { return { item: item, score: scoreItem(item, q) }; })
+      .filter(function (s) { return s.score > 0; })
+      .sort(function (a, b) { return b.score - a.score || a.item.title.localeCompare(b.item.title); })
+      .slice(0, 8)
+      .map(function (s) { return s.item; });
+    render(scored, q);
   });
 
   input.addEventListener("keydown", function (e) {

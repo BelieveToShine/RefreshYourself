@@ -41,6 +41,11 @@ down to one small concept instead of a whole system.
 - **Small drawn icons or emoji** inside a box header (📦 value, 🗄️ heap, 🔒 encapsulation, 🎭
   abstraction, 👪 inheritance, 🔀 polymorphism, etc.) — a labelled box with no icon is fine too;
   don't force an icon that doesn't add anything.
+- **Put a fun, on-topic icon on the moment that deserves personality — an error, a failure path,
+  a "gotcha."** A plain "error thrown" label is correct but forgettable; a 🐛 on it makes the
+  same information land more memorably, at zero extra cost. Reach for this on the diagram's
+  interesting/surprising moment specifically, not on every label — sprinkled everywhere it stops
+  reading as a highlight.
 - **Orthogonal connectors only** — horizontal/vertical lines with a small arrowhead marker, never
   a diagonal line. Label the arrow on a small rounded pill if the meaning isn't obvious from the
   boxes alone (e.g. "copies", "points to", "same object").
@@ -70,6 +75,49 @@ fine to reuse `cardShadow`/`arrow` in every diagram on the same page since each 
 scope, but if a page has 2+ diagrams give the second one's ids a suffix, e.g. `cardShadow2`, to
 avoid any browser-inconsistency risk with duplicate ids in one document).
 
+## Keep a name and its value on one line
+
+A variable box showing `x = 5` is one idea, not two — write it as a single `<text>` line
+(`x = 5`), never split across two stacked lines (`x` on one line, `= 5` below it). A real
+instance from this project: `x` and `= 5` were two separate `<text>` elements at different `y`
+positions, and it looked broken/odd rather than intentional. Split a box's content onto multiple
+lines only when it's genuinely more than one idea (a title line above a value, a type annotation
+below) — not for a simple `name = value` pair.
+
+## Arrowheads must point where the path actually ends
+
+`marker-end` puts the arrowhead in the direction of the path's **last segment**, not the overall
+direction of travel — so an orthogonal path's segment order matters, not just its start/end
+points. Two real bugs from this project:
+
+- **A path that goes sideways-then-down-then-sideways-again must END on a horizontal segment to
+  enter a box from the side** — `M90,54 H120 V95 H150` (right, down, right — ends horizontal,
+  arrowhead points correctly into the box's left edge). Writing it as `H150 V95` instead (right,
+  then down) makes the *last* segment vertical, so the arrowhead ends up pointing down into
+  empty space next to the box, not into it. Match the final segment's direction to the side of
+  the box being entered (horizontal for the left/right edge, vertical for the top/bottom edge).
+- **Only the segment that reaches the real destination gets a `marker-end`.** When one logical
+  route is split across two `<path>` elements (e.g. routed around another box, or shared with an
+  `<animateMotion>` path), the first/earlier path is just a routing bend — it must have no
+  marker at all. A real bug: the first leg of a "no error" route had its own `marker-end`,
+  drawing a stray arrowhead at the midpoint bend, before the second path even reached
+  `finally`. Before shipping a diagram with any multi-segment or multi-path route, trace it
+  segment by segment and confirm exactly one arrowhead exists per real destination — no more, no
+  less.
+
+## Panel titles must fit THEIR half, not the whole canvas
+
+When one `<svg>` is split into two side-by-side panels by a divider line (rather than two
+separate `<svg>` diagrams), a `text-anchor="middle"` title centered on that panel's midpoint can
+still overflow past `x="0"` or the divider if the string is too long for that panel's actual
+width — the viewBox being wide enough overall doesn't save you, because the text is centered on
+half of it, not all of it. A real bug: a panel title text was long enough to start at a negative
+x-coordinate, so its first few characters were clipped off outside the SVG entirely. Before
+shipping a split-panel diagram, estimate the title's rendered width against that specific
+panel's width (divider-to-edge, not the full canvas) and shorten the wording (or drop a
+parenthetical) until it clears with margin on both sides — do this check for every panel
+separately, they're rarely the same width.
+
 ## No overlap — check this every time
 
 A label, box, or arrow is never allowed to visually clip another shape. Concretely:
@@ -81,12 +129,38 @@ A label, box, or arrow is never allowed to visually clip another shape. Concrete
   clipped the box's edge. Leave generous gaps between boxes specifically so a label has somewhere
   to live.
 - **Never center a label directly on the line/arrow it describes** — float it just to one side,
-  or just above the line, so the stroke doesn't run through the letters.
+  or just above the line, so the stroke doesn't run through the letters. But "off to one side"
+  means a small offset (20-40px), not far away — a label floating 100+px from the line it
+  describes reads as disconnected/unrelated, which is its own bug (a real instance: a "no error"
+  label sat so far from its arrow that it looked like an unrelated, orphaned note).
+- **Check every label against every OTHER text element on the canvas too, not just boxes.** A
+  real bug: a top-of-diagram caption note and a path label ended up at overlapping coordinates,
+  so the caption's text ran straight through the label's pill. The bounding-box trace in the
+  first bullet applies to text-vs-text, not only text-vs-box.
 - **Straight orthogonal lines only, routed around shapes, never through one.** If two boxes
   aren't directly aligned, route the connector as an L/Z shape (horizontal + vertical segments),
   never a diagonal, and never let it cross through a box that isn't its endpoint.
 - Validate the SVG is well-formed (tags balanced, every `<defs>` closed) before considering the
   page done — a broken tag blanks the whole diagram silently.
+
+## Verify by computing the numbers, not by eyeballing the code
+
+This is the rule that actually catches the bugs above — every one of them (a pill sitting on a
+path's own bend, a 2px gap that was really a sub-pixel overlap, a text baseline that landed
+exactly on a box's bottom edge) passed a casual look at the coordinates and only showed up once
+someone looked at the rendered diagram. Before calling any diagram done:
+
+1. **List every shape's actual bounding box** — a `<rect>` at `x,y` with `width,height` occupies
+   exactly `[x, x+width] × [y, y+height]`; a path segment has a tiny but real bounding box too
+   (its stroke-width, roughly ±1px around the line).
+2. **For every pair that could plausibly be near each other, compute the gap as a number** —
+   `(other.top) - (this.bottom)`, etc. "Looks like it's above the line" is not a check; "18px
+   clear" is. A gap under ~6-8px is too tight to trust — increase it.
+3. **Do this for every label against every box AND every path segment** — not just the box it's
+   "obviously" describing. A label's own bend-point on its path, or a completely different
+   diagram element sharing a coordinate by coincidence, is exactly what slipped through here.
+4. Only after that numeric pass is a diagram considered checked — not after just re-reading the
+   markup and judging it "looks fine."
 
 ## Animation — use it, purposefully
 
