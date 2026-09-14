@@ -1,5 +1,27 @@
 # Rule: Writing a Topic Page
 
+## Workflow: list the full topic roadmap first, implement pages one at a time
+
+For any tier, **write out the full set of topic titles before building a single page.** The tier
+index (`<track>/<tier>/index.html`) always shows the *complete* planned list — 14, 40, 100
+questions, however many real interview topics that tier actually has — not just the ones that
+already have a finished page. This is deliberate: the roadmap has to be visible up front so
+progress is obvious and nothing gets forgotten.
+
+- A topic with a finished page is a normal linked row (its file exists, hot-first order, numbered
+  to match position — see [content-structure.md](content-structure.md)).
+- A topic that's listed but not yet written is a **`.topic-row.planned`** row: no link (it's a
+  `<span class="ttitle">`, not an `<a>`), muted, tagged `<span class="badge planned">📝 Coming
+  soon</span>` instead of Hot/Normal. It still occupies its real numbered slot in hot-first order
+  — a planned Hot topic still sits above a written Normal one.
+- Numbering never gets reshuffled just because a topic isn't written yet — the number is the
+  topic's permanent position in the hot-first list, written or not.
+- Group every 10 topics (written + planned together) into one `.qgroup` accordion — see
+  [content-structure.md](content-structure.md). The first group defaults `open`, later groups
+  default closed.
+- Once a page is written, flip that row from `planned` to a real link — nothing else about the
+  list's order or grouping changes.
+
 Locked decisions from the working session that set this project up. Don't re-derive them.
 
 ## Ordering: hot topics before normal topics — everywhere
@@ -70,7 +92,9 @@ In this exact order:
      and wrap mid-sentence. Real example: `int/bool/double/struct → value` and
      `class/array/string → reference` are two `.kp-line`s in one `<li>`, not one long line.
 7. **Prev / Next** — links to the previous and next topic in this tier's hot-first order, plus a
-   link back up to the tier index. First topic has no "prev", last has no "next".
+   link back up to the tier index. First topic has no "prev", last has no "next." **If the
+   neighbouring topic is still `planned` (not written), don't link to its not-yet-existing file**
+   — show its title muted, pointing at the tier index instead, labelled "(coming soon)."
 
 ## What a topic page is *not*
 

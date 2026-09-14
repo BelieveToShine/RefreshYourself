@@ -7,10 +7,11 @@ Locked decisions from the working session that set this project up. Don't re-der
 ```
 /index.html                     ← site home: tile grid, one tile per track
 /assets/style.css                ← one shared stylesheet, used by every page
-/assets/site.js                  ← one shared script (mobile nav toggle only)
+/assets/site.js                  ← one shared script: global search/autosuggest (see rules/search.md)
+/assets/search-index.json        ← one entry per WRITTEN page — update it every time a page is added
 
-/<track>/index.html              ← track home: intro + 3 tier cards (Basic/Intermediate/Advanced)
-/<track>/basic/index.html        ← tier index: ordered topic list (hot topics first)
+/<track>/index.html              ← track home: pride blurb + 3 tier bulletins (Basic/Intermediate/Advanced)
+/<track>/basic/index.html        ← tier index: FULL topic roadmap, grouped in 10s (see below)
 /<track>/basic/1.html            ← topic page (numbered, matches its position in the index)
 /<track>/basic/2.html
 /<track>/intermediate/index.html ← same pattern
@@ -18,14 +19,21 @@ Locked decisions from the working session that set this project up. Don't re-der
 ```
 
 - `<track>` is a short lowercase slug: `csharp`, `oops`, `dotnet`, `sql`, `react`, `dsa`, etc.
-- Topic pages are numbered starting at `1.html` **in the order they appear on the tier index
-  page** — hot topics get the low numbers because hot topics come first (see
-  [content-writing.md](content-writing.md)). If a topic is inserted later in the middle of the
-  list, renumber the files so the number always matches list position — don't leave gaps or
-  reuse a number for a different topic.
+- **The tier index lists the full roadmap first — written and not-yet-written topics together**
+  (see the workflow note in [content-writing.md](content-writing.md)). A topic's number is its
+  permanent slot in that hot-first roadmap from the moment it's *listed*, not from when it's
+  *written* — so `7.html` is already "claimed" by whichever topic sits 7th on the index even
+  before that file exists.
+- If a genuinely new topic needs inserting mid-list (not just filling a planned slot), renumber
+  the files after it so the number always matches list position — don't leave gaps or reuse a
+  number for a different topic.
 - A tier that isn't built yet still gets an `index.html`, but it's a short "coming soon" stub
   (see template in content-writing.md) rather than a missing link — the tier card on the track
   home page must never 404.
+- **Every page that exists must have a `data-root` attribute on `<body>`** — the relative path
+  back to site root (`""` at the root, `"../"` one level down, `"../../"` two levels down, etc.).
+  This is what lets the shared search script find `assets/search-index.json` and build result
+  links correctly from any depth. See [search.md](search.md).
 
 ## Site home (`/index.html`)
 
@@ -44,10 +52,19 @@ Locked decisions from the working session that set this project up. Don't re-der
 
 ## Tier index (`/<track>/<tier>/index.html`)
 
-- A numbered list of topics, **hot topics first, normal topics after** — see
+- Lists **every planned topic for that tier, written or not** — see the workflow note in
+  [content-writing.md](content-writing.md). Real tiers run long (Basic can easily be 50-60
+  topics, Advanced 100+) — the list is the full roadmap, not just what's done.
+- **Hot topics first, normal topics after**, across the whole tier — see
   [content-writing.md](content-writing.md) for what counts as hot.
-- Each row: number, topic title, a 🔥 Hot / Normal badge, links to its numbered topic page.
-- This page is the "menu" — it does not contain any explanation itself, just the ordered list.
+- Each row: number, title, a badge (🔥 Hot / Normal / 📝 Coming soon). A written topic's title
+  links to its numbered page; a planned-but-unwritten topic's title is plain text, no link.
+- **Grouped in tens** — every 10 topics (written + planned together) sit inside one collapsible
+  `<details class="qgroup">` block, labelled by range (e.g. "Questions 1–10"). The first group is
+  `open` by default; every later group starts closed. This is what keeps a 60-topic tier
+  scannable instead of one giant page-long list.
+- This page is the "menu" — it does not contain any explanation itself, just the ordered,
+  grouped list.
 
 ## Topic page (`/<track>/<tier>/<n>.html`)
 

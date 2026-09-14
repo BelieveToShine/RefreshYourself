@@ -15,37 +15,44 @@ to remember** box. Built for quick brush-up before an interview, not for deep st
 ## Mandatory workflow
 
 1. **Know the structure** — [`docs/rules/content-structure.md`](docs/rules/content-structure.md).
-   Folder layout, URL/file naming, what an index page contains vs. a topic page.
-2. **Know the writing rules** — [`docs/rules/content-writing.md`](docs/rules/content-writing.md).
-   Simple words only, hot-topics-first ordering, the exact template every topic page follows.
-3. **Know the diagram style** — [`docs/rules/diagram-style.md`](docs/rules/diagram-style.md).
-   Hand-authored inline SVG, small and crisp, matches the visual language of the LeadHunter
-   architecture diagrams but scoped to one concept per page.
-4. **Do the work** — add/edit pages following those three docs.
-5. **Update the tier index** — a new topic page is not done until it's linked from its tier's
-   `index.html`, in the correct hot-vs-normal position.
+   Folder layout, URL/file naming, `data-root`, what an index page contains vs. a topic page.
+2. **List the topic roadmap before writing any page** — [`docs/rules/content-writing.md`](docs/rules/content-writing.md).
+   A tier index shows every planned topic (written or not) grouped in tens, hot-first. Decide the
+   full list for that tier first; implement pages one at a time after.
+3. **Know the writing rules** — same file. Simple words, the "why it matters" bullets, the
+   real-world example, the exact topic-page template.
+4. **Know the diagram style** — [`docs/rules/diagram-style.md`](docs/rules/diagram-style.md).
+   Hand-authored inline SVG, small and crisp, no overlap, purposeful animation.
+5. **Know the visual style** — [`docs/rules/visual-style.md`](docs/rules/visual-style.md). Fonts,
+   `.hl` highlight spans, logos, colourful breadcrumb pills, eyebrow badges.
+6. **Do the work** — add/edit pages following those docs.
+7. **Update the tier index row** (flip `planned` → a real link) **and** add the page to
+   [`assets/search-index.json`](assets/search-index.json) — see
+   [`docs/rules/search.md`](docs/rules/search.md). A topic page is not done until both happen.
 
 ## Rules
 
 - **Structure:** [`docs/rules/content-structure.md`](docs/rules/content-structure.md)
 - **Writing & ordering:** [`docs/rules/content-writing.md`](docs/rules/content-writing.md)
 - **Diagrams:** [`docs/rules/diagram-style.md`](docs/rules/diagram-style.md)
+- **Visual style (fonts, highlights, logos, breadcrumb):** [`docs/rules/visual-style.md`](docs/rules/visual-style.md)
+- **Global search:** [`docs/rules/search.md`](docs/rules/search.md)
 
 ## Quick reminders
 
-- **Hot topics before normal topics, in every tier, in every track.** No exceptions — this was
-  called out twice by the user.
-- **Every topic page needs at least one diagram**, and the diagram alone should be enough to
-  recall the concept — the diagram is the brush-up, the text is backup.
-- **Very simple words only.** No jargon that needs its own explanation. If a term is unavoidable
-  (e.g. "heap"), the diagram shows it, don't just name-drop it in prose.
-- **Small, elegant diagrams** — 2 to 5 small boxes/zones, not a full architecture diagram. If a
-  concept needs more than that to show clearly, split it into two small diagrams rather than one
-  crowded one.
+- **Hot topics before normal topics, in every tier, in every track.** No exceptions.
+- **List the full roadmap on the tier index before writing pages** — planned-but-unwritten rows
+  are shown, muted, unlinked, tagged 📝. Numbering is permanent from the moment a topic is listed.
+- **Every topic page needs at least one diagram**, inline in that page's own HTML (never a
+  separate `.svg` file), placed right next to the part of the explanation it supports.
+- **Very simple words only**, and genuinely short — 2-3 tight paragraphs. "Why it matters" is
+  2-3 bullets, not a paragraph. One real-world example, one breath long.
+- **Every new written page needs an entry in `assets/search-index.json`** — the site-wide search
+  box depends on it.
 - **Never commit, push, or open a PR without being asked that turn** — same rule as every other
   repo this user works in. Ask once the requested pages are done.
 - Plain HTML/CSS/JS only — no framework, no build step. One shared stylesheet
-  (`assets/style.css`), one shared script (`assets/site.js`) for the mobile nav toggle only.
+  (`assets/style.css`), one shared script (`assets/site.js`, global search).
 
 ## Adding rules
 

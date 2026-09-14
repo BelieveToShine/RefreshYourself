@@ -47,6 +47,22 @@ uppercase text — set `--eyebrow-bg` / `--eyebrow-ink` inline on the `.eyebrow`
 the topic: hot topics get the red pair (`#fee2e2` / `#b91c1c`), normal topics use the default
 accent pair (no override needed). Lead the pill with the emoji that matches (🔥 for hot).
 
+## Logos
+
+- **Brand mark** — a small two-tone "refresh" loop icon (inline SVG, ~24px) sits next to the
+  "RefreshYourself" wordmark in the top bar on every page. Same markup, copy-pasted per page (no
+  separate icon file, same reasoning as [diagram-style.md](diagram-style.md) — a page should
+  render correctly on its own).
+- **Track logos** — where a track has a real, recognizable brand mark (C#'s purple hexagon, and
+  later .NET, SQL, React icons), hand-draw a close SVG approximation in the same house style as
+  the diagrams (flat shapes, no photographic/bitmap logo assets, no external image fetch) rather
+  than a generic emoji. Use it on: that track's home-page tile, and the top of that track's home
+  page (`.hero .hero-top`). Tracks with no standard logo (OOP's, DSA) keep a fitting emoji —
+  don't invent a fake brand mark for a concept that doesn't have one.
+- Keep logos **small and consistent in size** across every place they appear (tile icon size vs.
+  track-hero size are the only two sizes — see `.tile .icon` / `.tech-logo` in
+  `assets/style.css`); a logo that changes proportions from page to page looks unfinished.
+
 ## Key point cards get the same treatment as everything else
 
 The "Say this in the interview" cards (`.keypoints`) are the payoff of the page — give them a
