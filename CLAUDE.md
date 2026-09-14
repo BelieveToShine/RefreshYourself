@@ -14,26 +14,41 @@ to remember** box. Built for quick brush-up before an interview, not for deep st
 
 ## Mandatory workflow
 
+0. **Read the whole-project picture first** — [`docs/refreshyourself-overview.md`](docs/refreshyourself-overview.md).
+   The full topic catalog (built vs. planned, every track/tier) and the build order. This file
+   tells you *what's* left; the rules below tell you *how* to build it.
 1. **Know the structure** — [`docs/rules/content-structure.md`](docs/rules/content-structure.md).
    Folder layout, URL/file naming, `data-root`, what an index page contains vs. a topic page.
 2. **List the topic roadmap before writing any page** — [`docs/rules/content-writing.md`](docs/rules/content-writing.md).
    A tier index shows every planned topic (written or not) grouped in tens, hot-first. Decide the
-   full list for that tier first; implement pages one at a time after.
+   full list for that tier first; implement pages one at a time after. **Write that roadmap into
+   the track's spec** (`docs/superpowers/specs/<track>/overview.md` — see
+   [`docs/superpowers/specs/README.md`](docs/superpowers/specs/README.md)) at the same time, not
+   as a follow-up — the spec and the live tier-index page are two views of one roadmap.
 3. **Know the writing rules** — same file. Simple words, the "why it matters" bullets, the
    real-world example, the exact topic-page template.
 4. **Know the diagram style** — [`docs/rules/diagram-style.md`](docs/rules/diagram-style.md).
    Hand-authored inline SVG, small and crisp, no overlap, purposeful animation.
 5. **Know the visual style** — [`docs/rules/visual-style.md`](docs/rules/visual-style.md). Fonts,
    `.hl` highlight spans, logos, colourful breadcrumb pills, eyebrow badges.
-6. **Do the work** — add/edit pages following those docs.
-7. **Update the tier index row** (flip `planned` → a real link) **and** add the page to
+6. **Never write a claim you're not actually sure is true** — [`docs/rules/accuracy.md`](docs/rules/accuracy.md).
+   Outranks every other writing rule. Read it before writing any diagram, explanation, code
+   snippet, or key point.
+7. **Do the work** — add/edit pages following those docs.
+8. **Update the tier index row** (flip `planned` → a real link), **the track's spec doc** (flip
+   its `written?` column the same way), **and** add the page to
    [`assets/search-index.js`](assets/search-index.js) — see
-   [`docs/rules/search.md`](docs/rules/search.md). A topic page is not done until both happen.
+   [`docs/rules/search.md`](docs/rules/search.md). A topic page is not done until all three
+   happen.
 
 ## Rules
 
+Full action → rule lookup table: [`docs/rules/README.md`](docs/rules/README.md). Quick list:
+
+- **Track roadmaps/catalog (what's built vs. planned):** [`docs/superpowers/specs/README.md`](docs/superpowers/specs/README.md)
 - **Structure:** [`docs/rules/content-structure.md`](docs/rules/content-structure.md)
 - **Writing & ordering:** [`docs/rules/content-writing.md`](docs/rules/content-writing.md)
+- **Accuracy (never guess):** [`docs/rules/accuracy.md`](docs/rules/accuracy.md)
 - **Diagrams:** [`docs/rules/diagram-style.md`](docs/rules/diagram-style.md)
 - **Visual style (fonts, highlights, logos, breadcrumb):** [`docs/rules/visual-style.md`](docs/rules/visual-style.md)
 - **Global search:** [`docs/rules/search.md`](docs/rules/search.md)
@@ -41,6 +56,9 @@ to remember** box. Built for quick brush-up before an interview, not for deep st
 
 ## Quick reminders
 
+- **Never write a technical claim you're not actually confident is true** — no invented specifics
+  to sound authoritative. See [`docs/rules/accuracy.md`](docs/rules/accuracy.md). This outranks
+  every other content rule.
 - **Hot topics before normal topics, in every tier, in every track.** No exceptions.
 - **List the full roadmap on the tier index before writing pages** — planned-but-unwritten rows
   are shown, muted, unlinked, tagged 📝. Numbering is permanent from the moment a topic is listed.

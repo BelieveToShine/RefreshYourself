@@ -70,6 +70,26 @@ label, isn't obviously readable at tile size, and the page stopped explaining wh
 because an icon and a label happen to share the same word — that pairing is a normal icon+
 wordmark lockup, not a duplication bug.
 
+## Roadmap icon — the one deliberate exception to "no external images"
+
+Every home-page tile gets a small circular badge in its top-right corner
+(`assets/images/roadmap_icon.png` — a road curving to a map pin), linking to that track's
+`roadmap.html` (the one-page, all-tiers view of every topic, written or planned — see
+[content-structure.md](content-structure.md)). This is the **one deliberate exception** to the
+site's usual "no external image assets" stance — chosen and locked in by the user after
+comparing several candidates directly on the tile. Don't swap it for an emoji or hand-drawn SVG
+without being asked; don't add more images elsewhere on this precedent.
+
+- **Enabled** (`<a class="roadmap-badge" href="<track>/roadmap.html">`) once that track actually
+  has a `roadmap.html` — currently C# and Azure.
+- **Disabled** (`<span class="roadmap-badge disabled">`, no link, `title="No roadmap planned
+  yet"`) for every other track until its roadmap page is built — same enabled-once-real pattern
+  used everywhere else on this site (tier pills, tier-index rows). The image is shown greyscale
+  via `.roadmap-badge.disabled img{ filter:grayscale(1); }` so it's visibly inert, not just an
+  inactive-looking link.
+- When a new track gets its `roadmap.html`, flip its home-tile badge from disabled to enabled in
+  the same edit — don't leave it disabled once the destination exists.
+
 ## Logos — plain emoji only, no hand-drawn brand marks
 
 - **Brand mark** — a small two-tone "refresh" loop icon (inline SVG, ~24px) sits next to the

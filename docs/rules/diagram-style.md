@@ -161,6 +161,17 @@ someone looked at the rendered diagram. Before calling any diagram done:
    diagram element sharing a coordinate by coincidence, is exactly what slipped through here.
 4. Only after that numeric pass is a diagram considered checked — not after just re-reading the
    markup and judging it "looks fine."
+5. **In a split-panel diagram, check that each panel's content is centered on the SAME x as that
+   panel's own title, not just "somewhere in that half."** A real bug: a panel's title was
+   correctly centered on its half, but the box/captions below it were centered 60-70px off to
+   one side — each element individually looked fine, but the group read as visibly off-center
+   under its own heading. Compute `box.x + box.width/2` for every element in the panel and
+   compare it to the title's x — they should match (or be symmetric as a pair around it).
+6. **An arrow must span its FULL intended distance, not stop partway.** A real bug: an arrow
+   meant to connect two boxes was drawn only across part of the gap between them, leaving one
+   end dangling in empty space with no visible connection to anything. When writing a connector,
+   state the two endpoints as "box A's edge" and "box B's edge" explicitly, and check the path's
+   actual start/end coordinates match those edges — not a coordinate that merely looked close.
 
 ## Animation — use it, purposefully
 

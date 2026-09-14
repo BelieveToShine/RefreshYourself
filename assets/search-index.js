@@ -14,5 +14,22 @@ window.SEARCH_INDEX = [
   { title: "Array vs. List<T>", track: "C#", tier: "Basic", path: "csharp/basic/7.html", keywords: "array list generic collection fixed size grow capacity resize csharp" },
   { title: "ref vs. out vs. in", track: "C#", tier: "Basic", path: "csharp/basic/8.html", keywords: "ref out in parameter pass by reference tryparse struct csharp" },
   { title: "String vs. StringBuilder", track: "C#", tier: "Basic", path: "csharp/basic/9.html", keywords: "string stringbuilder immutable concatenation append performance loop csharp" },
-  { title: "Nullable Types (int?)", track: "C#", tier: "Basic", path: "csharp/basic/10.html", keywords: "nullable int hasvalue value null coalescing operator csharp" }
+  { title: "Nullable Types (int?)", track: "C#", tier: "Basic", path: "csharp/basic/10.html", keywords: "nullable int hasvalue value null coalescing operator csharp" },
+  { title: "var vs. dynamic vs. object", track: "C#", tier: "Basic", path: "csharp/basic/11.html", keywords: "var dynamic object type inference compile time runtime csharp" },
+  { title: "Enums", track: "C#", tier: "Basic", path: "csharp/basic/12.html", keywords: "enum enums named constants flags switch csharp" },
+  { title: "?: and ??", track: "C#", tier: "Basic", path: "csharp/basic/13.html", keywords: "ternary null coalescing operator question mark csharp" },
+  { title: "Namespaces & using", track: "C#", tier: "Basic", path: "csharp/basic/14.html", keywords: "namespace using import directive organizing code csharp" },
+  { title: "Azure — track home", track: "Azure", tier: "", path: "azure/index.html", keywords: "azure cloud microsoft overview" },
+  { title: "Azure Basic — topic list", track: "Azure", tier: "Basic", path: "azure/basic/index.html", keywords: "azure basic list roadmap functions app service storage sql key vault" },
+  { title: "Azure Intermediate — topic list", track: "Azure", tier: "Intermediate", path: "azure/intermediate/index.html", keywords: "azure intermediate list roadmap service bus cosmos db apim" },
+  { title: "Azure Advanced — topic list", track: "Azure", tier: "Advanced", path: "azure/advanced/index.html", keywords: "azure advanced list roadmap well-architected resilience networking" },
+  { title: "C# Intermediate — topic list", track: "C#", tier: "Intermediate", path: "csharp/intermediate/index.html", keywords: "csharp intermediate list roadmap generics async linq delegates" },
+  { title: "C# Advanced — topic list", track: "C#", tier: "Advanced", path: "csharp/advanced/index.html", keywords: "csharp advanced list roadmap garbage collection threading reflection" },
+  { title: "C# — full roadmap", track: "C#", tier: "", path: "csharp/roadmap.html", keywords: "csharp roadmap all topics plan overview" },
+  { title: "Azure — full roadmap", track: "Azure", tier: "", path: "azure/roadmap.html", keywords: "azure roadmap all topics plan overview" },
+  { title: "AI — track home", track: "AI", tier: "", path: "ai/index.html", keywords: "ai genai llm generative overview" },
+  { title: "AI Basic — topic list", track: "AI", tier: "Basic", path: "ai/basic/index.html", keywords: "ai basic list roadmap tokens embeddings prompt" },
+  { title: "AI Intermediate — topic list", track: "AI", tier: "Intermediate", path: "ai/intermediate/index.html", keywords: "ai intermediate list roadmap rag agents tools fine-tuning" },
+  { title: "AI Advanced — topic list", track: "AI", tier: "Advanced", path: "ai/advanced/index.html", keywords: "ai advanced list roadmap guardrails eval llmops cost" },
+  { title: "AI — full roadmap", track: "AI", tier: "", path: "ai/roadmap.html", keywords: "ai roadmap all topics plan overview genai llm" }
 ];

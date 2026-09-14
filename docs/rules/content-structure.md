@@ -64,6 +64,12 @@ Locked decisions from the working session that set this project up. Don't re-der
   [content-writing.md](content-writing.md) for what counts as hot.
 - Each row: number, title, a badge (🔥 Hot / Normal / 📝 Coming soon). A written topic's title
   links to its numbered page; a planned-but-unwritten topic's title is plain text, no link.
+- **Title = bold core name + a normal-weight tail — never bold the whole line.** Split at the
+  em dash: `<strong>Value Types vs. Reference Types</strong><span class="ttail"> — what's
+  actually being copied?</span>`. The bold part is what a skimming eye should catch; the tail
+  (clarifying phrase after the dash) stays lower-emphasis on purpose, so a long list of 14-60
+  rows stays fast to scan instead of reading as a wall of equally-bold text. Applies identically
+  to written rows (`<a>`) and planned rows (`<span class="ttitle">`).
 - **Grouped in tens** — every 10 topics (written + planned together) sit inside one collapsible
   `<details class="qgroup">` block, labelled by range (e.g. "Questions 1–10"). The first group is
   `open` by default; every later group starts closed. This is what keeps a 60-topic tier

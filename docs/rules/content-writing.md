@@ -86,7 +86,21 @@ In this exact order:
    set of directions to the same house, a road vs. an off-ramp, …) over a dry definition — it's
    what makes the concept stick. If a paragraph is fighting to stay short, that's the diagram's
    job to carry instead, not a reason to keep the paragraph long.
-6. **"🌍 Real-world example" — collapsed toggle, closed by default.** `<details class="realworld
+6. **"💻 See the code" — collapsed toggle, closed by default.** `<details class="codebox toggle">`
+   with `<summary>💻 See the code</summary>`, containing one `<pre><code>` block (see `.codebox`
+   in `assets/style.css` — a dark panel, `Fira Code`, comments wrapped in
+   `<span class="cmt">...</span>`). A small, minimal, realistic snippet showing the actual
+   syntax for this topic — the thing someone skims to double-check "is that the right keyword/
+   shape" without leaving the page. 5-10 lines is plenty; it's a syntax reference, not a full
+   program — no `Main`, no imports, no output-printing ceremony unless the topic is specifically
+   about output. Sits right after Explanation, before the real-world example.
+   - **Every line that's doing something worth noticing gets its own short inline
+     `<span class="cmt">// comment</span>`** — not just one comment somewhere in the block. A
+     real gap from this project: one snippet shipped with zero comments and read as a wall of
+     code with no explanation; others had only one, leaving other equally-important lines
+     unexplained. Crisp means a few words, not a sentence — `// out MUST be set here too`, not
+     "this line is required because the out parameter needs to be assigned before returning."
+7. **"🌍 Real-world example" — collapsed toggle, closed by default.** `<details class="realworld
    toggle">` with `<summary>🌍 Real-world example</summary>`. One relatable, everyday analogy (a
    photocopy vs. a shared doc link, a locker vs. a mailbox, …) that makes the concept click — 2-3
    sentences, never a story or a worked scenario. If you can't state the analogy in one breath,
