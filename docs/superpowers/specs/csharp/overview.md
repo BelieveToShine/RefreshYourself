@@ -5,9 +5,10 @@ for what this file is and the process for keeping it in sync with the live pages
 
 ## Status
 
-**Basic is complete and written (14/14), awaiting the user's review before Intermediate or
-Advanced content is written.** Intermediate and Advanced have their full roadmaps listed on the
-live tier-index pages but zero topics written.
+**Basic is complete and written (14/14), including the left tier-navigation sidebar on every
+page (see [`rules/tier-navigation.md`](../../rules/tier-navigation.md)) — awaiting the user's
+final review before Intermediate or Advanced content is written.** Intermediate and Advanced
+have their full roadmaps listed on the live tier-index pages but zero topics written.
 
 ## Basic (14 topics) — ✅ all written
 

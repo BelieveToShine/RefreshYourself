@@ -83,6 +83,23 @@ Locked decisions from the working session that set this project up. Don't re-der
   this project up is explicit that each page must contain only its own related topic.
 - Follows the fixed template in [content-writing.md](content-writing.md): breadcrumb → title →
   diagram → simple explanation → key points box → prev/next links back to the tier index.
+- **The inline `.pager` at the bottom of the page (Prev / ↑ tier index / Next) is still the
+  source of truth for navigation data — never remove it.** A second, sticky bottom bar
+  (`.fixed-pager`) is generated automatically from that same `.pager` block by
+  `assets/site.js` (see the IIFE at the bottom of that file) so Prev/Next stay reachable while
+  scrolling, without crowding the header's logo/search or duplicating links by hand in every
+  page's HTML. This was a deliberate choice over adding navigation to the sticky top header:
+  the header already carries the logo and global search, and a bottom bar is the established
+  pattern for sequential content (Docusaurus, MDN, GitBook all do this) rather than a
+  home-grown one. Because the fixed bar is built from the existing markup, **no topic page ever
+  needs its own copy of this bar** — if Prev/Next stop appearing in the fixed bar, the bug is in
+  `site.js`'s selector, not in the page.
+- **A separate, desktop-only left sidebar (`.tier-nav`) lists every topic in the current
+  track+tier**, W3Schools-style, so a reader can jump topic-to-topic without detouring through
+  the tier index. Same "data drives the chrome, page HTML stays clean" pattern as the bar
+  above — see [tier-navigation.md](tier-navigation.md) for the full spec (data shape, how to
+  wire up a new tier, and three real bugs worth reading before touching it). Below `960px` it
+  hides entirely and the fixed bottom bar above is the mobile equivalent.
 
 ## Adding a brand-new track
 

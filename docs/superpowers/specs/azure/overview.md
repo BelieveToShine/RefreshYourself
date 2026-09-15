@@ -5,9 +5,14 @@ for what this file is and the process for keeping it in sync with the live pages
 
 ## Status
 
-**Roadmap-only — skeleton and full topic lists exist on the live tier-index pages, zero topics
-written.** Per explicit instruction: do not start writing Azure topic pages until C# has been
-fully reviewed by the user and they say to proceed.
+**Cleared to start (as of 2026-09-15) — the user is working on Azure Basic in a parallel
+session while C# wraps up.** Roadmap and full topic lists already exist on the live tier-index
+pages below, zero topics written yet. Read in this order before writing the first page:
+[`docs/refreshyourself-overview.md`](../../refreshyourself-overview.md) →
+[`docs/rules/README.md`](../../rules/README.md) (starting with `product-principle.md`) → this
+file's tables below for the exact topic order/hot flags. The C# Basic tier (`csharp/basic/`) is
+the finished, user-approved reference implementation of every rule in `docs/rules/` — when in
+doubt about how a rule applies in practice, open the matching C# page and match its pattern.
 
 ## Basic (14 topics) — roadmap only, 0 written
 
@@ -95,8 +100,8 @@ is foundational but a *deep dive* on it is more Intermediate/Advanced than Basic
 
 ## Known gaps
 
-- Nothing in this track is written yet — this is a roadmap/skeleton only, by explicit
-  instruction, until C# is reviewed.
+- Nothing in this track is written yet — roadmap/skeleton only. No longer gated on C# review;
+  see **Status** above.
 - The source file's "Quick must-know shortlist" (Functions+Durable, Service Bus vs. Event Grid
   vs. Event Hubs, Cosmos DB partitioning+consistency, Managed Identity+Service
   Principal+Key Vault, APIM, Front Door vs. App Gateway, App Insights+KQL, Well-Architected +

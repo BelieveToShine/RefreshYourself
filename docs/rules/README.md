@@ -19,6 +19,7 @@ override default behavior — read the relevant one before doing the thing, not 
 | Write or edit the "🔥 Easy interview recall" box | [interview-recall.md](interview-recall.md) |
 | Write or edit the "⚠️ Common Trap" box | [common-trap.md](common-trap.md) |
 | Add a new page, or touch `assets/site.js` / the search index | [search.md](search.md) |
+| Wire up the left "tier navigation" sidebar for a tier, or touch `assets/nav-index.js` | [tier-navigation.md](tier-navigation.md) |
 
 For the whole-project picture (what this site is, the full topic catalog, what's written vs.
 planned) read [`docs/refreshyourself-overview.md`](../refreshyourself-overview.md) first — before

@@ -18,5 +18,8 @@
     badges.
   - [`rules/search.md`](rules/search.md) — the site-wide search box: how it works, and the one
     rule (update `search-index.js`) that keeps it working.
+  - [`rules/tier-navigation.md`](rules/tier-navigation.md) — the left "topic-to-topic" sidebar:
+    how it's built from `nav-index.js` with zero per-page markup, and three real bugs to not
+    repeat when wiring it up for a new tier.
   - [`rules/keypoints.md`](rules/keypoints.md) — the "Say this in the interview" box: highlight
     every bullet's main point, plain professional wording, the "when do I use X vs. Y" pattern.

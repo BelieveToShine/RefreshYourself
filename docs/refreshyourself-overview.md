@@ -23,11 +23,14 @@ else (why it matters, explanation, code, real-world example) collapsed by defaul
 
 ## Current build status (one line each — see the track's own spec for detail)
 
-- **C#** — Basic complete (14/14), awaiting user review. Intermediate/Advanced: roadmap listed,
-  0 written. See [`specs/csharp/overview.md`](superpowers/specs/csharp/overview.md).
+- **C#** — Basic complete (14/14), including the tier-navigation sidebar (see
+  [`rules/tier-navigation.md`](rules/tier-navigation.md)). Awaiting final user review.
+  Intermediate/Advanced: roadmap listed, 0 written, still gated on the user saying to proceed.
+  See [`specs/csharp/overview.md`](superpowers/specs/csharp/overview.md).
 - **Azure** — roadmap-only skeleton across all three tiers, sourced from
-  `Azure-Interview-Topics.md`. **Do not write Azure content until told to** — waiting on C#
-  review first. See [`specs/azure/overview.md`](superpowers/specs/azure/overview.md).
+  `Azure-Interview-Topics.md`. **Cleared to start** — the user is writing Azure Basic content in
+  a parallel session; C# Basic is the finished reference implementation to pattern-match
+  against. See [`specs/azure/overview.md`](superpowers/specs/azure/overview.md).
 - **AI** — roadmap-only skeleton across all three tiers, sourced from `AI-Interview-Topics.md`.
   Skeleton just built, awaiting user review/adjustment before anything else. **Do not write AI
   content until told to.** See [`specs/ai/overview.md`](superpowers/specs/ai/overview.md).
