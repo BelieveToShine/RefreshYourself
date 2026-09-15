@@ -213,6 +213,18 @@
     return file === currentFile || file.replace(/\.html$/, "") === currentFile;
   }
 
+  // Which groups are expanded is remembered per tier (sessionStorage, cleared when the tab
+  // closes) so navigating between topics never resets a group the user opened or closed by
+  // hand — one tier's memory is keyed separately from every other tier's, so working on C#
+  // Basic in one tab and Azure Basic in another never overrides each other. Until the user
+  // manually toggles a group for the first time in this tier, nothing is stored yet and a
+  // sensible default applies (first group open, plus whichever group holds the current page);
+  // the moment they toggle anything, that exact open/closed layout is saved and reused verbatim
+  // on every later page — never re-computed from "which item is active" again.
+  var storeKey = "tn-open:" + tierKey;
+  var stored = {};
+  try { stored = JSON.parse(sessionStorage.getItem(storeKey) || "{}"); } catch (e) { stored = {}; }
+
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
@@ -230,11 +242,16 @@
     );
   }
 
+  function groupOpen(group, isFirst) {
+    if (Object.prototype.hasOwnProperty.call(stored, group.label)) return stored[group.label];
+    var hasActive = group.items.some(function (i) { return isCurrent(i.file); });
+    return isFirst || hasActive;
+  }
+
   function groupHtml(group, isFirst) {
     var hotBadge = group.hot ? '<span class="gn-hot">' + group.hot + " 🔥</span>" : "";
-    var hasActive = group.items.some(function (i) { return isCurrent(i.file); });
     return (
-      '<details class="tn-group"' + (isFirst || hasActive ? " open" : "") + ">" +
+      '<details class="tn-group"' + (groupOpen(group, isFirst) ? " open" : "") + ">" +
       "<summary>" + esc(group.label) + hotBadge + '<span class="chev">▾</span></summary>' +
       '<ol class="tn-list">' + group.items.map(itemHtml).join("") + "</ol>" +
       "</details>"
@@ -254,6 +271,17 @@
   while (main.firstChild) topicBody.appendChild(main.firstChild);
   main.appendChild(aside);
   main.appendChild(topicBody);
+
+  // Persist the exact open/closed state of every group the instant the user toggles any one
+  // of them — a "toggle" event on <details> doesn't bubble, so each group needs its own
+  // listener rather than one delegated on the sidebar.
+  var groupEls = aside.querySelectorAll(".tn-group");
+  function saveState() {
+    var state = {};
+    groupEls.forEach(function (el, i) { state[data.groups[i].label] = el.open; });
+    try { sessionStorage.setItem(storeKey, JSON.stringify(state)); } catch (e) {}
+  }
+  groupEls.forEach(function (el) { el.addEventListener("toggle", saveState); });
 
   document.body.classList.add("has-tier-nav");
 })();

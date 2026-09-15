@@ -143,6 +143,32 @@ always route new text through `esc()` before it goes into an HTML string.
 - The hot flag is a small, slightly muted 🔥 (`.tn-dot`), not full-size/full-opacity, so it
   doesn't compete with the active/hover state.
 
+## Group expand/collapse state persists per tier, and is never auto-overridden
+
+Which groups are open is remembered in `sessionStorage` under `tn-open:<tierKey>` (e.g.
+`tn-open:csharp/basic`), so navigating between topic pages never resets a group the reader
+opened or closed by hand. This came from real feedback: the initial version force-opened
+"whichever group contains the active page" on every load, which silently collapsed a group the
+reader had manually opened the moment they clicked into a different group's topic.
+
+The rule now is: **selecting a menu item (navigating) never changes which groups are open —
+only manually toggling a group's `<summary>` does, and that toggle is saved immediately.**
+Concretely:
+- Before the reader has toggled anything in a tier this session, there's nothing in storage
+  yet, so a sensible default applies per page: the first group is open, and so is whichever
+  group holds the current page.
+- The instant they toggle any group open/closed, the open/closed state of *every* group in
+  that tier is saved to `sessionStorage` in one shot (`saveState()` in the builder IIFE) and
+  reused verbatim on every later page in that tier — the "open the active item's group"
+  default stops applying entirely from that point on, even if it would hide the active page
+  inside a collapsed group. That's intentional: the reader's own choice wins.
+- The storage key is `tierKey` itself (`"csharp/basic"`, `"azure/basic"`, …), so two tiers —
+  or two tracks — never share or override each other's remembered state. This falls out of the
+  existing per-tier `data-tier-key` wiring with **no extra work needed** when a new tier is
+  added; don't add any tier-specific logic for this.
+- `sessionStorage` (not `localStorage`) is deliberate — "session" here means the current
+  browser tab's lifetime, matching how the reader actually works through a tier in one sitting.
+
 ## Adding this to a new tier (e.g. Azure Basic)
 
 1. Add a new top-level entry to `assets/nav-index.js`, keyed `"azure/basic"` — copy the group
