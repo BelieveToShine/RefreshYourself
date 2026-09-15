@@ -49,68 +49,166 @@ Locked decisions from the working session that set this project up. Don't re-der
 
 ## The topic page template (every `.html` under `<track>/<tier>/`)
 
-**The goal of this page is quick refreshment, not study.** Two things earn a permanent, always-
-visible spot: the diagram and the "say this in the interview" box. Everything else that adds
-depth — why it matters, the prose explanation, the real-world example — is genuinely useful but
-is not what someone glances at for a 5-minute brush-up, so it's collapsed by default behind a
+**Read [product-principle.md](product-principle.md) first.** This site is a visual
+interview-recall system, not a documentation site — SCAN → SEE → RECALL → SPEAK, not
+READ → STUDY → MEMORIZE. Five things earn a permanent, always-visible spot: the "🔥 Easy
+interview recall" line, the "🧠 Visual Mental Model" diagram, the "⚠️ Common Trap" warning, and
+the "🎯 say this in the interview" box — together they should let someone refresh the concept in
+30-60 seconds without opening a single toggle. Everything else that adds depth — why it matters,
+the prose explanation, the code, the real-world example — is genuinely useful but is not what
+someone glances at for a 5-minute brush-up, so it's collapsed by default behind a
 `<details class="… toggle">` (see `assets/style.css`) and opened only if they want more. Don't
-make the diagram or the keypoints box a toggle, and don't leave the other three permanently
+make any of the always-visible pieces a toggle, and don't leave the collapsed ones permanently
 expanded — the collapse is the point.
+
+**The interview answer sits early, not at the bottom.** Recall → Visual Model → Trap → Interview
+line is the fast path — all four always visible, in that order, before a single collapsed
+section. Explanation, Code, and Real-world come after; they're for whoever wants to go deeper,
+not part of the 30-second pass.
+
+**No section repeats a fact another section already owns** — see "Content discipline" in
+[product-principle.md](product-principle.md). The recall line states the memory trick once; the
+Explanation should build on it (add the *why*), never restate it as its own "Memory trick:" line.
 
 In this exact order:
 
 1. **Breadcrumb** — `Home / <Track> / <Tier> / <Topic title>`, each part a link except the last.
-2. **Title** — short and punchy, the interview question in as few words as possible (e.g. "Value
-   or Reference? What's really being copied" rather than a textbook heading). Highlight the one
-   or two contrasting words with `.hl` (see [visual-style.md](visual-style.md)).
+2. **Title — must contain a hook or tension, never a flat descriptive label.** A title fails this
+   test if you could prefix it with "Understanding" and it would read exactly the same way —
+   that's the tell for a weak title. Compare:
+   - Weak: *"Understanding nullable types"* → Strong: `int?` — what happens when an `int` can
+     be nothing?
+   - Weak: *"Understanding enums"* → Strong: `enum` — turn magic numbers into named choices.
+   - Weak: *"Giving a fixed set of options real names"* (a real title this project shipped,
+     just as weak as "Understanding enums" despite not using that word) → same fix as above.
+
+   Two ways to build the hook, pick whichever fits the topic:
+   - **Lead with the actual keyword/type**, in code font, then a tension clause — the keyword
+     itself becomes part of the hook (`int?`, `enum`, `namespace`). This works best for a
+     single-concept topic.
+   - **Pose it as the literal question an interviewer would ask**, or name the specific
+     misconception/consequence the topic resolves (`"Same object, or just same content?"`,
+     `"Why one slows a loop and the other doesn't"`). This works best for a comparison topic.
+
+   Never a claim that overstates the actual comparison (e.g. don't title a page "only one is
+   risky" when more than one option genuinely carries risk — see [accuracy.md](accuracy.md)).
+   Prefer a framing tied to what an interviewer is actually probing for (e.g. "know who checks
+   your code" for a compile-time-vs-runtime topic) over a vaguer contrast. Highlight the one or
+   two contrasting words with `.hl` (see [visual-style.md](visual-style.md)).
+
+   **This rule was written once, applied to the one page being fixed at the time, and then
+   silently skipped on every other page written afterward** — a real gap, caught only when
+   several pages were reviewed side by side later. When a rule like this lands, sweep every
+   existing page against it in the same pass, not just the page that prompted it — see the
+   verification step in [product-principle.md](product-principle.md).
 3. **"Why it matters" — collapsed toggle, closed by default.** `<details class="topic-hook
    toggle">` with a `<summary>` (not a plain label — the summary IS the clickable toggle).
    2-3 short bullets inside, never a paragraph, never article prose: what real bug/situation this
    explains, when it's actually useful to know, and (only if genuinely true) that it's a common
    interview opener.
-4. **Diagram(s) — always visible, never a toggle.** Inline, placed right next to the part of the
-   explanation they support — see [diagram-style.md](diagram-style.md). Not collected separately
-   at the top or bottom of the page. A topic with two distinct halves (e.g. boxing vs. unboxing)
-   gets two small diagrams, each beside its own half of the text.
+4. **"🔥 Easy interview recall" — always visible, never a toggle.** `<div class="recall">` sitting
+   right after "Why it matters." Full rules for what goes inside it live in
+   [interview-recall.md](interview-recall.md) — read it before writing or editing this box.
+5. **"🧠 Visual Mental Model" — always visible, never a toggle.** A `<div class="viz-label">🧠
+   Visual Mental Model</div>` sits right above the diagram(s), naming the section so the goal is
+   explicit: *can someone understand the concept just from looking at the picture for 5 seconds?*
+   Inline, placed right next to the part of the explanation it supports — see
+   [diagram-style.md](diagram-style.md). Not collected separately at the top or bottom of the
+   page. A topic with two distinct halves (e.g. boxing vs. unboxing) gets two small diagrams,
+   each beside its own half of the text.
    - **Don't stop at "here's the mechanic" or "here's where it breaks" — also show "here's when
      you'd actually reach for this."** A real gap from this project: the `==` /
      `.Equals()` / `ReferenceEquals()` page's first diagram only showed the *default*, everything-
      returns-false case — it never showed a case where each one is genuinely the right tool, or
      said which to reach for. If a topic has a real practical-use angle (a lot of them do), give
      it its own small diagram/panel, not just a line buried in prose.
-5. **Explanation — collapsed toggle, closed by default.** `<details class="explain toggle">`
+   - **The 5-second test:** hide everything except the label and the diagram. If the main idea
+     still comes through, the diagram works. If not, simplify or redesign it — don't compensate
+     with more surrounding prose.
+6. **"⚠️ Common Trap" — always visible, never a toggle.** `<div class="trap">` sitting right
+   after the diagram and before the interview-answer box. One misconception or interview
+   mistake, stated as a single memorable line — never a list. This moved up from the bottom of
+   the page: the single wrong-turn a candidate is likely to make is exactly as urgent as the
+   recall line and the diagram, not a footnote. Full rules live in
+   [common-trap.md](common-trap.md) — read it before writing or editing this box.
+7. **"🎯 Say this in the interview" box — always visible, never a toggle.** `<div class="keypoints">`
+   sitting right after the Common Trap — moved up from the very bottom of the page for the same
+   reason: the spoken answer is core, always-visible content, not a wrap-up. Full rules for what
+   goes inside it (lead with one primary spoken sentence, then supporting bullets, every bullet
+   highlighting its own main point, plain professional wording, the "when do I use X vs. Y vs. Z"
+   pattern) live in their own dedicated file: [keypoints.md](keypoints.md) — read it before
+   writing or editing this box.
+8. **Explanation — collapsed toggle, closed by default.** `<details class="explain toggle">`
    with `<summary>📖 Explanation</summary>`. Genuinely short even so — 2-3 tight paragraphs, max.
    This was called out directly: early drafts were too long and "didn't give interest to read
    anything." Every sentence should either add a fact or land a memorable phrase — never both
-   restate the diagram AND explain it in full prose. Prefer one vivid comparison (a copy vs. a
-   set of directions to the same house, a road vs. an off-ramp, …) over a dry definition — it's
-   what makes the concept stick. If a paragraph is fighting to stay short, that's the diagram's
-   job to carry instead, not a reason to keep the paragraph long.
-6. **"💻 See the code" — collapsed toggle, closed by default.** `<details class="codebox toggle">`
-   with `<summary>💻 See the code</summary>`, containing one `<pre><code>` block (see `.codebox`
-   in `assets/style.css` — a dark panel, `Fira Code`, comments wrapped in
-   `<span class="cmt">...</span>`). A small, minimal, realistic snippet showing the actual
+   restate the diagram AND explain it in full prose, and never restate the recall box's memory
+   trick as its own line (see "Content discipline" above). Prefer one vivid comparison (a copy
+   vs. a set of directions to the same house, a road vs. an off-ramp, …) over a dry definition —
+   it's what makes the concept stick. If a paragraph is fighting to stay short, that's the
+   diagram's job to carry instead, not a reason to keep the paragraph long.
+   - **If the topic is genuinely an X-vs-Y(-vs-Z) question, add a `.cmp-table` comparison
+     table** (see `assets/style.css`) — one row per dimension that actually differs (when it's
+     decided, who/what checks it, casting cost, the main idea, the risk if you get it wrong),
+     one column per option. This was called out directly: "difference table where ever possible
+     is needed" — a table someone can scan in three seconds beats a paragraph making the same
+     three points in prose. Tie the table's rows back to whatever the title is asking (e.g. a
+     "who checks your code" title should have a "member checking" row) so the table pays off the
+     title's framing, not just a generic feature list.
+   - **If the topic has combined/composite variants (a variant built by combining two simpler
+     rules with AND/OR), give each one its own column too — don't stop at the base options.**
+     A real gap this caught: the Access Modifiers table only had `private`/`protected`/
+     `internal`/`public` — it left out `protected internal` and `private protected` entirely,
+     even though the whole point of those two is showing how the base rules combine (one is an
+     OR of two boundaries, the other is an AND of the same two). Omitting a composite variant
+     from the table hides the exact thing it exists to teach.
+   - **Never include a row whose real rule doesn't actually match the column header's framing.**
+     A real gap this caught: a table asked "crosses the class hierarchy?" and answered "✅ yes,
+     any class" for `internal` — but `internal`'s actual rule has nothing to do with class
+     hierarchy at all (it's purely an assembly-boundary check, independent of inheritance); the
+     row happened to produce a true-ish answer while testing the wrong axis. Before writing a
+     row, state the option's *actual* rule in one sentence and check the row's question is
+     really asking about that rule — not a related-sounding but different one.
+   - **Write like the crispest possible answer, not a textbook paragraph.** Bold the term being
+     defined, keep sentences short, and prefer "X does A. Y does B." over "Whereas X does A, Y on
+     the other hand does B." This was called out directly against a real complaint: the site's
+     prose read as dense and duller than what a good chat assistant produces off the same
+     question — the fix is tighter sentences and more scannable structure (bold, short lines,
+     tables), not more words.
+9. **"💻 See the code" — collapsed toggle, closed by default.** `<details class="codebox toggle">`
+   with `<summary>💻 See the code</summary>`, containing one or more `.code-card` blocks (see
+   `.code-card` in `assets/style.css` — a **light** card, never a dark console: a `C#` language
+   chip, a copy button, `Fira Code`, syntax-colored spans `.kw`/`.ty`/`.str`/`.num` and comment
+   spans `.cx-ok`/`.cx-err`/`.cx-cmt`). A small, minimal, realistic snippet showing the actual
    syntax for this topic — the thing someone skims to double-check "is that the right keyword/
-   shape" without leaving the page. 5-10 lines is plenty; it's a syntax reference, not a full
-   program — no `Main`, no imports, no output-printing ceremony unless the topic is specifically
-   about output. Sits right after Explanation, before the real-world example.
-   - **Every line that's doing something worth noticing gets its own short inline
-     `<span class="cmt">// comment</span>`** — not just one comment somewhere in the block. A
-     real gap from this project: one snippet shipped with zero comments and read as a wall of
-     code with no explanation; others had only one, leaving other equally-important lines
-     unexplained. Crisp means a few words, not a sentence — `// out MUST be set here too`, not
-     "this line is required because the out parameter needs to be assigned before returning."
-7. **"🌍 Real-world example" — collapsed toggle, closed by default.** `<details class="realworld
+   shape" without leaving the page. Sits right after Explanation, before the real-world example.
+   - **When a topic has 2-3 distinct points (a comparison, a before/after), use 2-3 small
+     `.code-card` blocks instead of one long annotated block — each followed by its own one-line
+     `<p class="cx-note">` explanation right underneath it.** This was called out directly against
+     a real complaint: a wall of code with everything explained through inline comments reads
+     worse than a short worked example per point, each with a plain-English takeaway line right
+     after it. One card, one point, one sentence — not a single snippet trying to prove three
+     things at once.
+   - **Every line that's doing something worth noticing still gets its own short inline
+     comment** even inside a small card — not just one comment somewhere in the block. Crisp
+     means a few words, not a sentence — `// ❌ Compile-time error`, not "this line fails because
+     the compiler already locked in the type."
+   - **Code must earn its spot: it has to demonstrate the specific distinction this page exists
+     to teach, not just be valid syntax.** A real gap this caught: a `dynamic` example that just
+     showed `dynamic b = 10; b = "Hello";` is technically correct but only teaches "dynamic can
+     hold different types" — `object` can hold different runtime values too, so it doesn't
+     demonstrate what's actually dangerous about `dynamic`. The fix that actually teaches the
+     point: `dynamic user = "Sam"; user.Length;` (works) vs. `user.Lenght;` (a typo — compiles
+     fine, throws a runtime exception) — now the example proves the exact claim the page is
+     making. Before shipping a code card, ask "does running this in my head prove the page's one
+     idea, or would it look identical for a different concept?" — if the latter, redesign the
+     example.
+10. **"🌍 Real-world example" — collapsed toggle, closed by default.** `<details class="realworld
    toggle">` with `<summary>🌍 Real-world example</summary>`. One relatable, everyday analogy (a
    photocopy vs. a shared doc link, a locker vs. a mailbox, …) that makes the concept click — 2-3
    sentences, never a story or a worked scenario. If you can't state the analogy in one breath,
    it's too elaborate — simplify it, don't explain it further.
-7. **"Key Points to Remember" box — always visible, never a toggle.** Always the last thing on
-   the page, right before Prev/Next. Full rules for what goes inside it (every bullet must
-   highlight its own main point, plain professional wording, the "when do I use X vs. Y vs. Z"
-   pattern, multi-clause bullets) live in their own dedicated file:
-   [keypoints.md](keypoints.md) — read it before writing or editing this box.
-7. **Prev / Next** — links to the previous and next topic in this tier's hot-first order, plus a
+11. **Prev / Next** — links to the previous and next topic in this tier's hot-first order, plus a
    link back up to the tier index. First topic has no "prev", last has no "next." **If the
    neighbouring topic is still `planned` (not written), don't link to its not-yet-existing file**
    — show its title muted, pointing at the tier index instead, labelled "(coming soon)."

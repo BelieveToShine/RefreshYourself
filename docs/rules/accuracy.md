@@ -28,6 +28,29 @@ first, then simple, then catchy — never the other order.**
   treat it as a signal to re-check nearby claims on that same page — a mistake is rarely isolated
   to one sentence.
 
+## How this interacts with memory tricks and recall lines
+
+A memory trick (`var` = "compiler decides", `dynamic` = "runtime decides") is allowed to
+compress — that's the whole point of [interview-recall.md](interview-recall.md). It is **not**
+allowed to overstate to the point of being wrong. A real example from this project: an early
+draft of the `dynamic` explanation said "dynamic turns type checking off" — catchy, but not
+quite true, since `dynamic` doesn't disable checking, it *defers* it (operations still get
+checked, just at runtime instead of compile time). The fix was "dynamic defers type checking to
+runtime — operations aren't resolved until that line actually executes," which is just as short
+but doesn't teach a wrong mental model. When a catchy phrase and a fully-accurate phrase
+conflict, narrow the catchy phrase until it's both — never ship the catchier, less-true one.
+
+**The recall layer and the explanation layer are allowed to hold different levels of precision —
+but only the recall layer gets to round off.** A second real example: the recall box saying
+`public` = "everyone"/"no walls" is a fine compression for a 5-second memory trick. It would
+*not* be fine to write the same "no door at all" phrasing in the Explanation section, because
+it's not quite true — a `public` member is still only reachable through an accessible containing
+type, and general C# accessibility rules still apply. The Explanation's job is to be the precise
+version underneath the catchy recall line: "accessible wherever the containing type is
+accessible," not "no restriction whatsoever." If a memory-trick phrase would be wrong stated as a
+fact in the Explanation, that's fine — it just means the Explanation needs its own, more careful
+wording; it does not mean the recall line needs to change.
+
 ## How this interacts with the simple-words rule
 
 Simple words describe something correctly in plain language — they never mean rounding a claim

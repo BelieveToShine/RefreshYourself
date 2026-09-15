@@ -2,7 +2,65 @@
 
 How to draw the diagram(s) on a topic page. Same visual language as the LeadHunter architecture
 diagrams (hand-authored SVG, colour-coded zones, drawn icons, orthogonal connectors) — scoped
-down to one small concept instead of a whole system.
+down to one small concept instead of a whole system. This is the "🧠 Visual Mental Model" step
+in the page template — see [content-writing.md](content-writing.md) and
+[product-principle.md](product-principle.md) for where it sits and why it exists.
+
+## Choose the diagram TYPE by the concept — never default to "three boxes"
+
+**The diagram must show a relationship, not re-illustrate the paragraph next to it in picture
+form.** Before drawing anything, name which of these shapes the concept actually is, and draw
+that shape — don't reach for the same three-boxes-side-by-side layout for every topic just
+because it's familiar:
+
+| Concept shape | Diagram type | Example |
+|---|---|---|
+| Comparing 2-3 named options | Side-by-side comparison, but with a **shared root question** branching down into each option (not three isolated boxes) — see the worked example below | `var` vs. `dynamic` vs. `object` |
+| One thing turning into another | Before → change → after, top to bottom or left to right | `int` → `int?` |
+| A condition picking a path | A decision tree — condition at top, two branches down to their outcomes | `?:` |
+| A check for one specific state | A fallback flow — value → "is it X?" → two branches | `??` (is it null?) |
+| Something happening over a span of time | A left-to-right or top-to-bottom flow with a clear start and end | `async`/`await` |
+| One thing being a kind of another | A simple hierarchy, top to bottom | base class → derived class |
+| One thing holding several of another | A container with visible slots/items inside it | `List<T>`, arrays |
+| A thing being created, used, then cleaned up | A lifecycle strip: 3-4 stages left to right | object lifecycle, `using` |
+| Compile-time vs. runtime behavior | Two clearly labelled zones (not just two colors) with the transition between them shown | `dynamic`, `var` |
+| Multiple independent dimensions/boundaries that combine | Expose the dimensions themselves (a boundary diagram or a small matrix), not one flat list of equal-looking options | Access modifiers (class-hierarchy boundary × assembly boundary) |
+| One thing calling/using another indirectly | A dependency relationship — the consumer, the abstraction it depends on, the concrete thing behind it | Dependency injection |
+| Data passing through a pipeline of steps | Input → transformation(s) → output, left to right | LINQ |
+| Two things that are related but not interchangeable | Comparison **and** the relationship between them (e.g. "every class implicitly is one, only some declare the other") | interface vs. class |
+
+**Worked example — a comparison gets a shared root, not three isolated boxes.** For "who decides
+the type," draw one root question at the top ("WHO DECIDES?"), a line branching down into three
+columns (`var` / `object` / `dynamic`), and each column continuing down through 2-3 short stages
+to its outcome (e.g. `var → compiler → strong type`, `object → container → cast`, `dynamic →
+runtime → binder → exception possible`). The shared root is what turns three separate facts into
+one relationship — that's the difference between "three boxes with paragraphs in them" and an
+actual mental model.
+
+## Multi-dimensional concepts need TWO diagrams, not one bigger one
+
+**When a concept has independent dimensions that combine (an AND/OR relationship between simpler
+rules), don't force it into a single flat comparison of equal-looking cards — that hides the
+actual structure.** This was caught on Access Modifiers: `private`/`protected`/`internal`/`public`
+sit on a spectrum of increasing accessibility, but `protected internal` and `private protected`
+aren't a 5th and 6th option on that same spectrum — they're **combinations of two independent
+boundaries** (the class-hierarchy boundary that `protected` controls, and the assembly boundary
+that `internal` controls). Six equal-looking boxes in a row buries that.
+
+The fix is two small diagrams instead of one:
+1. **How access expands** — a nested-boundaries diagram (`public` containing `internal`
+   containing `protected` containing `private`) for the four base modifiers, showing increasing
+   accessibility. Label this explicitly as a *mental model of increasing accessibility, not
+   literal C# scoping* — don't let the nesting imply the compiler actually nests these scopes.
+2. **How the combined modifiers work** — a separate, small OR/AND diagram:
+   `protected internal → protected OR internal` next to `private protected → protected AND
+   internal`. This is the part worth its own visual, because the OR-vs-AND distinction is exactly
+   the thing people get backwards (see [common-trap.md](common-trap.md)).
+
+General rule: **before drawing, ask whether the concept has more than one independent boundary
+or axis.** If yes, the diagram's job is to expose those axes (a boundary diagram, a small
+decision matrix, two linked diagrams) — not to flatten everything into one row of same-shaped
+boxes just because there are several named options.
 
 ## Inline, not a separate file — this is non-negotiable
 
@@ -38,6 +96,15 @@ down to one small concept instead of a whole system.
     something happening over time.
   - **Slate** `#f1f5f9` fill / `#94a3b8` stroke / `#475569` text — neutral / outside / not the
     point of this diagram.
+- **A box's title uses that box's saturated theme color (e.g. blue `#1d4ed8`) — but any smaller
+  detail/subtitle line underneath it uses plain neutral gray (`#5b6472`), never the same
+  saturated color at a smaller size.** A real bug from this project: subtitle lines like "must
+  initialize" were given the same saturated blue/amber/green as the bold title, set in italic at
+  9.5px — small, italic, and saturated together made them noticeably harder to read than the
+  title above them, even though each individual choice (color, italic, size) looked fine alone.
+  The fix, and the site-wide convention going forward: title = bold, theme color, ~13px; subtitle
+  = regular weight (no italic), neutral gray, ~10.5px. The color already did its job in the
+  title and the box's own fill/stroke — the subtitle's job is legibility, not more color.
 - **Small drawn icons or emoji** inside a box header (📦 value, 🗄️ heap, 🔒 encapsulation, 🎭
   abstraction, 👪 inheritance, 🔀 polymorphism, etc.) — a labelled box with no icon is fine too;
   don't force an icon that doesn't add anything.
@@ -118,6 +185,19 @@ panel's width (divider-to-edge, not the full canvas) and shorten the wording (or
 parenthetical) until it clears with margin on both sides — do this check for every panel
 separately, they're rarely the same width.
 
+## Check the WHOLE diagram is centered, not just individual elements
+
+A diagram can have every individual label correctly positioned relative to its own box and
+still read as lopsided, because the *content as a group* isn't centered in the `viewBox`. A real
+bug: a flowchart's boxes were all consistently placed relative to each other, but the whole
+group's horizontal span sat in the right two-thirds of a 640-wide canvas, leaving a large dead
+zone on the left and almost no margin on the right — correct internally, visibly off-center
+overall. Before shipping any diagram: compute the leftmost and rightmost x-coordinates actually
+used (across every box, pill, and label — not just the boxes), find their midpoint, and compare
+it to the `viewBox`'s own horizontal center. If they don't match (within ~10px), shift every
+coordinate in the diagram by the same offset to recenter the whole group — do the same check
+vertically for a tall diagram.
+
 ## No overlap — check this every time
 
 A label, box, or arrow is never allowed to visually clip another shape. Concretely:
@@ -142,6 +222,41 @@ A label, box, or arrow is never allowed to visually clip another shape. Concrete
   never a diagonal, and never let it cross through a box that isn't its endpoint.
 - Validate the SVG is well-formed (tags balanced, every `<defs>` closed) before considering the
   page done — a broken tag blanks the whole diagram silently.
+- **Leave real margin between the lowest (or widest) shape and the `viewBox` edge — the
+  drop-shadow filter needs room outside the shape itself, or it gets clipped by the canvas.**
+  The shared filter (`x="-20%" y="-20%" width="140%" height="140%"`) extends the shadow *outside*
+  each shape's own bounding box, scaled to that shape's size — a real bug from this project: a
+  row of boxes had its bottom edge land at exactly the `viewBox`'s own height (e.g. boxes ending
+  at y=200 in a `viewBox` of height 200), leaving zero room for the shadow below them, so every
+  box in that row rendered with a visibly flat-cut bottom edge instead of its rounded corner and
+  soft shadow. Always leave at least ~15-20px of clear `viewBox` space below the lowest shape
+  (and to the right of the widest one) — check this explicitly for the bottom-most row of any
+  multi-row diagram, since it's the one most likely to be sized flush against the canvas edge.
+
+## A bidirectional arrow needs TWO different marker defs, not one marker on both ends
+
+**`marker-start` with `orient="auto"` does NOT mirror the arrowhead — it uses the exact same
+local tangent direction as `marker-end`.** For a straight horizontal line, that tangent direction
+is identical at both ends, so pointing the same right-pointing triangle at both `marker-start` and
+`marker-end` produces two arrowheads that both point right — not a `↔` shape. The one at the
+start ends up pointing *into* its own box (same direction as the line), which reads as no
+arrowhead at all rather than a wrong one, making this bug easy to miss on a casual look. A real
+bug from this project: a "caller ↔ method" bidirectional arrow for `ref` was built exactly this
+way and rendered with only one visible arrowhead. The fix is two separate marker defs — one
+right-pointing triangle for `marker-end`, one explicitly left-pointing (mirrored) triangle for
+`marker-start`:
+```html
+<marker id="arR" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+</marker>
+<marker id="arL" markerWidth="8" markerHeight="8" refX="2.5" refY="2.5" orient="auto">
+  <path d="M5.5,0 L0,2.5 L5.5,5 Z" fill="#3b82f6"/>
+</marker>
+<path d="M180,68 H460" marker-start="url(#arL)" marker-end="url(#arR)" .../>
+```
+Whenever a diagram needs a genuinely bidirectional connector (two named things both read *and*
+affect each other), check for exactly this — one marker used at both ends of a path is a
+same-direction bug, not a mirrored one.
 
 ## Verify by computing the numbers, not by eyeballing the code
 
@@ -172,24 +287,50 @@ someone looked at the rendered diagram. Before calling any diagram done:
    end dangling in empty space with no visible connection to anything. When writing a connector,
    state the two endpoints as "box A's edge" and "box B's edge" explicitly, and check the path's
    actual start/end coordinates match those edges — not a coordinate that merely looked close.
+7. **A connector must be visibly longer than its own arrowhead marker, or the arrowhead
+   distorts the whole line.** With the default `markerUnits="strokeWidth"`, a marker's
+   rendered size is roughly `markerWidth × stroke-width` — e.g. a `10×10` marker on a
+   `stroke-width="1.8"` path renders at ~18×18 units. A real bug from a tree/fork diagram in
+   this project: three "drop" connectors from a horizontal bar into boxes below it were drawn
+   only 10 units long — shorter than their own ~18-unit-wide arrowhead — so the arrowheads
+   overshot both ends of their tiny paths and rendered as a distorted, diagonal-looking mess
+   instead of clean small arrows. Fix: either lengthen the connector (this project's fix — a
+   short "drop" or "stub" arrow should be at least ~20-25 units, comfortably longer than the
+   marker) or shrink the marker (smaller `markerWidth`/`markerHeight` and a proportionally
+   redrawn arrow path inside it) — check this any time a connector is unusually short, not just
+   the ones that are unusually long.
 
-## Animation — use it, purposefully
+## Animation — check every diagram for a place it earns its keep
 
-A moving picture holds attention better than a static one, so reach for a small, self-contained
-SMIL animation (`<animate>` / `<animateMotion>` / `<animateTransform>` — no external GIF, nothing
-that needs a build step) wherever it makes the concept clearer, not just decorative motion:
+**Don't treat animation as optional polish — actively look for where it would make a "Visual
+Mental Model" more attractive AND clearer before calling the diagram done.** A moving picture
+holds attention better than a static one and a static site full of still boxes reads as flatter
+than it needs to. Reach for a small, self-contained SMIL animation (`<animate>` /
+`<animateMotion>` / `<animateTransform>` — no external GIF, nothing that needs a build step)
+wherever it makes the concept clearer, not just decorative motion:
 
 - **Marching ants** (`stroke-dasharray` + `<animate attributeName="stroke-dashoffset">`) on an
-  arrow that represents an ongoing/live relationship — e.g. two variables both pointing at the
-  same heap object.
+  arrow that represents an ongoing/live relationship, or specifically the *risky/uncertain*
+  branch of a tree/comparison diagram (see [product-principle.md](product-principle.md)'s
+  "diagram shows a relationship" rule). Worked example from this project: in the `var` vs.
+  `dynamic` vs. `object` tree diagram, only the `dynamic` column's final connector (the one
+  leading into "may throw at runtime") is animated with marching ants in the risk color (red) —
+  every other connector on the page is still. The motion itself becomes part of the meaning:
+  *this* is the path that's still "live" at runtime, everything else was already settled at
+  compile time.
 - **A small token travelling along a path** (`<animateMotion>`) to show something happening over
   time — e.g. a value being copied from one box to another, or a request travelling from caller
   to callee.
 - Animate **only the one or two things that need motion to be understood** — a diagram where
   everything moves at once is harder to read than a still one. Everything else on the page stays
-  static.
+  static. Motion is a spotlight, not a decoration — if you can't say what the motion means, don't
+  add it.
 - Generous duration (2–4s per cycle), `repeatCount="indefinite"`, so it reads as "this is always
   true" rather than a one-off flourish that's easy to miss.
+- **A marker on an animated dashed path needs its own color-matched `<marker>` definition** —
+  the arrowhead should match the path's stroke color (e.g. a red dashed path needs a red
+  arrowhead, not the diagram's default neutral one), so the whole connector reads as one
+  deliberate highlight, not a still gray arrowhead bolted onto a moving red line.
 
 ## CSS wrapper
 

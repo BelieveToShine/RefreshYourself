@@ -57,6 +57,16 @@
     </div>
   </details>
 
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>string</code> <span class="rarrow">→</span> <b>immutable</b>, every change is new</p>
+      <p class="rrow"><code>StringBuilder</code> <span class="rarrow">→</span> <b>one buffer</b>, grows in place</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> a loop of <b><code>+=</code></b> vs. a loop of <b><code>.Append()</code></b></p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
   <figure class="diagram-card">
     <svg viewBox="0 0 640 190" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
       <defs>
@@ -103,12 +113,25 @@
 
       <g filter="url(#sh9b)"><rect x="120" y="40" width="400" height="66" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
       <text x="320" y="78" text-anchor="middle" font-size="14" font-weight="700" fill="#15803d">"Hi there friend"</text>
-      <text x="320" y="98" text-anchor="middle" font-size="10" font-style="italic" fill="#166534">same buffer, grows in place</text>
+      <text x="320" y="98" text-anchor="middle" font-size="10.5" fill="#5b6472">same buffer, grows in place</text>
 
       <text x="320" y="130" text-anchor="middle" font-size="11.5" fill="#5b6472">One buffer. Every Append() just extends it — nothing thrown away.</text>
     </svg>
     <figcaption>StringBuilder keeps one growable buffer and writes into it — no repeated allocations.</figcaption>
   </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>String interpolation isn't magic.</b> <code>$"Hello {name}"</code> still compiles down to concatenation under the hood — same allocation cost as <code>+=</code>.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>string</code> is immutable, so every change allocates a new string. <code>StringBuilder</code> keeps one resizable buffer and writes into it directly — that's the whole reason it's faster in a loop."</p>
+    <ul>
+      <li><span class="kp-line">Few concatenations → <span class="hl hl-hot">plain string</span></span><span class="kp-line">Loop / many appends → <span class="hl hl-basic">StringBuilder</span></span></li>
+    </ul>
+  </div>
 
   <details class="explain toggle">
     <summary>📖 Explanation <span class="chev">▾</span></summary>
@@ -124,20 +147,45 @@
 
       <p>For a handful of concatenations, plain <code>string</code> is simpler and perfectly
       fine — <code>StringBuilder</code> earns its keep specifically inside loops or long chains.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>string</code></th><th><code>StringBuilder</code></th></tr></thead>
+        <tbody>
+          <tr><th>Mutable?</th><td class="no">❌ no</td><td class="yes">✅ yes</td></tr>
+          <tr><th>Each <code>+=</code> / <code>.Append()</code></th><td>Allocates a whole new string</td><td>Extends the same buffer</td></tr>
+          <tr><th>Best for</th><td>A handful of concatenations</td><td>Loops, long chains of appends</td></tr>
+        </tbody>
+      </table>
     </div>
   </details>
 
   <details class="codebox toggle">
     <summary>💻 See the code <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <pre><code>string s = "";
-for (int i = 0; i &lt; 1000; i++)
-    s += i;                    <span class="cmt">// 1000 new strings created</span>
 
-var sb = new StringBuilder();
-for (int i = 0; i &lt; 1000; i++)
-    sb.Append(i);               <span class="cmt">// one growing buffer</span>
-string result = sb.ToString();</code></pre>
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">string</span> s = <span class="str">""</span>;
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">1000</span>; i++)
+    s += i;   <span class="cx-err">// 1000 new strings created, 999 thrown away</span></code></pre>
+      </div>
+      <p class="cx-note">Each <code>+=</code> is a <b>brand-new allocation</b> — the loop body pays that cost 1000 times.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> sb = <span class="kw">new</span> <span class="ty">StringBuilder</span>();
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">1000</span>; i++)
+    sb.Append(i);   <span class="cx-ok">// ✅ one growing buffer, no throwaway strings</span>
+<span class="ty">string</span> result = sb.ToString();</code></pre>
+      </div>
+      <p class="cx-note">Same 1000 iterations, <b>one allocation instead of a thousand</b>.</p>
+
     </div>
   </details>
 
@@ -150,17 +198,6 @@ string result = sb.ToString();</code></pre>
       surface.</p>
     </div>
   </details>
-
-  <div class="keypoints">
-    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
-    <ul>
-      <li><code>string</code> is <span class="hl hl-hot">immutable</span> — every change is a new allocation.</li>
-      <li><code>StringBuilder</code> = <span class="hl hl-basic">one buffer</span>, grows in place.</li>
-      <li>The cost only shows up <span class="hl hl-hot">inside a loop</span> — a one-off concat is fine either way.</li>
-      <li><span class="kp-line">Few concatenations → <span class="hl hl-hot">plain string</span></span><span class="kp-line">Loop / many appends → <span class="hl hl-basic">StringBuilder</span></span></li>
-      <li>String interpolation (<code>$"…"</code>) is <span class="hl hl-hot">still just concatenation</span> under the hood.</li>
-    </ul>
-  </div>
 
   <div class="pager">
     <div class="side prev">

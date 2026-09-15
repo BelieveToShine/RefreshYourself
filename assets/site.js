@@ -125,3 +125,19 @@
     setTimeout(function () { resultsBox.innerHTML = ""; }, 150);
   });
 })();
+
+/* "See the code" copy buttons — copies that .code-card's <pre> text, briefly swaps the icon
+   for a checkmark. See docs/rules/content-writing.md. */
+(function () {
+  document.querySelectorAll(".code-card .cc-copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var pre = btn.closest(".code-card").querySelector("pre");
+      if (!pre || !navigator.clipboard) return;
+      navigator.clipboard.writeText(pre.textContent).then(function () {
+        var original = btn.innerHTML;
+        btn.innerHTML = "✅";
+        setTimeout(function () { btn.innerHTML = original; }, 1200);
+      });
+    });
+  });
+})();

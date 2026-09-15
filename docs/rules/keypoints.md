@@ -13,6 +13,28 @@ is the complete, standalone rule for what goes in it — read this before writin
   or a short claim, not a full explanatory sentence with subordinate clauses. Compress; never
   just repeat the Explanation section in slightly different words.
 
+## Lead with one primary spoken answer, then the supporting bullets
+
+Per [product-principle.md](product-principle.md), this box moved up the page — it's now the
+"🎯 Say this in the interview" step right after the Common Trap, not a wrap-up at the bottom. To
+earn that spot, it needs to answer the actual question in one breath before anything else:
+
+```html
+<div class="keypoints">
+  <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+  <p class="kp-primary">"<code>var</code> uses compile-time type inference, so it's still
+  strongly typed. <code>object</code> is a general base type and may require casting, while
+  <code>dynamic</code> defers member binding to runtime."</p>
+  <ul>
+    <!-- supporting bullets — "know these if they probe further" -->
+  </ul>
+</div>
+```
+
+`.kp-primary` is **one sentence someone could say out loud, unprompted, as the complete answer**
+— not a summary of the bullets below it. The bullets underneath it are for when the interviewer
+digs deeper, not a repeat of the primary sentence in list form.
+
 ## Every single bullet highlights its own main point — no exceptions
 
 **Every `<li>` gets at least one `<span class="hl hl-*">` on the word or phrase that IS the
