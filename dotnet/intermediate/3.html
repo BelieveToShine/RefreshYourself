@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Lifetimes — .NET Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dotnet/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#7c3aed;">🧱 .NET / ASP.NET Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Service Lifetimes</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 .NET · Intermediate · Must Know</div>
+    <h1>Singleton, Scoped, Transient — <span class="hl hl-hot">who actually gets a new instance?</span></h1>
+    <p class="interview-q">"What's the actual difference between Singleton, Scoped, and Transient service lifetimes?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Almost certainly the single most-asked ASP.NET Core question — often the first check for "have you actually used DI, or just read about it."</li>
+        <li>Comes up every time you register a service in <code>Program.cs</code>, and every time you're debugging why one user's data showed up in another user's response.</li>
+        <li>The follow-up about a Singleton depending on a Scoped service is a favorite way to separate memorized definitions from real experience.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Singleton</code> <span class="rarrow">→</span> <b>one</b> instance, forever</p>
+      <p class="rrow"><code>Scoped</code> <span class="rarrow">→</span> <b>one</b> instance, per request</p>
+      <p class="rrow"><code>Transient</code> <span class="rarrow">→</span> <b>new</b> instance, every time</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Singleton</code></b> is one, forever. <b><code>Scoped</code></b> resets each request. <b><code>Transient</code></b> resets every time.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shD3" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">ONE SERVICE — WHEN DOES DI CREATE A NEW INSTANCE?</text>
+
+      <text x="215" y="42" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Request 1</text>
+      <circle cx="215" cy="58" r="5" fill="#94a3b8"/>
+      <text x="375" y="42" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Request 2</text>
+      <circle cx="375" cy="58" r="5" fill="#94a3b8"/>
+      <text x="535" y="42" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Request 3</text>
+      <circle cx="535" cy="58" r="5" fill="#94a3b8"/>
+
+      <path d="M215,64 V248" fill="none" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="3 3"/>
+      <path d="M375,64 V248" fill="none" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="3 3"/>
+      <path d="M535,64 V248" fill="none" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="3 3"/>
+
+      <text x="20" y="102" font-size="12" font-weight="700" fill="#1d4ed8">🌐 Singleton</text>
+      <g filter="url(#shD3)"><rect x="140" y="76" width="470" height="44" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="375" y="94" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">1 instance — the whole app</text>
+      <text x="375" y="108" text-anchor="middle" font-size="10" fill="#5b6472">created once, shared by every request, forever</text>
+
+      <text x="20" y="168" font-size="12" font-weight="700" fill="#92400e">📨 Scoped</text>
+      <g filter="url(#shD3)"><rect x="150" y="142" width="130" height="44" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="215" y="160" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">new instance</text>
+      <text x="215" y="174" text-anchor="middle" font-size="10" fill="#5b6472">this request only</text>
+      <g filter="url(#shD3)"><rect x="310" y="142" width="130" height="44" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="375" y="160" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">new instance</text>
+      <text x="375" y="174" text-anchor="middle" font-size="10" fill="#5b6472">this request only</text>
+      <g filter="url(#shD3)"><rect x="470" y="142" width="130" height="44" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="535" y="160" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">new instance</text>
+      <text x="535" y="174" text-anchor="middle" font-size="10" fill="#5b6472">this request only</text>
+
+      <text x="20" y="232" font-size="12" font-weight="700" fill="#166534">⚡ Transient</text>
+      <g filter="url(#shD3)"><rect x="150" y="208" width="50" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="175" y="232" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">new</text>
+      <g filter="url(#shD3)"><rect x="230" y="208" width="50" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="255" y="232" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">new</text>
+      <g filter="url(#shD3)"><rect x="310" y="208" width="50" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="335" y="232" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">new</text>
+      <g filter="url(#shD3)"><rect x="390" y="208" width="50" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="415" y="232" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">new</text>
+      <g filter="url(#shD3)"><rect x="470" y="208" width="50" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="495" y="232" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">new</text>
+      <g filter="url(#shD3)"><rect x="550" y="208" width="50" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="575" y="232" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">new</text>
+
+      <text x="375" y="266" text-anchor="middle" font-size="10" fill="#5b6472">Transient resets on every resolution — even a second one inside the same request</text>
+    </svg>
+    <figcaption>Same three requests, three different reset rules: Singleton never resets, Scoped resets once per request, Transient resets on every single resolution.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shD3b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arD3b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.5">THE CAPTIVE DEPENDENCY BUG</text>
+
+      <g filter="url(#shD3b)"><rect x="40" y="40" width="260" height="54" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="170" y="60" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Singleton MyService</text>
+      <text x="170" y="76" text-anchor="middle" font-size="10.5" fill="#5b6472">constructor takes IScopedThing</text>
+
+      <path d="M300,67 H340" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arD3b)"/>
+
+      <g filter="url(#shD3b)"><rect x="340" y="40" width="260" height="54" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="470" y="60" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">IScopedThing — frozen 😮</text>
+      <text x="470" y="76" text-anchor="middle" font-size="10.5" fill="#5b6472">frozen at startup, stuck forever</text>
+
+      <text x="320" y="128" text-anchor="middle" font-size="11" fill="#5b6472">Singleton is built once — whatever Scoped instance it grabbed then stays frozen for good.</text>
+    </svg>
+    <figcaption>Inject a Scoped service into a Singleton's constructor and the container only resolves it once — that one instance is captive for the app's whole lifetime.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A Singleton holding per-request state in a field is not harmless.</b> Because a Singleton is shared by every concurrent request forever, a field like <code>private User _currentUser;</code> leaks one user's data into another user's response under load — the fix is almost always registering the service as Scoped or Transient instead.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If Scoped means one instance per HTTP request, what does 'scope' mean in a background service, where there's no request?"</b> There's no automatic scope to hook into — you create one yourself with <code>IServiceScopeFactory.CreateScope()</code>, resolve what you need inside it, then let it get disposed when you're done.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Singleton creates one instance for the whole application and reuses it forever. Scoped creates one instance per scope — in a web app that scope is the HTTP request, so everything resolved during one request shares it, but the next request gets a new one. Transient creates a brand-new instance every single time it's resolved, even more than once inside the same request."</p>
+    <ul>
+      <li><code>Singleton</code> <span class="hl hl-blue">→ one instance, whole app, forever</span>.</li>
+      <li><code>Scoped</code> <span class="hl hl-inter">→ one instance per HTTP request</span>, fresh again next request.</li>
+      <li><code>Transient</code> <span class="hl hl-basic">→ brand-new every resolution</span>, even twice in one request.</li>
+      <li>Service leaking state between requests → <span class="hl hl-hot">check whether it's a Singleton holding per-request data first</span>.</li>
+      <li>Scoped or Transient injected into a Singleton's constructor → <span class="hl hl-hot">captive dependency</span>, frozen at startup.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Singleton</span> means the container builds the service exactly
+      once — the first time something asks for it — and hands that same object to every consumer
+      from then on, for the rest of the application's lifetime.</p>
+
+      <p><span class="hl hl-inter">Scoped</span> means the container builds one instance per scope,
+      and in a web app the framework creates exactly one scope per incoming HTTP request. Every
+      repository, service, or <code>DbContext</code> resolved while handling that one request shares
+      the same Scoped instance — that's exactly why <code>DbContext</code> is registered Scoped:
+      everything touching the database in one request shares a single unit of work and one set of
+      tracked changes, but the next request starts clean.</p>
+
+      <p><span class="hl hl-basic">Transient</span> means the container never reuses an instance — it
+      builds a fresh one every time something asks for it, even twice within the same method. The
+      thing that catches people out: injecting a Scoped or Transient service into a Singleton's
+      constructor doesn't make it behave normally — the Singleton is only ever built once, so
+      whatever instance it captured at that moment stays frozen there forever, a bug called a
+      captive dependency. ASP.NET Core's container can catch the most obvious case of this at
+      startup — with scope validation enabled (the default in the Development environment),
+      resolving a Scoped service through a Singleton throws instead of silently freezing it.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Singleton</th><th>Scoped</th><th>Transient</th></tr></thead>
+        <tbody>
+          <tr><th>When created?</th><td>once, first time it's needed</td><td>once per scope (once per HTTP request)</td><td>every single time it's resolved</td></tr>
+          <tr><th>Shared by</th><td>every request, forever</td><td>everything inside one request only</td><td>nobody — always a fresh copy</td></tr>
+          <tr><th>Resets when?</th><td class="no">❌ never</td><td>at the start of the next request</td><td>immediately — the next resolution is new</td></tr>
+          <tr><th>Risk if misused</th><td class="no">❌ leaks state across users/requests</td><td>low — mainly the captive-dependency risk above</td><td class="no">❌ wasteful if the object is expensive to build</td></tr>
+          <tr><th>Typical use</th><td>caching, configuration, stateless helpers</td><td><code>DbContext</code>, unit-of-work, per-request state</td><td>small, stateless services</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">builder</span>.Services.AddSingleton&lt;<span class="ty">ISingletonThing</span>, <span class="ty">Thing</span>&gt;();
+<span class="kw">builder</span>.Services.AddScoped&lt;<span class="ty">IScopedThing</span>, <span class="ty">Thing</span>&gt;();
+<span class="kw">builder</span>.Services.AddTransient&lt;<span class="ty">ITransientThing</span>, <span class="ty">Thing</span>&gt;();</code></pre>
+      </div>
+      <p class="cx-note">Same class, three registrations — the lifetime is a property of the <b>registration</b>, not the class.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">using</span> <span class="kw">var</span> scope1 = provider.CreateScope();
+<span class="kw">var</span> a1 = scope1.ServiceProvider.GetRequiredService&lt;<span class="ty">ISingletonThing</span>&gt;();
+<span class="kw">var</span> b1 = scope1.ServiceProvider.GetRequiredService&lt;<span class="ty">IScopedThing</span>&gt;();
+<span class="kw">var</span> c1 = scope1.ServiceProvider.GetRequiredService&lt;<span class="ty">ITransientThing</span>&gt;();
+<span class="kw">var</span> c2 = scope1.ServiceProvider.GetRequiredService&lt;<span class="ty">ITransientThing</span>&gt;();
+
+<span class="kw">using</span> <span class="kw">var</span> scope2 = provider.CreateScope();
+<span class="kw">var</span> a2 = scope2.ServiceProvider.GetRequiredService&lt;<span class="ty">ISingletonThing</span>&gt;();
+<span class="kw">var</span> b2 = scope2.ServiceProvider.GetRequiredService&lt;<span class="ty">IScopedThing</span>&gt;();
+
+Console.WriteLine(a1 == a2);   <span class="cx-ok">// ✅ true — same Singleton, different scopes</span>
+Console.WriteLine(b1 == b2);   <span class="cx-err">// ❌ false — Scoped resets per scope</span>
+Console.WriteLine(c1 == c2);   <span class="cx-err">// ❌ false — Transient resets every resolve, even inside scope1</span></code></pre>
+      </div>
+      <p class="cx-note">Each scope stands in for one HTTP request — this is exactly how ASP.NET Core resolves your services <b>per request</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">builder</span>.Services.AddScoped&lt;<span class="ty">IScopedThing</span>, <span class="ty">Thing</span>&gt;();
+<span class="kw">builder</span>.Services.AddSingleton&lt;<span class="ty">Broken</span>&gt;();
+
+<span class="kw">public</span> <span class="kw">class</span> <span class="ty">Broken</span>
+{
+    <span class="kw">private</span> <span class="kw">readonly</span> <span class="ty">IScopedThing</span> _thing;
+    <span class="kw">public</span> <span class="ty">Broken</span>(<span class="ty">IScopedThing</span> thing) =&gt; _thing = thing;   <span class="cx-cmt">// 🐛 captured once, frozen forever</span>
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>Broken</code> is a Singleton, so the container builds it once — whatever Scoped instance it grabbed then <b>never gets refreshed</b>.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Scenario: user A occasionally sees user B's name in the response, under load, only in
+      production.</b> The first thing to check is whether the service on that code path is
+      registered as <code>Singleton</code> — it's the only lifetime that survives across concurrent
+      requests, so it's the only one that can physically hold a field like <code>_currentUser</code>
+      long enough for a second request to see it. The fix is almost always changing the
+      registration to <code>Scoped</code> (or <code>Transient</code>), or moving that value out of
+      instance state entirely.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="2.html">← The Built-in DI Container</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to .NET Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="4.html">Middleware →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · .NET / ASP.NET Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

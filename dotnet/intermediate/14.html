@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Authorization Policies & Claims — .NET Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dotnet/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#7c3aed;">🧱 .NET / ASP.NET Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Authorization Policies &amp; Claims</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ .NET · Intermediate · Should Know</div>
+    <h1><code>Roles</code> vs. <code>Policies</code> — <span class="hl hl-inter">one flat label, or a rule that can check anything?</span></h1>
+    <p class="interview-q">"What's the difference between role-based and policy-based (claims-based) authorization?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Tests whether you understand ASP.NET Core's authorization model, not just memorized <code>[Authorize]</code> syntax.</li>
+        <li>Comes up the moment a feature needs a check finer than "does this user have role X" — department scoping, subscription tiers, feature flags.</li>
+        <li>A common follow-up checks whether you know roles and policies aren't competing systems — a role is just one input to a policy.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Roles</code> <span class="rarrow">→</span> checks <b>one</b> claim: the role</p>
+      <p class="rrow"><code>Policy</code> <span class="rarrow">→</span> checks <b>any</b> claim(s), plus logic</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> both read the same <b><code>claims</code></b> — a role check just asks one narrow question of them.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI14" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI14" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI14Amber" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.5">CLAIMS FEED BOTH KINDS OF CHECK</text>
+
+      <g filter="url(#shI14)"><rect x="205" y="34" width="230" height="56" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="57" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🪪 Claims</text>
+      <text x="320" y="74" text-anchor="middle" font-size="10" fill="#5b6472">e.g. role, department, tier</text>
+
+      <path d="M320,90 V110" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M320,110 H125 V140" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI14)"/>
+      <path d="M320,110 H505 V140" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI14)"/>
+
+      <g filter="url(#shI14)"><rect x="20" y="140" width="210" height="76" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="125" y="163" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🎭 Role Check</text>
+      <text x="125" y="180" text-anchor="middle" font-size="10" fill="#5b6472">[Authorize(Roles="Admin")]</text>
+      <text x="125" y="195" text-anchor="middle" font-size="9.5" fill="#5b6472">checks ONE flat claim</text>
+
+      <g filter="url(#shI14)"><rect x="400" y="140" width="210" height="76" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="505" y="163" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🧩 Policy</text>
+      <text x="505" y="180" text-anchor="middle" font-size="10" fill="#5b6472">AddPolicy("SalesOnly", ...)</text>
+      <text x="505" y="195" text-anchor="middle" font-size="9.5" fill="#5b6472">checks ANY claims + logic</text>
+
+      <path d="M230,178 H400" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arI14Amber)"><animate attributeName="stroke-dashoffset" values="7;0" dur="2s" repeatCount="indefinite"/></path>
+      <rect x="250" y="142" width="130" height="22" rx="11" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="315" y="157" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">one kind of policy</text>
+
+      <path d="M125,216 V246" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI14)"/>
+      <path d="M505,216 V246" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI14)"/>
+
+      <g filter="url(#shI14)"><rect x="45" y="246" width="200" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="125" y="268" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ Simple &amp; coarse</text>
+      <text x="125" y="283" text-anchor="middle" font-size="9.5" fill="#5b6472">one flat label, easy to apply</text>
+
+      <g filter="url(#shI14)"><rect x="405" y="246" width="200" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="505" y="268" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ Flexible &amp; fine-grained</text>
+      <text x="505" y="283" text-anchor="middle" font-size="9.5" fill="#5b6472">any claim(s) + custom rules</text>
+    </svg>
+    <figcaption>Both checks read the same claims — a role check is just one built-in shape of a policy, not a separate system.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Roles and policies are not two competing systems.</b> Even <code>[Authorize(Roles = "Admin")]</code> is implemented as a built-in policy that checks for a role claim under the hood — a role check is just one narrow shape of a policy, not a separate mechanism you choose instead of one.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How would you authorize 'a user can edit their OWN order, but not someone else's'?"</b> That's resource-based authorization — a policy alone can't compare the user to one specific order, since it never sees the resource. Call <code>IAuthorizationService.AuthorizeAsync(user, order, "policy")</code>, which passes the actual resource in so a requirement handler can check ownership.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>[Authorize(Roles = "Admin")]</code> checks whether the user has one specific role claim — simple, but coarse. A policy is a named rule I define once with <code>AddPolicy</code> that can check any claim or combination of claims, and even run custom logic. Roles aren't a separate system — they're just one built-in kind of policy."</p>
+    <ul>
+      <li><code>Claims</code> <span class="hl hl-blue">→ any key-value fact about the user</span>, role is just one of them.</li>
+      <li><code>Roles</code> <span class="hl hl-basic">→ use for a simple, coarse permission check</span> — one flat label.</li>
+      <li><code>Policy</code> <span class="hl hl-inter">→ use when the rule is conditional or combines claims</span> — department, tier, and more.</li>
+      <li>Resource ownership → <span class="hl hl-hot">needs <code>AuthorizeAsync(user, resource, policy)</code></span>, not a policy alone.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <span class="hl hl-blue">claim</span> is any key-value fact attached to the authenticated
+      identity — <code>role: Admin</code>, <code>department: Sales</code>,
+      <code>subscription_tier: Premium</code>. A role is not a separate mechanism from a claim; it's
+      just one conventional kind of claim, stored and read the same way as any other.</p>
+
+      <p><span class="hl hl-blue">Role-based authorization</span> — <code>[Authorize(Roles =
+      "Admin,Manager")]</code> — checks whether the current identity carries one of the listed role
+      claims. It's simple, but coarse: a role is one flat label, and roles multiply awkwardly once
+      you need a finer distinction, like "Manager, but only for their own department."</p>
+
+      <p><span class="hl hl-inter">Policy-based authorization</span> solves that by naming a policy
+      once — <code>options.AddPolicy("SalesOnly", p => p.RequireClaim("department", "Sales"))</code>
+      — and applying it with <code>[Authorize(Policy = "SalesOnly")]</code>. A policy can combine
+      multiple claim checks or run custom requirement-handler logic, which is strictly more than a
+      role check can express. Even the built-in role check is implemented internally as a policy —
+      knowing that is the actual skill being tested, not memorizing two separate attribute forms.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Role-based</th><th>Policy-based</th></tr></thead>
+        <tbody>
+          <tr><th>What it checks</th><td>one role claim</td><td>any claim(s) + custom logic</td></tr>
+          <tr><th>Where it's defined</th><td>inline in <code>[Authorize]</code></td><td>named once via <code>AddPolicy</code>, reused</td></tr>
+          <tr><th>Combines conditions?</th><td class="no">❌ no</td><td>✅ yes</td></tr>
+          <tr><th>Checks the specific resource?</th><td class="no">❌ no</td><td class="no">❌ only via <code>AuthorizeAsync(user, resource, policy)</code></td></tr>
+          <tr><th>Best for</th><td>simple, coarse permission</td><td>conditional, fine-grained rules</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>[<span class="ty">Authorize</span>(Roles = <span class="str">"Admin,Manager"</span>)]   <span class="cx-cmt">// one flat claim</span>
+[HttpDelete(<span class="str">"{id}"</span>)]
+<span class="kw">public</span> <span class="ty">IActionResult</span> Delete(<span class="kw">int</span> id)
+{
+    <span class="cx-ok">// ✅ passes only if the user has an "Admin" OR "Manager" role claim</span>
+    ...
+}</code></pre>
+      </div>
+      <p class="cx-note">Coarse and simple — it can only ever ask <b>one question</b>: does a role claim match?</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(<span class="str">"SalesOnly"</span>, policy =>
+        policy.RequireClaim(<span class="str">"department"</span>, <span class="str">"Sales"</span>)
+              .RequireClaim(<span class="str">"subscription_tier"</span>, <span class="str">"Premium"</span>));
+});
+
+[<span class="ty">Authorize</span>(Policy = <span class="str">"SalesOnly"</span>)]   <span class="cx-ok">// ✅ two claims, one named rule</span>
+<span class="kw">public</span> <span class="ty">IActionResult</span> SalesDashboard() { ... }</code></pre>
+      </div>
+      <p class="cx-note">A policy can combine <b>multiple claims</b> — something a plain role check has no way to express.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> result = <span class="kw">await</span> _authService.AuthorizeAsync(
+    User, order, <span class="str">"OwnerOnly"</span>);   <span class="cx-cmt">// the resource itself is passed in</span>
+
+<span class="kw">if</span> (!result.Succeeded) <span class="kw">return</span> Forbid();   <span class="cx-err">// 🐛 not their order</span></code></pre>
+      </div>
+      <p class="cx-note">Neither a role nor a plain claims policy can see <b>which order</b> — only this overload can.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your API needs "a user can edit their own order, but not someone else's."</b> A role
+      check can't express that at all, and a claims policy still can't — both only ever look at the
+      user, never at the specific order being requested. The fix is resource-based authorization:
+      call <code>AuthorizeAsync(user, order, "OwnerOnly")</code> so a requirement handler can compare
+      <code>order.OwnerId</code> against the current user's id before allowing the edit.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="13.html">← Authentication Schemes</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to .NET Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="15.html">Global Exception Handling →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · .NET / ASP.NET Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

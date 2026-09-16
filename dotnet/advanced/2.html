@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Binding Internals &amp; MVC vs. Web API vs. Razor Pages — .NET Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dotnet/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#7c3aed;">🧱 .NET / ASP.NET Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Model Binding Internals &amp; MVC vs. Web API vs. Razor Pages</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 .NET · Advanced · Deep Dive</div>
+    <h1>Model binding internals — <span class="hl hl-blue">who wins the source race</span>, and <span class="hl hl-adv">which framework</span> catches the result?</h1>
+    <p class="interview-q">"How does model binding actually decide where to pull a value from, and when would you reach for MVC vs. a pure Web API vs. Razor Pages?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>A silent wrong value in a bound parameter is almost always the binder picking a
+        different source than the one you expected — knowing the priority order is how you debug
+        that fast.</li>
+        <li>The custom-binder question checks whether you understand why the default binder
+        exists at all, not just that <code>[FromBody]</code>/<code>[FromQuery]</code> are things.</li>
+        <li>Picking MVC vs. Web API vs. Razor Pages for a new feature is a common system-design
+        follow-up — especially for anyone who's only ever worked in one of the three.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Route values <span class="rarrow">→</span> <b>1st</b>, straight from the URL path</p>
+      <p class="rrow">Query string <span class="rarrow">→</span> <b>2nd</b>, after the <code>?</code></p>
+      <p class="rrow">Form body <span class="rarrow">→</span> <b>3rd</b>, only on a POST form</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>MVC</code></b> → full pages</span>
+      <span class="tc-line"><b><code>Web API</code></b> → JSON only</span>
+      <span class="tc-line"><b><code>Razor Pages</code></b> → simple CRUD, no controller</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 290" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA2a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA2a" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">WHICH SOURCE WINS FOR ONE PARAMETER?</text>
+
+      <g filter="url(#shA2a)"><rect x="20" y="34" width="180" height="64" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="110" y="50" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.3">1ST PRIORITY</text>
+      <text x="110" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">📍 Route values</text>
+      <text x="110" y="84" text-anchor="middle" font-size="10.5" fill="#5b6472">the {id} in the route</text>
+
+      <g filter="url(#shA2a)"><rect x="230" y="34" width="180" height="64" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="50" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e" letter-spacing="0.3">2ND PRIORITY</text>
+      <text x="320" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🔍 Query string</text>
+      <text x="320" y="84" text-anchor="middle" font-size="10.5" fill="#5b6472">?id=5 in the URL</text>
+
+      <g filter="url(#shA2a)"><rect x="440" y="34" width="180" height="64" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="530" y="50" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569" letter-spacing="0.3">3RD PRIORITY</text>
+      <text x="530" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">📮 Form body</text>
+      <text x="530" y="84" text-anchor="middle" font-size="10.5" fill="#5b6472">POST form fields</text>
+
+      <path d="M110,98 V118" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M320,98 V118" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M530,98 V118" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M110,118 H530" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M320,118 V156" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA2a)"/>
+
+      <g filter="url(#shA2a)"><rect x="230" y="156" width="180" height="56" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="178" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🎯 int id — bound</text>
+      <text x="320" y="196" text-anchor="middle" font-size="10.5" fill="#5b6472">the first match wins</text>
+
+      <g filter="url(#shA2a)"><rect x="140" y="228" width="360" height="44" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/></g>
+      <text x="320" y="244" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">🏷️ [FromHeader] / 🧩 [FromServices]</text>
+      <text x="320" y="260" text-anchor="middle" font-size="10" fill="#5b6472">bound explicitly — skip this priority chase</text>
+    </svg>
+    <figcaption>Route beats query, query beats body — headers and services never join the race at all.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA2b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA2b" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">MVC vs. WEB API vs. RAZOR PAGES</text>
+
+      <g filter="url(#shA2b)"><rect x="190" y="30" width="260" height="48" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="52" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">🧭 WHICH ONE FITS?</text>
+      <text x="320" y="68" text-anchor="middle" font-size="10" fill="#5b6472">by what the endpoint returns</text>
+
+      <path d="M320,78 V96" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M110,96 H530" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M110,96 V114" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA2b)"/>
+      <path d="M320,96 V114" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA2b)"/>
+      <path d="M530,96 V114" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA2b)"/>
+
+      <g filter="url(#shA2b)"><rect x="20" y="114" width="180" height="48" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="110" y="134" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🖼️ MVC</text>
+      <text x="110" y="152" text-anchor="middle" font-size="10.5" fill="#5b6472">views + controllers</text>
+
+      <g filter="url(#shA2b)"><rect x="230" y="114" width="180" height="48" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="134" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🔌 Web API</text>
+      <text x="320" y="152" text-anchor="middle" font-size="10.5" fill="#5b6472">[ApiController], JSON</text>
+
+      <g filter="url(#shA2b)"><rect x="440" y="114" width="180" height="48" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="530" y="134" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">📄 Razor Pages</text>
+      <text x="530" y="152" text-anchor="middle" font-size="10.5" fill="#5b6472">page + PageModel</text>
+
+      <path d="M110,162 V182" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA2b)"/>
+      <path d="M320,162 V182" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA2b)"/>
+      <path d="M530,162 V182" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA2b)"/>
+
+      <g filter="url(#shA2b)"><rect x="20" y="182" width="180" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/></g>
+      <text x="110" y="198" text-anchor="middle" font-size="9" font-weight="700" fill="#1d4ed8" letter-spacing="0.4">BEST FOR</text>
+      <text x="110" y="216" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">Full HTML pages</text>
+
+      <g filter="url(#shA2b)"><rect x="230" y="182" width="180" height="46" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/></g>
+      <text x="320" y="198" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e" letter-spacing="0.4">BEST FOR</text>
+      <text x="320" y="216" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">JSON-only REST API</text>
+
+      <g filter="url(#shA2b)"><rect x="440" y="182" width="180" height="46" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/></g>
+      <text x="530" y="198" text-anchor="middle" font-size="9" font-weight="700" fill="#475569" letter-spacing="0.4">BEST FOR</text>
+      <text x="530" y="216" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">Simple CRUD pages</text>
+    </svg>
+    <figcaption>Same endpoint routing underneath — the right shape depends on what the endpoint has to produce.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>You don't have to pick just one for the whole app.</b> MVC controllers,
+    Web API controllers, and Razor Pages can all live in the same ASP.NET Core project side by
+    side — they plug into the same underlying endpoint routing, so mixing them per feature is
+    normal, not a compromise.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If you inherited an MVC app that's slow under load, what's the very
+    first diagnostic step — before touching any code?"</b> Profile it. Attach a profiler or check
+    APM traces to find the actual hot path first; the usual suspects are where to look once you
+    know roughly where the time is going, not a checklist to run blindly.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"The default binder checks route values first, then the query string,
+    then the request form body — headers and services are bound explicitly with
+    <code>[FromHeader]</code> and <code>[FromServices]</code> instead of joining that priority
+    chain. I'd reach for MVC when I need full server-rendered views, a Web API controller for a
+    JSON-only REST API, and Razor Pages for a simple, mostly-CRUD page-per-feature app — and a
+    real project can mix all three."</p>
+    <ul>
+      <li>Binder priority → <span class="hl hl-blue">route values win first</span>, then query string, then form body.</li>
+      <li>Custom binder → <span class="hl hl-hot">needed for app-specific parsing</span>, e.g. a comma-separated <code>?ids=1,2,3</code> into a <code>List&lt;int&gt;</code>.</li>
+      <li>MVC → <span class="hl hl-blue">use for full HTML pages</span> with shared layouts and navigation.</li>
+      <li>Web API (<code>[ApiController]</code>) → <span class="hl hl-inter">use for a JSON-only REST API</span> consumed by a SPA, mobile app, or another service.</li>
+      <li>Razor Pages → <span class="hl hl-teal">use for simple, page-per-feature CRUD</span> — no separate controller needed.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Route values</span> are checked first — anything captured by the
+      route template (like <code>{id}</code>) wins on a name match before anything else is even
+      looked at. The <span class="hl hl-inter">query string</span> is checked next, then the
+      request form body for a traditional POST form submission. <code>[FromHeader]</code> and
+      <code>[FromServices]</code> sit outside this chase entirely — they bind explicitly by
+      attribute, never by search order. For a complex or nested type, the binder repeats this same
+      source search recursively, property by property. (<a href="../intermediate/7.html">Model
+      Binding &amp; Validation</a> covers how triggering and validation actually work — this page
+      picks up from there, on where the bound value comes from.)</p>
+
+      <p>The default binder only knows how to match one value to one property by name — it can't
+      apply logic on top of that. A query string like <code>?ids=1,2,3</code> won't bind to a
+      <code>List&lt;int&gt;</code> on its own, and a value object like <code>Money</code> or
+      <code>EmailAddress</code> can't be parsed from a single string with its own validation baked
+      in. That's what <code>IModelBinder</code> is for: implement it, then register it with
+      <code>[ModelBinder(BinderType = ...)]</code> on the parameter (or a binder provider for
+      something reusable), and the framework calls it instead of the default just for that one
+      parameter.</p>
+
+      <p>MVC, Web API, and Razor Pages aren't three separate frameworks — they're three shapes
+      built on the same endpoint routing, and the right one depends on what the endpoint actually
+      needs to produce.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>MVC</th><th>Web API (<code>[ApiController]</code>)</th><th>Razor Pages</th></tr></thead>
+        <tbody>
+          <tr><th>Returns</th><td>a rendered HTML view</td><td>JSON (or another format) via an <code>ActionResult</code></td><td>its own rendered HTML page</td></tr>
+          <tr><th>Structure</th><td>Controller + View + optional Model</td><td><code>ControllerBase</code>, no views at all</td><td>one <code>.cshtml</code> + its own <code>PageModel</code>, no separate controller</td></tr>
+          <tr><th>Invalid model → 400?</th><td class="no">manual check</td><td class="yes">✅ automatic</td><td class="no">manual check</td></tr>
+          <tr><th>Best for</th><td>server-rendered pages with shared layouts/navigation</td><td>a REST API for a SPA, mobile app, or another service</td><td>simple, mostly-CRUD page-per-feature apps</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">IntListBinder</span> : <span class="ty">IModelBinder</span>
+{
+    <span class="kw">public</span> <span class="ty">Task</span> BindModelAsync(<span class="ty">ModelBindingContext</span> ctx)
+    {
+        <span class="kw">var</span> raw = ctx.ValueProvider
+            .GetValue(ctx.ModelName).FirstValue; <span class="cx-cmt">// "1,2,3"</span>
+        <span class="kw">if</span> (raw <span class="kw">is</span> <span class="kw">null</span>) <span class="kw">return</span> Task.CompletedTask;
+
+        <span class="cx-ok">// ✅ the default binder can't split one value into a list</span>
+        <span class="kw">var</span> ids = raw.Split(<span class="str">','</span>).Select(<span class="kw">int</span>.Parse).ToList();
+        ctx.Result = ModelBindingResult.Success(ids);
+        <span class="kw">return</span> Task.CompletedTask;
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">The default binder expects <b>one value per key</b> —
+      <code>?ids=1,2,3</code> would otherwise bind an empty <code>List&lt;int&gt;</code>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>[HttpGet(<span class="str">"products"</span>)]
+<span class="kw">public</span> <span class="ty">IActionResult</span> GetByIds(
+    [ModelBinder(BinderType = <span class="kw">typeof</span>(<span class="ty">IntListBinder</span>))] <span class="ty">List</span>&lt;<span class="kw">int</span>&gt; ids)
+{
+    <span class="cx-cmt">// GET /products?ids=1,2,3 → ids = [1, 2, 3]</span>
+    <span class="kw">return</span> Ok(_products.Where(p => ids.Contains(p.Id)));
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>[ModelBinder(BinderType = ...)]</code> overrides the default binder
+      for <b>just this one parameter</b> — every other parameter still binds normally.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// MVC — returns a rendered view</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="ty">OrdersController</span> : <span class="ty">Controller</span>
+{
+    <span class="kw">public</span> <span class="ty">IActionResult</span> Index() => View(_orders.All());
+}
+
+<span class="cx-cmt">// Web API — JSON only, no views</span>
+[ApiController]
+<span class="kw">public</span> <span class="kw">class</span> <span class="ty">OrdersApiController</span> : <span class="ty">ControllerBase</span>
+{
+    [HttpGet] <span class="kw">public</span> <span class="ty">IActionResult</span> Get() => Ok(_orders.All());
+}
+
+<span class="cx-cmt">// Razor Pages — page + its own code-behind, no separate controller</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="ty">IndexModel</span> : <span class="ty">PageModel</span>
+{
+    <span class="kw">public</span> <span class="kw">void</span> OnGet() => Orders = _orders.All();
+}</code></pre>
+      </div>
+      <p class="cx-note">Same underlying endpoint routing, <b>three different shapes</b> — pick by
+      what the endpoint needs to produce.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>An MVC app that used to feel fine is timing out under real production load.</b>
+      Profile it first (see the follow-up above) — once you know roughly where the time is going,
+      these are the usual suspects:</p>
+      <ul>
+        <li><b>DbContext / query patterns</b> — N+1 queries, or a read-only query missing <code>AsNoTracking()</code>.</li>
+        <li><b>Service lifetime misuse</b> — an expensive dependency built fresh every request instead of cached at a longer lifetime.</li>
+        <li><b>Sync-over-async blocking</b> — <code>.Result</code> or <code>.Wait()</code> on a <code>Task</code>, which can exhaust the thread pool.</li>
+        <li><b>View-rendering overhead</b> — an unusually large or complex Razor view, less often the real cause.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="1.html">← Kestrel &amp; Reverse Proxies</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to .NET Advanced</a>
+    <div class="side next"></div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · .NET / ASP.NET Core · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

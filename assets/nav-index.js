@@ -162,5 +162,69 @@ window.NAV_INDEX = {
         ]
       }
     ]
+  },
+  "dotnet/basic": {
+    track: ".NET",
+    trackIcon: "🧱",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1–5",
+        items: [
+          { n: 1, file: "1.html", short: ".NET vs. .NET Framework", title: ".NET vs. .NET Framework", tail: "the actual relationship between the two.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "CLR, BCL & Managed Code", title: "CLR, BCL & Managed Code", tail: "what \"managed\" actually means.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "SDK vs. Runtime & NuGet", title: "SDK vs. Runtime, .csproj & NuGet", tail: "what each piece of tooling actually does.", priority: "⭐" },
+          { n: 4, file: "4.html", short: "What Is MVC",             title: "What Is MVC",             tail: "Model, View, Controller — and why you usually need a ViewModel too.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Filters, CORS & Logging", title: "Filters, CORS, HTTPS & Logging", tail: "four pipeline concerns worth knowing by name.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "dotnet/intermediate": {
+    track: ".NET",
+    trackIcon: "🧱",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1–10",
+        items: [
+          { n: 1,  file: "1.html",  short: "What Happens at Startup",  title: "What Happens When a .NET App Starts", tail: "Kestrel, the Generic Host, and your first line of code.", priority: "🔥" },
+          { n: 2,  file: "2.html",  short: "The Built-in DI Container", title: "The Built-in DI Container", tail: "why ASP.NET Core ships with one.", priority: "🔥" },
+          { n: 3,  file: "3.html",  short: "Service Lifetimes",         title: "Service Lifetimes", tail: "Singleton vs. Scoped vs. Transient.", priority: "🔥" },
+          { n: 4,  file: "4.html",  short: "Middleware",                title: "Middleware", tail: "Use/Run/Map, and why order matters.", priority: "🔥" },
+          { n: 5,  file: "5.html",  short: "AuthN vs. AuthZ (pipeline)", title: "Authentication vs. Authorization", tail: "as pipeline stages — where each check happens.", priority: "🔥" },
+          { n: 6,  file: "6.html",  short: "Routing",                   title: "Routing", tail: "endpoint routing, conventional vs. attribute.", priority: "⭐" },
+          { n: 7,  file: "7.html",  short: "Model Binding & Validation", title: "Model Binding & Validation", tail: "turning a raw request into a typed parameter.", priority: "⭐" },
+          { n: 8,  file: "8.html",  short: "ViewBag/ViewData/TempData",  title: "ViewBag vs. ViewData vs. TempData", tail: "and why TempData disappears after one redirect.", priority: "⭐" },
+          { n: 9,  file: "9.html",  short: "Razor & Routing",            title: "Razor & Routing", tail: "mixing C# and HTML, attribute vs. conventional routing.", priority: "⭐" },
+          { n: 10, file: "10.html", short: "MVC-Specific Filters",       title: "MVC-Specific Filters", tail: "action vs. authorization vs. exception, and execution order.", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11–16",
+        items: [
+          { n: 11, file: "11.html", short: "Views, Layouts & Areas",    title: "Views, Layouts & Organization", tail: "partials, and when a project needs Areas.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Configuration Sources",     title: "Configuration Sources", tail: "appsettings, env vars, and the override order.", priority: "🔥" },
+          { n: 13, file: "13.html", short: "Authentication Schemes",    title: "Authentication Schemes", tail: "cookie-based vs. token-based, at a high level.", priority: "🔥" },
+          { n: 14, file: "14.html", short: "AuthZ Policies & Claims",   title: "Authorization Policies & Claims", tail: "role-based vs. policy-based.", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Global Exception Handling", title: "Global Exception Handling", tail: "the standard pattern, and why dev vs. prod must differ.", priority: "🔥" },
+          { n: 16, file: "16.html", short: "Generic Host & Lifetime",   title: "The Generic Host & Application Lifetime", tail: "the lifecycle events, and when to hook into each.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "dotnet/advanced": {
+    track: ".NET",
+    trackIcon: "🧱",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1–2",
+        items: [
+          { n: 1, file: "1.html", short: "Kestrel & Reverse Proxies", title: "Kestrel & Reverse Proxies", tail: "why Kestrel isn't meant to face the internet alone.", priority: "⭐" },
+          { n: 2, file: "2.html", short: "Model Binding Internals",   title: "Model Binding Internals & MVC vs. Web API vs. Razor Pages", tail: "binder resolution order, and picking the right framework.", priority: "🧠" }
+        ]
+      }
+    ]
   }
 };

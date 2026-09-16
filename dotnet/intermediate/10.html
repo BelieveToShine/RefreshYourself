@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVC-Specific Filters — .NET Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dotnet/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#7c3aed;">🧱 .NET / ASP.NET Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">MVC-Specific Filters</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ .NET · Intermediate · Should Know</div>
+    <h1>Action, Authorization &amp; Exception Filters — <span class="hl hl-blue">who runs first, and who only shows up when things break</span></h1>
+    <p class="interview-q">"What's the difference between action, authorization, and exception filters, and what order do they run in?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Interviewers use this to check you know MVC's pipeline isn't just "a filter runs somewhere" — each filter type owns a distinct job and a fixed place in the order.</li>
+        <li>A classic follow-up pits a global filter against a controller-scoped one of the same type — the default resolution order separates memorized syntax from real understanding.</li>
+        <li>Confusing an exception filter with <code>UseExceptionHandler()</code> middleware is one of the most common mix-ups going into a mid-level ASP.NET Core interview.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Authorization <span class="rarrow">→</span> <b>runs first</b>, can block</p>
+      <p class="rrow">Action <span class="rarrow">→</span> <b>wraps</b> the action itself</p>
+      <p class="rrow">Exception <span class="rarrow">→</span> <b>only</b> on a throw</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Authorization</code></b> gatekeeps. <b><code>Action</code></b> wraps. <b><code>Exception</code></b> waits.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI10" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI10" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI10Rose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">MVC FILTER PIPELINE — FIXED EXECUTION ORDER</text>
+
+      <g filter="url(#shI10)"><rect x="20" y="48" width="132" height="68" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="86" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🔐 Authorization</text>
+      <text x="86" y="98" text-anchor="middle" font-size="10" fill="#5b6472">can short-circuit</text>
+
+      <path d="M152,82 H176" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI10)"/>
+
+      <g filter="url(#shI10)"><rect x="176" y="48" width="132" height="68" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="242" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">▶️ Before Action</text>
+      <text x="242" y="98" text-anchor="middle" font-size="10" fill="#5b6472">before method runs</text>
+
+      <path d="M308,82 H332" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI10)"/>
+
+      <g filter="url(#shI10)"><rect x="332" y="48" width="132" height="68" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="398" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">⚙️ Action Runs</text>
+      <text x="398" y="98" text-anchor="middle" font-size="10" fill="#5b6472">the method body</text>
+
+      <path d="M464,82 H488" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI10)"/>
+
+      <g filter="url(#shI10)"><rect x="488" y="48" width="132" height="68" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="554" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">⏹ After Action</text>
+      <text x="554" y="98" text-anchor="middle" font-size="10" fill="#5b6472">after method runs</text>
+
+      <path d="M398,116 V190" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arI10Rose)"><animate attributeName="stroke-dashoffset" values="9;0" dur="2s" repeatCount="indefinite"/></path>
+
+      <rect x="423" y="141" width="150" height="24" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+      <text x="498" y="157" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">only if it throws</text>
+
+      <g filter="url(#shI10)"><rect x="298" y="190" width="200" height="70" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="398" y="217" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">🐛 Exception Filter</text>
+      <text x="398" y="240" text-anchor="middle" font-size="10" fill="#5b6472">MVC's last-chance handler</text>
+
+      <text x="320" y="285" text-anchor="middle" font-size="11" fill="#5b6472">Exception filters are the only type that run conditionally — every other filter always runs</text>
+    </svg>
+    <figcaption>Authorization, then action (before/after) run on every request — the exception filter only lights up when something throws.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>An exception filter does not catch every unhandled exception in the app.</b> It only catches exceptions thrown inside MVC's own action-invocation pipeline — anything thrown by other middleware, or outside MVC's filter scope, is still the job of pipeline-level middleware like <code>UseExceptionHandler()</code>.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If a global filter and a controller-specific filter of the same type both apply, which one runs first?"</b> Scope decides the default order — global runs before controller-scoped, which runs before action-scoped, for filters of the same type — though an explicit <code>Order</code> property can override that default.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Authorization filters run first and can short-circuit the request before anything else executes. Action filters wrap the action itself, running code before and after the method body. Exception filters are the odd one out — they only run if the action or an earlier filter throws, acting as MVC's own last-chance handler."</p>
+    <ul>
+      <li>Authorization filter → <span class="hl hl-blue">runs first, can short-circuit</span> the whole request.</li>
+      <li>Action filter → <span class="hl hl-inter">wraps the action</span> — runs before and after the method body.</li>
+      <li>Exception filter → <span class="hl hl-hot">only runs when something throws</span> — MVC's own last-chance handler.</li>
+      <li>Global filter → <span class="hl hl-basic">registered once in <code>MvcOptions.Filters</code></span>, applies to every action in the app.</li>
+      <li>Controller/action-scoped filter → <span class="hl hl-teal">an attribute on one class or method</span> — only that scope is affected.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>MVC's filter pipeline runs in a fixed sequence, and each filter <em>type</em> owns one
+      specific moment in it, not just a different label. <span class="hl hl-blue">Authorization
+      filters</span> run before anything else in the pipeline gets a chance to execute — including
+      model binding — so they're the cheapest place to reject a caller who was never allowed to
+      reach the action at all.</p>
+
+      <p><span class="hl hl-inter">Action filters</span> wrap the action method itself:
+      <code>OnActionExecuting</code> fires right before the method body runs, and
+      <code>OnActionExecuted</code> fires right after — the same before/after shape already
+      introduced on the Basic filters page, just scoped specifically to the action invocation
+      here.</p>
+
+      <p><span class="hl hl-hot">Exception filters</span> are the one type that doesn't run on
+      every request — they only fire if the action method or an earlier filter in the pipeline
+      throws. That makes them a last-chance handler <em>inside</em> MVC's own filter pipeline,
+      distinct from pipeline-wide middleware like <code>UseExceptionHandler()</code>, which sits
+      outside MVC entirely and catches exceptions no matter which part of the app threw them.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Authorization</th><th>Action</th><th>Exception</th></tr></thead>
+        <tbody>
+          <tr><th>When it runs</th><td>first, always</td><td>always — before &amp; after the action</td><td class="no">❌ only if something throws</td></tr>
+          <tr><th>Job</th><td>is the caller allowed in?</td><td>wrap the action call</td><td>handle a thrown exception</td></tr>
+          <tr><th>Can short-circuit?</th><td class="yes">✅ before model binding even runs</td><td class="yes">✅ by setting the context's <code>Result</code></td><td class="yes">✅ by marking the exception handled</td></tr>
+          <tr><th>Common mix-up</th><td>confused with authentication itself</td><td>confused with the action method's own logic</td><td>confused with <code>UseExceptionHandler()</code> middleware</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">MustBeOwnerFilter</span> : <span class="ty">IAuthorizationFilter</span>
+{
+    <span class="kw">public</span> <span class="kw">void</span> OnAuthorization(<span class="ty">AuthorizationFilterContext</span> ctx)
+    {
+        <span class="kw">if</span> (!ctx.HttpContext.User.HasClaim(<span class="str">"owner"</span>, <span class="str">"true"</span>))
+            ctx.Result = <span class="kw">new</span> <span class="ty">ForbidResult</span>();  <span class="cx-err">// ❌ action never runs</span>
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">Setting <code>ctx.Result</code> here <b>short-circuits everything downstream</b> — model binding, action filters, the action itself.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">AddHeaderFilter</span> : <span class="ty">IActionFilter</span>
+{
+    <span class="kw">public</span> <span class="kw">void</span> OnActionExecuting(<span class="ty">ActionExecutingContext</span> ctx) { }  <span class="cx-cmt">// before — nothing to add yet</span>
+
+    <span class="kw">public</span> <span class="kw">void</span> OnActionExecuted(<span class="ty">ActionExecutedContext</span> ctx)
+        <span class="cx-ok">// ✅ after — the action's result already exists here</span>
+        => ctx.HttpContext.Response.Headers[<span class="str">"X-Served-By"</span>] = <span class="str">"filter"</span>;
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>OnActionExecuted</code> can inspect or modify the result <b>because the action has already run</b> — that ordering is the whole point of the type.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">OrderFailedFilter</span> : <span class="ty">IExceptionFilter</span>
+{
+    <span class="kw">public</span> <span class="kw">void</span> OnException(<span class="ty">ExceptionContext</span> ctx)
+    {
+        ctx.Result = <span class="kw">new</span> <span class="ty">ObjectResult</span>(<span class="kw">new</span> { error = <span class="str">"order failed"</span> }) { StatusCode = <span class="num">500</span> };
+        ctx.ExceptionHandled = <span class="kw">true</span>;  <span class="cx-ok">// ✅ only fires if the action above threw</span>
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">This never runs on a normal request — <b>only when the action (or an earlier filter) throws</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Program.cs — GLOBAL: applies to every action in the app</span>
+builder.Services.AddControllers(options =>
+    options.Filters.Add&lt;<span class="ty">AddHeaderFilter</span>&gt;());
+
+<span class="cx-cmt">// Controller — SCOPED: only this one action</span>
+[<span class="ty">AddHeaderFilter</span>]
+<span class="kw">public</span> <span class="ty">IActionResult</span> Get() => Ok();</code></pre>
+      </div>
+      <p class="cx-note">Same filter class, two different reach — <b>global runs everywhere</b>, the attribute runs only where it's attached.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Airport security, not a metal detector.</b> The authorization filter is the ID check at
+      the gate — it turns you away before you're anywhere near the scanner. The action filter is
+      the scan itself, wrapping you as you walk through it, before and after. The exception filter
+      is the incident response team: nobody sees them unless something actually goes wrong at the
+      scanner, and they don't patrol the rest of the airport — only that one checkpoint.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="9.html">← Razor &amp; Routing</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to .NET Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="11.html">Views, Layouts &amp; Organization →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · .NET / ASP.NET Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

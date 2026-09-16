@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Exception Handling — .NET Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dotnet/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#7c3aed;">🧱 .NET / ASP.NET Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Global Exception Handling</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 .NET · Intermediate · Must Know</div>
+    <h1><code>UseExceptionHandler</code> vs. <code>UseDeveloperExceptionPage</code> — <span class="hl hl-hot">one of these must never reach production</span></h1>
+    <p class="interview-q">What's the standard pattern for turning an unhandled exception into a clean response, and why must dev vs. production differ?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Every real ASP.NET Core app needs one place that turns a crash into a proper response instead of a raw, bodiless 500 — interviewers use this to check you know the standard middleware pattern, not just "wrap it in try/catch."</li>
+        <li>Comes up any time someone asks how your API behaves when something goes wrong, or reviews a <code>Program.cs</code> for a security issue.</li>
+        <li>Classic follow-up bait: "could this app accidentally ship the dev exception page to production?" — yes, and it's a genuinely common misconfiguration.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Development</code> <span class="rarrow">→</span> <b>full</b> stack trace, on screen</p>
+      <p class="rrow"><code>Production</code> <span class="rarrow">→</span> <b>generic</b> response, nothing leaked</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>IsDevelopment()</code></b> is the gate — flip it, and you flip which page runs.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI15" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI15" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="28" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">UNHANDLED EXCEPTION — WHICH ENVIRONMENT RUNS?</text>
+
+      <g filter="url(#shI15)"><rect x="220" y="40" width="200" height="36" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="62" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">⚡ Unhandled Exception</text>
+
+      <path d="M320,76 V104" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15)"/>
+
+      <rect x="220" y="104" width="200" height="30" rx="15" fill="#ffffff" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3">
+        <animate attributeName="stroke-dashoffset" values="7;0" dur="1.2s" repeatCount="indefinite"/>
+      </rect>
+      <text x="320" y="123" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">if (env.IsDevelopment())</text>
+
+      <path d="M320,134 V146" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,146 H480" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,146 V168" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15)"/>
+      <path d="M480,146 V168" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15)"/>
+
+      <g filter="url(#shI15)"><rect x="60" y="168" width="200" height="44" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="160" y="186" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">DEVELOPMENT</text>
+      <text x="160" y="202" text-anchor="middle" font-size="10.5" fill="#5b6472">UseDeveloperExceptionPage()</text>
+
+      <g filter="url(#shI15)"><rect x="380" y="168" width="200" height="44" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="186" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">PRODUCTION</text>
+      <text x="480" y="202" text-anchor="middle" font-size="10.5" fill="#5b6472">UseExceptionHandler("/Error")</text>
+
+      <path d="M160,212 V228" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15)"/>
+      <path d="M480,212 V228" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15)"/>
+
+      <g filter="url(#shI15)"><rect x="45" y="228" width="230" height="56" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="160" y="250" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">📄 Full stack trace</text>
+      <text x="160" y="266" text-anchor="middle" font-size="10.5" fill="#5b6472">file paths + exception details</text>
+
+      <g filter="url(#shI15)"><rect x="365" y="228" width="230" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="250" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ ProblemDetails JSON</text>
+      <text x="480" y="266" text-anchor="middle" font-size="10.5" fill="#5b6472">no internal details leaked</text>
+
+      <text x="320" y="304" text-anchor="middle" font-size="11" fill="#991b1b">🐛 Hardcode the left path with no gate, and it leaks straight to real users</text>
+    </svg>
+    <figcaption>Same unhandled exception, two very different responses — the environment check decides which one a real user could ever see.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>The dev exception page isn't automatically disabled in production.</b> If <code>UseDeveloperExceptionPage()</code> isn't gated behind <code>app.Environment.IsDevelopment()</code> — or worse, hardcoded to always run — it keeps handing out stack traces and file paths to real users after every deploy.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"For a Web API specifically, what does that clean response actually look like?"</b> Not an HTML error page — a structured JSON error response, often the RFC 7807 "Problem Details" format ASP.NET Core has built-in support for, since API clients expect JSON, not HTML.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Register exception-handling middleware as one of the first things in the pipeline — <code>UseExceptionHandler</code> for a clean fallback response, or <code>UseStatusCodePages</code> for non-exception error codes. In Development that's the developer exception page with the full stack trace; in every other environment it's a generic response — usually a Problem Details JSON payload for an API — because the dev page is a security risk the moment real users can trigger it."</p>
+    <ul>
+      <li><code>UseExceptionHandler</code> <span class="hl hl-basic">→ registered first</span>, so it wraps everything downstream.</li>
+      <li><code>UseDeveloperExceptionPage</code> <span class="hl hl-hot">→ gated behind IsDevelopment()</span>, never shipped as-is to prod.</li>
+      <li>Web API → <span class="hl hl-inter">clean response means JSON</span>, typically RFC 7807 Problem Details.</li>
+      <li>MVC exception filters → <span class="hl hl-blue">narrower scope</span> — they only catch what MVC's own action pipeline throws.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>The standard fix for "an unhandled exception shouldn't blow up as a raw stack trace" is a
+      piece of <span class="hl hl-blue">middleware registered near the very start of the
+      pipeline</span> — either <code>UseExceptionHandler(...)</code>, which redirects to an
+      error-handling endpoint or writes a clean response, or <code>UseStatusCodePages()</code> for
+      responses that come back with an error status but no exception at all (a 404, say). Because
+      it sits first, it wraps every downstream middleware and endpoint — <b>much broader</b> than
+      an MVC exception filter, which only ever sees exceptions thrown from inside MVC's own
+      action-invocation pipeline. See <a href="10.html">MVC-Specific Filters</a> for that narrower
+      tool; the two aren't competing, they just operate at different layers.</p>
+
+      <p><code>UseDeveloperExceptionPage()</code> is genuinely useful while you're coding locally —
+      it shows the full stack trace, the request details, and the exception type directly in the
+      browser. That same detail is exactly why it's <span class="hl hl-hot">an active security
+      liability</span> outside your own machine: internal file paths, stack frames, and sometimes
+      sensitive data become visible to anyone who can trigger an error. That's the whole reason
+      ASP.NET Core's own templates gate it behind <code>if (app.Environment.IsDevelopment())</code>
+      and fall back to a generic <code>UseExceptionHandler("/Error")</code> everywhere else.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Developer Exception Page</th><th>Production Exception Handling</th></tr></thead>
+        <tbody>
+          <tr><th>What it shows</th><td>full stack trace, exception type, request details</td><td>generic message — Problem Details JSON for a Web API</td></tr>
+          <tr><th>Where it's safe</th><td>your own machine, trusted devs only</td><td>any real deployment, staging included</td></tr>
+          <tr><th>How it's selected</th><td><code>IsDevelopment()</code> check passes</td><td>the <code>else</code> branch — any non-Development environment</td></tr>
+          <tr><th>Risk if swapped</th><td class="no">🐛 leaks internals to real users</td><td>none — that's the point of it</td></tr>
+          <tr><th>Response shape (API)</th><td>HTML page, not meant to leave your machine</td><td>JSON, since API clients expect JSON</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">if</span> (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();   <span class="cx-ok">// ✅ full details — dev machine only</span>
+}
+<span class="kw">else</span>
+{
+    app.UseExceptionHandler(<span class="str">"/Error"</span>); <span class="cx-ok">// ✅ clean fallback everywhere else</span>
+}
+
+app.MapControllers();                  <span class="cx-cmt">// registered AFTER — everything below is covered</span></code></pre>
+      </div>
+      <p class="cx-note">This has to run <b>near the top of the pipeline</b> — it can only catch what happens after it.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>app.UseDeveloperExceptionPage();   <span class="cx-err">// ❌ no IsDevelopment() check at all</span>
+app.MapControllers();</code></pre>
+      </div>
+      <p class="cx-note">No gate → this now leaks stack traces to <b>real users</b> after every deploy, not just on your machine.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>app.UseExceptionHandler(exceptionApp =>
+{
+    exceptionApp.Run(<span class="kw">async</span> context =>
+    {
+        context.Response.StatusCode = <span class="num">500</span>;
+        <span class="kw">await</span> context.Response.WriteAsJsonAsync(<span class="kw">new</span>
+        {
+            type = <span class="str">"about:blank"</span>,
+            title = <span class="str">"An unexpected error occurred."</span>,
+            status = <span class="num">500</span>
+        });   <span class="cx-ok">// ✅ JSON, not an HTML error page</span>
+    });
+});</code></pre>
+      </div>
+      <p class="cx-note">For a Web API, the fallback has to write <b>JSON</b> — these fields match the shape of RFC 7807 Problem Details.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Production logs are full of 500s, but every affected user just sees a plain
+      <code>{"title":"An unexpected error occurred.","status":500}</code> — no stack trace, no
+      table name, nothing.</b> That's not a bug, that's the exception-handling middleware doing
+      exactly its job. You look up the real exception server-side, from the logs or a
+      correlation/trace ID in the response — never by putting it in front of the user who
+      triggered it.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="14.html">← Authorization Policies &amp; Claims</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to .NET Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="16.html">The Generic Host &amp; Application Lifetime →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · .NET / ASP.NET Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

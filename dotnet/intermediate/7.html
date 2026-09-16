@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Binding &amp; Validation — .NET Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dotnet/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#7c3aed;">🧱 .NET / ASP.NET Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Model Binding &amp; Validation</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ .NET · Intermediate · Should Know</div>
+    <h1>Model Binding — <span class="hl hl-blue">the framework fills it in</span>. Does it check it too?</h1>
+    <p class="interview-q">What is model binding, and how does validation actually get triggered?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Comes up the moment an action takes any input — every create/update endpoint depends on this working correctly.</li>
+        <li>The <code>[ApiController]</code> auto-400 behavior is a favorite follow-up — a lot of candidates don't realize it's the attribute doing that, not ASP.NET Core in general.</li>
+        <li>Sets up the deeper Advanced topic on binder source order and custom binders — this page is the practical foundation that one builds on.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Model binding = <b>"the framework fills in your action's parameters for you."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line">Route, Query, Body, Headers → the <b>Model Binder</b> fills the parameter</span>
+      <span class="tc-line">Validation runs by itself — but <b><code>ModelState.IsValid</code></b> only helps if you actually check it</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI7a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI7a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">HOW A REQUEST BECOMES A TYPED C# OBJECT</text>
+
+      <g filter="url(#shI7a)"><rect x="40" y="40" width="120" height="44" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="100" y="66" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">📍 Route</text>
+
+      <g filter="url(#shI7a)"><rect x="187" y="40" width="120" height="44" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="247" y="66" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">🔍 Query</text>
+
+      <g filter="url(#shI7a)"><rect x="334" y="40" width="120" height="44" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="394" y="66" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">📦 Body (JSON)</text>
+
+      <g filter="url(#shI7a)"><rect x="481" y="40" width="120" height="44" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="541" y="66" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">🏷️ Headers</text>
+
+      <path d="M100,84 V100" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M247,84 V100" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M394,84 V100" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M541,84 V100" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M100,100 H541" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M320,100 V120" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI7a)"/>
+
+      <g filter="url(#shI7a)"><rect x="210" y="120" width="220" height="54" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="148" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">⚙️ Model Binder</text>
+      <text x="320" y="164" text-anchor="middle" font-size="10.5" fill="#5b6472">matches names to parameters</text>
+
+      <path d="M320,174 V200" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI7a)"/>
+
+      <g filter="url(#shI7a)"><rect x="140" y="200" width="360" height="50" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="222" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e" font-family="Fira Code, monospace">OrderDto order</text>
+      <text x="320" y="238" text-anchor="middle" font-size="10.5" fill="#5b6472">populated — validity not decided yet</text>
+
+      <text x="320" y="272" text-anchor="middle" font-size="11" fill="#5b6472">The binder fills in the parameter — validation happens in the same step</text>
+    </svg>
+    <figcaption>Route, query, body, and headers all feed the same binder — one <code>OrderDto</code> comes out the other side, already validated but not yet checked.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI7b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI7bGray" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI7bGreen" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arI7bRed" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">WHO ACTUALLY STOPS THE INVALID ONE?</text>
+
+      <g filter="url(#shI7b)"><rect x="190" y="40" width="260" height="44" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="62" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e" font-family="Fira Code, monospace">OrderDto order (bound)</text>
+      <text x="320" y="77" text-anchor="middle" font-size="10.5" fill="#5b6472">not yet checked for validity</text>
+
+      <path d="M320,84 V110" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI7bGray)"/>
+
+      <g filter="url(#shI7b)"><rect x="200" y="110" width="240" height="40" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="135" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">IsValid actually checked?</text>
+
+      <path d="M320,150 V164" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,164 H480" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,164 V182" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arI7bGreen)"/>
+      <path d="M480,164 V182" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arI7bRed)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shI7b)"><rect x="60" y="182" width="200" height="52" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="204" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ Checked</text>
+      <text x="160" y="220" text-anchor="middle" font-size="10.5" fill="#5b6472">invalid data stops here</text>
+
+      <g filter="url(#shI7b)"><rect x="380" y="182" width="200" height="52" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="480" y="204" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">⚠️ Not checked</text>
+      <text x="480" y="220" text-anchor="middle" font-size="10.5" fill="#5b6472">reaches your code anyway 🐛</text>
+
+      <text x="320" y="256" text-anchor="middle" font-size="11" fill="#5b6472">Binding &amp; validation always run — checking the result is the only optional step</text>
+    </svg>
+    <figcaption><code>[ApiController]</code> does this check for you automatically; a plain <code>Controller</code> only does it if you write the <code>if</code> yourself.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Binding automatically rejects invalid data.</b> It doesn't — the object still gets populated and its validation attributes still run either way; only checking <code>ModelState.IsValid</code> yourself (or letting <code>[ApiController]</code> do it for you) actually stops an invalid object from reaching your code.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If a query string, a route value, AND the request body all supply a value for the same parameter name, which one wins?"</b> There's a defined default source-precedence order — see <a href="../advanced/2.html">Model Binding Internals</a> for the exact ordering, since that's where the full priority list belongs.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Model binding automatically populates an action's parameters — a simple type or a whole class — from the route, the query string, the body, or headers. Data-annotation attributes like <code>[Required]</code> run automatically as part of that same step, but only checking <code>ModelState.IsValid</code> actually stops invalid data from reaching your code."</p>
+    <ul>
+      <li><code>CreateOrder(OrderDto order)</code> <span class="hl hl-blue">→ the binder reads route, query, body, and headers</span> and fills the object in for you.</li>
+      <li><code>[Required]</code>, <code>[Range]</code>, etc. <span class="hl hl-inter">→ checked automatically</span>, with the result recorded in <code>ModelState</code>.</li>
+      <li>Forget to check it → <span class="hl hl-hot">invalid data still reaches your business logic</span> in a classic controller.</li>
+      <li><code>[ApiController]</code> <span class="hl hl-basic">→ auto-returns 400 on invalid ModelState</span>; plain controllers don't get that for free.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Model binding</span> is the step where a raw HTTP request turns
+      into ordinary C# parameters. Before your action code runs, the framework reads the route
+      values, the query string, the request body, and headers, matches them up by name against
+      your action's parameters, and hands them over already assembled — that's why
+      <code>CreateOrder(OrderDto order)</code> can just take a fully-formed <code>OrderDto</code>
+      instead of anyone hand-parsing <code>Request.Body</code>.</p>
+
+      <p>Validation piggybacks on that same step. Any data-annotation attribute on the model —
+      <code>[Required]</code>, <code>[StringLength]</code>, <code>[Range]</code> — gets checked
+      the moment binding finishes, and the outcome is recorded in <code>ModelState</code>.
+      <span class="hl hl-inter">ModelState.IsValid</span> is just a yes/no summary of what was
+      already recorded — it doesn't do any checking itself, it only reports what the checking
+      already found.</p>
+
+      <p>What happens to an invalid object depends entirely on whether anyone reads that summary.
+      A classic MVC controller never reads it for you — the object still reaches your action,
+      valid or not, unless you check <code>ModelState.IsValid</code> yourself.
+      <code>[ApiController]</code> changes that default: it reads <code>ModelState</code> before
+      your action runs and returns a 400 automatically when it's invalid, which is why Web API
+      controllers built with <code>[ApiController]</code> almost never need the manual check.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Plain <code>Controller</code></th><th><code>[ApiController]</code></th></tr></thead>
+        <tbody>
+          <tr><th>Model bound &amp; validated?</th><td>✅ always</td><td>✅ always</td></tr>
+          <tr><th><code>ModelState.IsValid</code> auto-checked?</th><td class="no">❌ no — you check it</td><td>✅ yes, before your action runs</td></tr>
+          <tr><th>Invalid data reaches your action?</th><td class="no">⚠️ yes, if you forget to check</td><td class="no">❌ no — rejected with 400 first</td></tr>
+          <tr><th>Extra code needed</th><td><code>if (!ModelState.IsValid) return BadRequest();</code></td><td>none — automatic</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>[HttpPost(<span class="str">"orders"</span>)]
+<span class="kw">public</span> <span class="ty">IActionResult</span> CreateOrder(<span class="ty">OrderDto</span> order)
+{
+    <span class="cx-cmt">// order.Name, order.Total are already populated</span>
+    <span class="cx-cmt">// from the JSON body — nobody parsed Request.Body</span>
+    _orders.Save(order);
+    <span class="kw">return</span> Ok();
+}</code></pre>
+      </div>
+      <p class="cx-note">The binder already matched the JSON body to <code>OrderDto</code>'s properties — <b>no manual parsing anywhere</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">OrderDto</span>
+{
+    [Required]
+    <span class="kw">public</span> <span class="ty">string</span> Name { <span class="kw">get</span>; <span class="kw">set</span>; }
+
+    [Range(<span class="num">1</span>, <span class="num">100</span>)]
+    <span class="kw">public</span> <span class="kw">int</span> Quantity { <span class="kw">get</span>; <span class="kw">set</span>; }
+}
+
+<span class="kw">public</span> <span class="ty">IActionResult</span> CreateOrder(<span class="ty">OrderDto</span> order)
+{
+    _orders.Save(order);   <span class="cx-err">// ❌ runs even if order.Name is null</span>
+    <span class="kw">return</span> Ok();
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>ModelState.IsValid</code> was never checked — an invalid <code>order</code> still reached <b><code>_orders.Save()</code></b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>[ApiController]                 <span class="cx-ok">// ✅ auto-checks ModelState</span>
+[Route(<span class="str">"api/orders"</span>)]
+<span class="kw">public</span> <span class="kw">class</span> <span class="ty">OrdersController</span> : <span class="ty">ControllerBase</span>
+{
+    [HttpPost]
+    <span class="kw">public</span> <span class="ty">IActionResult</span> CreateOrder(<span class="ty">OrderDto</span> order)
+    {
+        _orders.Save(order);   <span class="cx-ok">// only runs if order was valid</span>
+        <span class="kw">return</span> Ok();
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>[ApiController]</code> returns 400 before this line ever runs — a plain <code>Controller</code> needs the <b><code>if (!ModelState.IsValid)</code></b> check written by hand.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>QA reports that empty order names are getting saved to the database</b>, even though
+      <code>OrderDto.Name</code> has <code>[Required]</code> on it. Nine times out of ten the
+      controller is a plain <code>Controller</code>, not one marked <code>[ApiController]</code>,
+      and nobody ever added <code>if (!ModelState.IsValid) return BadRequest();</code> — the
+      validation attribute ran and recorded the failure, but no code ever asked
+      <code>ModelState</code> what it found.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="6.html">← Routing</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to .NET Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="8.html">ViewBag vs. ViewData vs. TempData →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · .NET / ASP.NET Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
