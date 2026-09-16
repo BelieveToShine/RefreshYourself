@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reflection — C# Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="csharp/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#1d4ed8;">🎵 C#</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Reflection</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ C# · Advanced · Should Know</div>
+    <h1>Reflection — <span class="hl hl-blue">reading your own code's metadata at runtime</span></h1>
+    <p class="interview-q">"What is reflection, and what can it do that normal code can't?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>It's the actual mechanism behind serializers, DI containers, and ORMs — none of those libraries could hand-write code for every type you'll ever define.</li>
+        <li>Comes up as "how does a JSON serializer know about my class without me telling it anything?" — reflection is the real answer.</li>
+        <li>Knowing it's too slow for a hot path is what separates "used it once" from actually understanding the cost.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Reflection = <b>"code that looks at its own types at runtime and can call into them, without knowing those types at compile time."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <code>obj.GetType()</code> → walks its metadata → finds <code>DoWork()</code> → <code>MethodInfo.Invoke()</code> calls it.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA10" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA10" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arA10Blue" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">COMPILE TIME — the caller doesn't know the concrete type</text>
+
+      <g filter="url(#shA10)"><rect x="190" y="40" width="260" height="60" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="64" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">object plugin = LoadPlugin();</text>
+      <text x="320" y="84" text-anchor="middle" font-size="10.5" fill="#5b6472">no compile-time reference to Foo</text>
+
+      <path d="M40,110 H600" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="6 4"/>
+
+      <path d="M320,100 V145 H440 V222" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arA10Blue)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+      <text x="380" y="133" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">typeof(Foo)/GetType()</text>
+
+      <text x="320" y="165" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">RUNTIME — reflection looks back into the type</text>
+
+      <g filter="url(#shA10)"><rect x="50" y="175" width="540" height="160" rx="14" fill="none" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="5 4"/></g>
+      <text x="320" y="198" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">🏛️ Assembly: MyPlugins.dll</text>
+
+      <g filter="url(#shA10)"><rect x="75" y="222" width="200" height="100" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="175" y="250" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">class Foo (compiled)</text>
+      <text x="175" y="272" text-anchor="middle" font-size="10.5" fill="#5b6472">sits in the assembly as IL</text>
+
+      <g filter="url(#shA10)"><rect x="315" y="222" width="250" height="100" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="440" y="246" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🔍 Foo's own metadata</text>
+      <text x="440" y="268" text-anchor="middle" font-size="11" fill="#92400e">🏷️ Attributes</text>
+      <text x="440" y="288" text-anchor="middle" font-size="11" fill="#92400e">🔧 Methods: DoWork()</text>
+      <text x="440" y="308" text-anchor="middle" font-size="11" fill="#92400e">📄 Properties: Name</text>
+
+      <path d="M440,322 V360" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA10)"/>
+
+      <g filter="url(#shA10)"><rect x="315" y="360" width="250" height="58" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="440" y="384" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">⚡ MethodInfo.Invoke()</text>
+      <text x="440" y="404" text-anchor="middle" font-size="10.5" fill="#5b6472">runs DoWork() — found via reflection</text>
+    </svg>
+    <figcaption>Reflection reaches back into the compiled type's own metadata, then invokes what it finds — all without a compile-time reference to <code>Foo</code>.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Reflection is basically free, so I'll use it anywhere I'd use a normal method call."</b> Reflected member access is dramatically slower than a direct call — fine for one-time setup (building a DI container at startup), risky the moment it sits inside a loop that runs on every request.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How would you avoid paying that cost on every call?"</b> Cache the <code>MethodInfo</code>/<code>PropertyInfo</code> you looked up once, or compile it into a delegate the first time — reflect once, invoke fast after that.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Reflection lets code inspect and invoke types, members, and metadata that aren't known until runtime — it's the basis for serializers, DI containers, and ORMs. The cost is speed: reflected access is much slower than a direct call, so it belongs in one-time setup, not a hot path."</p>
+    <ul>
+      <li><code>typeof(Foo)</code> / <code>obj.GetType()</code> → <span class="hl hl-blue">the entry point</span> into a type's own metadata.</li>
+      <li>Reflection can read <span class="hl hl-adv">properties, methods, and attributes</span> the calling code never referenced at compile time.</li>
+      <li><code>MethodInfo.Invoke()</code> → <span class="hl hl-inter">calls a method found at runtime</span>, no compile-time reference needed.</li>
+      <li>In a hot path → <span class="hl hl-hot">cache the lookup or compile a delegate</span> — don't reflect on every call.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Reflection</span> is the runtime handing your own code a mirror.
+      Every compiled type carries its metadata — its properties, methods, constructors, attributes —
+      inside the assembly alongside the IL. <code>typeof(Foo)</code> (compile-time) or
+      <code>obj.GetType()</code> (runtime) hands back a <code>Type</code> object that can walk that
+      metadata: list members, read attributes, find a specific method by name — all without the
+      calling code ever writing <code>Foo</code> in a type position.</p>
+
+      <p><span class="hl hl-adv">Finding a member is only half the story</span> — reflection can also
+      invoke it. <code>MethodInfo.Invoke()</code> calls a method it found by name, on an object it only
+      knows as <code>object</code>. This is exactly how a JSON serializer sets a property it has never
+      heard of, or a dependency-injection container calls a constructor it discovered by scanning an
+      assembly for a matching type.</p>
+
+      <p><span class="hl hl-hot">None of this is free.</span> Every reflected call goes through extra
+      lookup and validation the JIT can't optimize away the way it can a direct call. That's fine for a
+      one-time setup step — building a container at startup — and risky inside code that runs on every
+      request.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">object</span> plugin = LoadPlugin();
+<span class="ty">Type</span> t = plugin.GetType();   <span class="cx-ok">// ✅ runtime — no compile-time reference to Foo</span>
+Console.WriteLine(t.Name);      <span class="cx-cmt">// "Foo"</span></code></pre>
+      </div>
+      <p class="cx-note"><code>GetType()</code> reads the object's actual runtime type — the caller never wrote <code>Foo</code> anywhere.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">MethodInfo</span>? method = t.GetMethod(<span class="str">"DoWork"</span>);  <span class="cx-cmt">// 🔍 found by name, not by reference</span>
+<span class="kw">if</span> (method != <span class="kw">null</span>)
+    Console.WriteLine(method.Name);                <span class="cx-cmt">// "DoWork"</span></code></pre>
+      </div>
+      <p class="cx-note"><code>GetMethod</code>/<code>GetProperties</code> walk the type's own metadata — the same data the compiler used, exposed as objects you can query.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>method.Invoke(plugin, <span class="kw">null</span>);  <span class="cx-ok">// ✅ calls Foo.DoWork() — plugin is still just "object" here</span></code></pre>
+      </div>
+      <p class="cx-note"><code>Invoke()</code> calls the method it found — the calling code never had to know it was a <code>Foo</code>.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Every JSON serializer you've used runs on this.</b> It was written long before your class
+      existed, yet it can read and set every property on it — because at runtime it asks your type for
+      its own property list instead of the author hard-coding every possible class up front.</p>
+      <p><b>Scenario:</b> a dependency-injection container needs to construct hundreds of classes it has
+      never seen source code for. It scans loaded assemblies, reflects on each type's constructor to
+      find what it needs, and builds the object graph — all metadata lookups, no hard-coded list of
+      types.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="9.html">← Unsafe Code &amp; Pointers</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to C# Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="11.html">Attributes →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · C# · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

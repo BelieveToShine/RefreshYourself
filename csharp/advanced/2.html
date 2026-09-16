@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>lock — what's actually happening under the hood — C# Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="csharp/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#1d4ed8;">🎵 C#</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">lock / Monitor &amp; Race Conditions</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 C# · Advanced · Must Know</div>
+    <h1><code>lock</code> — what's actually happening <span class="hl hl-hot">under the hood</span></h1>
+    <p class="interview-q">"What does <code>lock</code> actually do under the hood?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>A lost update is one of the most common real production bugs — a counter, balance,
+        or cache that's silently wrong under load, with no exception pointing at it.</li>
+        <li>Interviewers ask this specifically to test whether you know <code>lock</code> is just
+        <code>Monitor.Enter</code>/<code>Monitor.Exit</code> under a try/finally, not magic.</li>
+        <li>Shows up the moment two requests touch the same in-memory state at once — a shared
+        dictionary, a counter, a cache.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline"><code>lock</code> = <b>"syntactic sugar for <code>Monitor.Enter</code> /
+    <code>Monitor.Exit</code>, wrapped in a try/finally."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line">Two threads, no <code>lock</code> → <b><code>lost update</code></b></span>
+      <span class="tc-line">Same two threads, with <code>lock</code> → <b><code>one waits its turn</code></b></span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA2" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arA2Amber" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arA2Short" markerWidth="6" markerHeight="6" refX="4" refY="2" orient="auto">
+          <path d="M0,0 L4,2 L0,4 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <path d="M320,10 V246" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+
+      <!-- LEFT PANEL: no lock -->
+      <text x="160" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">❌ NO LOCK → LOST UPDATE</text>
+
+      <g filter="url(#shA2)"><rect x="95" y="36" width="130" height="34" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="57" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">counter = 0</text>
+
+      <path d="M160,70 V72 H80 V86" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arA2Short)"/>
+      <path d="M160,70 V72 H240 V86" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arA2Short)"/>
+
+      <g filter="url(#shA2)"><rect x="15" y="86" width="130" height="92" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="80" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Thread A</text>
+      <text x="80" y="122" text-anchor="middle" font-size="10.5" fill="#5b6472">reads counter → 0</text>
+      <text x="80" y="140" text-anchor="middle" font-size="10.5" fill="#5b6472">local = 0 + 1 = 1</text>
+      <text x="80" y="158" text-anchor="middle" font-size="10.5" fill="#5b6472">writes 1  (t=1)</text>
+
+      <g filter="url(#shA2)"><rect x="175" y="86" width="130" height="92" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="240" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Thread B</text>
+      <text x="240" y="122" text-anchor="middle" font-size="10.5" fill="#5b6472">reads counter → 0</text>
+      <text x="240" y="140" text-anchor="middle" font-size="10.5" fill="#5b6472">local = 0 + 1 = 1</text>
+      <text x="240" y="158" text-anchor="middle" font-size="10.5" fill="#5b6472">writes 1  (t=2) ⚠️</text>
+
+      <path d="M80,178 V194" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arA2)"/>
+      <path d="M240,178 V194" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arA2)"/>
+
+      <g filter="url(#shA2)"><rect x="25" y="194" width="270" height="40" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="211" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">counter = 1 🐛</text>
+      <text x="160" y="226" text-anchor="middle" font-size="10" fill="#5b6472">expected 2 — A's write was lost</text>
+
+      <!-- RIGHT PANEL: with lock -->
+      <text x="480" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ WITH LOCK → SERIALIZED</text>
+
+      <g filter="url(#shA2)"><rect x="405" y="36" width="150" height="34" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="57" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🔒 obj — unlocked</text>
+
+      <path d="M480,70 V72 H400 V86" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arA2Short)"/>
+      <path d="M480,70 V72 H560 V86" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arA2Short)"/>
+
+      <g filter="url(#shA2)"><rect x="340" y="86" width="120" height="92" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="400" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Thread A</text>
+      <text x="400" y="122" text-anchor="middle" font-size="10.5" fill="#5b6472">Enter(obj) ✅</text>
+      <text x="400" y="140" text-anchor="middle" font-size="10.5" fill="#5b6472">counter++ → 1</text>
+      <text x="400" y="158" text-anchor="middle" font-size="10.5" fill="#5b6472">Exit(obj)</text>
+
+      <g filter="url(#shA2)"><rect x="500" y="86" width="120" height="92" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="560" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Thread B</text>
+      <text x="560" y="122" text-anchor="middle" font-size="10.5" fill="#5b6472">Enter(obj) ⏳ waits</text>
+      <text x="560" y="140" text-anchor="middle" font-size="10.5" fill="#5b6472">…A exits, enters ✅</text>
+      <text x="560" y="158" text-anchor="middle" font-size="10.5" fill="#5b6472">counter++ → 2</text>
+
+      <text x="480" y="116" text-anchor="middle" font-size="12">⏳</text>
+      <path d="M500,132 H460" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arA2Amber)">
+        <animate attributeName="stroke-dashoffset" values="7;0" dur="1s" repeatCount="indefinite"/>
+      </path>
+
+      <path d="M400,178 V194" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arA2)"/>
+      <path d="M560,178 V194" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arA2)"/>
+
+      <g filter="url(#shA2)"><rect x="345" y="194" width="270" height="40" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="211" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">counter = 2 ✅</text>
+      <text x="480" y="226" text-anchor="middle" font-size="10" fill="#5b6472">every increment counted</text>
+
+      <text x="320" y="258" text-anchor="middle" font-size="11" fill="#5b6472">Same shared counter, same two threads — only one version can lose an update</text>
+    </svg>
+    <figcaption>A lock doesn't stop the race by luck — it stops it by making Thread B wait for Thread A's block to finish.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>lock(this)</code> makes the whole object thread-safe.</b> It only
+    blocks other code that locks the exact same reference — since <code>this</code> is public,
+    unrelated code elsewhere can lock on it too, creating contention (or deadlocks) that have
+    nothing to do with the field you meant to protect; lock on a private, dedicated object instead.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Can the same thread take the same lock twice?"</b> Yes —
+    <code>Monitor</code> is reentrant. A thread that already holds the lock can enter another
+    <code>lock</code> block on the same object without blocking itself, as long as it exits the
+    same number of times it entered.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>lock</code> is syntactic sugar for <code>Monitor.Enter</code>
+    and <code>Monitor.Exit</code> wrapped in a try/finally — it gives one thread exclusive access
+    to a block of code at a time, so a shared race condition can't leave changes half-applied."</p>
+    <ul>
+      <li><code>lock</code> → compiles to <span class="hl hl-blue">Monitor.Enter / Monitor.Exit in a try/finally</span>.</li>
+      <li>A race condition = <span class="hl hl-hot">two threads read-modify-write shared state</span> without coordination.</li>
+      <li>Never lock on <code>this</code>/<code>typeof(X)</code> — <span class="hl hl-adv">use a private, dedicated lock object</span>.</li>
+      <li>A hot shared cache → reach for <span class="hl hl-inter">ReaderWriterLockSlim</span>, not one lock around everything.</li>
+      <li><code>Monitor</code> is <span class="hl hl-basic">reentrant</span> — the same thread can safely re-enter its own lock.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">lock (obj) { ... }</span> is the compiler doing the boring part
+      for you: it emits <code>Monitor.Enter(obj)</code> before the block and
+      <code>Monitor.Exit(obj)</code> in a <code>finally</code> after it, so the lock is released
+      even if the block throws. Nothing about it is special-cased by the runtime beyond that —
+      it's a fixed expansion, every time.</p>
+
+      <p><span class="hl hl-inter">Exclusive</span> means exactly one thread is inside the block
+      at a time. Any other thread that calls <code>Monitor.Enter</code> on the *same* object
+      simply parks there until the first thread calls <code>Monitor.Exit</code> — it's not busy
+      spinning, it's asleep until woken.</p>
+
+      <p>A race condition is what happens without that: two clerks both glance at "12 tickets
+      left," both write down 11, and one sale vanishes — not because either clerk made a mistake,
+      but because neither knew the other had looked at the same number at the same moment.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">int</span> counter = <span class="num">0</span>;
+<span class="kw">void</span> Increment() {
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">100000</span>; i++)
+        counter++;              <span class="cx-err">// ❌ read-modify-write, not atomic</span>
+}
+
+Parallel.Invoke(Increment, Increment);
+Console.WriteLine(counter);     <span class="cx-err">// ❌ almost never 200000</span></code></pre>
+      </div>
+      <p class="cx-note"><code>counter++</code> is really three steps — read, add one, write back
+      — and two threads can interleave between them.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">readonly</span> <span class="kw">object</span> _gate = <span class="kw">new</span>();
+<span class="kw">int</span> counter = <span class="num">0</span>;
+<span class="kw">void</span> Increment() {
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">100000</span>; i++)
+        <span class="kw">lock</span> (_gate) { counter++; }   <span class="cx-ok">// ✅ one thread inside at a time</span>
+}
+
+Parallel.Invoke(Increment, Increment);
+Console.WriteLine(counter);               <span class="cx-ok">// ✅ always 200000</span></code></pre>
+      </div>
+      <p class="cx-note"><code>lock (_gate)</code> forces the second thread to wait until the
+      first thread's block finishes.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">lock</span> (_gate) {
+    counter++;
+}
+
+<span class="cx-cmt">// is (roughly) syntactic sugar for:</span>
+Monitor.Enter(_gate);
+<span class="kw">try</span> {
+    counter++;
+} <span class="kw">finally</span> {
+    Monitor.Exit(_gate);          <span class="cx-ok">// ✅ still runs even if an exception is thrown</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">The <code>try</code>/<code>finally</code> is the important part — it
+      guarantees <code>Monitor.Exit</code> runs even if the block throws.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A single-occupancy bathroom door lock.</b> One person turns the latch, everyone else
+      outside just waits — there's no line-cutting and no two people getting in at once. That's
+      all <code>lock</code> is: a latch on a block of code.</p>
+
+      <p><b>Architecture:</b> You have a shared, in-memory cache that's read constantly and
+      written only occasionally, across many threads — how would you structure the locking so
+      reads don't serialize behind each other? A single <code>lock</code> around the whole cache
+      would force every read to queue up behind every other read, not just behind writes. Reach
+      for a <code>ReaderWriterLockSlim</code> (or a concurrent collection built for this exact
+      shape) instead, so any number of readers can proceed together and only a writer needs
+      exclusive access.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="1.html">← async/await Internals</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to C# Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="3.html">The Dispose Pattern &amp; Finalizers →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · C# · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

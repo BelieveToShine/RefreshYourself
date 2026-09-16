@@ -8,19 +8,30 @@ planned, and why, without re-deriving any of it from the live pages.
 
 ## The site is mid-rebuild — read this before starting a new track's roadmap
 
-Locked with the user on 2026-09-15: RefreshYourself is moving from a topic-tutorial site to an
-**interview question bank** for 3+ year developers, across a new track pipeline (C# → OOP →
-.NET/ASP.NET Core → Web API → EF Core → SQL → Azure, plus React/DSA/AI unaffected). Every track
-now goes through 7 phases **before** any page gets built:
+Locked with the user on 2026-09-15 (audience/depth definition refined 2026-09-16): RefreshYourself
+is moving from a topic-tutorial site to an **interview question bank for experienced
+professionals — roughly 3+ years through senior, lead, architect, and principal** — across a new
+track pipeline (C# → OOP → .NET/ASP.NET Core → Web API → EF Core → SQL → Azure, plus React/DSA/AI
+unaffected). Every track now goes through 7 phases **before** any page gets built:
 
 1. **Question taxonomy** — what could an interviewer ask, grouped by concept, no tier/priority yet
 2. Review — dedupe, identify gaps
 3. Group questions into actual pages
-4. Assign Basic / Intermediate / Advanced — **by interview depth (recall-speed vs. internals/
-   trade-offs/architecture), never by "beginner vs. expert tutorial"**
-5. Assign interview priority — 🔥 Must Know / ⭐ Should Know / 🧠 Deep Dive (independent of tier)
+4. Assign Basic / Intermediate / Advanced — **by question type, not difficulty or seniority.**
+   See [`rules/interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)
+   for the full definition — Advanced explicitly includes architecture/trade-off/scenario
+   questions, with **no separate "Architect" tier.**
+5. Assign interview priority — 🔥 Must Know / ⭐ Should Know / 🧠 Deep Dive (independent of
+   tier — never a seniority signal; see the same rule file)
 6. Build the roadmap/index
-7. Build or update the actual topic pages
+7. Build or update the actual topic pages — **including a mandatory full-coverage automated
+   diagram-verification sweep before the phase counts as done**, whether pages were built by the
+   orchestrating session directly or by delegated subagents. See
+   [`rules/diagram-style.md`](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
+   for the incident that made this mandatory (2026-09-16, C#'s 35 new pages: 5 real defects
+   slipped past every subagent's own "verified by computing coordinates" self-report) and the
+   exact script/process to run against every page — not a sample — before handing the batch to
+   the user for manual review.
 
 **[`csharp/question-taxonomy.md`](csharp/question-taxonomy.md) is the Phase-1 reference
 implementation** — its format (concept groups → Core concept/Understanding/Comparison/Pitfall/
@@ -36,7 +47,7 @@ track ends up with once it reaches Phase 6 — just know that for any track stil
 
 | Track | Covers |
 |---|---|
-| [csharp/](csharp/overview.md) | **Phases 1–6 complete** — [question-taxonomy.md](csharp/question-taxonomy.md) → [roadmap.md](csharp/roadmap.md), 49 pages tiered+prioritized. Basic 14/14 written+frozen; 35 more planned, Phase 7 not started. |
+| [csharp/](csharp/overview.md) | **All 7 phases complete — 49/49 pages written.** [question-taxonomy.md](csharp/question-taxonomy.md) → [roadmap.md](csharp/roadmap.md). Original 14 Basic pages frozen; the other 35 are new, awaiting page-by-page review. |
 | [oops/](oops/question-taxonomy.md) | OOP — no old roadmap existed. [question-taxonomy.md](oops/question-taxonomy.md) (Phase 1, awaiting review) is the only doc so far. |
 | [dotnet/](dotnet/question-taxonomy.md) | .NET / ASP.NET Core (incl. MVC as a grouped subsection) — rescoped from the old, never-written ".NET Framework" slot. [question-taxonomy.md](dotnet/question-taxonomy.md) (Phase 1, awaiting review) is the only doc so far. |
 | [webapi/](webapi/question-taxonomy.md) | Web API — brand-new track, no site folder yet (Phase 6/7 work). [question-taxonomy.md](webapi/question-taxonomy.md) (Phase 1, awaiting review) is the only doc so far. |

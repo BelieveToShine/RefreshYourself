@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>unsafe — Raw Pointers &amp; Memory Access — C# Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="csharp/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#1d4ed8;">🎵 C#</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Unsafe Code &amp; Pointers</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 C# · Advanced · Deep Dive</div>
+    <h1><code>unsafe</code> — <span class="hl hl-teal">trading safety for raw memory access</span></h1>
+    <p class="interview-q">"What does the <code>unsafe</code> keyword actually unlock?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>A systems-programming question, not an everyday-code one — it checks that you know the CLR's safety net exists at all, and what it actually covers.</li>
+        <li>Most C# developers never write an <code>unsafe</code> block outside interop or genuine perf-critical buffer work — knowing the boundary matters more than the syntax.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>normal C#</code> <span class="rarrow">→</span> <b>CLR checks</b> every access</p>
+      <p class="rrow"><code>unsafe</code> <span class="rarrow">→</span> <b>raw pointer</b>, no checks</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>unsafe</code></b> switches off the CLR's <b>bounds and type checks</b> for that one block — you're now responsible for staying in bounds yourself.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 366" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA9" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA9" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arA9Red" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">ACCESSING MEMORY — buffer[i]</text>
+
+      <path d="M320,30 V46" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M180,46 H460" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M180,46 V78" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA9)"/>
+      <path d="M460,46 V78" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA9)"/>
+
+      <g filter="url(#shA9)"><rect x="90" y="78" width="180" height="36" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="180" y="100" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">✅ Safe C# (default)</text>
+      <g filter="url(#shA9)"><rect x="370" y="78" width="180" height="36" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="460" y="100" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">⚠️ unsafe context</text>
+
+      <path d="M180,114 V142" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA9)"/>
+      <path d="M550,96 H582" fill="none" stroke="#dc2626" stroke-width="1.6"/>
+      <path d="M582,96 V200" fill="none" stroke="#dc2626" stroke-width="1.6"/>
+      <path d="M582,200 H460" fill="none" stroke="#dc2626" stroke-width="1.6"/>
+      <path d="M460,200 V226" fill="none" stroke="#dc2626" stroke-width="1.6" marker-end="url(#arA9)"/>
+
+      <g filter="url(#shA9)"><rect x="110" y="142" width="140" height="50" rx="14" fill="#f1f5f9" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="180" y="163" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🔒 THE FENCE</text>
+      <text x="180" y="180" text-anchor="middle" font-size="10.5" fill="#5b6472">checks every access</text>
+
+      <g filter="url(#shA9)"><rect x="390" y="142" width="140" height="50" rx="14" fill="#f1f5f9" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="6 4"/></g>
+      <text x="460" y="163" text-anchor="middle" font-size="13" font-weight="700" fill="#b91c1c">🚧 THE FENCE</text>
+      <text x="460" y="180" text-anchor="middle" font-size="10.5" fill="#5b6472">no check performed</text>
+
+      <path d="M180,192 V226" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA9)"/>
+
+      <g filter="url(#shA9)"><rect x="90" y="226" width="180" height="38" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="180" y="249" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">buffer[i] → checked</text>
+      <g filter="url(#shA9)"><rect x="370" y="226" width="180" height="38" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="460" y="249" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">*(p + i) → raw address</text>
+
+      <path d="M180,264 V292" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA9)"/>
+      <path d="M460,264 V292" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arA9Red)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shA9)"><rect x="60" y="292" width="240" height="44" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="180" y="310" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">✅ throws &amp; catches it</text>
+      <text x="180" y="327" text-anchor="middle" font-size="10.5" fill="#5b6472">IndexOutOfRangeException</text>
+
+      <g filter="url(#shA9)"><rect x="340" y="292" width="240" height="44" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="460" y="310" text-anchor="middle" font-size="13" font-weight="700" fill="#b91c1c">❌ silent corruption</text>
+      <text x="460" y="327" text-anchor="middle" font-size="10.5" fill="#5b6472">or a crash — nothing catches it</text>
+
+      <text x="320" y="354" text-anchor="middle" font-size="11" fill="#5b6472">Normal C# reads through a fence that checks every access — unsafe steps around it entirely</text>
+    </svg>
+    <figcaption>Same memory, two different rules — one keeps a fence around it, the other routes straight past it.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>unsafe</code> doesn't mean "broken" or "won't compile."</b> It's fully valid, verifiable C# that switches off one specific guarantee — bounds and type safety on raw memory — not every safety net at once.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"So when would you actually reach for it in real application code?"</b> Only in a narrow, provably-hot path — like pixel or byte-buffer manipulation — after profiling has already shown the managed alternative is the real bottleneck, never as a default choice.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>unsafe</code> unlocks raw pointer arithmetic and direct memory access, bypassing the CLR's type and bounds checks. It's a narrow escape hatch — the right call only in a proven, hot path like pixel or byte-buffer work, after profiling shows the managed code is the actual bottleneck, never a default optimization."</p>
+    <ul>
+      <li><code>unsafe</code> <span class="hl hl-adv">→ raw pointers, no bounds or type checks</span>.</li>
+      <li>Needs the <code>AllowUnsafeBlocks</code> compiler flag — <span class="hl hl-teal">off by default</span> for a reason.</li>
+      <li><code>fixed</code> pins a managed reference in place so a pointer into it stays valid while you use it.</li>
+      <li>Reach for it only <span class="hl hl-hot">after profiling proves</span> the managed path is the bottleneck.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Normal C# never lets you touch memory directly. Every array access, every field read,
+      goes through the CLR's own checks — <span class="hl hl-blue">is this index inside the
+      array?</span>, <span class="hl hl-blue">is this reference really the type it claims to
+      be?</span> Those checks are the fence around memory: you can only reach what's on your
+      side of it.</p>
+
+      <p><code>unsafe</code> doesn't tear that fence down for the whole program — it opens one
+      gap in it, for one block. Inside an <code>unsafe</code> block you can declare a raw
+      pointer (<code>byte*</code>), walk it with pointer arithmetic, and read or write memory
+      directly — no index check, no type check, nothing stopping a bad address from touching
+      whatever happens to sit next to it.</p>
+
+      <p>The trade runs both ways: pointer arithmetic on a pinned buffer can be measurably
+      faster than bounds-checked indexing in a tight loop, but every bug that check used to
+      catch now fails silently instead of throwing — a bad index doesn't raise
+      <code>IndexOutOfRangeException</code> anymore, it just corrupts nearby memory or crashes
+      the process.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Normal C#</th><th><code>unsafe</code></th></tr></thead>
+        <tbody>
+          <tr><th>Memory access</th><td>through safe references only</td><td>raw pointers, direct addresses</td></tr>
+          <tr><th>Bounds/type checks</th><td>✅ always enforced</td><td class="no">❌ none — you own it</td></tr>
+          <tr><th>On a bad access</th><td>throws a catchable exception</td><td>silent corruption or a crash</td></tr>
+          <tr><th>Needs</th><td>nothing extra</td><td><code>AllowUnsafeBlocks</code> + <code>unsafe</code>/<code>fixed</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">int</span>[] numbers = { <span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span> };
+<span class="kw">int</span> x = numbers[<span class="num">5</span>];   <span class="cx-err">// ❌ throws IndexOutOfRangeException — caught immediately</span></code></pre>
+      </div>
+      <p class="cx-note">The CLR checks every index before it touches memory — a bad index fails loudly, right where the mistake is.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">unsafe</span>
+{
+    <span class="kw">fixed</span> (<span class="kw">int</span>* p = numbers)   <span class="cx-cmt">// pins the array — p now points at numbers[0]</span>
+    {
+        <span class="kw">int</span> x = *(p + <span class="num">5</span>);       <span class="cx-err">// ⚠️ no check — reads whatever memory happens to be there</span>
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">Same out-of-range index, but nothing stops it — <code>p + 5</code> is just an address now, not a checked position in an array.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Normal C# is reaching into a locked display case through its front opening</b> — you
+      can only take what's actually inside, at a valid slot. <code>unsafe</code> is reaching
+      around the back and pulling straight off the shelf, address by address — faster if you
+      know exactly what's there, but nothing stops you grabbing the wrong shelf entirely.</p>
+      <p>In real code this shows up in narrow, profiled hot paths — decoding a large image's raw
+      pixel buffer, or a high-throughput byte-buffer parser — where the managed, bounds-checked
+      version was measured and proven to be the actual bottleneck.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="8.html">← Concurrent Collections</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to C# Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="10.html">Reflection →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · C# · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

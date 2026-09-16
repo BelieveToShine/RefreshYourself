@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garbage Collection — C# Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="csharp/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#1d4ed8;">🎵 C#</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Garbage Collection</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 C# · Advanced · Must Know</div>
+    <h1>Garbage Collection — <span class="hl hl-hot">why gen 0 gets checked far more than gen 2</span></h1>
+    <p class="interview-q">"What are generations 0, 1, and 2, and why do they exist?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>A leading cause of mysterious latency spikes in high-throughput services — a full Gen 2 collection can pause the app for milliseconds to seconds.</li>
+        <li>Interviewers use it to check whether you see the GC as a performance concern, not just "automatic memory cleanup."</li>
+        <li>The LOH's fragmentation behavior is a real production surprise most developers only learn about after hitting it.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Gen 0</code> <span class="rarrow">→</span> <b>checked constantly</b>, cheap</p>
+      <p class="rrow"><code>Gen 1</code> <span class="rarrow">→</span> <b>buffer</b> in between</p>
+      <p class="rrow"><code>Gen 2</code> <span class="rarrow">→</span> <b>checked rarely</b>, expensive</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Gen 0</code></b> is nearly free to scan. <b><code>Gen 2</code></b> is expensive to scan — so it's checked least.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 330" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA5" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA5Green" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arA5Rose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <path d="M390,10 V270" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+
+      <text x="190" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">GENERATIONAL HEAP</text>
+      <text x="190" y="34" text-anchor="middle" font-size="10.5" fill="#5b6472">objects that survive get promoted upward</text>
+
+      <text x="515" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">LARGE OBJECT HEAP (LOH)</text>
+      <text x="515" y="34" text-anchor="middle" font-size="10.5" fill="#5b6472">⏭️ bypasses Gen 0 entirely</text>
+
+      <g filter="url(#shA5)"><rect x="30" y="46" width="320" height="220" rx="18" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="190" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">GEN 2</text>
+      <text x="190" y="84" text-anchor="middle" font-size="10.5" fill="#5b6472">🔍 checked rarely, expensive</text>
+
+      <g filter="url(#shA5)"><rect x="65" y="94" width="250" height="142" rx="16" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="190" y="118" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">GEN 1</text>
+      <text x="190" y="132" text-anchor="middle" font-size="10.5" fill="#5b6472">🔍🔍 checked occasionally</text>
+
+      <g filter="url(#shA5)"><rect x="100" y="142" width="180" height="74" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="190" y="174" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">GEN 0</text>
+      <text x="190" y="192" text-anchor="middle" font-size="10.5" fill="#5b6472">🔍🔍🔍 checked constantly</text>
+
+      <path d="M190,212 V236" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arA5Green)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+      <path d="M190,240 V262" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arA5Green)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+      <text x="232" y="250" font-size="10.5" font-weight="700" fill="#166534">🎓 promoted</text>
+
+      <path d="M515,44 V96" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA5Rose)"/>
+
+      <g filter="url(#shA5)"><rect x="435" y="96" width="160" height="120" rx="16" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="515" y="124" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐘 LOH</text>
+      <text x="515" y="142" text-anchor="middle" font-size="10.5" fill="#5b6472">separate heap</text>
+      <text x="515" y="160" text-anchor="middle" font-size="10.5" fill="#5b6472">🧩 rarely compacted</text>
+      <text x="515" y="178" text-anchor="middle" font-size="10.5" fill="#5b6472">⚠️ fragmentation risk</text>
+
+      <text x="320" y="288" text-anchor="middle" font-size="11" fill="#5b6472">🎓 Survive a collection → promoted upward (Gen 0 → Gen 1 → Gen 2)</text>
+      <text x="320" y="304" text-anchor="middle" font-size="11" fill="#5b6472">🐘 Large objects skip straight to the LOH — bypassing Gen 0 entirely</text>
+    </svg>
+    <figcaption>Gen 0 is scanned constantly because it's cheap; Gen 2 is scanned rarely because it's expensive. Large objects skip the generations entirely and land straight on the LOH.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"A garbage collection always scans the whole heap."</b> It doesn't — a Gen 0 collection only scans Gen 0; Gen 1 and Gen 2 are left completely untouched unless a higher-generation collection is actually triggered.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What about really large objects — do they also start in Gen 0?"</b> No — allocations of roughly 85KB or more go straight to a separate heap, the Large Object Heap, skipping Gen 0 entirely; it's collected less often and, unlike the rest of the heap, historically isn't compacted by default, which can fragment it over time.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Most objects die young, so the runtime organizes the heap into generations. Gen 0 is checked constantly because it's small and cheap to scan; Gen 2 is checked rarely because scanning long-lived survivors is expensive. Large allocations — roughly 85KB or more — skip the generations entirely and go straight to a separate Large Object Heap, which historically isn't compacted by default."</p>
+    <ul>
+      <li><code>Gen 0</code> → <span class="hl hl-blue">checked on almost every collection</span> — small, cheap, most objects die here.</li>
+      <li><code>Gen 2</code> → <span class="hl hl-teal">checked rarely</span> — only long-lived survivors end up there, and scanning it is expensive.</li>
+      <li><code>LOH</code> → <span class="hl hl-hot">separate heap for big allocations</span> (~85KB+), bypassing the generations entirely.</li>
+      <li>In a low-latency service, <span class="hl hl-basic">the real fix is allocating less</span> — pool buffers, avoid boxing/LINQ allocations — not tuning GC settings first.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Most objects allocated in a request or a loop iteration — temporaries, small helper
+      objects — never live long enough to see a second collection. The runtime builds its whole
+      strategy around that one observation: check the newest allocations (<span class="hl hl-blue">Gen 0</span>)
+      constantly, since that's where almost all the garbage actually is, and check older
+      survivors far less, since scanning them rarely finds anything to reclaim.</p>
+
+      <p>An object that survives a Gen 0 collection is <b>promoted</b> to Gen 1; survive again and
+      it's promoted to Gen 2. <span class="hl hl-teal">Gen 2</span> is where genuinely long-lived
+      objects — caches, singletons, static state — end up, and a full Gen 2 collection is the
+      expensive one, because it has to walk everything still alive across the whole heap.</p>
+
+      <p>The <span class="hl hl-hot">Large Object Heap</span> is a separate concern entirely: any
+      allocation at or above roughly 85KB goes straight there, never touching Gen 0. It's
+      collected on its own schedule and, unlike the generational heap, historically isn't
+      compacted by default — repeated large allocations can leave it fragmented with unusable
+      gaps even when there's technically enough free memory.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Gen 0</th><th>Gen 1</th><th>Gen 2</th><th>LOH</th></tr></thead>
+        <tbody>
+          <tr><th>Holds</th><td>newest objects</td><td>recent survivors</td><td>long-lived survivors</td><td>large allocations (~85KB+)</td></tr>
+          <tr><th>Checked</th><td>constantly</td><td>occasionally</td><td>rarely</td><td>on its own schedule</td></tr>
+          <tr><th>Cost to scan</th><td>cheap</td><td>moderate</td><td>expensive</td><td>expensive (huge objects)</td></tr>
+          <tr><th>Compacted?</th><td>✅ yes</td><td>✅ yes</td><td>✅ yes</td><td class="no">❌ not by default</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Console</span>.WriteLine(<span class="ty">GC</span>.CollectionCount(0));  <span class="cx-cmt">// Gen 0 — this climbs constantly</span>
+<span class="ty">Console</span>.WriteLine(<span class="ty">GC</span>.CollectionCount(2));  <span class="cx-cmt">// Gen 2 — this barely moves</span></code></pre>
+      </div>
+      <p class="cx-note">Watch the two numbers in a busy app — <code>Gen 0</code>'s count climbs constantly while <code>Gen 2</code>'s barely moves.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> small = <span class="kw">new</span> <span class="kw">byte</span>[1_000];    <span class="cx-cmt">// ~1KB — lands in Gen 0, normal heap</span>
+<span class="kw">var</span> big   = <span class="kw">new</span> <span class="kw">byte</span>[100_000];  <span class="cx-cmt">// ~100KB — over ~85KB, straight to the LOH</span></code></pre>
+      </div>
+      <p class="cx-note">Crossing roughly 85KB sends the allocation straight to the <code>LOH</code> — it never touches <code>Gen 0</code> at all.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">ArrayPool</span>&lt;<span class="kw">byte</span>&gt; pool = <span class="ty">ArrayPool</span>&lt;<span class="kw">byte</span>&gt;.Shared;
+<span class="kw">var</span> buffer = pool.Rent(4096);   <span class="cx-ok">// ✅ reused — no new Gen 0 allocation</span>
+pool.Return(buffer);          <span class="cx-cmt">// back in the pool for next time</span></code></pre>
+      </div>
+      <p class="cx-note">In a low-latency service, this is the real fix — fewer allocations means fewer, cheaper collections, not tuning the collector itself.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Analogy:</b> Gen 0 is the inbox on your desk — checked constantly because that's
+      where new, quickly-resolved things pile up. Gen 2 is the archive room — checked rarely,
+      because going through it is expensive and most of what's there is staying for good.</p>
+
+      <p><b>Architecture scenario:</b> You're designing a low-latency service where an occasional
+      multi-second GC pause is unacceptable — what do you actually do about it? Start by
+      minimizing the allocation rate in hot paths — pool and reuse buffers, avoid boxing and
+      LINQ allocations that create hidden garbage — since fewer allocations mean fewer, cheaper
+      collections. Beyond that, evaluate Server GC vs. Workstation GC and concurrent/background
+      GC settings, and in the most extreme cases redesign around <code>Span&lt;T&gt;</code>-based
+      buffer reuse to avoid large short-lived allocations entirely. Calling
+      <code>GC.Collect()</code> and hoping is not the fix.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="4.html">← IEnumerable&lt;T&gt; vs. IQueryable&lt;T&gt;</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to C# Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="6.html">Span&lt;T&gt; &amp; Memory&lt;T&gt; →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · C# · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

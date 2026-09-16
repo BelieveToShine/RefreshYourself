@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>async/await — pausing without blocking the thread — C# Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="csharp/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#1d4ed8;">🎵 C#</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">async / await — the Basics</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 C# · Intermediate · Must Know</div>
+    <h1><code>async</code>/<code>await</code> — <span class="hl hl-hot">pausing without blocking the thread</span></h1>
+    <p class="interview-q">"What does <code>async</code>/<code>await</code> actually do? Does <code>async</code> create a new thread?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>The most-asked question after OOP basics — a wrong mental model here is hard to recover from mid-interview.</li>
+        <li>The moment your code makes any network or database call, this is exactly what you're relying on.</li>
+        <li>A very common opener specifically because so many candidates confuse it with multithreading.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline"><code>await</code> = <b>"give the thread back until this is ready."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <code>async</code> just marks the method as pausable — the actual pause happens at <code>await</code>, and no new thread is ever created for it.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 330" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI15" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI15" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI15Amber" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arI15Blue" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.4">AWAIT — WHAT HAPPENS TO THE THREAD, OVER TIME</text>
+
+      <text x="45" y="34" font-size="10.5" fill="#5b6472">⏱ time passing</text>
+      <path d="M45,42 H595" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arI15)"/>
+
+      <text x="45" y="54" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.3">🧵 CALLING THREAD</text>
+
+      <g filter="url(#shI15)"><rect x="45" y="64" width="130" height="38" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="110" y="87" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Runs the method</text>
+
+      <g filter="url(#shI15)"><rect x="245" y="64" width="180" height="44" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="335" y="84" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">Returns immediately</text>
+      <text x="335" y="99" text-anchor="middle" font-size="10" fill="#5b6472">thread is free immediately</text>
+
+      <path d="M175,83 H245" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15)"/>
+      <path d="M210,83 V145" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arI15Amber)"/>
+      <circle cx="210" cy="83" r="3" fill="#64748b"/>
+
+      <rect x="218" y="118" width="64" height="18" rx="9" fill="#ffffff" stroke="#d97706" stroke-width="1.2"/>
+      <text x="250" y="130.5" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">await</text>
+
+      <text x="300" y="137" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.3">🌐 NO THREAD NEEDED</text>
+      <g filter="url(#shI15)"><rect x="145" y="145" width="315" height="50" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="302" y="167" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">I/O happens elsewhere</text>
+      <text x="302" y="183" text-anchor="middle" font-size="10" fill="#5b6472">no thread attached — nothing blocks or spins</text>
+
+      <path d="M460,195 V245" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arI15Blue)"><animate attributeName="stroke-dashoffset" values="9;0" dur="0.8s" repeatCount="indefinite"/></path>
+
+      <rect x="480" y="206" width="90" height="20" rx="10" fill="#ffffff" stroke="#3b82f6" stroke-width="1.2"/>
+      <text x="525" y="220" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">task completes</text>
+
+      <text x="450" y="237" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.3">🧵 RESUMPTION</text>
+      <g filter="url(#shI15)"><rect x="450" y="245" width="160" height="46" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="530" y="264" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Method resumes</text>
+      <text x="530" y="280" text-anchor="middle" font-size="9.5" fill="#5b6472">often a different thread</text>
+
+      <text x="320" y="312" text-anchor="middle" font-size="11" fill="#5b6472">No thread ever sits there spinning — freed at await, picked back up once the work is done.</text>
+    </svg>
+    <figcaption><code>await</code> hands control back to the caller immediately — the wait happens off to the side, and resumption typically lands on a thread-pool thread.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>async</code> does not mean "runs in parallel" or "runs on a new thread."</b> It only means the method can give up the calling thread at an <code>await</code> instead of blocking it — the keyword alone never creates a thread.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What happens if you call an async method but never await it?"</b> It starts running right away and hands you back a <code>Task</code> you're ignoring — execution moves on immediately, and if that call throws, the exception is silently lost unless something later awaits or observes that task.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>async</code> marks a method that can pause at an <code>await</code> without blocking the calling thread. <code>await</code> schedules the rest of the method to resume once the awaited <code>Task</code> completes. Neither keyword creates a new thread or forces parallelism — that's a separate decision."</p>
+    <ul>
+      <li><code>async</code> → <span class="hl hl-inter">marks the method as pausable</span>, it doesn't touch threads by itself.</li>
+      <li><code>await</code> → <span class="hl hl-blue">gives the thread back immediately</span>; nothing spins while the <code>Task</code> is pending.</li>
+      <li>Not parallelism → <span class="hl hl-hot">one thread can be "waiting" on many operations</span> at once, because it isn't really waiting on any of them.</li>
+      <li>Resumption → <span class="hl hl-basic">usually lands on a thread-pool thread</span>, not necessarily the one that started.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">async</span> doesn't change what a method computes — it changes what happens the moment execution reaches an <code>await</code>. Instead of the calling thread sitting there until the awaited work finishes, the method's state is saved and the thread is handed straight back to whoever called it. It's like leaving a note saying "call me back when this is ready," instead of standing at the printer watching it finish.</p>
+
+      <p><span class="hl hl-inter">await</span> is the real pause point — the compiler rewrites the method into a state machine, so everything after it becomes a continuation scheduled to run once the awaited <code>Task</code> completes. Neither keyword spins up a thread on its own: for genuine I/O (a network call, a file read), the operating system handles the wait, and no managed thread is occupied at all while it's pending.</p>
+
+      <p>This is why <code>async</code>/<code>await</code> is about <b>concurrency, not parallelism</b> — one thread can be "waiting" on hundreds of I/O operations at once, because it isn't actually blocked on any single one of them; it's free to do other work until each one calls back.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">async</span> Task&lt;<span class="kw">string</span>&gt; GetDataAsync()
+{
+    Console.WriteLine(<span class="str">"Starting call…"</span>);
+    <span class="kw">string</span> result = <span class="kw">await</span> httpClient.GetStringAsync(url);  <span class="cx-cmt">// thread returns here — no blocking</span>
+    Console.WriteLine(<span class="str">"Got it: "</span> + result);
+    <span class="kw">return</span> result;
+}</code></pre>
+      </div>
+      <p class="cx-note">The thread that called <code>GetDataAsync()</code> is free the instant it hits <code>await</code> — it never sits there waiting for the response.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>GetDataAsync();  <span class="cx-err">// ❌ fire-and-forget — not awaited</span>
+Console.WriteLine(<span class="str">"This runs immediately, before GetDataAsync finishes"</span>);</code></pre>
+      </div>
+      <p class="cx-note">Not awaiting doesn't stop the call — it just means you've lost the ability to know when it finishes, or to see any exception it throws.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your endpoint needs data from three independent external services</b> — say pricing, inventory, and shipping — before it can respond. None of the three depends on another's result, so awaiting them one at a time turns three network round-trips into one long serial wait. Start all three calls first, then await them together (<code>Task.WhenAll</code>) — while all three are pending, no thread is blocked on any of them; the thread is simply free until each one reports back.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="14.html">← yield return &amp; Custom Iterators</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to C# Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="16.html">Task vs. Thread vs. ThreadPool →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · C# · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

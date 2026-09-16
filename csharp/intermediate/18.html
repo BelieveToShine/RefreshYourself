@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDisposable &amp; using — C# Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="csharp/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#1d4ed8;">🎵 C#</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">IDisposable &amp; using — the Basics</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 C# · Intermediate · Must Know</div>
+    <h1><code>IDisposable</code> &amp; <code>using</code> — <span class="hl hl-hot">a cleanup you can't forget</span></h1>
+    <p class="interview-q">"What problem does <code>IDisposable</code> + <code>using</code> actually solve?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Any resource that isn't managed memory — a file handle, a database connection, a network socket — has to be released explicitly; the garbage collector doesn't know how.</li>
+        <li>Comes up the moment code opens a file, a <code>SqlConnection</code>, or a stream — which is most real backend code.</li>
+        <li>A near-guaranteed interview opener because it sounds simple but is easy to get subtly wrong — forgetting cleanup on an early return or a thrown exception.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline"><code>using</code> = <b>"cleanup you can't forget — even when an exception fires."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <code>using</code> is just a <b><code>try</code></b>/<b><code>finally</code></b> the compiler writes for you, calling <b><code>Dispose()</code></b> either way.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI18" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI18" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI18Red" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="26" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.5">WHAT USING ACTUALLY COMPILES DOWN TO</text>
+
+      <g filter="url(#shI18)"><rect x="20" y="50" width="200" height="200" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="40" y="72" font-size="13" font-weight="700" fill="#1d4ed8">📦 using block</text>
+      <text x="40" y="100" font-size="12.5" fill="#1e293b">using (var c = Open())</text>
+      <text x="40" y="124" font-size="12.5" fill="#1e293b">{</text>
+      <text x="40" y="148" font-size="12.5" fill="#1e293b">    c.Query(...);</text>
+      <text x="40" y="172" font-size="12.5" fill="#1e293b">}</text>
+      <text x="40" y="210" font-size="10.5" fill="#5b6472">one block, one cleanup</text>
+
+      <path d="M220,150 H420" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI18)"/>
+      <rect x="235" y="101" width="170" height="28" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+      <text x="320" y="119" text-anchor="middle" font-size="10" fill="#475569">compiler expands this into</text>
+
+      <g filter="url(#shI18)"><rect x="420" y="50" width="200" height="200" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="440" y="72" font-size="13" font-weight="700" fill="#166534">🔧 try / finally</text>
+      <text x="440" y="100" font-size="12.5" fill="#1e293b">try {</text>
+      <text x="440" y="124" font-size="12.5" fill="#1e293b">    c.Query(...);</text>
+      <text x="440" y="148" font-size="12.5" fill="#1e293b">}</text>
+      <text x="440" y="172" font-size="12.5" fill="#1e293b">finally {</text>
+      <text x="440" y="196" font-size="12.5" fill="#1e293b">    c.Dispose();</text>
+      <text x="440" y="220" font-size="12.5" fill="#1e293b">}</text>
+      <text x="440" y="238" font-size="10.5" fill="#5b6472">runs however the block exits</text>
+
+      <text x="602" y="112" text-anchor="middle" font-size="13">💥</text>
+      <path d="M602,124 V196" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arI18Red)">
+        <animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/>
+      </path>
+
+      <text x="320" y="280" text-anchor="middle" font-size="11" fill="#b91c1c">⚡ Dispose() still runs even if Query() throws — that's the whole reason using exists</text>
+    </svg>
+    <figcaption>The exact expansion: a <code>using</code> block is a <code>try</code>/<code>finally</code> the compiler writes for you, so cleanup happens no matter how the block exits.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>using</code> is not a <code>try</code>/<code>catch</code>.</b> It only guarantees <code>Dispose()</code> runs in a <code>finally</code> — it never swallows the exception, which still propagates up after cleanup.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Can you use <code>using</code> with more than one resource at a time?"</b> Yes — stack multiple <code>using</code> statements in a row (they implicitly nest), or use a C# 8 <code>using</code> declaration (<code>using var c = Open();</code>), which disposes at the end of the enclosing block instead of a dedicated one.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>IDisposable</code> and <code>using</code> exist to guarantee a scarce resource — a file handle, a connection — gets released even if an exception is thrown while it's being used. The compiler expands <code>using</code> into a <code>try</code>/<code>finally</code> that calls <code>Dispose()</code> in the <code>finally</code> block, so cleanup runs no matter how the block exits."</p>
+    <ul>
+      <li><span class="hl hl-blue">Solves</span> the "forgot to release it" problem — cleanup happens even on an early return or a thrown exception.</li>
+      <li><code>using</code> <span class="rarrow">→</span> <span class="hl hl-hot">try/finally</span>, generated by the compiler — guaranteed structure, not magic.</li>
+      <li>Only types that <span class="hl hl-inter">implement <code>IDisposable</code></span> can go inside a <code>using</code> — the compiler checks for <code>Dispose()</code> at compile time.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Some resources aren't memory the garbage collector can reclaim on its own — a
+      <span class="hl hl-blue">file handle</span>, a database connection, a network socket are all
+      scarce things the operating system hands out and expects back. Closing them by hand works
+      right up until an exception fires halfway through, or a method returns early — then the
+      close call never runs and the resource leaks.</p>
+
+      <p><code>using</code> removes that risk entirely. It's <span class="hl hl-inter">built on
+      <code>try</code>/<code>finally</code></span> — the compiler writes the <code>finally</code>
+      block for you and puts the call to <code>Dispose()</code> inside it, so the release happens
+      whether the block finishes normally, returns early, or throws. The only requirement is that
+      the type implements <code>IDisposable</code>; the compiler checks for a
+      <code>Dispose()</code> method at compile time and refuses to build otherwise.</p>
+
+      <p>This is deliberately the shallow half of the topic — the actual <code>Dispose</code>
+      pattern (what a class writes inside its own <code>Dispose()</code>, and how finalizers back
+      it up) is a separate, deeper topic on its own.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">SqlConnection</span> c = <span class="kw">new</span> <span class="ty">SqlConnection</span>(connStr);
+c.Open();
+c.Query(sql);              <span class="cx-err">// ❌ throws — code below never runs</span>
+c.Dispose();                <span class="cx-cmt">// never reached — connection leaks</span></code></pre>
+      </div>
+      <p class="cx-note">Manual cleanup only works if nothing ever throws — one exception mid-block and the resource is never released.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">using</span> (<span class="ty">SqlConnection</span> c = <span class="kw">new</span> <span class="ty">SqlConnection</span>(connStr))
+{
+    c.Open();
+    c.Query(sql);          <span class="cx-err">// throws — jumps straight to cleanup</span>
+}                              <span class="cx-ok">// ✅ Dispose() already guaranteed to run</span></code></pre>
+      </div>
+      <p class="cx-note"><code>using</code> guarantees the same cleanup <b>regardless</b> of how the block exits.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">try</span>
+{
+    c.Open();
+    c.Query(sql);          <span class="cx-cmt">// same code, no using keyword</span>
+}
+<span class="kw">finally</span>
+{
+    c.Dispose();               <span class="cx-ok">// ✅ what using was doing all along</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">This is the exact code the compiler generates — <code>using</code> is just this, written for you.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A repository method opens a database connection, runs one query, and returns.</b>
+      Without <code>using</code>, a query that throws (a timeout, a bad parameter) leaves that
+      connection open — under load, the connection pool fills up and every other request starts
+      failing too. Wrapping the connection in a <code>using</code> block means the failure still
+      happens, but the connection always goes back to the pool first.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="17.html">← Cancellation (CancellationToken)</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to C# Intermediate</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · C# · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -300,6 +300,113 @@ someone looked at the rendered diagram. Before calling any diagram done:
    redrawn arrow path inside it) — check this any time a connector is unusually short, not just
    the ones that are unusually long.
 
+## Mandatory automated verification — hand-computed coordinates are not verification
+
+**A real incident, 2026-09-16, during C#'s Phase 7 (35 new pages built by parallel subagents):**
+every subagent was given this rule file, including the "Verify by computing the numbers, not by
+eyeballing the code" section above, and every subagent reported having followed it. Several of
+them, however, explicitly reported that they could **not** actually get a live rendered page in
+front of them — a Browser-pane navigation was declined, a concurrent session navigated the shared
+tab away mid-check, an unrelated port conflict hit the shared dev server — and fell back to
+"verified by careful manual computation of the coordinates" as a substitute. The orchestrating
+session accepted those self-reports at face value and moved on without independently re-checking.
+
+The result: 5 of the 35 pages shipped with a genuine, real defect — a horizontal "bus" line that
+didn't reach the vertical drop-arrows below it, a fork/merge connector landing in the empty gap
+between two side-by-side boxes instead of on either one (twice, same page), an arrow that ended
+14px short of the box it was supposed to enter, and a subtitle 11px wider than the box it sat in.
+Every one of these is *exactly* the class of bug "Verify by computing the numbers" exists to
+catch — the rule was followed, on paper, by every subagent that hit it. **It still didn't work,
+because "I computed the numbers by hand" and "I rendered the page and measured it" are not the
+same operation, and nothing forced a distinction between the two before a page was marked done.**
+Hand computation is exactly the failure mode this whole rule file already exists to route around
+(see "Panel titles," "Check the WHOLE diagram is centered," etc. — all found the same way: by
+looking at the rendered page, not the markup) — it just hadn't yet been made mandatory and
+automatic instead of advisory.
+
+**The fix, mandatory from now on, no exceptions:**
+
+1. **A page with any `<svg class="topic-diagram">` is not "done" — by the orchestrating session
+   or by any subagent it delegates to — until it has been checked against the *actually rendered*
+   page, not the markup.** The minimum acceptable check is running the automated script below,
+   injected via a real browser/JS-execution tool, against the live page. A screenshot reviewed by
+   eye is a good addition (catches things geometry alone can't, like color/contrast) but does not
+   replace the script — the script catches the exact defect classes hand-eyeballing keeps missing.
+2. **A subagent's report of "verified by computing the coordinates, could not access a live
+   browser" (or any equivalent — declined navigation, a concurrent session took the tab, a port
+   conflict) is a report that verification did NOT happen, not a report that it did.** The
+   orchestrating session must never accept that sentence as equivalent to a passed check. When a
+   subagent says this, the orchestrating session is responsible for running the real check itself
+   on that page before considering it complete.
+3. **This is full coverage, not a sample.** In the 2026-09-16 incident the 5 real defects were
+   spread across Basic, Intermediate, and Advanced pages, built in different dispatch batches by
+   different subagents — there was no single "suspect batch" a spot-check would have caught them
+   all in. Before any track's Phase 7 (or any future diagram-bearing page, however authored) is
+   considered complete, the orchestrating session runs the script below against **every single
+   diagram-bearing page, one page at a time**, fixes any genuine finding, and re-runs the script
+   on that page to confirm the fix — before moving to the next page. Only after every page in the
+   batch passes with zero remaining genuine issues is that batch ready for the user's manual
+   review.
+
+**The script** (self-contained; inject and run via a live browser JS-execution tool against the
+already-rendered page — it does nothing useful against static markup):
+
+```javascript
+function ptSegDist(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1,len2=dx*dx+dy*dy;if(len2===0)return Math.hypot(px-x1,py-y1);let t=((px-x1)*dx+(py-y1)*dy)/len2;t=Math.max(0,Math.min(1,t));return Math.hypot(px-(x1+t*dx),py-(y1+t*dy));}
+function pathSegments(d){const segs=[];if(!d)return segs;const toks=d.trim().split(/(?=[MLHVCQAmlhvcqa])/).map(s=>s.trim()).filter(Boolean);let cx=0,cy=0;toks.forEach(tok=>{const cmd=tok[0];const nums=tok.slice(1).trim().split(/[\s,]+/).filter(Boolean).map(Number);if(cmd==='M'){cx=nums[0];cy=nums[1];}else if(cmd==='L'){segs.push([cx,cy,nums[0],nums[1]]);cx=nums[0];cy=nums[1];}else if(cmd==='H'){segs.push([cx,cy,nums[0],cy]);cx=nums[0];}else if(cmd==='V'){segs.push([cx,cy,cx,nums[0]]);cy=nums[0];}});return segs;}
+function pointNearGeometry(px,py,rects,texts,paths,excludePath,tol){for(const r of rects){if(px>=r.box.x-tol&&px<=r.box.x+r.box.w+tol&&py>=r.box.y-tol&&py<=r.box.y+r.box.h+tol)return'rect';}for(const t of texts){if(px>=t.box.x-tol&&px<=t.box.x+t.box.width+tol&&py>=t.box.y-tol&&py<=t.box.y+t.box.height+tol)return'text';}for(const p of paths){if(p===excludePath)continue;for(const seg of p.segs){if(ptSegDist(px,py,seg[0],seg[1],seg[2],seg[3])<=tol)return'path';}}return null;}
+function markerReach(svg, markerId){const el=svg.querySelector('#'+markerId);if(!el)return 5.5;const inner=el.querySelector('path,polygon');if(!inner)return 5.5;const d=inner.getAttribute('d')||inner.getAttribute('points')||'';const nums=(d.match(/-?\d+\.?\d*/g)||[]).map(Number);let maxX=0;for(let i=0;i<nums.length;i+=2){if(nums[i]>maxX)maxX=nums[i];}return maxX||5.5;}
+function checkDiagram(){const svgs=Array.from(document.querySelectorAll('svg.topic-diagram'));if(!svgs.length)return{error:'no svg'};const all=[];svgs.forEach((svg,idx)=>{const texts=Array.from(svg.querySelectorAll('text')).map(t=>({text:t.textContent.trim(),box:t.getBBox()}));const rects=Array.from(svg.querySelectorAll('rect')).filter(r=>!r.closest('defs')).map(r=>({box:{x:+r.getAttribute('x'),y:+r.getAttribute('y'),w:+r.getAttribute('width'),h:+r.getAttribute('height')}}));const pathEls=Array.from(svg.querySelectorAll('path')).filter(p=>!p.closest('defs'));const paths=pathEls.map(p=>{const d=p.getAttribute('d');let start=null,end=null;try{const len=p.getTotalLength();start=p.getPointAtLength(0);end=p.getPointAtLength(len);}catch(e){}return{el:p,hasMarker:p.hasAttribute('marker-end'),d,start,end,segs:pathSegments(d)};});const TOL=9;const issues=[];for(let i=0;i<texts.length;i++)for(let j=i+1;j<texts.length;j++){const a=texts[i].box,b=texts[j].box;const ox=Math.max(0,Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x));const oy=Math.max(0,Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y));if(ox>4&&oy>4)issues.push('TEXT-TEXT OVERLAP: "'+texts[i].text+'" vs "'+texts[j].text+'"');}rects.forEach(r=>{texts.forEach(t=>{const cx=t.box.x+t.box.width/2,cy=t.box.y+t.box.height/2;if(cx>=r.box.x&&cx<=r.box.x+r.box.w&&cy>=r.box.y&&cy<=r.box.y+r.box.h){if(t.box.x<r.box.x-3||t.box.x+t.box.width>r.box.x+r.box.w+3)issues.push('TEXT OVERFLOW: "'+t.text+'" w='+t.box.width.toFixed(0)+' boxw='+r.box.w);}});});paths.filter(p=>p.hasMarker&&p.end).forEach(p=>{if(!pointNearGeometry(p.end.x,p.end.y,rects,texts,paths,p,TOL))issues.push('ARROW END disconnected at ('+p.end.x.toFixed(0)+','+p.end.y.toFixed(0)+') d="'+p.d+'"');});paths.filter(p=>p.hasMarker&&p.start).forEach(p=>{if(!pointNearGeometry(p.start.x,p.start.y,rects,texts,paths,p,TOL))issues.push('ARROW START disconnected at ('+p.start.x.toFixed(0)+','+p.start.y.toFixed(0)+') d="'+p.d+'"');});paths.filter(p=>p.hasMarker).forEach(p=>{const me=p.el.getAttribute('marker-end');const m=me.match(/#([\w-]+)/);if(!m)return;const sw=parseFloat(p.el.getAttribute('stroke-width'))||1.5;const reach=markerReach(svg,m[1])*sw;if(!p.segs.length)return;const last=p.segs[p.segs.length-1];const segLen=Math.hypot(last[2]-last[0],last[3]-last[1]);if(segLen<reach*1.2)issues.push('SHORT SEGMENT vs marker reach: segLen='+segLen.toFixed(1)+' reach='+reach.toFixed(1)+' d="'+p.d+'"');});all.push({svgIndex:idx,issueCount:issues.length,issues});});return all;}
+JSON.stringify(checkDiagram());
+```
+
+What it checks, per `<svg class="topic-diagram">` on the page: pairwise text-vs-text bounding-box
+overlap, text overflowing the `<rect>` it's centered inside, for every `<path>` carrying a
+`marker-end`/`marker-start` whether its actual start/end point (via `getPointAtLength`, not the
+raw `d` coordinates) lands within a 9px tolerance of a rect's edge, a text's bounding box, or a
+point along another path's own segments (so a legitimate T-junction/fork point passes, while a
+genuinely floating endpoint doesn't) — and, for every marked path, whether its final segment is
+long enough not to distort under its own arrowhead (see `markerReach` below; this check was added
+2026-09-16, one revision after the checks above — see the follow-up incident right below this).
+
+**Three known limitations, already worked around in the script above — don't remove any of them:**
+- Elements inside `<marker>`/`<defs>` are arrowhead *templates*, not real diagram connectors —
+  both the `<rect>` and `<path>` selectors exclude anything under `.closest('defs')`.
+- A plain divider or decorative directional line (no `marker-end`) is not a connector and must
+  not be checked for connectivity — only paths that actually carry a marker (`p.hasMarker`) go
+  through the start/end proximity check. (One real page in this project has an intentional
+  "⏱ time passing" axis arrow the checker would otherwise flag; this filter is why it doesn't.)
+- **The "short segment" check must measure the marker's actual drawn shape, not its declared
+  `markerWidth`.** A `<marker markerWidth="8">` whose inner triangle only reaches `x=5.5` (out of
+  that 8-unit viewport) visually protrudes ~5.5×strokeWidth, not 8×strokeWidth — using the
+  viewport width as the "reach" over-estimates real distortion risk and produces false positives
+  on segments that render perfectly cleanly. `markerReach()` reads the marker's own inner
+  `<path>`/`<polygon>` and takes its actual max x-coordinate for exactly this reason — don't
+  simplify it back to `markerWidth * strokeWidth`.
+
+A page passes when every `<svg class="topic-diagram">` on it reports `"issueCount":0`. Any other
+count is a real finding to fix, not a heuristic to argue with — investigate the specific
+coordinates named before dismissing one as a false positive, and only dismiss it if it matches
+one of the limitations above (e.g. an intentional no-marker directional line).
+
+**Follow-up incident, same day:** the day this rule was written, the user reported a *different*
+rendering defect — a fork diagram (`advanced/2.html`, "lock/Monitor") whose arrowheads into two
+side-by-side boxes were visibly distorted, blob-like triangles instead of clean arrows. The rule
+text for this exact bug already existed ("A connector must be visibly longer than its own
+arrowhead marker" — see "Verify by computing the numbers" above) and had for some time — but the
+verification *script* just written to enforce this whole rule file had no check for it: it only
+tested disconnection and overlap, not marker-vs-segment-length distortion. **A rule that exists
+only in prose, with no automated check enforcing it, is exactly as skippable as no rule at all —
+the same failure mode this whole section exists to close, one level up.** The fix was the
+`markerReach`-based check now embedded in the script above, plus re-running it against all 35
+pages (not just the one reported) — it found and fixed one more real instance on the same page,
+and confirmed the other 34 pages were already clean under the new check. **Whenever a new
+defect class is found by eye that the current script doesn't catch, the correct response is
+always: extend the script first, then re-run it against every page the current pipeline covers —
+never fix the one reported instance and stop, since a defect visible on one page was built by the
+same process on all the others and has no reason to be unique to the one someone happened to
+look at.**
+
 ## Animation — check every diagram for a place it earns its keep
 
 **Don't treat animation as optional polish — actively look for where it would make a "Visual

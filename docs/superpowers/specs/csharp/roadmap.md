@@ -7,13 +7,22 @@ tag. Phase 7 (writing the final diagram-rich HTML pages) hasn't started — this
 reviewable plan for what those pages will be and what each should say.
 
 **Goal driving every call below:** someone who reads this track end-to-end should be able to
-clear roughly 80% of the C# questions in a real interview. That's why several concepts below got
-**split into multiple pages** (a rich concept deserves room, not a cramped single page) and why
-almost every page ends with a scenario question — recall alone doesn't build interview
-confidence the way "I've already thought through a version of this" does.
+clear roughly 80% of the C# questions in a real interview — from a 3-year developer's interview
+up through a senior/lead/architect one. That's why several concepts below got **split into
+multiple pages** (a rich concept deserves room, not a cramped single page) and why almost every
+page ends with a scenario question — recall alone doesn't build interview confidence the way
+"I've already thought through a version of this" does. Where a concept is relevant at
+architect depth, that shows up as an **Architecture** question inside the Advanced page for that
+concept — never a separate tier. See
+[`rules/interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md) for the
+full audience/tier/priority definition this roadmap follows (updated 2026-09-16 from the
+narrower "3+ year developer" framing this track was first drafted under — no content below
+needed re-tiering as a result, since Advanced already meant internals/performance/concurrency;
+six Advanced pages got an added Architecture question, listed in the changelog at the bottom).
 
-**Priority key:** 🔥 Must Know · ⭐ Should Know · 🧠 Deep Dive — independent of tier; an Advanced
-page can still be 🔥.
+**Priority key:** 🔥 Must Know · ⭐ Should Know · 🧠 Deep Dive — independent of tier and
+independent of seniority; an Advanced page can still be 🔥, and a Basic page can still matter to
+an architect brushing up on fundamentals.
 
 **The 14 live C# Basic pages are frozen** — listed below for completeness (so the roadmap is
 one coherent picture) with their *existing* tier/priority carried over as-is, not re-litigated.
@@ -257,6 +266,12 @@ one coherent picture) with their *existing* tier/priority carried over as-is, no
   A: Blocking on an async call (`.Result`, `.Wait()`) from a thread that owns a
   `SynchronizationContext` (classic ASP.NET, UI apps) — the blocked thread is exactly the thread
   the awaited continuation needs to resume on, so neither ever proceeds.
+- **Architecture:** A service handles thousands of concurrent requests, each making downstream
+  I/O calls — how do you decide between fully async I/O vs. a bounded pool of dedicated worker
+  threads, and what actually breaks first if you get that choice wrong at scale?
+  A: Async I/O scales far better here since it doesn't occupy a thread while waiting — a
+  thread-per-request model exhausts the thread pool under load, causing queuing/timeouts long
+  before CPU is actually the bottleneck.
 
 #### 2. `lock` / `Monitor` & Race Conditions 🔥
 - **Q: What is a race condition, concretely?**
@@ -265,6 +280,12 @@ one coherent picture) with their *existing* tier/priority carried over as-is, no
 - **Q: What does `lock` actually do under the hood?**
   A: `lock (obj) { ... }` is syntactic sugar over `Monitor.Enter`/`Monitor.Exit` (in a
   `try`/`finally`) — it takes an exclusive lock on `obj`'s monitor for the block's duration.
+- **Architecture:** You need a shared, in-memory cache read constantly and written
+  occasionally, across many threads — how would you structure the locking so reads don't
+  serialize behind each other?
+  A: A reader-writer lock (`ReaderWriterLockSlim`) or a concurrent collection built for this
+  shape, rather than a single `lock` around the whole cache — a plain `lock` would force every
+  read to wait behind every other read, not just behind writes.
 
 #### 3. The Dispose Pattern & Finalizers ⭐
 - **Q: The Dispose pattern vs. a finalizer — why have both, and when does the finalizer even
@@ -277,6 +298,11 @@ one coherent picture) with their *existing* tier/priority carried over as-is, no
 - **Scenario:** Your service is leaking database connections under load — what would you check?
   → whether every code path actually reaches `Dispose()` (including exception paths), and
   whether a nested disposable field is being disposed by its owner.
+- **Architecture:** In a large application wired up with a DI container, who should actually
+  own calling `Dispose()` on a service's disposable dependencies?
+  A: The container itself, tied to the scope that created the dependency (e.g. one per web
+  request) — application code should very rarely call `Dispose()` directly on an injected
+  dependency; doing so risks disposing something another consumer in the same scope still needs.
 
 #### 4. `IEnumerable<T>` vs. `IQueryable<T>` ⭐
 - **Q: What's the practical difference, specifically with EF Core?**
@@ -286,6 +312,11 @@ one coherent picture) with their *existing* tier/priority carried over as-is, no
 - **Scenario:** Calling `.ToList()` too early — what goes wrong? → The whole table (or an
   unfiltered chunk of it) gets pulled into memory before any further filtering happens in .NET
   instead of the database.
+- **Architecture:** In a layered application, should a repository return `IQueryable<T>` up to
+  the service layer, or always materialize to `IEnumerable<T>`/a list first?
+  A: Generally materialize at the repository boundary — leaking `IQueryable<T>` upward lets
+  callers keep composing the query, which quietly couples the service layer to EF Core/the
+  database and makes it easy to accidentally build an inefficient query far from where it runs.
 
 #### 5. Garbage Collection — Generations & the Large Object Heap 🔥
 - **Q: What are generations 0, 1, and 2, and why do they exist?**
@@ -296,6 +327,12 @@ one coherent picture) with their *existing* tier/priority carried over as-is, no
   A: A separate heap for large allocations (≈85KB+) that's collected less often and, unlike the
   regular heap, historically isn't compacted by default — which can cause fragmentation from
   repeated large allocations.
+- **Architecture:** You're designing a low-latency service where occasional multi-second GC
+  pauses are unacceptable — what would you actually do about it?
+  A: Minimize allocation rate in hot paths (pooling/reusing buffers, avoiding boxing and LINQ
+  allocations), consider Server GC vs. Workstation GC and concurrent/background GC settings, and
+  in the most extreme cases evaluate `Span<T>`-based buffer reuse or a redesign that avoids
+  large short-lived allocations entirely — not just "call `GC.Collect()` and hope."
 
 #### 6. `Span<T>` & `Memory<T>` ⭐
 - **Q: What problem do they solve that array/string slicing doesn't?**
@@ -323,6 +360,11 @@ one coherent picture) with their *existing* tier/priority carried over as-is, no
 - **Q: Does a concurrent collection make a multi-step operation atomic?**
   A: No — only the individual operation (a single `Add`, a single `TryUpdate`) is guaranteed
   atomic; a read-then-write sequence across two calls still needs its own coordination.
+- **Architecture:** Multiple service instances need a shared, frequently-updated in-memory
+  cache — is a `ConcurrentDictionary` per instance the right architecture?
+  A: Only if some staleness/inconsistency across instances is acceptable — a `ConcurrentDictionary`
+  solves thread-safety *within one process*; consistency *across* processes needs a distributed
+  cache (e.g. Redis) instead, a different problem entirely.
 
 #### 9. Unsafe Code & Pointers 🧠
 - **Q: What does the `unsafe` keyword actually unlock?**
@@ -389,3 +431,25 @@ Notable re-tiering calls (interview depth, not the old plan's tier):
 Every scenario question above is genuinely new relative to the taxonomy (which only listed the
 bare concept/comparison questions) — added specifically so a reader has already rehearsed a
 plausible follow-up, not just the textbook definition.
+
+### 2026-09-16 update — broader audience, architecture questions added
+
+The audience/tier/priority definition was refined (see
+[`rules/interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)): the
+site targets 3+ years **through** senior/lead/architect/principal, not capped near the low end,
+and Advanced explicitly includes architecture/trade-off questions with no separate "Architect"
+tier. This didn't change any tier or priority assignment above — Advanced already meant
+internals/performance/concurrency, which is the right depth — but it added an explicit
+**Architecture** question to six Advanced pages where that depth is real, following the
+Basic→Intermediate→Advanced→Architecture progression pattern (worked example: Dependency
+Injection, in the rule file):
+
+- async/await internals — async I/O vs. dedicated worker threads at scale
+- lock/Monitor & race conditions — structuring a shared cache's locking so reads don't serialize
+- The Dispose pattern & finalizers — who owns disposing a DI-injected dependency
+- IEnumerable\<T\> vs. IQueryable\<T\> — where a repository should stop exposing `IQueryable`
+- Garbage Collection — designing a low-latency service around GC pause avoidance
+- Concurrent collections — per-process thread safety vs. cross-instance consistency
+
+The remaining seven Advanced pages didn't get one — not every concept needs an architecture
+question, and forcing one on, say, `Span<T>`/`Memory<T>` or Unsafe code would have been padding.

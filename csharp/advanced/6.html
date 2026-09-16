@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Span&lt;T&gt; — a view over memory, not a copy of it — C# Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="csharp/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#1d4ed8;">🎵 C#</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Span&lt;T&gt; &amp; Memory&lt;T&gt;</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ C# · Advanced · Should Know</div>
+    <h1><code>Span&lt;T&gt;</code> — <span class="hl hl-blue">a view</span> over memory, not <span class="hl hl-hot">a copy</span> of it</h1>
+    <p class="interview-q">"What problem do <code>Span&lt;T&gt;</code>/<code>Memory&lt;T&gt;</code> solve that array/string slicing doesn't?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Shows up the moment you're optimizing a hot path — parsing, buffer handling, high-throughput APIs — where "just slice it" was quietly allocating on every call.</li>
+        <li>Explains a real compiler error you'll eventually hit: "cannot use a Span&lt;T&gt; here" inside an <code>async</code> method or a class field.</li>
+        <li>A strong signal you know modern .NET performance work, not just the syntax of arrays and strings.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Span&lt;T&gt; = <b>"a window over memory — same bytes, zero copies."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <code>arr[2..5]</code> allocates a brand-new array; <b><code>Span&lt;T&gt;</code></b> just narrows the view over the one that's already there — <b><code>Memory&lt;T&gt;</code></b> is the heap-safe version you can actually store and await on.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 436" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA6" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA6" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arA6Amber" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <!-- Section 1: the source array + Span<T> as a window over it -->
+      <text x="320" y="26" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">int[] data — 8 ints, ONE block of memory</text>
+
+      <g>
+        <rect x="168" y="36" width="38" height="34" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+        <rect x="206" y="36" width="38" height="34" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+        <rect x="244" y="36" width="38" height="34" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+        <rect x="282" y="36" width="38" height="34" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+        <rect x="320" y="36" width="38" height="34" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+        <rect x="358" y="36" width="38" height="34" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+        <rect x="396" y="36" width="38" height="34" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+        <rect x="434" y="36" width="38" height="34" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+      </g>
+      <g font-size="11" font-weight="600" fill="#475569" text-anchor="middle">
+        <text x="187" y="58">10</text><text x="225" y="58">20</text><text x="263" y="58">30</text>
+        <text x="301" y="58">40</text><text x="339" y="58">50</text><text x="377" y="58">60</text>
+        <text x="415" y="58">70</text><text x="453" y="58">80</text>
+      </g>
+      <g font-size="9" fill="#94a3b8" text-anchor="middle">
+        <text x="187" y="90">0</text><text x="225" y="90">1</text><text x="263" y="90">2</text>
+        <text x="301" y="90">3</text><text x="339" y="90">4</text><text x="377" y="90">5</text>
+        <text x="415" y="90">6</text><text x="453" y="90">7</text>
+      </g>
+
+      <rect x="240" y="32" width="122" height="42" rx="10" fill="#3b82f6" fill-opacity="0.12" stroke="#1d4ed8" stroke-width="2.4"/>
+
+      <path d="M330,100 V74" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arA6)"/>
+      <g filter="url(#shA6)"><rect x="225" y="100" width="210" height="26" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="330" y="117" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">Span&lt;int&gt; span = data.AsSpan(2,3)</text>
+      <text x="330" y="142" text-anchor="middle" font-size="10" fill="#5b6472">👁 points into the SAME memory — 0 bytes copied</text>
+
+      <!-- Section 2: array[2..5] — the copy -->
+      <text x="320" y="176" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e" letter-spacing="0.3">array[2..5] — same-looking slice, allocates a NEW array</text>
+
+      <g>
+        <rect x="55" y="194" width="22" height="26" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.3"/>
+        <rect x="77" y="194" width="22" height="26" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.3"/>
+        <rect x="99" y="194" width="22" height="26" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.3"/>
+        <rect x="121" y="194" width="22" height="26" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.3"/>
+        <rect x="143" y="194" width="22" height="26" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.3"/>
+        <rect x="165" y="194" width="22" height="26" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.3"/>
+        <rect x="187" y="194" width="22" height="26" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.3"/>
+        <rect x="209" y="194" width="22" height="26" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.3"/>
+      </g>
+      <g font-size="8.5" fill="#94a3b8" text-anchor="middle">
+        <text x="66" y="211">10</text><text x="88" y="211">20</text><text x="110" y="211">30</text>
+        <text x="132" y="211">40</text><text x="154" y="211">50</text><text x="176" y="211">60</text>
+        <text x="198" y="211">70</text><text x="220" y="211">80</text>
+      </g>
+      <rect x="97" y="192" width="70" height="30" rx="6" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="5 3"/>
+
+      <path d="M132,222 V240 H480 V266" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arA6Amber)"/>
+      <circle cx="132" cy="222" r="5" fill="#d97706">
+        <animateMotion path="M0,0 V18 H348 V44" dur="2.2s" repeatCount="indefinite"/>
+      </circle>
+      <text x="300" y="232" text-anchor="middle" font-size="10" font-weight="600" fill="#92400e">copies 3 ints</text>
+
+      <g filter="url(#shA6)"><rect x="411" y="266" width="138" height="34" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/></g>
+      <text x="480" y="287" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">30 · 40 · 50</text>
+      <text x="480" y="316" text-anchor="middle" font-size="10" fill="#5b6472">🧾 new allocation — different address in memory</text>
+
+      <!-- Section 3: the ref struct restrictions -->
+      <g filter="url(#shA6)"><rect x="60" y="336" width="520" height="74" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="90" y="358" font-size="12" font-weight="700" fill="#991b1b">❌ A Span&lt;T&gt; can never outlive its stack frame:</text>
+      <text x="90" y="376" font-size="10.5" fill="#7f1d1d">• can't be a field on a class on the heap (it's a ref struct)</text>
+      <text x="90" y="392" font-size="10.5" fill="#7f1d1d">• can't be used across an await — the frame may be gone when it resumes</text>
+    </svg>
+    <figcaption>Same 3 elements, two different outcomes — a <code>Span&lt;T&gt;</code> window costs nothing; a normal slice allocates a brand-new array.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Span&lt;T&gt; is just a faster array slice, so I can store it anywhere like normal data."</b> It's a <code>ref struct</code> that might be pointing at stack memory — the compiler blocks it from class fields and from crossing an <code>await</code> specifically so it can never outlive the stack frame that created it.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why can't Span&lt;T&gt; be a field on a class, or used across an await?"</b> Because it can point at stack memory, and both of those situations could let it outlive the stack frame that created it — the compiler enforces this by making <code>Span&lt;T&gt;</code> a <code>ref struct</code>.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>Span&lt;T&gt;</code> is a zero-allocation view over existing contiguous memory — an array, a string, or even stack memory — while slicing an array or string the normal way allocates a brand-new copy. It's a <code>ref struct</code>, so the compiler restricts where it can live specifically to stop it from outliving the memory it points at."</p>
+    <ul>
+      <li><code>Span&lt;T&gt;</code> → use for a <span class="hl hl-blue">synchronous, short-lived</span> zero-copy view — parsing or buffer work inside one method call.</li>
+      <li><code>Memory&lt;T&gt;</code> → use when the view needs to <span class="hl hl-teal">survive an await or live on the heap</span> — async I/O, stored buffers.</li>
+      <li>Normal slicing (<code>arr[2..5]</code>, <code>Substring()</code>) → <span class="hl hl-hot">simplest code, but it allocates</span> — fine off the hot path.</li>
+      <li>It's a <code>ref struct</code> → <span class="hl hl-basic">can't be boxed, can't be a heap field, can't cross an await</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Span&lt;T&gt;</span> is like getting a bookmark and a page range for a book you
+      already own, instead of photocopying those pages. Reading through the bookmark costs nothing extra;
+      slicing an array or calling <code>Substring()</code> is the photocopy — quick to write, but every call
+      pays for fresh memory.</p>
+
+      <p><span class="hl hl-teal">Memory&lt;T&gt;</span> is the same idea, minus the one restriction that
+      makes <code>Span&lt;T&gt;</code> fast: it's a normal struct, not a <code>ref struct</code>, so it can
+      live on the heap and survive an <code>await</code>. Reach for it exactly when a <code>Span&lt;T&gt;</code>
+      would need to live longer than the current method call — call <code>.Span</code> on it to get a real
+      <code>Span&lt;T&gt;</code> back for the actual work.</p>
+
+      <p>The field-and-<code>await</code> restriction isn't arbitrary: a <code>Span&lt;T&gt;</code> can point
+      at memory on the <b>stack</b>, which disappears the moment its method returns. Letting it sit in a
+      class field or survive across an <code>await</code> (where execution can resume on a different point in
+      the call stack) would let a program read memory that's already gone — the compiler removes that
+      possibility entirely by making <code>Span&lt;T&gt;</code> a <code>ref struct</code>.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>Span&lt;T&gt;</code></th><th><code>Memory&lt;T&gt;</code></th><th><code>arr[2..5]</code> / <code>Substring()</code></th></tr></thead>
+        <tbody>
+          <tr><th>Allocates a copy?</th><td class="no">❌ no</td><td class="no">❌ no</td><td>✅ yes</td></tr>
+          <tr><th>Can be a class field?</th><td class="no">❌ no (<code>ref struct</code>)</td><td>✅ yes</td><td>✅ yes</td></tr>
+          <tr><th>Can cross an <code>await</code>?</th><td class="no">❌ no</td><td>✅ yes</td><td>✅ yes</td></tr>
+          <tr><th>Best used for</th><td>sync hot-path parsing</td><td>async/stored buffers</td><td>simple code, off the hot path</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">int</span>[] data = { <span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>, <span class="num">60</span>, <span class="num">70</span>, <span class="num">80</span> };
+<span class="ty">Span</span>&lt;<span class="kw">int</span>&gt; span = data.AsSpan(<span class="num">2</span>, <span class="num">3</span>);  <span class="cx-ok">// ✅ points into `data` — 0 bytes copied</span>
+span[<span class="num">0</span>] = <span class="num">99</span>;                       <span class="cx-ok">// ✅ mutates data[2] too — same memory</span></code></pre>
+      </div>
+      <p class="cx-note">Writing through the span changes the original array — that's the proof it's a <b>view</b>, not a copy.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">int</span>[] slice = data[<span class="num">2</span>..<span class="num">5</span>];   <span class="cx-err">// ❌ allocates a brand-new 3-element array</span>
+slice[<span class="num">0</span>] = <span class="num">99</span>;              <span class="cx-cmt">// only changes the copy — `data` is untouched</span></code></pre>
+      </div>
+      <p class="cx-note">Range slicing on an array <b>looks</b> the same but silently copies — exactly what <code>Span&lt;T&gt;</code> was built to avoid.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">class</span> <span class="ty">Cache</span>
+{
+    <span class="ty">Span</span>&lt;<span class="kw">byte</span>&gt; _bytes;      <span class="cx-err">// ❌ Span&lt;T&gt; can't be a field on a heap class</span>
+}
+
+<span class="kw">async</span> <span class="ty">Task</span> ReadAsync(<span class="kw">byte</span>[] data)
+{
+    <span class="ty">Span</span>&lt;<span class="kw">byte</span>&gt; span = data.AsSpan();
+    <span class="kw">await</span> <span class="ty">Task</span>.Delay(<span class="num">1</span>);       <span class="cx-err">// ❌ span can't stay alive across an await</span>
+    span[<span class="num">0</span>] = <span class="num">1</span>;
+}</code></pre>
+      </div>
+      <p class="cx-note">Both errors exist for the same reason — <code>span</code> might be pointing at the stack, and the compiler won't let it outlive that stack frame.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Span&lt;T&gt; is a bookmark and a page range for a book you already own</b> — you read exactly
+      the pages you need without photocopying them. Slicing the array is the photocopy: quick to write,
+      but every request pays for fresh paper.</p>
+      <p><b>You're parsing thousands of incoming byte buffers a second</b> and profiling shows GC pressure
+      coming from array slicing in that hot path. Swapping the slices for <code>Span&lt;T&gt;</code>/
+      <code>ReadOnlySpan&lt;T&gt;</code> removes the copies entirely, because the code is now just narrowing
+      the view instead of allocating a new array per request.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="5.html">← Garbage Collection</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to C# Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="7.html">volatile &amp; Interlocked →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · C# · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

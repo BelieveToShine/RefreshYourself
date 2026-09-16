@@ -1,7 +1,8 @@
 # OOP — Interview Question Taxonomy
 
 **Phase 1 of the 7-phase pipeline** (see [`docs/superpowers/specs/README.md`](../README.md)).
-This answers only: **what could an interviewer ask about OOP design to a 3+ year developer?**
+This answers only: **what could an interviewer ask about OOP design, for an experienced
+professional anywhere from 3+ years through senior/lead/architect/principal?**
 No tier, no priority, no page grouping yet — see the C# taxonomy for the format this follows and
 what each variant label (Core concept / Understanding / Comparison / Pitfall / Scenario) means.
 **[new]** marks anything added beyond the user's original OOP section of the interview-prep plan.
@@ -10,7 +11,7 @@ what each variant label (Core concept / Understanding / Comparison / Pitfall / S
 
 **This track must not teach OOP from zero, and must lean scenario-heavy far more than C#'s
 taxonomy does.** The user's own instruction: a page explaining "what is polymorphism?" is much
-less valuable to a 3+ year developer than a page built around *"you have `CreditCardPayment`,
+less valuable to an experienced developer than a page built around *"you have `CreditCardPayment`,
 `PayPalPayment`, and `BankTransferPayment` — how would you design it?"* with the resulting
 `IPaymentProcessor` diagram. Wherever a concept below has a natural real-world design scenario,
 it's called out explicitly — favor those over generic definition questions when Phase 3 groups

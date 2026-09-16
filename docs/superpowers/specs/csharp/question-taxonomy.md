@@ -1,7 +1,8 @@
 # C# — Interview Question Taxonomy
 
 **Phase 1 of the 7-phase pipeline agreed with the user.** This document answers one question
-only: **what could an interviewer ask about C# to a 3+ year developer?** It does **not** decide:
+only: **what could an interviewer ask about C#, for an experienced professional anywhere from
+3+ years through senior/lead/architect/principal?** It does **not** decide:
 
 - which tier (Basic/Intermediate/Advanced) a question belongs to,
 - interview priority (🔥 Must Know / ⭐ Should Know / 🧠 Deep Dive),

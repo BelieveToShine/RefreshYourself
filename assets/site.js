@@ -231,7 +231,7 @@
 
   function itemHtml(item) {
     var active = isCurrent(item.file);
-    var dot = item.hot ? '<span class="tn-dot">🔥</span>' : "";
+    var dot = item.priority ? '<span class="tn-dot">' + item.priority + "</span>" : "";
     return (
       '<li class="tn-item">' +
       '<a href="' + item.file + '"' + (active ? ' class="active"' : "") + '>' +
@@ -249,7 +249,8 @@
   }
 
   function groupHtml(group, isFirst) {
-    var hotBadge = group.hot ? '<span class="gn-hot">' + group.hot + " 🔥</span>" : "";
+    var mustKnow = group.items.filter(function (i) { return i.priority === "🔥"; }).length;
+    var hotBadge = mustKnow ? '<span class="gn-hot">' + mustKnow + " 🔥</span>" : "";
     return (
       '<details class="tn-group"' + (groupOpen(group, isFirst) ? " open" : "") + ">" +
       "<summary>" + esc(group.label) + hotBadge + '<span class="chev">▾</span></summary>' +

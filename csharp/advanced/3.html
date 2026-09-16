@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Dispose Pattern &amp; Finalizers — C# Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="csharp/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#1d4ed8;">🎵 C#</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">The Dispose Pattern &amp; Finalizers</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ C# · Advanced · Should Know</div>
+    <h1>The Dispose pattern — <span class="hl hl-blue">deterministic cleanup</span> vs. <span class="hl hl-hot">the GC's last resort</span></h1>
+    <p class="interview-q">"The Dispose pattern vs. a finalizer — why have both, and when does the finalizer even run?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>A service leaking database connections under load almost always traces back to one
+        code path — often an exception path — that never reaches <code>Dispose()</code>.</li>
+        <li>Interviewers use this to check whether you actually understand the GC's
+        non-determinism, not just whether <code>using</code> exists.</li>
+        <li>A common trap for anyone who assumes "C# has garbage collection" means cleanup is
+        automatic and timing doesn't matter.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Dispose()</code> <span class="rarrow">→</span> <b>deterministic</b>, runs now</p>
+      <p class="rrow">Finalizer <span class="rarrow">→</span> <b>non-deterministic</b>, GC's last resort</p>
+      <p class="rrow"><code>SuppressFinalize</code> <span class="rarrow">→</span> <b>skips</b> the wasted finalizer call</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Dispose()</code></b> is you cleaning
+    up before you leave. A <b>finalizer</b> is the landlord cleaning up months later — only if
+    you never did.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 355" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA3" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA3" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arA3Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arA3Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arA3Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">AN OBJECT HOLDING AN UNMANAGED RESOURCE</text>
+
+      <g filter="url(#shA3)"><rect x="195" y="28" width="250" height="42" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="47" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">📁 IDisposable object</text>
+      <text x="320" y="62" text-anchor="middle" font-size="10.5" fill="#5b6472">file handle / socket / DB connection</text>
+
+      <path d="M320,70 V88" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M140,88 H500" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M140,88 V112" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA3)"/>
+      <path d="M500,88 V112" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA3)"/>
+
+      <text x="140" y="103" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">PATH A</text>
+      <text x="500" y="103" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">PATH B</text>
+
+      <g filter="url(#shA3)"><rect x="45" y="112" width="190" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="140" y="132" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Dispose() called</text>
+      <text x="140" y="148" text-anchor="middle" font-size="10.5" fill="#5b6472">explicitly, or via using</text>
+
+      <g filter="url(#shA3)"><rect x="405" y="112" width="190" height="46" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="500" y="132" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Caller forgets</text>
+      <text x="500" y="148" text-anchor="middle" font-size="10.5" fill="#5b6472">object becomes unreachable</text>
+
+      <path d="M140,158 V182" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arA3Blue)"/>
+      <path d="M500,158 V182" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA3Red)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shA3)"><rect x="45" y="182" width="190" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="140" y="203" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ Cleanup runs now</text>
+      <text x="140" y="218" text-anchor="middle" font-size="10.5" fill="#5b6472">deterministic, immediate</text>
+      <text x="140" y="231" text-anchor="middle" font-size="10.5" fill="#5b6472">SuppressFinalize skips finalizer</text>
+
+      <g filter="url(#shA3)"><rect x="405" y="182" width="190" height="56" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="500" y="203" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐛 Finalizer, eventually</text>
+      <text x="500" y="218" text-anchor="middle" font-size="10.5" fill="#5b6472">non-deterministic timing</text>
+      <text x="500" y="231" text-anchor="middle" font-size="10.5" fill="#5b6472">runs only if Dispose() never did</text>
+
+      <path d="M140,238 V260 H300 V284" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA3Green)"/>
+      <path d="M500,238 V260 H340 V284" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA3Red)"/>
+
+      <rect x="182" y="243" width="76" height="18" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1"/>
+      <text x="220" y="255.5" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">⚡ immediate</text>
+
+      <rect x="374" y="243" width="92" height="18" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+      <text x="420" y="255.5" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">⏳ not guaranteed</text>
+
+      <g filter="url(#shA3)"><rect x="200" y="284" width="240" height="48" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="306" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🏁 Resource released</text>
+      <text x="320" y="321" text-anchor="middle" font-size="9.5" fill="#5b6472">same end state, very different reliability &amp; timing</text>
+    </svg>
+    <figcaption>Both paths end with the resource released — only Path A tells you when.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>The finalizer is not a safety guarantee.</b> It runs eventually, in an
+    unpredictable order, only if the object is still unreachable when a GC happens to check that
+    generation — and it may never run at all before the process exits.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Does calling <code>GC.SuppressFinalize()</code> release the resource
+    itself?"</b> No — it only tells the GC to skip queuing this object's finalizer. The actual
+    release still has to happen inside <code>Dispose()</code>; skip that call and
+    <code>SuppressFinalize</code> has nothing to suppress a cleanup for.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>Dispose()</code> is deterministic cleanup — called explicitly or
+    through <code>using</code> — and it should call <code>GC.SuppressFinalize(this)</code> once
+    it's run, so the object skips the finalizer queue entirely. A finalizer is the GC's
+    last-resort safety net: it only runs if <code>Dispose()</code> was never called, and its
+    timing is never guaranteed."</p>
+    <ul>
+      <li><code>Dispose()</code> → <span class="hl hl-blue">deterministic, immediate</span> cleanup, on the thread that calls it.</li>
+      <li>Finalizer → <span class="hl hl-hot">non-deterministic, last resort</span>, runs on the GC's own schedule.</li>
+      <li><code>GC.SuppressFinalize(this)</code> → <span class="hl hl-basic">skips the finalization queue</span> once <code>Dispose()</code> already ran.</li>
+      <li>Leaking resources under load → <span class="hl hl-inter">check every path reaches Dispose(), including exception paths</span>.</li>
+      <li>Injected dependency ownership → <span class="hl hl-adv">the container owns disposal, tied to its own scope</span>, not the class that consumes it.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Dispose()</span> is a normal method — nothing stops calling
+      code from simply not calling it, which is exactly the gap a finalizer exists to patch. The
+      full pattern splits cleanup into <code>Dispose(bool disposing)</code> so it can release
+      both managed and unmanaged resources when called from <code>Dispose()</code> itself, but
+      only the unmanaged half when called from the finalizer — by then, any managed objects it
+      references may already have been finalized themselves, in an order the GC decides.</p>
+
+      <p><span class="hl hl-hot">The finalizer</span> costs more than people expect: a
+      finalizable object survives at least one extra GC generation, sitting on the finalization
+      queue instead of being reclaimed outright, and its cleanup runs later on a dedicated
+      finalizer thread — at a time the GC picks, not the code. <code>GC.SuppressFinalize(this)</code>
+      inside <code>Dispose()</code> is what avoids that cost once cleanup has already happened
+      deterministically.</p>
+
+      <p>Ownership matters as much as mechanics. A class that receives a disposable dependency
+      from outside — through a constructor, from a DI container — rarely knows that dependency's
+      real lifetime, so it usually shouldn't call <code>Dispose()</code> on it at all: whoever
+      created the dependency, and controls its scope, is the one who should close it.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>Dispose()</code></th><th>Finalizer</th></tr></thead>
+        <tbody>
+          <tr><th>Triggered by</th><td>explicit call, or <code>using</code></td><td>the GC, only if <code>Dispose()</code> never ran</td></tr>
+          <tr><th>Timing</th><td>deterministic — happens exactly when called</td><td>non-deterministic — "eventually," maybe never before exit</td></tr>
+          <tr><th>Extra cost</th><td>none beyond the call itself</td><td>object promoted, sits on the finalization queue an extra generation</td></tr>
+          <tr><th>Can be skipped?</th><td>n/a — it's the primary path</td><td>✅ yes, via <code>GC.SuppressFinalize(this)</code></td></tr>
+          <tr><th>Best used for</th><td>the cleanup path you always rely on</td><td>a backstop only, never the plan</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">ResourceHolder</span> : <span class="ty">IDisposable</span>
+{
+    <span class="kw">private</span> <span class="ty">SafeHandle</span> _handle;
+    <span class="kw">private</span> <span class="kw">bool</span> _disposed;
+
+    <span class="kw">public</span> <span class="kw">void</span> Dispose()
+    {
+        Dispose(<span class="kw">true</span>);           <span class="cx-cmt">// caller-driven cleanup</span>
+        GC.SuppressFinalize(<span class="kw">this</span>); <span class="cx-ok">// ✅ skip the finalizer — already clean</span>
+    }
+
+    <span class="kw">protected</span> <span class="kw">virtual</span> <span class="kw">void</span> Dispose(<span class="kw">bool</span> disposing)
+    {
+        <span class="kw">if</span> (_disposed) <span class="kw">return</span>;
+        <span class="kw">if</span> (disposing)
+            _handle?.Dispose();      <span class="cx-cmt">// safe here — other managed objects still alive</span>
+        _disposed = <span class="kw">true</span>;
+    }
+
+    ~ResourceHolder() => Dispose(<span class="kw">false</span>); <span class="cx-cmt">// last resort only</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">The finalizer calls the <b>same</b> <code>Dispose(bool)</code>, but with
+      <code>disposing: false</code> — it must not touch other managed objects, since the GC may
+      already have finalized them.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> r = <span class="kw">new</span> <span class="ty">ResourceHolder</span>();
+<span class="cx-cmt">// r.Dispose() never called</span>
+r = <span class="kw">null</span>;                 <span class="cx-cmt">// object is now unreachable</span>
+<span class="cx-err">// ...sometime later, GC finalizes it — timing not guaranteed, maybe never before exit</span></code></pre>
+      </div>
+      <p class="cx-note">Same end state as calling <code>Dispose()</code> — the resource is
+      eventually released — but with <b>no control</b> over when, or whether it happens in time.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">ReportService</span>
+{
+    <span class="kw">private</span> <span class="kw">readonly</span> <span class="ty">IReportRepository</span> _repo; <span class="cx-cmt">// disposable, injected</span>
+
+    <span class="kw">public</span> ReportService(<span class="ty">IReportRepository</span> repo) => _repo = repo;
+
+    <span class="cx-err">// ❌ don't call _repo.Dispose() here — this class doesn't own its lifetime</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">The DI container disposes <code>_repo</code> when <b>its own scope</b>
+      ends — not when this service happens to be done with it.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your app is wired up with a DI container, and a service takes a disposable
+      dependency through its constructor.</b> Should that service call <code>Dispose()</code> on
+      it? Almost always no — the container itself should own disposal, tied to whichever scope
+      created the dependency (a single web request, for example). Calling <code>Dispose()</code>
+      directly on an injected dependency risks releasing something another consumer in that same
+      scope still needs.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="2.html">← lock / Monitor &amp; Race Conditions</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to C# Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="4.html">IEnumerable&lt;T&gt; vs. IQueryable&lt;T&gt; →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · C# · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

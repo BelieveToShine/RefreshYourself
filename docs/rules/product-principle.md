@@ -32,33 +32,47 @@ for cutting), not a reason to make this one longer.
 
 ## Required information hierarchy
 
-This is the fixed page order — see the full spec in
+**Updated 2026-09-16 for the interview-question-bank rebuild** — this order applies to every
+*new* page (Phase 7 of a track's rebuild); the 14 live C# Basic pages are frozen under the
+previous version of this hierarchy and are not retrofitted. Full spec in
 [content-writing.md](content-writing.md), this is the summary:
 
-1. Title / hook
+1. Title / hook, **plus a compact "❓ Interview Question" line right under it** stating the
+   literal phrasing an interviewer would use — the hook title stays (it's already proven across
+   14 pages and earns its own spot), the literal question is new and sits alongside it, not a
+   replacement for it.
 2. Why it matters — collapsed
 3. 🔥 5-Second Recall — always visible
 4. 🧠 Visual Mental Model — always visible
-5. ⚠️ Common Trap — always visible
-6. 🎯 Say this in the interview — always visible
-7. 📖 Explanation — collapsed by default
-8. 💻 Code — collapsed by default
-9. 🌍 Real-world example — collapsed by default
+5. ⚠️ Common Trap — always visible, compact card
+6. 🔄 Likely Follow-up — always visible, compact card, **new.** A different thing from the Trap:
+   Trap is a misconception the candidate might state; Follow-up is the next question the
+   interviewer is likely to ask right after the first answer. Keep both compact so the two don't
+   make the page feel heavier — see [content-writing.md](content-writing.md) for the exact box
+   spec and a worked example.
+7. 🎯 Say this in the interview — always visible
+8. 📖 Explanation — collapsed by default
+9. 💻 Code — collapsed by default
+10. 🌍 Real-world / Scenario — collapsed by default. Broadened from "real-world example": for a
+    topic where a scenario/architecture-depth question is real (see
+    [interview-depth-and-priority.md](interview-depth-and-priority.md)), this section leads with
+    that scenario instead of (or alongside) a generic analogy.
 
 **The interview answer moved up.** It used to sit at the very bottom of the page, after every
-collapsed section. It's now the fourth always-visible thing, right after the Common Trap —
-because "what do I actually say out loud" is exactly as urgent as the recall line and the trap,
-not a wrap-up someone only reaches after reading everything else.
+collapsed section. It's now the seventh always-visible thing, right after Trap and Follow-up —
+because "what do I actually say out loud" is exactly as urgent as the recall line, the trap, and
+the follow-up, not a wrap-up someone only reaches after reading everything else.
 
 ## Content discipline — each section owns one job, nothing is repeated
 
 - The recall section owns the memory trick.
 - The visual owns the mental model.
 - The trap owns the one misconception.
+- The follow-up owns the next question an interviewer would actually ask.
 - The interview answer owns the spoken sentence.
 - The explanation owns the technical accuracy / depth.
 - The code owns the demonstration.
-- The real-world example owns the everyday analogy.
+- The real-world/scenario section owns the everyday analogy or the operational scenario.
 
 **Don't restate the same fact across sections just because it's true in more than one place.** A
 real gap this caught: an early draft repeated the exact same "compiler decides / runtime
@@ -68,8 +82,8 @@ that owns it — every other section either builds on it or is silent about it, 
 
 ## Two learning modes, one page
 
-- **⚡ Interview mode (5-30 seconds)** — the four always-visible sections only: Recall, Visual,
-  Trap, Interview answer. This is the mode most visits are actually in.
+- **⚡ Interview mode (5-30 seconds)** — the always-visible sections only: Recall, Visual, Trap,
+  Follow-up, Interview answer. This is the mode most visits are actually in.
 - **📚 Understand mode (2-10 minutes)** — opening Explanation, Code, and Real-world for whoever
   wants the depth. This mode exists for the first time someone learns a topic, or the rare deep
   dive — never assume it's the default mode a visit is in.
@@ -81,10 +95,11 @@ Priority order, strongest visual weight to quietest:
 1. 🔥 Recall
 2. 🧠 Visual Mental Model
 3. ⚠️ Common Trap
-4. 🎯 Interview answer
-5. 📖 Explanation / 💻 Code / 🌍 Real-world (once opened) — neutral, quiet cards; they're
-   already opted into by the reader, they don't need to compete for attention the way the
-   always-visible four do.
+4. 🔄 Likely Follow-up — same weight class as Trap, both compact
+5. 🎯 Interview answer
+6. 📖 Explanation / 💻 Code / 🌍 Real-world/Scenario (once opened) — neutral, quiet cards;
+   they're already opted into by the reader, they don't need to compete for attention the way
+   the always-visible ones do.
 
 ## The 5-second test
 
@@ -105,6 +120,7 @@ itself becomes a second language the user learns once:
 | Red (`hl-hot`) | runtime / risk / failure | `dynamic`, runtime exceptions, deferred checks |
 | Green (`hl-basic` used sparingly, ✅ in tables) | success / correct result / recommended practice | a correct outcome, a recommended default |
 | Purple/indigo (`--accent`, the keypoints box's existing color) | interview / key takeaway / speaking | the "🎯 Say this in the interview" box — already this color site-wide, now named as part of the system |
+| Teal (`hl-followup`, new 2026-09-16) | the interviewer's next move | the "🔄 Likely Follow-up" box only — kept visually distinct from the trap's amber so the two compact cards don't blur together |
 | Neutral (plain surface, no accent) | explanation / supporting content | Explanation, Code, Real-world — deliberately quiet, see "Visual hierarchy" above |
 
 **Never rely on color alone, and never use color just because a section "needs" one.** Every
@@ -139,6 +155,12 @@ Before calling a page finished, all of these should pass:
   sound? (see [accuracy.md](accuracy.md))
 - **Noise test** — is anything present that doesn't improve understanding or recall? If yes,
   cut it rather than justify it.
+- **Diagram integrity test** — has the automated geometric check in [diagram-style.md](diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
+  actually been run against the *rendered* page (not just reasoned about from the markup) for
+  every `<svg class="topic-diagram">` on it, with zero remaining genuine findings? A page — built
+  by the orchestrating session or by any delegated subagent — is not done without this, and a
+  subagent's "verified by computing coordinates, couldn't reach a live browser" is not a pass;
+  see that section for the incident that made this mandatory rather than advisory.
 
 If any of these fails, fix the page before adding more content to it — more text is almost never
 the fix for a failed test above.

@@ -93,8 +93,12 @@ window.NAV_INDEX = {
 - `title` / `tail` — copy verbatim from that topic's own hero `<h1>` / the tier index's
   `<strong>`/`.ttail` split, so the hover-expand never says something subtly different from
   the page it points to.
-- `hot` on an item drives the small 🔥 dot; `hot` on a group drives the group header's count
-  badge. Both are optional — omit rather than writing `false`/`0`.
+- `priority` on an item (`"🔥"` / `"⭐"` / `"🧠"` — see
+  [interview-depth-and-priority.md](interview-depth-and-priority.md)) drives the small dot next
+  to its label. The group header's "N 🔥" badge is computed automatically from how many items in
+  that group are `"🔥"` — never set a count by hand. (This replaced an earlier boolean `hot`
+  flag on 2026-09-16 once the site-wide priority system had three states instead of two — if you
+  ever see a bare `hot: true/false` in this file, it's stale and should be converted.)
 
 ## Real bugs found while building this — the parts that aren't obvious
 

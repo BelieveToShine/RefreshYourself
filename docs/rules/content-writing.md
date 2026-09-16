@@ -51,20 +51,31 @@ Locked decisions from the working session that set this project up. Don't re-der
 
 **Read [product-principle.md](product-principle.md) first.** This site is a visual
 interview-recall system, not a documentation site — SCAN → SEE → RECALL → SPEAK, not
-READ → STUDY → MEMORIZE. Five things earn a permanent, always-visible spot: the "🔥 Easy
-interview recall" line, the "🧠 Visual Mental Model" diagram, the "⚠️ Common Trap" warning, and
-the "🎯 say this in the interview" box — together they should let someone refresh the concept in
-30-60 seconds without opening a single toggle. Everything else that adds depth — why it matters,
-the prose explanation, the code, the real-world example — is genuinely useful but is not what
-someone glances at for a 5-minute brush-up, so it's collapsed by default behind a
-`<details class="… toggle">` (see `assets/style.css`) and opened only if they want more. Don't
-make any of the always-visible pieces a toggle, and don't leave the collapsed ones permanently
-expanded — the collapse is the point.
+READ → STUDY → MEMORIZE. This is the template for **new pages under the interview-question-bank
+rebuild** (locked 2026-09-15/16); the 14 live C# Basic pages were written under the previous
+version and are frozen, not retrofitted — see [tier-navigation.md](tier-navigation.md)'s note on
+what "frozen" means in practice.
 
-**The interview answer sits early, not at the bottom.** Recall → Visual Model → Trap → Interview
-line is the fast path — all four always visible, in that order, before a single collapsed
-section. Explanation, Code, and Real-world come after; they're for whoever wants to go deeper,
-not part of the 30-second pass.
+Six things earn a permanent, always-visible spot: the "❓ Interview Question" line, the "🔥 Easy
+interview recall" line, the "🧠 Visual Mental Model" diagram, the "⚠️ Common Trap" warning, the
+"🔄 Likely Follow-up" box, and the "🎯 say this in the interview" box — together they should let
+someone refresh the concept in 30-60 seconds without opening a single toggle. Everything else
+that adds depth — why it matters, the prose explanation, the code, the real-world/scenario
+material — is genuinely useful but is not what someone glances at for a 5-minute brush-up, so
+it's collapsed by default behind a `<details class="… toggle">` (see `assets/style.css`) and
+opened only if they want more. Don't make any of the always-visible pieces a toggle, and don't
+leave the collapsed ones permanently expanded — the collapse is the point.
+
+**The interview answer sits early, not at the bottom.** Recall → Visual Model → Trap →
+Follow-up → Interview line is the fast path — all five always visible, in that order, before a
+single collapsed section. Explanation, Code, and Real-world/Scenario come after; they're for
+whoever wants to go deeper, not part of the 30-second pass.
+
+**Audience note for every new page:** written for an experienced professional anywhere from 3+
+years through senior/lead/architect/principal — never framed as a beginner tutorial, and never
+capped at junior/mid-level depth just because a topic is "basic." See
+[interview-depth-and-priority.md](interview-depth-and-priority.md) for the full tier/priority
+definition this applies against.
 
 **No section repeats a fact another section already owns** — see "Content discipline" in
 [product-principle.md](product-principle.md). The recall line states the memory trick once; the
@@ -101,15 +112,24 @@ In this exact order:
    several pages were reviewed side by side later. When a rule like this lands, sweep every
    existing page against it in the same pass, not just the page that prompted it — see the
    verification step in [product-principle.md](product-principle.md).
-3. **"Why it matters" — collapsed toggle, closed by default.** `<details class="topic-hook
+3. **"❓ Interview Question" — always visible, never a toggle, new for the rebuild.** A single
+   compact line right under the H1, `<p class="interview-q">`, stating the literal question an
+   interviewer would ask out loud — plain sentence, no hook/wordplay (that's the H1's job). For
+   `var` vs. `dynamic` vs. `object`, the H1 stays the existing hook title
+   ("`var` vs. `dynamic` vs. `object` — know who checks your code") and this line reads *"What is
+   the difference between `var`, `dynamic`, and `object`?"* — the two aren't the same sentence
+   and shouldn't be; the H1 hooks attention, this line states the actual thing to answer. Skip
+   this line only if the H1 already *is* essentially the literal question verbatim (rare — most
+   hook titles are punchier than the literal phrasing on purpose).
+4. **"Why it matters" — collapsed toggle, closed by default.** `<details class="topic-hook
    toggle">` with a `<summary>` (not a plain label — the summary IS the clickable toggle).
    2-3 short bullets inside, never a paragraph, never article prose: what real bug/situation this
    explains, when it's actually useful to know, and (only if genuinely true) that it's a common
    interview opener.
-4. **"🔥 Easy interview recall" — always visible, never a toggle.** `<div class="recall">` sitting
+5. **"🔥 Easy interview recall" — always visible, never a toggle.** `<div class="recall">` sitting
    right after "Why it matters." Full rules for what goes inside it live in
    [interview-recall.md](interview-recall.md) — read it before writing or editing this box.
-5. **"🧠 Visual Mental Model" — always visible, never a toggle.** A `<div class="viz-label">🧠
+6. **"🧠 Visual Mental Model" — always visible, never a toggle.** A `<div class="viz-label">🧠
    Visual Mental Model</div>` sits right above the diagram(s), naming the section so the goal is
    explicit: *can someone understand the concept just from looking at the picture for 5 seconds?*
    Inline, placed right next to the part of the explanation it supports — see
@@ -125,20 +145,34 @@ In this exact order:
    - **The 5-second test:** hide everything except the label and the diagram. If the main idea
      still comes through, the diagram works. If not, simplify or redesign it — don't compensate
      with more surrounding prose.
-6. **"⚠️ Common Trap" — always visible, never a toggle.** `<div class="trap">` sitting right
-   after the diagram and before the interview-answer box. One misconception or interview
+7. **"⚠️ Common Trap" — always visible, never a toggle, compact.** `<div class="trap">` sitting
+   right after the diagram and before the follow-up box. One misconception or interview
    mistake, stated as a single memorable line — never a list. This moved up from the bottom of
    the page: the single wrong-turn a candidate is likely to make is exactly as urgent as the
    recall line and the diagram, not a footnote. Full rules live in
    [common-trap.md](common-trap.md) — read it before writing or editing this box.
-7. **"🎯 Say this in the interview" box — always visible, never a toggle.** `<div class="keypoints">`
-   sitting right after the Common Trap — moved up from the very bottom of the page for the same
+8. **"🔄 Likely Follow-up" — always visible, never a toggle, compact, new for the rebuild.**
+   `<div class="followup">` sitting right after the Trap. Different job from the Trap: the Trap
+   is a misconception the *candidate* might state; the Follow-up is the question the
+   *interviewer* is likely to ask right after hearing a correct first answer. One question, one
+   short answer — same "single memorable line" discipline as the Trap, not a list, not a
+   paragraph.
+   - Structure: `<p class="ftline">` holding a bolded question, then a short plain-sentence
+     answer — e.g. for `var`: *"So is `var` strongly typed?"* → *"Yes — the compiler still locks
+     in a concrete type at compile time; only the keyword is inferred, not the type-safety."*
+   - Pull this from the concept's own **Comparison** or **Pitfall** question in the taxonomy/
+     roadmap where one exists — don't invent a generic "tell me more" follow-up; it should be a
+     question a real interviewer plausibly asks next, specific to this concept.
+   - Skip this box only if the concept genuinely has no natural follow-up beyond the Trap
+     (rare) — don't pad it with a restated version of the Trap or the Say-this line.
+9. **"🎯 Say this in the interview" box — always visible, never a toggle.** `<div class="keypoints">`
+   sitting right after the Follow-up — moved up from the very bottom of the page for the same
    reason: the spoken answer is core, always-visible content, not a wrap-up. Full rules for what
    goes inside it (lead with one primary spoken sentence, then supporting bullets, every bullet
    highlighting its own main point, plain professional wording, the "when do I use X vs. Y vs. Z"
    pattern) live in their own dedicated file: [keypoints.md](keypoints.md) — read it before
    writing or editing this box.
-8. **Explanation — collapsed toggle, closed by default.** `<details class="explain toggle">`
+10. **Explanation — collapsed toggle, closed by default.** `<details class="explain toggle">`
    with `<summary>📖 Explanation</summary>`. Genuinely short even so — 2-3 tight paragraphs, max.
    This was called out directly: early drafts were too long and "didn't give interest to read
    anything." Every sentence should either add a fact or land a memorable phrase — never both
@@ -175,7 +209,7 @@ In this exact order:
      prose read as dense and duller than what a good chat assistant produces off the same
      question — the fix is tighter sentences and more scannable structure (bold, short lines,
      tables), not more words.
-9. **"💻 See the code" — collapsed toggle, closed by default.** `<details class="codebox toggle">`
+11. **"💻 See the code" — collapsed toggle, closed by default.** `<details class="codebox toggle">`
    with `<summary>💻 See the code</summary>`, containing one or more `.code-card` blocks (see
    `.code-card` in `assets/style.css` — a **light** card, never a dark console: a `C#` language
    chip, a copy button, `Fira Code`, syntax-colored spans `.kw`/`.ty`/`.str`/`.num` and comment
@@ -203,12 +237,22 @@ In this exact order:
      making. Before shipping a code card, ask "does running this in my head prove the page's one
      idea, or would it look identical for a different concept?" — if the latter, redesign the
      example.
-10. **"🌍 Real-world example" — collapsed toggle, closed by default.** `<details class="realworld
-   toggle">` with `<summary>🌍 Real-world example</summary>`. One relatable, everyday analogy (a
-   photocopy vs. a shared doc link, a locker vs. a mailbox, …) that makes the concept click — 2-3
-   sentences, never a story or a worked scenario. If you can't state the analogy in one breath,
-   it's too elaborate — simplify it, don't explain it further.
-11. **Prev / Next** — links to the previous and next topic in this tier's hot-first order, plus a
+12. **"🌍 Real-world / Scenario" — collapsed toggle, closed by default.** `<details
+   class="realworld toggle">` with `<summary>🌍 Real-world example</summary>` (keep the same
+   summary text/emoji unless the page is scenario-led — see below). Two shapes, pick whichever
+   the concept actually earns, per
+   [interview-depth-and-priority.md](interview-depth-and-priority.md):
+   - **Everyday analogy** (the original shape) — one relatable comparison (a photocopy vs. a
+     shared doc link, a locker vs. a mailbox, …) that makes the concept click. 2-3 sentences,
+     never a story. If you can't state it in one breath, it's too elaborate.
+   - **Operational scenario** (new — use when the roadmap already gave the concept a Scenario or
+     Architecture question, e.g. "your service is leaking database connections under load") —
+     state the situation in one line, then the short, direct answer. Still not a worked-through
+     story with steps; it's the same recall-first discipline as everything else on the page,
+     just applied to a real-world problem instead of an analogy.
+   - A page can use either shape or both (analogy first, scenario after) — never neither; every
+     page still ends with something in this section.
+13. **Prev / Next** — links to the previous and next topic in this tier's hot-first order, plus a
    link back up to the tier index. First topic has no "prev", last has no "next." **If the
    neighbouring topic is still `planned` (not written), don't link to its not-yet-existing file**
    — show its title muted, pointing at the tier index instead, labelled "(coming soon)."

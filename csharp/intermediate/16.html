@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task vs. Thread vs. ThreadPool — C# Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="csharp/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#1d4ed8;">🎵 C#</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Task vs. Thread vs. ThreadPool</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 C# · Intermediate · Must Know</div>
+    <h1><code>Task</code> vs. <code>Thread</code> vs. <code>ThreadPool</code> — <span class="hl hl-hot">who's actually doing the work</span></h1>
+    <p class="interview-q">"What's the actual relationship between <code>Task</code>, <code>Thread</code>, and <code>ThreadPool</code>?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Spinning up a raw <code>Thread</code> for work the pool already handles wastes an expensive resource for no reason.</li>
+        <li>Treating <code>Task</code> as "a thread" leads to wrong capacity thinking — an I/O-heavy service can juggle far more concurrent <code>Task</code>s than it has threads.</li>
+        <li>A near-guaranteed follow-up once <code>async</code>/<code>await</code> comes up: "so does <code>await</code> spin up a new thread?"</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Task</code> <span class="rarrow">→</span> <b>the job</b> — may or may not need a thread</p>
+      <p class="rrow"><code>Thread</code> <span class="rarrow">→</span> <b>a real OS</b> thread, expensive</p>
+      <p class="rrow"><code>ThreadPool</code> <span class="rarrow">→</span> <b>reuses</b> a pool of threads</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Task</code></b> is the job ticket. <b><code>Thread</code></b> is the actual worker. <b><code>ThreadPool</code></b> is where idle workers wait to be reused.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI16" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI16" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI16Blue" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="26" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.5">TASK — ONE ABSTRACTION, TWO PATHS UNDERNEATH</text>
+
+      <g filter="url(#shI16)"><rect x="30" y="42" width="580" height="272" rx="20" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/></g>
+      <text x="320" y="68" text-anchor="middle" font-size="16" font-weight="700" fill="#1d4ed8">📋 Task</text>
+      <text x="320" y="84" text-anchor="middle" font-size="10.5" fill="#5b6472">the abstraction you actually write in code</text>
+
+      <g filter="url(#shI16)"><rect x="75" y="98" width="250" height="24" rx="12" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/></g>
+      <text x="200" y="114" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">⚙️ CPU-bound → Task.Run</text>
+
+      <g filter="url(#shI16)"><rect x="380" y="98" width="190" height="24" rx="12" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/></g>
+      <text x="475" y="114" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">🌐 I/O-bound → await</text>
+
+      <path d="M200,122 V140" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI16)"/>
+      <path d="M475,122 V140" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arI16Blue)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+
+      <path d="M360,140 V300" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <g filter="url(#shI16)"><rect x="60" y="140" width="280" height="160" rx="16" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="200" y="168" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🏊 ThreadPool</text>
+      <text x="200" y="184" text-anchor="middle" font-size="10.5" fill="#5b6472">reuses a managed pool of threads</text>
+
+      <g filter="url(#shI16)"><rect x="90" y="202" width="220" height="84" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="200" y="236" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🧵 Thread</text>
+      <text x="200" y="252" text-anchor="middle" font-size="10.5" fill="#5b6472">real OS thread, expensive</text>
+
+      <g filter="url(#shI16)"><rect x="380" y="140" width="190" height="160" rx="16" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="475" y="166" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">⏳ Awaiting I/O</text>
+      <text x="475" y="182" text-anchor="middle" font-size="10.5" fill="#5b6472">no thread needed</text>
+      <text x="475" y="197" text-anchor="middle" font-size="10.5" fill="#5b6472">while it waits</text>
+      <text x="475" y="234" text-anchor="middle" font-size="22">🚫🧵</text>
+      <text x="475" y="280" text-anchor="middle" font-size="10" fill="#5b6472">still just a Task underneath</text>
+
+      <text x="320" y="336" text-anchor="middle" font-size="11" fill="#5b6472">Same Task — CPU work borrows a thread from the pool; I/O work borrows none while it waits.</text>
+    </svg>
+    <figcaption>Task is what you write; ThreadPool and Thread are what may be working underneath it — and for I/O, nothing has to be.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"A Task always means a new thread" isn't true.</b> A CPU-bound Task borrows one from the ThreadPool, but an I/O-bound Task awaiting a network or disk call occupies no thread at all while it waits.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"CPU-bound work vs. I/O-bound work — does that change which of these you reach for?"</b> Yes — CPU-bound work should use <code>Task.Run</code> (borrows a pooled thread); I/O-bound work should use plain <code>async</code>/<code>await</code> against the I/O API, which occupies no thread while it waits.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A <code>Thread</code> is a real OS thread. <code>ThreadPool</code> reuses a managed pool of threads instead of creating one per unit of work. <code>Task</code> is a higher-level abstraction that usually runs on the <code>ThreadPool</code> for CPU work, but for <code>async</code>/<code>await</code> I/O it doesn't need a thread at all while waiting."</p>
+    <ul>
+      <li><code>Thread</code> → <span class="hl hl-hot">rarely reach for directly</span> — creating one is the most expensive option here.</li>
+      <li><code>ThreadPool</code> → the runtime's reuse mechanism; <span class="hl hl-inter">Task.Run hands it CPU work</span> automatically.</li>
+      <li><code>Task</code> → <span class="hl hl-blue">the everyday abstraction</span> — pair it with <code>async</code>/<code>await</code> for I/O so no thread sits blocked.</li>
+      <li>CPU-bound vs. I/O-bound → <span class="hl hl-basic">the deciding question</span>, not "how do I parallelize this."</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <span class="hl hl-hot">Thread</span> is a real operating-system thread — the OS actually
+      allocates it a stack and schedules it. That makes it the most expensive of the three to
+      create, which is exactly why creating one per unit of work doesn't scale.</p>
+
+      <p><span class="hl hl-inter">ThreadPool</span> exists to avoid paying that cost repeatedly —
+      it keeps a set of OS threads already created and hands one to whatever work needs it next,
+      reusing it instead of tearing it down afterward.</p>
+
+      <p><span class="hl hl-blue">Task</span> sits above both of these as the thing you actually
+      write code against. A CPU-bound <code>Task</code> (started with <code>Task.Run</code>)
+      genuinely borrows a thread from the pool for the duration of the work. An I/O-bound
+      <code>Task</code> awaiting a network or disk call doesn't — there's nothing for a thread to
+      do while waiting on someone else, so none is held.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>Task</code></th><th><code>Thread</code></th><th><code>ThreadPool</code></th></tr></thead>
+        <tbody>
+          <tr><th>What it actually is</th><td>a unit of work / a promise of a result</td><td>a real OS-level thread</td><td>a shared pool of reusable OS threads</td></tr>
+          <tr><th>Cost to create</th><td>cheap — a lightweight object</td><td>expensive — a real OS resource</td><td>cheap — threads are already created, just reused</td></tr>
+          <tr><th>Who manages it</th><td>the runtime (usually via the pool)</td><td>you, manually</td><td>the runtime</td></tr>
+          <tr><th>While waiting on I/O</th><td>occupies no thread at all</td><td>blocked, still occupying the OS thread</td><td>a borrowed thread would still block if used this way</td></tr>
+          <tr><th>Use it directly?</th><td class="yes">✅ yes — the everyday abstraction</td><td>rarely — only for rare dedicated-thread needs</td><td>rarely by name — <code>Task.Run</code> uses it for you</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Thread</span> t = <span class="kw">new</span> <span class="ty">Thread</span>(DoWork);
+t.Start();               <span class="cx-err">// ❌ a brand-new OS thread just for this</span></code></pre>
+      </div>
+      <p class="cx-note">Creating a raw <code>Thread</code> directly is rarely the right call — it's the most expensive option on this page.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">await</span> <span class="ty">Task</span>.Run(() =&gt; ComputeHash(data));  <span class="cx-ok">// ✅ CPU work — runs on a pooled thread</span></code></pre>
+      </div>
+      <p class="cx-note"><code>Task.Run</code> hands CPU-bound work to the <code>ThreadPool</code> instead of creating a new OS thread.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> response = <span class="kw">await</span> httpClient.GetAsync(url);  <span class="cx-ok">// ✅ I/O — no thread blocked while waiting</span></code></pre>
+      </div>
+      <p class="cx-note">This <code>Task</code> is just waiting on the network — no thread, pooled or otherwise, is occupied until the response arrives.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Thread is like hiring a brand-new employee for one job and letting them go
+      afterward</b> — slow and expensive to set up. <code>ThreadPool</code> is a pool of employees
+      you've already hired, handed the next ticket instead of hiring someone new each time.
+      <code>Task</code> is the ticket itself — and if that ticket is just waiting on a reply from
+      someone else, it sits in the tray with nobody standing there watching it.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="15.html">← async/await — the Basics</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to C# Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="17.html">Cancellation (CancellationToken) →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · C# · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

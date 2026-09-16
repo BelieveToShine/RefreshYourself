@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ConcurrentDictionary — why locking a regular one isn't enough — C# Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="csharp/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#1d4ed8;">🎵 C#</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Concurrent Collections</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ C# · Advanced · Should Know</div>
+    <h1><code>ConcurrentDictionary</code> — why <span class="hl hl-hot">locking a regular one isn't enough</span></h1>
+    <p class="interview-q">"Why does <code>ConcurrentDictionary</code> exist instead of just locking around a regular <code>Dictionary</code>?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Comes up the moment a service needs a shared, frequently-updated in-memory cache under real concurrent load.</li>
+        <li>A natural follow-up after <code>lock</code>/<code>volatile</code>/<code>Interlocked</code> questions — checks whether you reach for the built-in collection instead of hand-rolling more locking.</li>
+        <li>Tests whether you know what "thread-safe" actually promises — and where that promise stops.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Dictionary</code> + <code>lock</code> <span class="rarrow">→</span> <b>one queue</b>, every key waits</p>
+      <p class="rrow"><code>ConcurrentDictionary</code> <span class="rarrow">→</span> <b>fine-grained</b> locking, unrelated keys don't wait</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>lock</code></b> blocks the whole table. <b><code>ConcurrentDictionary</code></b> only blocks the bucket actually being touched.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA8" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA8" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arRoseA8" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">3 THREADS · KEYS X, Y, Z · SAME COLLECTION</text>
+
+      <path d="M160,34 H480" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,34 V58" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+      <path d="M480,34 V58" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+
+      <g filter="url(#shA8)"><rect x="65" y="58" width="190" height="38" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Threads A, B, C</text>
+      <text x="160" y="92" text-anchor="middle" font-size="10.5" fill="#5b6472">keys X, Y, Z — all different</text>
+
+      <g filter="url(#shA8)"><rect x="385" y="58" width="190" height="38" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Threads A, B, C</text>
+      <text x="480" y="92" text-anchor="middle" font-size="10.5" fill="#5b6472">keys X, Y, Z — all different</text>
+
+      <path d="M160,96 V118" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+      <path d="M480,96 V118" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+
+      <g filter="url(#shA8)"><rect x="65" y="118" width="190" height="44" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="160" y="138" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🔒 lock(dict)</text>
+      <text x="160" y="153" text-anchor="middle" font-size="10.5" fill="#5b6472">one queue for every key</text>
+
+      <g filter="url(#shA8)"><rect x="385" y="118" width="190" height="44" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="138" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🔓 fine-grained locks</text>
+      <text x="480" y="153" text-anchor="middle" font-size="10.5" fill="#5b6472">unrelated keys, unrelated locks</text>
+
+      <path d="M160,162 V184" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arRoseA8)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.7s" repeatCount="indefinite"/></path>
+      <path d="M480,162 V184" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+
+      <g filter="url(#shA8)"><rect x="65" y="184" width="190" height="38" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="204" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">⏳ B, C wait</text>
+      <text x="160" y="218" text-anchor="middle" font-size="10.5" fill="#5b6472">even though keys differ</text>
+
+      <g filter="url(#shA8)"><rect x="385" y="184" width="190" height="38" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="204" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ all 3 proceed</text>
+      <text x="480" y="218" text-anchor="middle" font-size="10.5" fill="#5b6472">no blocking between them</text>
+
+      <text x="320" y="250" text-anchor="middle" font-size="11" fill="#5b6472">Same 3 threads, same collection — the only difference is what gets locked</text>
+    </svg>
+    <figcaption>A whole-table lock queues every thread behind every other one; fine-grained internal locking only queues threads touching the same key.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 660 220" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA8b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA8b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arRoseA8b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="330" y="18" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">SAME KEY, TWO THREADS — READ THEN UPDATE ACROSS TWO CALLS</text>
+
+      <g filter="url(#shA8b)"><rect x="20" y="40" width="170" height="36" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="105" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">A: TryGetValue → 10</text>
+
+      <path d="M190,58 H545" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arRoseA8b)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.7s" repeatCount="indefinite"/></path>
+      <text x="367" y="98" text-anchor="middle" font-size="10.5" fill="#5b6472">⏳ another thread can run in this gap</text>
+
+      <g filter="url(#shA8b)"><rect x="545" y="40" width="90" height="36" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="590" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">A: fails ❌</text>
+
+      <g filter="url(#shA8b)"><rect x="220" y="120" width="140" height="36" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="290" y="142" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">B: TryGetValue → 10</text>
+
+      <path d="M360,138 H390" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8b)"/>
+
+      <g filter="url(#shA8b)"><rect x="390" y="120" width="140" height="36" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="460" y="142" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">B: TryUpdate → 11 ✅</text>
+
+      <text x="330" y="180" text-anchor="middle" font-size="11" fill="#991b1b">❌ A's TryUpdate(11, comparand 10) returns false — value's already 11.</text>
+      <text x="330" y="196" text-anchor="middle" font-size="11" fill="#5b6472">Each call is atomic. The get-then-update pair across them is not.</text>
+    </svg>
+    <figcaption>TryGetValue and TryUpdate are each atomic on their own — the sequence between them isn't, so a concurrent writer can slip in between.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>ConcurrentDictionary doesn't make your code thread-safe end to end.</b> Only a single call (<code>TryAdd</code>, <code>TryUpdate</code>) is guaranteed atomic — a separate get-then-set across two calls can still lose an update.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"So how do I safely read-then-write a value?"</b> Use the built-in compound methods like <code>AddOrUpdate</code> or <code>GetOrAdd</code> — they retry the update delegate internally on contention instead of you coordinating a separate read and write. The delegate itself still has to be safe to run more than once.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>ConcurrentDictionary</code> exists because locking a whole <code>Dictionary</code> serializes every access, even to unrelated keys. It uses fine-grained internal locking, plus lock-free reads, so operations on different keys don't block each other — but only a single call is guaranteed atomic, not a sequence of calls."</p>
+    <ul>
+      <li><code>Dictionary</code> + <code>lock</code> → <span class="hl hl-inter">simple and correct</span>, but every thread queues behind the same lock regardless of key.</li>
+      <li><code>ConcurrentDictionary</code> → <span class="hl hl-basic">unrelated keys run concurrently</span>; internal striping and lock-free paths instead of one big lock.</li>
+      <li>A single call (<code>TryAdd</code>, <code>TryUpdate</code>) → <span class="hl hl-basic">atomic</span>; a separate get-then-set pair → <span class="hl hl-hot">not atomic together</span>.</li>
+      <li>Need a safe increment? → use <span class="hl hl-adv"><code>AddOrUpdate</code> / <code>GetOrAdd</code></span> instead of coordinating the read and write yourself.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A plain <span class="hl hl-inter"><code>Dictionary</code> wrapped in one <code>lock</code></span> is correct, but the lock is one object guarding the whole structure — every thread that touches the dictionary at all, for any key, has to wait for whichever thread currently holds it. Two threads updating completely unrelated keys still queue up behind each other.</p>
+
+      <p><span class="hl hl-basic"><code>ConcurrentDictionary</code></span> avoids that by not using one lock for everything. Internally it uses a small set of striped locks (different keys can map to different internal locks) plus lock-free techniques for many reads, so operations on unrelated keys genuinely run at the same time instead of taking turns.</p>
+
+      <p>What it does <b>not</b> do is turn a multi-step sequence into one atomic unit. Each individual method call is atomic — but a <code>TryGetValue</code> followed later by a <code>TryUpdate</code> is two separate atomic operations with a gap in between, and another thread can act during that gap.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>Dictionary</code> + <code>lock</code></th><th><code>ConcurrentDictionary</code></th></tr></thead>
+        <tbody>
+          <tr><th>What's locked</th><td>the whole structure, one <code>lock</code></td><td>internal stripes/segments per key</td></tr>
+          <tr><th>Unrelated keys</th><td>still wait on each other</td><td>run without blocking each other</td></tr>
+          <tr><th>Single call (e.g. <code>TryAdd</code>)</th><td>atomic (via the lock)</td><td>✅ atomic</td></tr>
+          <tr><th>Read-then-write across two calls</th><td>atomic only if you hold the lock the whole time</td><td class="no">❌ not atomic on its own</td></tr>
+          <tr><th>Best used for</th><td>simple, low-contention cases</td><td>shared, frequently-updated caches under real concurrency</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">private readonly</span> <span class="ty">object</span> _gate = <span class="kw">new</span>();
+<span class="kw">private readonly</span> <span class="ty">Dictionary</span>&lt;<span class="ty">string</span>, <span class="ty">int</span>&gt; _counts = <span class="kw">new</span>();
+
+<span class="kw">lock</span> (_gate)               <span class="cx-cmt">// ❌ guards EVERY key, not just "orders"</span>
+{
+    _counts[<span class="str">"orders"</span>]++;   <span class="cx-cmt">// a thread updating "users" still waits here</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">One <code>lock</code> guards the whole dictionary — a thread updating a completely different key still queues up behind it.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">private readonly</span> <span class="ty">ConcurrentDictionary</span>&lt;<span class="ty">string</span>, <span class="ty">int</span>&gt; _counts = <span class="kw">new</span>();
+
+_counts.TryAdd(<span class="str">"orders"</span>, <span class="num">0</span>);              <span class="cx-ok">// ✅ atomic on its own</span>
+_counts.TryUpdate(<span class="str">"orders"</span>, <span class="num">1</span>, <span class="num">0</span>);      <span class="cx-ok">// ✅ atomic — only succeeds if still 0</span></code></pre>
+      </div>
+      <p class="cx-note">No shared lock object needed — updating <code>"orders"</code> here never waits on a thread updating <code>"users"</code>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">int</span> current = _counts[<span class="str">"orders"</span>];        <span class="cx-cmt">// atomic read...</span>
+_counts.TryUpdate(<span class="str">"orders"</span>, current + <span class="num">1</span>, current); <span class="cx-err">// ❌ fails if another thread updated it in between</span>
+
+<span class="cx-cmt">// ✅ the fix — one call, retried internally on contention</span>
+_counts.AddOrUpdate(<span class="str">"orders"</span>, <span class="num">1</span>, (_, v) => v + <span class="num">1</span>);</code></pre>
+      </div>
+      <p class="cx-note">Reading and writing as two separate calls leaves a gap another thread can use — <code>AddOrUpdate</code> closes that gap by retrying instead of trusting a stale read.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your service runs several instances behind a load balancer, and each one keeps a
+      frequently-updated in-memory cache — is a <code>ConcurrentDictionary</code> per instance the
+      right architecture for that?</b> Only if some staleness or inconsistency between instances is
+      genuinely acceptable. <code>ConcurrentDictionary</code> only solves thread-safety
+      <i>within one process</i> — the threads inside a single instance never corrupt each other's
+      view of the cache. It says nothing about the <i>other</i> instances, each with their own
+      separate copy. If the cache has to agree across instances, that's a different problem —
+      a distributed cache (e.g. Redis) — not something a smarter in-process collection can fix.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="7.html">← volatile &amp; Interlocked</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to C# Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="9.html">Unsafe Code &amp; Pointers →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · C# · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

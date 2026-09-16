@@ -7,26 +7,35 @@ roadmap can grow and get maintained on its own instead of one page getting unwie
 
 ## What this is
 
-A quick-refresh **interview question bank** (not a tutorial site) for developers with 3+ years
-of experience — locked with the user on 2026-09-15, superseding the earlier "topic tutorial"
-framing. Two groups of tracks:
+A quick-refresh **interview question bank** (not a tutorial site) for **experienced
+professionals — roughly 3+ years through senior, lead, architect, and principal** — locked with
+the user on 2026-09-15, audience/depth definition refined 2026-09-16, superseding the earlier
+"topic tutorial" framing. Never write as if the reader is a beginner; never cap depth to a
+junior/mid-level interview. Two groups of tracks:
 
 - **Core backend interview path**, in this order: C# → OOP → .NET/ASP.NET Core (MVC lives inside
   this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure.
 - **Other tracks**, unaffected by this rebuild and not part of the ordered path: React, DSA, AI.
 
 Every track goes through 7 phases before any page is built — see
-[`specs/README.md`](superpowers/specs/README.md) for the full pipeline. Basic/Intermediate/
-Advanced now mean **interview depth** (recall-speed vs. practical understanding vs. internals/
-trade-offs/architecture) — explicitly **not** beginner/intermediate/expert tutorial difficulty.
-Every page also gets an independent priority tag (🔥 Must Know / ⭐ Should Know / 🧠 Deep Dive,
-Phase 5) — a topic can be Advanced *and* Must-Know at the same time.
+[`specs/README.md`](superpowers/specs/README.md) for the full pipeline, and
+[`rules/interview-depth-and-priority.md`](rules/interview-depth-and-priority.md) for the full
+definition of the two independent axes: Basic/Intermediate/Advanced mean **the type of question**
+(core knowledge → practical usage/comparison/troubleshooting → internals/performance/
+concurrency/security/scalability/trade-offs/architecture/scenarios) — never difficulty, and
+never a year-of-experience cutoff. There's deliberately **no separate "Architect" tier** —
+architecture-depth questions live inside Advanced. Every page also gets an independent priority
+tag (🔥 Must Know / ⭐ Should Know / 🧠 Deep Dive, Phase 5) that means **interview likelihood,
+never seniority** — an architect can still need a 🔥 Basic refresher, and a 3-year developer can
+run into a 🧠 Deep Dive question.
 
-The old page template ([content-writing.md](rules/content-writing.md)) still describes exactly
-what's live on C# Basic's 14 written pages today — **frozen**, not touched by this rebuild until
-a deliberate later migration pass. The new template (Question → Recall → Visual → Trap →
-Follow-up → Say-this → Explanation → Code → Real-world/Scenario) applies to new content going
-forward once a track reaches Phase 7.
+[content-writing.md](rules/content-writing.md) now documents two templates: the **old** one,
+which is exactly what's live on C#'s original 14 Basic pages — **frozen**, not touched by this
+rebuild until a deliberate later migration pass — and the **new** one (❓ Interview Question →
+🔥 Recall → 🧠 Visual → ⚠️ Trap → 🔄 Follow-up → 🎯 Say-this → 📖 Explanation → 💻 Code → 🌍
+Real-world/Scenario), which C# has already used to write its other 35 pages (Basic 15–18, all
+of Intermediate, all of Advanced) — the reference example for every other track's eventual
+Phase 7.
 
 ## Where things live
 
@@ -38,16 +47,19 @@ forward once a track reaches Phase 7.
 
 ## Current build status (one line each — see the track's own spec for detail)
 
-**Core backend path — all in Phase 1 (question taxonomy), awaiting the user's review before
-Phase 2 (dedupe/gaps) starts on any of them:**
+**Core backend path — C# is through all 7 phases; the other six tracks are still at Phase 1
+(question taxonomy), awaiting the user's review before Phase 2 (dedupe/gaps) starts on any of
+them:**
 
-- **C#** — **Phases 1–6 complete**: [`question-taxonomy.md`](superpowers/specs/csharp/question-taxonomy.md)
-  → [`roadmap.md`](superpowers/specs/csharp/roadmap.md), 49 pages tiered and prioritized, also
-  live on [`csharp/roadmap.html`](../csharp/roadmap.html) and the Basic/Intermediate/Advanced
-  tier-index pages. Phase 7 (writing the 35 planned pages) not started. The 14 written Basic
-  pages (incl. the tier-navigation sidebar — see [`rules/tier-navigation.md`](rules/tier-navigation.md))
-  stay **frozen**, not part of this rebuild; they get their own later migration pass. This
-  track is the reference example for how every other track goes through the pipeline. See
+- **C#** — **all 7 phases complete, 49/49 pages written** (2026-09-16):
+  [`question-taxonomy.md`](superpowers/specs/csharp/question-taxonomy.md) →
+  [`roadmap.md`](superpowers/specs/csharp/roadmap.md) → 49 tiered/prioritized pages, live on the
+  site and on [`csharp/roadmap.html`](../csharp/roadmap.html). The 14 *original* Basic pages
+  (incl. the tier-navigation sidebar — see [`rules/tier-navigation.md`](rules/tier-navigation.md))
+  stay exactly as they were, **frozen**; the other 35 (Basic 15–18, all Intermediate, all
+  Advanced) are new and built to the same rules but not yet through the user's page-by-page
+  review the original 14 had. This track is the reference example for how every other track
+  goes through the pipeline. See
   [`specs/csharp/overview.md`](superpowers/specs/csharp/overview.md).
 - **OOP** — [`question-taxonomy.md`](superpowers/specs/oops/question-taxonomy.md) written.
   Deliberately scenario-heavy per the user's instruction — no old roadmap existed.

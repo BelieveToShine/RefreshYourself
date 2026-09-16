@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indexers — C# Basic — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="csharp/basic">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#1d4ed8;">🎵 C#</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Indexers</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 C# · Basic · Deep Dive</div>
+    <h1>Indexers — <span class="hl hl-teal">letting your own type support <code>obj[i]</code></span></h1>
+    <p class="interview-q">"What is an indexer, and why write one instead of a method like <code>GetAt(i)</code>?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Shows up any time a type is really a wrapper around a dictionary, array, or list — a config object, a custom collection, a matrix/grid class.</li>
+        <li>A quiet code smell: a class with <code>GetAt(i)</code>/<code>SetAt(i, v)</code> instead of an indexer is hiding a collection behind extra method names.</li>
+        <li>Rarely opens an interview on its own — more likely to surface while reading or designing a wrapper type, or as a quick "how would you expose this" question.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Indexer = <b>"a property named <code>this[]</code> instead of a word — same get/set, <code>[]</code> syntax."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <code>myCollection[2]</code> is really just <b><code>myCollection.this[2]</code></b> — a specially-named property, not new syntax the compiler invents.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh18" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar18" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">WordList — A TYPE WITH AN INDEXER this[int i]</text>
+
+      <g filter="url(#sh18)"><rect x="30" y="56" width="78" height="30" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="69" y="76" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">🔎 READ</text>
+
+      <g filter="url(#sh18)"><rect x="125" y="44" width="175" height="54" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="212.5" y="63" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">YOU WRITE</text>
+      <text x="212.5" y="84" text-anchor="middle" font-size="13" font-family="Fira Code, Consolas, monospace" fill="#1d4ed8">var w = list[2];</text>
+
+      <path d="M300,71 H355" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar18)"/>
+
+      <g filter="url(#sh18)"><rect x="355" y="44" width="255" height="54" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="482.5" y="63" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">COMPILER CALLS get_Item</text>
+      <text x="482.5" y="84" text-anchor="middle" font-size="13" font-family="Fira Code, Consolas, monospace" fill="#92400e">return _items[2];</text>
+
+      <g filter="url(#sh18)"><rect x="30" y="156" width="78" height="30" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="69" y="176" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">✏️ WRITE</text>
+
+      <g filter="url(#sh18)"><rect x="125" y="144" width="175" height="54" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="212.5" y="163" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">YOU WRITE</text>
+      <text x="212.5" y="184" text-anchor="middle" font-size="13" font-family="Fira Code, Consolas, monospace" fill="#1d4ed8">list[2] = "cat";</text>
+
+      <path d="M300,171 H355" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar18)"/>
+
+      <g filter="url(#sh18)"><rect x="355" y="144" width="255" height="54" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="482.5" y="163" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">COMPILER CALLS set_Item</text>
+      <text x="482.5" y="184" text-anchor="middle" font-size="13" font-family="Fira Code, Consolas, monospace" fill="#92400e">_items[2] = "cat";</text>
+
+      <text x="320" y="222" text-anchor="middle" font-size="11" fill="#5b6472">One declaration — <tspan font-family="Fira Code, Consolas, monospace">this[int i] { get; set; }</tspan> — runs get on read, set on write</text>
+    </svg>
+    <figcaption>Same <code>this[int i]</code> declaration, two directions — reading calls <code>get</code>, assigning calls <code>set</code>.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>An indexer's index has to be an <code>int</code>, like an array.</b> It can be any type — <code>string</code>, a tuple, even multiple parameters — because it's really just a property with parameters, not literal array access.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Can an indexer take more than one parameter?"</b> Yes — a type can declare several indexers overloaded by parameter type or count, like <code>this[int row, int col]</code> for a grid, or <code>this[string key]</code> alongside <code>this[int index]</code> on the same class.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"An indexer is a specially-named property — <code>this[int i]</code> — that lets a type support <code>obj[i]</code> syntax directly. I'd write one instead of a method like <code>GetAt(i)</code> when the type is conceptually a collection, so square-bracket access reads more naturally than a named method call."</p>
+    <ul>
+      <li><code>this[i]</code> compiles to a <span class="hl hl-teal">specially-named property</span> (<code>get_Item</code>/<code>set_Item</code>), not compiler magic.</li>
+      <li>Index type isn't limited to <code>int</code> — <span class="hl hl-blue">string, tuples, custom types</span> all work, and it's overloadable.</li>
+      <li><code>get</code> and <code>set</code> can carry <span class="hl hl-inter">independent access modifiers</span>, exactly like an ordinary property.</li>
+      <li>Reach for it when the type <span class="hl hl-basic">wraps a collection</span> — skip it for a type that just happens to expose a "get by id" method.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>An indexer is a property that's named <span class="hl hl-blue"><code>this</code></span>
+      instead of a word, and takes a parameter in square brackets instead of none. The compiler
+      turns it into a real member named <code>Item</code> underneath, with <code>get_Item</code>
+      and <code>set_Item</code> accessors — <code>list[2]</code> and <code>list[2] = "cat"</code>
+      are just friendlier syntax for calling those.</p>
+
+      <p>Unlike array access, the index isn't restricted to <code>int</code>. It's an ordinary
+      parameter list, so a type can take a <code>string</code> key (like
+      <code>Dictionary&lt;TKey,TValue&gt;</code> does), a pair of coordinates, or any type that
+      makes sense for the concept — and a class can declare several indexers side by side,
+      overloaded by parameter type or count.</p>
+
+      <p>Writing <code>GetAt(i)</code>/<code>SetAt(i, v)</code> methods instead works fine, but an
+      indexer is the better fit whenever the type <i>is</i> a collection conceptually — it lets
+      callers write the same square-bracket syntax they already use on arrays and lists, with no
+      extra method names to remember.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">WordList</span>
+{
+    <span class="kw">private</span> <span class="kw">readonly</span> <span class="ty">List</span>&lt;<span class="kw">string</span>&gt; _items = <span class="kw">new</span>();
+
+    <span class="kw">public</span> <span class="kw">string</span> <span class="kw">this</span>[<span class="kw">int</span> i]      <span class="cx-cmt">// the indexer declaration</span>
+    {
+        get =&gt; _items[i];
+        set =&gt; _items[i] = value;
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">One declaration lets callers write <code>list[i]</code> instead of <code>list.GetAt(i)</code> / <code>list.SetAt(i, value)</code>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> list = <span class="kw">new</span> <span class="ty">WordList</span>();
+list[0] = <span class="str">"cat"</span>;              <span class="cx-cmt">// calls the set accessor</span>
+Console.WriteLine(list[0]);   <span class="cx-ok">// calls the get accessor — prints "cat"</span></code></pre>
+      </div>
+      <p class="cx-note">Reading calls <code>get</code>, assigning calls <code>set</code> — same as any other property, just addressed with <code>[]</code> instead of a dot.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">string</span> <span class="kw">this</span>[<span class="kw">string</span> key] =&gt; _lookup[key];   <span class="cx-cmt">// overloaded indexer — string key, not int</span></code></pre>
+      </div>
+      <p class="cx-note">Indexers can be overloaded like methods — a type can expose both <code>this[int]</code> and <code>this[string]</code> side by side.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>You've already used one.</b> <code>Dictionary&lt;TKey,TValue&gt;</code>'s
+      <code>config["ConnectionString"]</code> syntax is just its own indexer, keyed by
+      <code>string</code> instead of <code>int</code>. You'd write the same kind of member on a
+      custom <code>Grid</code> type so callers can read <code>grid[row, col]</code> instead of
+      <code>grid.GetCell(row, col)</code>.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="17.html">← Tuples &amp; Deconstruction</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to C# Basic</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · C# · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
