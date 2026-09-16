@@ -111,5 +111,56 @@ window.NAV_INDEX = {
         ]
       }
     ]
+  },
+  "oops/basic": {
+    track: "OOP",
+    trackIcon: "🧩",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1–4",
+        items: [
+          { n: 1, file: "1.html", short: "Encapsulation vs. Abstraction", title: "Encapsulation vs. Abstraction", tail: "hides state vs. hides complexity.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Inheritance vs. Composition",   title: "Inheritance vs. Composition",   tail: "is-a vs. has-a — how do you decide?", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Polymorphism",                  title: "Polymorphism",                  tail: "compile-time vs. runtime, overload vs. override.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Single Responsibility",         title: "Single Responsibility Principle", tail: "\"one reason to change,\" not \"one method.\"", priority: "🔥" }
+        ]
+      }
+    ]
+  },
+  "oops/intermediate": {
+    track: "OOP",
+    trackIcon: "🧩",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1–8",
+        items: [
+          { n: 1, file: "1.html", short: "Interface vs. Abstract Class", title: "Interface vs. Abstract Class",   tail: "when to reach for each.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Open/Closed Principle",        title: "Open/Closed Principle",          tail: "the switch statement that keeps growing.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Liskov Substitution",          title: "Liskov Substitution Principle",  tail: "the square-extends-rectangle trap.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Interface Segregation",        title: "Interface Segregation Principle", tail: "what a \"fat interface\" costs its implementers.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Dependency Inversion",         title: "Dependency Inversion Principle", tail: "depend on abstractions, not concretions.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Strategy vs. Conditional",     title: "Strategy Pattern vs. Conditional Logic", tail: "the payment-processor example.", priority: "⭐" },
+          { n: 7, file: "7.html", short: "Factory vs. DI",               title: "Factory vs. Dependency Injection", tail: "when you need one in addition to the other.", priority: "⭐" },
+          { n: 8, file: "8.html", short: "Coupling vs. Cohesion",        title: "Coupling vs. Cohesion",          tail: "and what actually makes code maintainable.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "oops/advanced": {
+    track: "OOP",
+    trackIcon: "🧩",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1–3",
+        items: [
+          { n: 1, file: "1.html", short: "SOLID as a Whole",         title: "SOLID as a Whole",                tail: "applying all five to one real service.", priority: "⭐" },
+          { n: 2, file: "2.html", short: "Composition over Inheritance", title: "Why Prefer Composition Over Inheritance", tail: "the fragile base class problem.", priority: "⭐" },
+          { n: 3, file: "3.html", short: "Refactoring a Coupled Service", title: "Refactoring a Tightly Coupled Service", tail: "one method, three hidden dependencies.", priority: "🧠" }
+        ]
+      }
+    ]
   }
 };

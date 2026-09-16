@@ -48,7 +48,7 @@ track ends up with once it reaches Phase 6 — just know that for any track stil
 | Track | Covers |
 |---|---|
 | [csharp/](csharp/overview.md) | **All 7 phases complete — 49/49 pages written.** [question-taxonomy.md](csharp/question-taxonomy.md) → [roadmap.md](csharp/roadmap.md). Original 14 Basic pages frozen; the other 35 are new, awaiting page-by-page review. |
-| [oops/](oops/question-taxonomy.md) | OOP — no old roadmap existed. [question-taxonomy.md](oops/question-taxonomy.md) (Phase 1, awaiting review) is the only doc so far. |
+| [oops/](oops/overview.md) | **All 7 phases complete — 15/15 pages written.** [question-taxonomy.md](oops/question-taxonomy.md) → [roadmap.md](oops/roadmap.md) → 15 tiered/prioritized pages, live on the site and on [`oops/roadmap.html`](../../../oops/roadmap.html). |
 | [dotnet/](dotnet/question-taxonomy.md) | .NET / ASP.NET Core (incl. MVC as a grouped subsection) — rescoped from the old, never-written ".NET Framework" slot. [question-taxonomy.md](dotnet/question-taxonomy.md) (Phase 1, awaiting review) is the only doc so far. |
 | [webapi/](webapi/question-taxonomy.md) | Web API — brand-new track, no site folder yet (Phase 6/7 work). [question-taxonomy.md](webapi/question-taxonomy.md) (Phase 1, awaiting review) is the only doc so far. |
 | [efcore/](efcore/question-taxonomy.md) | EF Core — brand-new track, no site folder yet (Phase 6/7 work). [question-taxonomy.md](efcore/question-taxonomy.md) (Phase 1, awaiting review) is the only doc so far. |

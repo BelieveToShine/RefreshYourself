@@ -47,9 +47,9 @@ Phase 7.
 
 ## Current build status (one line each — see the track's own spec for detail)
 
-**Core backend path — C# is through all 7 phases; the other six tracks are still at Phase 1
-(question taxonomy), awaiting the user's review before Phase 2 (dedupe/gaps) starts on any of
-them:**
+**Core backend path — C# and OOP are through all 7 phases; the other five tracks are still at
+Phase 1 (question taxonomy), awaiting the user's review before Phase 2 (dedupe/gaps) starts on
+any of them:**
 
 - **C#** — **all 7 phases complete, 49/49 pages written** (2026-09-16):
   [`question-taxonomy.md`](superpowers/specs/csharp/question-taxonomy.md) →
@@ -61,8 +61,13 @@ them:**
   review the original 14 had. This track is the reference example for how every other track
   goes through the pipeline. See
   [`specs/csharp/overview.md`](superpowers/specs/csharp/overview.md).
-- **OOP** — [`question-taxonomy.md`](superpowers/specs/oops/question-taxonomy.md) written.
-  Deliberately scenario-heavy per the user's instruction — no old roadmap existed.
+- **OOP** — **all 7 phases complete, 15/15 pages written** (2026-09-16):
+  [`question-taxonomy.md`](superpowers/specs/oops/question-taxonomy.md) →
+  [`roadmap.md`](superpowers/specs/oops/roadmap.md) → 15 tiered/prioritized pages, live on the
+  site and on [`oops/roadmap.html`](../oops/roadmap.html). Deliberately scenario-heavy per the
+  user's instruction (design/scenario questions, not "what is polymorphism" from zero). Every
+  diagram passed the mandatory automated verification script before this track was marked done —
+  see [`specs/oops/overview.md`](superpowers/specs/oops/overview.md).
 - **.NET / ASP.NET Core** — [`question-taxonomy.md`](superpowers/specs/dotnet/question-taxonomy.md)
   written, MVC included as a grouped subsection (not a separate track/folder). Rescopes the old,
   never-written ".NET Framework" slot — different technology, same folder slug (`dotnet/`).
