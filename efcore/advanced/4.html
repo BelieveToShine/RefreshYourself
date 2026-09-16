@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beyond N+1 — Common Performance Pitfalls — EF Core Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Beyond N+1 — Common Performance Pitfalls</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 EF Core · Advanced · Must Know</div>
+    <h1>No N+1 in sight — so why is the query still <span class="hl hl-hot">slow</span>?</h1>
+    <p class="interview-q">"Beyond N+1, what else commonly causes EF Core performance problems?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>A team fixes the obvious N+1 problem, ships it, and the endpoint is still slow under
+        real load — this is exactly the gap this page exists to close.</li>
+        <li>Interviewers use this to check whether "I know about N+1" is the whole story, or
+        whether you actually understand what else EF Core can quietly waste.</li>
+        <li>A common trap for anyone who assumes a clean-looking LINQ query and a fast database
+        query are the same thing.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">No <b>projection</b> <span class="rarrow">→</span> loading more than you need</p>
+      <p class="rrow">No <b>AsNoTracking</b> <span class="rarrow">→</span> tracking rows you'll never save</p>
+      <p class="rrow">No <b>index</b> <span class="rarrow">→</span> a scan EF Core can't see or fix</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> fixing <b><code>N+1</code></b> kills the extra
+    round trips. These three are about what happens on the <b>one</b> round trip that's left.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 380" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA4" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA4Grey" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arA4Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arA4Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arA4Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arA4Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">LOOKS CLEAN. IS IT ACTUALLY FAST?</text>
+
+      <g filter="url(#shA4)"><rect x="120" y="28" width="240" height="46" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="240" y="47" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🧩 The LINQ query</text>
+      <text x="240" y="62" text-anchor="middle" font-size="10.5" fill="#5b6472">Where → OrderBy → Select(...)</text>
+
+      <path d="M240,74 V94" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA4Grey)"/>
+
+      <g filter="url(#shA4)"><rect x="120" y="94" width="240" height="48" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="240" y="114" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">1. Projected?</text>
+      <text x="240" y="130" text-anchor="middle" font-size="10.5" fill="#5b6472">only the needed columns?</text>
+
+      <path d="M360,118 H395" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA4Red)"/>
+      <g filter="url(#shA4)"><rect x="395" y="93" width="140" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="465" y="113" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">❌ full entity</text>
+      <text x="465" y="129" text-anchor="middle" font-size="10" fill="#5b6472">wasted bandwidth</text>
+
+      <path d="M240,142 V162" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arA4Blue)"/>
+
+      <g filter="url(#shA4)"><rect x="120" y="162" width="240" height="48" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="240" y="182" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">2. Tracking mode?</text>
+      <text x="240" y="198" text-anchor="middle" font-size="10.5" fill="#5b6472">AsNoTracking for read-only?</text>
+
+      <path d="M360,186 H395" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA4Red)"/>
+      <g filter="url(#shA4)"><rect x="395" y="161" width="140" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="465" y="181" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">❌ fully tracked</text>
+      <text x="465" y="197" text-anchor="middle" font-size="10" fill="#5b6472">snapshot per row</text>
+
+      <path d="M240,210 V230" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arA4Amber)"/>
+
+      <g filter="url(#shA4)"><rect x="120" y="230" width="240" height="48" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="240" y="250" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">3. Indexed columns?</text>
+      <text x="240" y="266" text-anchor="middle" font-size="10.5" fill="#5b6472">filtered/sorted columns indexed?</text>
+
+      <path d="M360,254 H395" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA4Red)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+      <g filter="url(#shA4)"><rect x="395" y="229" width="140" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="465" y="249" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">🐛 full scan</text>
+      <text x="465" y="265" text-anchor="middle" font-size="10" fill="#5b6472">EF can't see this</text>
+
+      <path d="M240,278 V298" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA4Green)"/>
+
+      <g filter="url(#shA4)"><rect x="100" y="298" width="280" height="54" rx="16" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="240" y="319" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🔍 Check the execution plan</text>
+      <text x="240" y="336" text-anchor="middle" font-size="10.5" fill="#5b6472">EF Core's job stops here</text>
+    </svg>
+    <figcaption>Three checkpoints between "the LINQ looks clean" and "the query is actually
+    fast" — the third one, EF Core can't see at all.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A clean LINQ query is not the same as a fast SQL query.</b> EF Core's job
+    ends at generating correct, reasonably-shaped SQL — whether that SQL actually runs fast is a
+    database and indexing question EF Core has zero visibility into or control over.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Your LINQ query looks perfectly clean — a <code>Where</code>, an
+    <code>OrderBy</code>, a <code>Select</code> projection, <code>AsNoTracking</code> — but it's
+    still slow in production at real scale. What do you check next?"</b> The actual generated
+    SQL's execution plan, specifically whether the filtered and sorted columns are indexed — at
+    that point, the EF Core layer isn't where anything left to optimize actually lives.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Past N+1, I check three things: projection — am I loading only the
+    fields I need; tracking — should this be <code>AsNoTracking</code> since it's read-only; and
+    indexing — are the <code>WHERE</code> and <code>ORDER BY</code> columns actually indexed,
+    because that last one is entirely outside EF Core's control."</p>
+    <ul>
+      <li>Over-fetching → <span class="hl hl-blue">project into a DTO, don't load the whole entity</span>.</li>
+      <li>Unneeded tracking → <span class="hl hl-basic">use AsNoTracking for read-only queries at scale</span>.</li>
+      <li>Missing indexes → <span class="hl hl-hot">EF Core can't see or fix the database's own indexing</span>.</li>
+      <li>Clean LINQ ≠ fast SQL → <span class="hl hl-inter">always check the real execution plan under load</span>.</li>
+      <li>At architect depth → <span class="hl hl-adv">ask for the execution plan before proposing a code change</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><a href="../basic/5.html">Fixing N+1</a> stops the extra round trips, but a query that
+      hits the database exactly once can still be slow. <span class="hl hl-blue">Over-fetching</span>
+      is the first common cause: pulling back every mapped column and every included navigation
+      when the caller only reads two or three fields wastes bandwidth and memory before tracking
+      overhead even starts. See <a href="../basic/6.html">Projection</a> for the fix — select
+      straight into a DTO instead of the full entity.</p>
+
+      <p>If those entities are also <span class="hl hl-hot">tracked</span> for a read-only
+      operation, EF Core keeps a full original-value snapshot of every one of them, purely so it
+      can detect a change that will never happen. Loading a few thousand rows for a report or a
+      listing page pays this cost for nothing. See
+      <a href="../intermediate/2.html">Tracking vs. AsNoTracking()</a> — turning tracking off for a
+      read-only query removes the snapshot entirely.</p>
+
+      <p>The third cause sits outside EF Core entirely. EF Core will generate a
+      <code>WHERE</code> or <code>ORDER BY</code> against any column referenced in LINQ, but it
+      has no visibility into — and no control over — whether that column is actually indexed in
+      the database. An unindexed column still forces a full table scan no matter how clean the
+      generated SQL looks. That's a schema/DBA-side fix — the indexing mechanics themselves belong
+      to the <a href="../../sql/roadmap.html">SQL track</a>, still early in its own build-out.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Over-fetching</th><th>Tracking overhead</th><th>Missing indexes</th></tr></thead>
+        <tbody>
+          <tr><th>What happens</th><td>every mapped column and included navigation comes back, used or not</td><td>a full snapshot of every tracked row, kept for changes that never happen</td><td>the database scans the whole table on the filtered/sorted column</td></tr>
+          <tr><th>Cost</th><td>wasted bandwidth &amp; memory</td><td>memory and CPU for a comparison that never runs</td><td>query time grows with table size, not rows returned</td></tr>
+          <tr><th>Fixed by</th><td><code>Select()</code> into a DTO</td><td><code>AsNoTracking()</code></td><td>a database index — schema side</td></tr>
+          <tr><th>Who can fix it</th><td>the developer, in LINQ</td><td>the developer, in LINQ</td><td>❌ not EF Core — the DB schema/DBA</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err">// ❌ loads every column, plus the whole Author graph — for a title-only list</span>
+<span class="kw">var</span> posts = <span class="kw">await</span> db.Posts
+    .Include(p =&gt; p.Author)
+    .ToListAsync();</code></pre>
+      </div>
+      <p class="cx-note">Every mapped column and the entire <code>Author</code> navigation come
+      back, just to print a title on screen.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err">// ❌ tracked — EF keeps a snapshot of all 10,000 rows for changes that never happen</span>
+<span class="kw">var</span> report = <span class="kw">await</span> db.Orders
+    .Where(o =&gt; o.PlacedOn &gt;= start)
+    .ToListAsync();
+
+<span class="cx-ok">// ✅ read-only — skip the snapshot entirely</span>
+<span class="kw">var</span> report = <span class="kw">await</span> db.Orders
+    .Where(o =&gt; o.PlacedOn &gt;= start)
+    .AsNoTracking()
+    .ToListAsync();</code></pre>
+      </div>
+      <p class="cx-note">Same rows, same result — but only the second version skips building a
+      change-tracking snapshot nobody will ever read.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// same LINQ either way — EF Core can't tell you if OrderDate is indexed</span>
+<span class="kw">var</span> recent = <span class="kw">await</span> db.Orders
+    .Where(o =&gt; o.OrderDate &gt;= cutoff)
+    .OrderByDescending(o =&gt; o.OrderDate)
+    .Take(50)
+    .ToListAsync();
+<span class="cx-err">// fast with an index on OrderDate — a full table scan without one, same generated SQL shape</span></code></pre>
+      </div>
+      <p class="cx-note">The fix here isn't in this file at all — it's a migration that adds an
+      index on <code>OrderDate</code>.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A paginated report endpoint was fast in staging and timed out in production once real
+      data volume hit it.</b> The LINQ hadn't changed. The first two checks — is it projecting
+      into a DTO, is it running <code>AsNoTracking()</code> — were both already correct, so
+      neither was the cause. The actual fix was a missing index on the column the report filtered
+      and sorted by: staging's small table scanned fast enough to hide the problem, production's
+      real-sized table did not. Nothing in the C# changed — the fix was a migration adding an
+      index, decided from the query's execution plan, not from reading the LINQ again.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="3.html">← Optimistic Concurrency &amp; Row Versioning</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="5.html">Bulk Operations →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

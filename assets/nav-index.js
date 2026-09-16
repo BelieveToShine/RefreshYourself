@@ -292,5 +292,62 @@ window.NAV_INDEX = {
         ]
       }
     ]
+  },
+  "efcore/basic": {
+    track: "EF Core",
+    trackIcon: "🗄️",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1–7",
+        items: [
+          { n: 1, file: "1.html", short: "What Is EF Core",   title: "What Is EF Core", tail: "and what it saves you over raw SQL.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "DbContext & DbSet",  title: "DbContext & DbSet", tail: "what each one actually is.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Migrations Basics",  title: "Migrations & SaveChanges() — the Basics", tail: "what a migration is, what SaveChanges() does.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Keys & Relationships", title: "Primary Keys & Relationships by Convention", tail: "what EF Core infers without being told.", priority: "⭐" },
+          { n: 5, file: "5.html", short: "The N+1 Problem",   title: "The N+1 Problem", tail: "how it shows up with EF Core specifically.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Projection",         title: "Projection — Selecting into a DTO", tail: "instead of the entity.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Configuring Relationships", title: "Configuring Relationships", tail: "one-to-many and many-to-many.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "efcore/intermediate": {
+    track: "EF Core",
+    trackIcon: "🗄️",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1–8",
+        items: [
+          { n: 1, file: "1.html", short: "LINQ → SQL Translation", title: "LINQ → SQL Translation & Inspecting Generated SQL", tail: "and how to inspect the SQL it actually generates.", priority: "⭐" },
+          { n: 2, file: "2.html", short: "Tracking vs. AsNoTracking", title: "Tracking vs. AsNoTracking()", tail: "what each costs and saves.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Change Tracker",   title: "The Change Tracker & SaveChanges()", tail: "how it knows what to write.", priority: "⭐" },
+          { n: 4, file: "4.html", short: "Eager/Explicit/Lazy", title: "Eager vs. Explicit vs. Lazy Loading", tail: "what triggers each, and when the query actually runs.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "IQueryable vs. IEnumerable", title: "IQueryable<T> vs. IEnumerable<T>", tail: "where the query actually executes.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Fluent API vs. Annotations", title: "Fluent API vs. Data Annotations", tail: "when you'd reach for one over the other.", priority: "⭐" },
+          { n: 7, file: "7.html", short: "Migrations, Mechanically", title: "Migrations, Mechanically", tail: "what files dotnet ef migrations add actually produces.", priority: "⭐" },
+          { n: 8, file: "8.html", short: "Transactions & SaveChanges", title: "Transactions Around SaveChanges()", tail: "what EF Core wraps by default.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "efcore/advanced": {
+    track: "EF Core",
+    trackIcon: "🗄️",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1–6",
+        items: [
+          { n: 1, file: "1.html", short: "Compiled Queries",  title: "Compiled Queries", tail: "caching the query plan itself.", priority: "🧠" },
+          { n: 2, file: "2.html", short: "Query Splitting",   title: "Query Splitting", tail: "avoiding the cartesian explosion from multiple Includes.", priority: "🧠" },
+          { n: 3, file: "3.html", short: "Optimistic Concurrency", title: "Optimistic Concurrency & Row Versioning", tail: "how EF Core detects a conflicting update.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Beyond N+1",        title: "Beyond N+1 — Common Performance Pitfalls", tail: "over-fetching, tracking overhead, missing indexes.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Bulk Operations",   title: "Bulk Operations", tail: "why SaveChanges() doesn't scale to a big batch.", priority: "⭐" },
+          { n: 6, file: "6.html", short: "Connection Management", title: "Connection Management", tail: "one connection per query, per DbContext, or something else.", priority: "⭐" }
+        ]
+      }
+    ]
   }
 };

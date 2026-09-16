@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eager vs. Explicit vs. Lazy Loading — EF Core Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Eager vs. Explicit vs. Lazy Loading</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 EF Core · Intermediate · Must Know</div>
+    <h1>Eager vs. Explicit vs. Lazy Loading — <span class="hl hl-hot">who decides when the query fires?</span></h1>
+    <p class="interview-q">Eager loading vs. explicit loading vs. lazy loading — what triggers each, and when does the actual query run for each?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Interviewers use this to check whether you know <b>when</b> EF Core actually hits the database — not just which method to call.</li>
+        <li>It's the exact mechanism behind the N+1 problem — one of the most common EF Core interview traps.</li>
+        <li>Comes up any time you're deciding how a page should load related data — an order and its line items, a post and its comments.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Eager</code> <span class="rarrow">→</span> asks <b>upfront</b>, one query</p>
+      <p class="rrow"><code>Explicit</code> <span class="rarrow">→</span> asks <b>on demand</b>, later</p>
+      <p class="rrow"><code>Lazy</code> <span class="rarrow">→</span> asks <b>automatically</b>, without telling you</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>Eager</code></b> → you decide before the query runs</span>
+      <span class="tc-line"><b><code>Explicit</code></b> → you decide after, on your own call</span>
+      <span class="tc-line"><b><code>Lazy</code></b> → nobody decides — touching the property decides for you</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 310" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI4" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI4" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI4Rose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">WHEN DOES THE QUERY ACTUALLY RUN?</text>
+
+      <path d="M320,30 V40" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+      <path d="M110,40 H530" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+
+      <path d="M110,40 V66" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI4)"/>
+      <path d="M320,40 V66" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI4)"/>
+      <path d="M530,40 V66" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI4)"/>
+
+      <!-- EAGER column (blue) -->
+      <g filter="url(#shI4)"><rect x="35" y="66" width="150" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="110" y="83" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">EAGER</text>
+      <text x="110" y="98" text-anchor="middle" font-size="10" fill="#5b6472">via Include() chain</text>
+
+      <path d="M110,106 V132" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI4)"/>
+
+      <g filter="url(#shI4)"><rect x="35" y="132" width="150" height="44" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="110" y="150" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">AT QUERY TIME</text>
+      <text x="110" y="165" text-anchor="middle" font-size="10" fill="#5b6472">SQL JOIN, once</text>
+
+      <path d="M110,176 V202" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI4)"/>
+
+      <g filter="url(#shI4)"><rect x="35" y="202" width="150" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="110" y="223" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ ONE ROUND TRIP</text>
+      <text x="110" y="239" text-anchor="middle" font-size="10" fill="#5b6472">predictable cost</text>
+
+      <!-- EXPLICIT column (green) -->
+      <g filter="url(#shI4)"><rect x="245" y="66" width="150" height="40" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="83" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">EXPLICIT</text>
+      <text x="320" y="98" text-anchor="middle" font-size="10" fill="#5b6472">nav. already tracked</text>
+
+      <path d="M320,106 V132" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI4)"/>
+
+      <g filter="url(#shI4)"><rect x="245" y="132" width="150" height="44" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="150" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">ON YOUR CALL</text>
+      <text x="320" y="165" text-anchor="middle" font-size="10" fill="#5b6472">Entry().Load()</text>
+
+      <path d="M320,176 V202" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI4)"/>
+
+      <g filter="url(#shI4)"><rect x="245" y="202" width="150" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="223" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🎯 YOUR TIMING</text>
+      <text x="320" y="239" text-anchor="middle" font-size="10" fill="#5b6472">separate &amp; visible</text>
+
+      <!-- LAZY column (amber -> rose) -->
+      <g filter="url(#shI4)"><rect x="455" y="66" width="150" height="40" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="530" y="83" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">LAZY</text>
+      <text x="530" y="98" text-anchor="middle" font-size="10" fill="#5b6472">property accessed</text>
+
+      <path d="M530,106 V132" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI4)"/>
+
+      <g filter="url(#shI4)"><rect x="455" y="132" width="150" height="44" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="530" y="150" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">ON PROPERTY TOUCH</text>
+      <text x="530" y="165" text-anchor="middle" font-size="10" fill="#5b6472">query fires silently</text>
+
+      <path d="M530,176 V202" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arI4Rose)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shI4)"><rect x="455" y="202" width="150" height="48" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="530" y="223" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🐛 N+1 IN A LOOP</text>
+      <text x="530" y="239" text-anchor="middle" font-size="10" fill="#5b6472">hides in code review</text>
+
+      <text x="320" y="280" text-anchor="middle" font-size="11" fill="#5b6472">Eager and Explicit choose the moment — Lazy lets the property decide.</text>
+    </svg>
+    <figcaption>Same navigation property, three different moments the database actually gets hit.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Lazy loading isn't free convenience.</b> Turning it on project-wide makes every navigation-property read a potential hidden query — exactly what makes the <a href="../basic/5.html">N+1 problem</a> so easy to miss in code review, since the offending line just looks like an ordinary property access.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why would a team deliberately disable lazy loading entirely, project-wide, even though it's more convenient?"</b> It forces every data load to be explicit or eager, so it's visible right there in the code — making N+1 and other unexpected queries far easier to catch during code review.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Eager loading, with <code>Include()</code>/<code>ThenInclude()</code>, pulls related data into the original query so it runs once, at query time. Explicit loading calls <code>.Load()</code> on an already-tracked entity's navigation property whenever the code decides to. Lazy loading, with proxies enabled, fires a query automatically the instant you touch a navigation property — which is exactly what causes the N+1 problem inside a loop."</p>
+    <ul>
+      <li><code>Include()</code>/<code>ThenInclude()</code> → <span class="hl hl-blue">one query, at query time</span> — a JOIN, or a couple of controlled queries with <code>AsSplitQuery()</code>.</li>
+      <li>Explicit → <span class="hl hl-basic">.Load() on demand</span>, called later in the code, on an entity that's already tracked.</li>
+      <li>Lazy → <span class="hl hl-hot">transparent, on touch</span> — needs <code>UseLazyLoadingProxies()</code>, and it's the exact mechanism behind N+1.</li>
+      <li>Many teams <span class="hl hl-basic">disable lazy loading project-wide</span> on purpose, so every load stays visible in the code.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Eager loading</span> folds the related data into the query you already wrote — <code>Include()</code> names the navigation property to bring along, and <code>ThenInclude()</code> reaches one level deeper. By default EF Core builds one SQL query with a JOIN; call <code>AsSplitQuery()</code> and it switches to a couple of separate, still-controlled queries instead (the Advanced tier's Query Splitting topic covers when that trade-off is worth it).</p>
+
+      <p><span class="hl hl-basic">Explicit loading</span> waits. The entity is already tracked by the context, and later — inside an <code>if</code>, after a check, wherever the code actually needs the data — you call <code>context.Entry(order).Collection(o => o.Lines).Load()</code>. Same navigation property as eager, just a separate trip triggered on purpose.</p>
+
+      <p><span class="hl hl-hot">Lazy loading</span> needs <code>UseLazyLoadingProxies()</code> enabled and runtime proxy classes around your entities. From then on, simply reading <code>order.Lines</code> — no method call, nothing that looks like a database operation — is enough to fire a query the moment it happens. Read that same property once per iteration inside a loop, and it fires one query per iteration — the N+1 problem.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Eager</th><th>Explicit</th><th>Lazy</th></tr></thead>
+        <tbody>
+          <tr><th>When it runs</th><td>at query time</td><td>whenever <code>.Load()</code> is called</td><td>the instant the property is read</td></tr>
+          <tr><th>Trigger</th><td><code>Include()</code>/<code>ThenInclude()</code></td><td><code>Entry().Collection().Load()</code></td><td>any navigation property access</td></tr>
+          <tr><th>Queries produced</th><td>one query (JOIN), or split with <code>AsSplitQuery()</code></td><td>one extra query, on demand</td><td>one query per access — every time</td></tr>
+          <tr><th>Needs</th><td>nothing extra</td><td>an already-tracked entity</td><td><code>UseLazyLoadingProxies()</code></td></tr>
+          <tr><th>Risk if touched in a loop</th><td class="yes">✅ low — decided upfront</td><td class="yes">✅ low — decided in code</td><td class="no">❌ N+1, one query per iteration</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> orders = context.Orders
+    .Include(o => o.Customer)      <span class="cx-cmt">// one level</span>
+    .ThenInclude(c => c.Address)    <span class="cx-cmt">// one level deeper</span>
+    .ToList();                      <span class="cx-ok">// ✅ one query, runs now</span></code></pre>
+      </div>
+      <p class="cx-note"><code>Include()</code>/<code>ThenInclude()</code> load everything <b>as part of the same query</b> — no extra round trip.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> order = context.Orders.First();   <span class="cx-cmt">// Lines not loaded yet</span>
+
+<span class="kw">if</span> (needsLineDetails)
+{
+    context.Entry(order)
+        .Collection(o => o.Lines)
+        .Load();                        <span class="cx-ok">// ✅ separate query, triggered here</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">You decide the moment — <b>the query only runs if this branch actually executes</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// UseLazyLoadingProxies() enabled at startup</span>
+<span class="kw">var</span> orders = context.Orders.ToList();   <span class="cx-cmt">// Lines not loaded yet</span>
+
+<span class="kw">foreach</span> (<span class="kw">var</span> order <span class="kw">in</span> orders)
+{
+    Console.WriteLine(order.Lines.Count);   <span class="cx-err">// ❌ one query per order — N+1</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Every <code>order.Lines</code> read looks like a normal property access — that's <b>exactly what makes N+1 invisible in review</b>.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your order-summary endpoint feels slow, and the database logs show a burst of near-identical queries for a single request.</b> Check whether lazy loading is enabled and whether a navigation property is being read inside a loop — switching that one access to an eager <code>Include()</code> (or an explicit <code>.Load()</code> before the loop starts) collapses that burst into a single query.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="3.html">← The Change Tracker &amp; SaveChanges()</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="5.html">IQueryable&lt;T&gt; vs. IEnumerable&lt;T&gt; →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

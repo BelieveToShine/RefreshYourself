@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transactions Around SaveChanges() — EF Core Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Transactions Around SaveChanges()</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ EF Core · Intermediate · Should Know</div>
+    <h1><code>SaveChanges()</code> — one call, one transaction. <span class="hl hl-hot">A second call is a separate bet.</span></h1>
+    <p class="interview-q">How does EF Core handle transactions by default around <code>SaveChanges()</code>?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Checks whether you know <code>SaveChanges()</code> has real transactional behavior, not just "it writes rows to the database."</li>
+        <li>Comes up any time a feature needs two or more writes — including raw SQL, or writes split across <code>DbContext</code>s — to succeed or fail together.</li>
+        <li>A very common interview opener into transaction scope, because most candidates have never had to think about it until something actually broke in production.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">1× <code>SaveChanges()</code> <span class="rarrow">→</span> <b>one</b> transaction</p>
+      <p class="rrow">2× <code>SaveChanges()</code> <span class="rarrow">→</span> <b>two</b> transactions</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>SaveChanges()</code></b> draws its own boundary around itself — nothing outside that one call is included, not even the very next line of your code.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 290" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI8a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI8a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI8aRose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">SaveChanges() = ONE ALL-OR-NOTHING TRANSACTION</text>
+
+      <g filter="url(#shI8a)"><rect x="70" y="40" width="500" height="84" rx="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="7 5"/></g>
+      <text x="320" y="58" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">IMPLICIT TRANSACTION</text>
+
+      <g filter="url(#shI8a)"><rect x="90" y="72" width="130" height="32" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="155" y="92" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">INSERT Order</text>
+
+      <g filter="url(#shI8a)"><rect x="255" y="72" width="130" height="32" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="320" y="92" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">UPDATE Stock</text>
+
+      <g filter="url(#shI8a)"><rect x="420" y="72" width="130" height="32" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="485" y="92" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">DELETE Temp</text>
+
+      <path d="M320,124 V156" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+
+      <path d="M320,156 H180 V178" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI8a)"/>
+      <path d="M320,156 H460 V178" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arI8aRose)">
+        <animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shI8a)"><rect x="100" y="178" width="160" height="56" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="180" y="200" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ ALL SUCCEED</text>
+      <text x="180" y="217" text-anchor="middle" font-size="10.5" fill="#5b6472">all 3 rows commit</text>
+
+      <g filter="url(#shI8a)"><rect x="380" y="178" width="160" height="56" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="460" y="200" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">❌ ONE FAILS 🐛</text>
+      <text x="460" y="217" text-anchor="middle" font-size="10.5" fill="#5b6472">all 3 rows roll back</text>
+
+      <text x="320" y="264" text-anchor="middle" font-size="11" fill="#5b6472">One call, one transaction — every statement in that batch commits together or rolls back together</text>
+    </svg>
+    <figcaption>A single <code>SaveChanges()</code> call is all-or-nothing — no statement in that batch can commit while another in the same batch rolls back.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 340" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI8b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI8b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI8bRose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">TWO SaveChanges() CALLS — ATOMIC TOGETHER ONLY IF WRAPPED</text>
+
+      <path d="M320,36 V290" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <text x="165" y="50" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">SEPARATE CALLS</text>
+      <text x="470" y="50" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">WRAPPED IN ONE TRANSACTION</text>
+
+      <g filter="url(#shI8b)"><rect x="70" y="64" width="190" height="32" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="165" y="84" text-anchor="middle" font-size="11" font-weight="600" fill="#1d4ed8">SaveChanges() #1</text>
+
+      <path d="M165,96 V112" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI8b)"/>
+      <rect x="115" y="112" width="100" height="22" rx="11" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="165" y="127" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">✅ commits</text>
+
+      <path d="M165,134 V150" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI8b)"/>
+
+      <g filter="url(#shI8b)"><rect x="70" y="150" width="190" height="32" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="165" y="170" text-anchor="middle" font-size="11" font-weight="600" fill="#1d4ed8">SaveChanges() #2</text>
+
+      <path d="M165,182 V198" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arI8bRose)">
+        <animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/>
+      </path>
+      <rect x="115" y="198" width="100" height="22" rx="11" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+      <text x="165" y="213" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">❌ throws</text>
+
+      <path d="M165,220 V236" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI8b)"/>
+
+      <g filter="url(#shI8b)"><rect x="45" y="236" width="240" height="48" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="165" y="256" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">😮 inconsistent</text>
+      <text x="165" y="272" text-anchor="middle" font-size="10.5" fill="#5b6472">Order kept, AuditLog lost</text>
+
+      <g filter="url(#shI8b)"><rect x="350" y="64" width="240" height="124" rx="16" fill="#fef3c7" stroke="#d97706" stroke-width="1.8" stroke-dasharray="7 5"/></g>
+      <text x="470" y="80" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">BeginTransaction()</text>
+
+      <g filter="url(#shI8b)"><rect x="375" y="92" width="190" height="32" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="470" y="112" text-anchor="middle" font-size="11" font-weight="600" fill="#1d4ed8">SaveChanges() #1</text>
+
+      <g filter="url(#shI8b)"><rect x="375" y="140" width="190" height="32" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="470" y="160" text-anchor="middle" font-size="11" font-weight="600" fill="#1d4ed8">SaveChanges() #2</text>
+
+      <path d="M470,188 V204" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI8b)"/>
+
+      <g filter="url(#shI8b)"><rect x="350" y="204" width="240" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="470" y="224" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ atomic together</text>
+      <text x="470" y="240" text-anchor="middle" font-size="10.5" fill="#5b6472">both saved, or both rolled back</text>
+
+      <text x="320" y="312" text-anchor="middle" font-size="11" fill="#5b6472">Two implicit transactions never share atomicity — only an explicit transaction spans both calls</text>
+    </svg>
+    <figcaption>Two separate <code>SaveChanges()</code> calls get two separate transactions — only wrapping both in <code>BeginTransaction()</code> makes them succeed or fail together.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Two <code>SaveChanges()</code> calls next to each other in the same method are not automatically atomic together.</b> Each call opens and closes its own independent implicit transaction, so the first can commit successfully while the second fails later — leaving the database in an inconsistent in-between state unless an explicit transaction wraps both calls.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"You call <code>SaveChanges()</code> once to insert an Order, then call it again to insert that Order's audit-log entry. The second call throws. What's the actual state of the database afterward?"</b> The Order is already committed from the first successful call — only the audit-log insert failed and rolled back. The database is left inconsistent unless an explicit transaction had wrapped both calls together.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"By default, a single <code>SaveChanges()</code> call wraps every INSERT, UPDATE, and DELETE it generates in one implicit database transaction, so that one call is all-or-nothing. If I need multiple <code>SaveChanges()</code> calls — or EF Core mixed with raw SQL — to succeed or fail together, I wrap them in an explicit transaction with <code>BeginTransaction()</code>, or a <code>TransactionScope</code> when the unit of work spans more than one <code>DbContext</code>."</p>
+    <ul>
+      <li>One <code>SaveChanges()</code> <span class="hl hl-blue">→ one implicit transaction</span>, every statement in that batch commits or rolls back together.</li>
+      <li>Two separate <code>SaveChanges()</code> calls <span class="hl hl-hot">→ two independent transactions</span>, not atomic together by default.</li>
+      <li>Need them atomic together <span class="hl hl-basic">→ wrap both in <code>BeginTransaction()</code></span>, commit only once every call succeeded.</li>
+      <li>Unit of work spans multiple <code>DbContext</code>s or resources <span class="hl hl-inter">→ use a <code>TransactionScope</code></span> instead.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>When <span class="hl hl-blue"><code>SaveChanges()</code></span> runs, EF Core translates every
+      tracked change into INSERT, UPDATE, and DELETE statements and sends them to the database inside
+      one transaction it opens and closes for you. If any statement in that batch fails, EF Core rolls
+      the entire batch back — nothing partial is ever left behind from a single call.</p>
+
+      <p>That transaction's boundary is exactly one call wide. A second call to <code>SaveChanges()</code>
+      — or a raw ADO.NET command run outside EF Core's own connection — isn't automatically part of it.
+      Each database operation gets its own boundary <span class="hl hl-hot">unless you explicitly say
+      otherwise</span>, the same way two separate trips to the post office are two separate deliveries,
+      even if you make them minutes apart.</p>
+
+      <p><code>context.Database.BeginTransaction()</code> gives you that explicit boundary: nothing
+      inside it is written to disk until you call <code>Commit()</code>, so every <code>SaveChanges()</code>
+      call (and any raw SQL run on the same connection) between the begin and the commit rises or falls
+      together. When the unit of work spans more than one <code>DbContext</code>, or a non-EF resource,
+      a <code>System.Transactions.TransactionScope</code> wraps all of them under one ambient transaction
+      instead.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Implicit (default)</th><th>Explicit (<code>BeginTransaction</code>)</th></tr></thead>
+        <tbody>
+          <tr><th>Starts / ends</th><td>automatically, once per <code>SaveChanges()</code> call</td><td>you call <code>BeginTransaction()</code> … <code>Commit()</code>/<code>Rollback()</code></td></tr>
+          <tr><th>Atomic across multiple calls?</th><td class="no">❌ no — each call is its own boundary</td><td class="yes">✅ yes — every call inside it is one unit</td></tr>
+          <tr><th>Covers raw SQL run alongside it?</th><td class="no">❌ no, unless run on the same transaction</td><td class="yes">✅ yes, on the same connection/transaction</td></tr>
+          <tr><th>Typical use</th><td>a single <code>SaveChanges()</code> call</td><td>multiple <code>SaveChanges()</code> calls, or EF Core + raw SQL together</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">using</span> <span class="kw">var</span> context = <span class="kw">new</span> <span class="ty">AppDbContext</span>();
+
+context.Orders.Add(<span class="kw">new</span> <span class="ty">Order</span> { CustomerId = <span class="num">42</span> });       <span class="cx-cmt">// tracked only</span>
+context.OrderLines.Add(<span class="kw">new</span> <span class="ty">OrderLine</span> { ProductId = <span class="num">7</span> }); <span class="cx-cmt">// tracked only</span>
+
+context.SaveChanges();   <span class="cx-ok">// ✅ ONE transaction — both inserts commit together</span></code></pre>
+      </div>
+      <p class="cx-note">Every statement <code>SaveChanges()</code> generates here — both inserts — commits or rolls back as <b>one unit</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>context.Orders.Add(order);
+context.SaveChanges();          <span class="cx-ok">// ✅ commits immediately — its own transaction</span>
+
+context.AuditLogs.Add(<span class="kw">new</span> <span class="ty">AuditLog</span> { OrderId = order.Id });
+context.SaveChanges();          <span class="cx-err">// ❌ throws — only THIS insert rolls back</span>
+                                 <span class="cx-cmt">// the Order above is already saved</span></code></pre>
+      </div>
+      <p class="cx-note">The first <code>SaveChanges()</code> already wrote to the database before the second one ever threw — <b>nothing ties them together</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">using</span> <span class="kw">var</span> txn = context.Database.BeginTransaction();
+<span class="kw">try</span>
+{
+    context.Orders.Add(order);
+    context.SaveChanges();               <span class="cx-cmt">// not committed yet — still inside txn</span>
+
+    context.AuditLogs.Add(<span class="kw">new</span> <span class="ty">AuditLog</span> { OrderId = order.Id });
+    context.SaveChanges();               <span class="cx-cmt">// not committed yet either</span>
+
+    txn.Commit();                        <span class="cx-ok">// ✅ both inserts commit together</span>
+}
+<span class="kw">catch</span>
+{
+    txn.Rollback();                      <span class="cx-err">// ❌ both inserts undone together</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Nothing is written to disk until <code>Commit()</code> — <b>the explicit transaction is what makes both calls atomic together</b>.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your checkout flow saves an Order, then calls <code>SaveChanges()</code> again to write a
+      separate AuditLog row.</b> If the audit-log table is ever out of sync, that second call throws —
+      but the Order is already committed, so every checkout still succeeds while the audit trail
+      silently goes missing. Wrapping both calls in one <code>BeginTransaction()</code> turns that into
+      a clean, whole failure instead of a silent partial one — exactly the trade-off explicit
+      transactions exist to make.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="7.html">← Migrations, Mechanically</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Intermediate</a>
+    <div class="side next"></div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -47,9 +47,9 @@ Phase 7.
 
 ## Current build status (one line each — see the track's own spec for detail)
 
-**Core backend path — C#, OOP, .NET/ASP.NET Core, and Web API are through all 7 phases; the
-other three tracks are still at Phase 1 (question taxonomy), awaiting the user's review before
-Phase 2 (dedupe/gaps) starts on any of them:**
+**Core backend path — C#, OOP, .NET/ASP.NET Core, Web API, and EF Core are through all 7 phases;
+the other two tracks are still at Phase 1 (question taxonomy), awaiting the user's review before
+Phase 2 (dedupe/gaps) starts on either of them:**
 
 - **C#** — **all 7 phases complete, 49/49 pages written** (2026-09-16):
   [`question-taxonomy.md`](superpowers/specs/csharp/question-taxonomy.md) →
@@ -84,8 +84,13 @@ Phase 2 (dedupe/gaps) starts on any of them:**
   only what's specific to designing/operating an HTTP API contract. Every diagram passed the
   mandatory automated verification script. See
   [`specs/webapi/overview.md`](superpowers/specs/webapi/overview.md).
-- **EF Core** — [`question-taxonomy.md`](superpowers/specs/efcore/question-taxonomy.md) written.
-  Brand-new track; no site folder exists yet.
+- **EF Core** — **all 7 phases complete, 21/21 pages written** (2026-09-16):
+  [`question-taxonomy.md`](superpowers/specs/efcore/question-taxonomy.md) →
+  [`roadmap.md`](superpowers/specs/efcore/roadmap.md) → 21 tiered/prioritized pages, live on the
+  site and on [`efcore/roadmap.html`](../efcore/roadmap.html). Scoped to EF Core as the ORM
+  layer — LINQ translation, tracking, loading, migrations — leaving raw SQL/database-engine
+  internals to the `sql/` track. Every diagram passed the mandatory automated verification
+  script. See [`specs/efcore/overview.md`](superpowers/specs/efcore/overview.md).
 - **SQL** — [`question-taxonomy.md`](superpowers/specs/sql/question-taxonomy.md) written. No old
   roadmap existed.
 - **Azure** — [`question-taxonomy.md`](superpowers/specs/azure/question-taxonomy.md) written,

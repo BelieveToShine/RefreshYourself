@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bulk Operations — EF Core Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Bulk Operations</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ EF Core · Advanced · Should Know</div>
+    <h1><code>ExecuteUpdate()</code> — <span class="hl hl-basic">one SQL statement</span> instead of <span class="hl hl-hot">a million tracked entities</span></h1>
+    <p class="interview-q">What are bulk operations, and why doesn't EF Core's default <code>SaveChanges()</code> behave well for a large batch update or delete?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Nightly price updates, marking millions of stale rows as archived, GDPR-style mass
+        deletes — real backends run jobs like this constantly, and the naive way to write one is a
+        classic performance trap.</li>
+        <li>Interviewers use this to check whether you actually understand what
+        <code>SaveChanges()</code> does under the hood, not just that Entity Framework exists.</li>
+        <li>A very common senior/architect follow-up: "how would you update or delete a million
+        rows without loading them all into memory first?"</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>SaveChanges()</code> loop <span class="rarrow">→</span> <b>load + track</b> every row first</p>
+      <p class="rrow"><code>ExecuteUpdate()</code> <span class="rarrow">→</span> <b>one</b> SQL UPDATE, zero rows loaded</p>
+      <p class="rrow"><code>ExecuteDelete()</code> <span class="rarrow">→</span> <b>one</b> SQL DELETE, zero rows loaded</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>SaveChanges()</code></b> loads a
+    million rows into memory just to change one column. <b><code>ExecuteUpdate()</code></b> never
+    loads a single one.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 355" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA5" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA5" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arA5Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arA5Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arA5Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">MILLIONS OF ROWS MATCH A FILTER</text>
+
+      <g filter="url(#shA5)"><rect x="195" y="28" width="250" height="42" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="47" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🗄️ Rows matching a filter</text>
+      <text x="320" y="62" text-anchor="middle" font-size="10.5" fill="#5b6472">e.g. Price column, category X</text>
+
+      <path d="M320,70 V88" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M140,88 H500" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M140,88 V112" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA5)"/>
+      <path d="M500,88 V112" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA5)"/>
+
+      <text x="140" y="103" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">THE LOOP WAY</text>
+      <text x="500" y="103" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">EF CORE 7+</text>
+
+      <g filter="url(#shA5)"><rect x="45" y="112" width="190" height="46" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="140" y="132" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Load &amp; track each row</text>
+      <text x="140" y="148" text-anchor="middle" font-size="10.5" fill="#5b6472">one row at a time</text>
+
+      <g filter="url(#shA5)"><rect x="405" y="112" width="190" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="500" y="132" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">ExecuteUpdate()</text>
+      <text x="500" y="148" text-anchor="middle" font-size="10.5" fill="#5b6472">called on IQueryable&lt;T&gt;</text>
+
+      <path d="M140,158 V182" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA5Red)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+      <path d="M500,158 V182" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arA5Blue)"/>
+
+      <g filter="url(#shA5)"><rect x="45" y="182" width="190" height="56" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="140" y="203" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐌 N separate UPDATEs</text>
+      <text x="140" y="218" text-anchor="middle" font-size="10.5" fill="#5b6472">one row = one round trip</text>
+      <text x="140" y="231" text-anchor="middle" font-size="10.5" fill="#5b6472">millions tracked in memory</text>
+
+      <g filter="url(#shA5)"><rect x="405" y="182" width="190" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="500" y="203" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">⚡ ONE UPDATE</text>
+      <text x="500" y="218" text-anchor="middle" font-size="10.5" fill="#5b6472">translated straight to SQL</text>
+      <text x="500" y="231" text-anchor="middle" font-size="10.5" fill="#5b6472">zero entities ever loaded</text>
+
+      <path d="M140,238 V255 H300 V284" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA5Red)"/>
+      <path d="M500,238 V255 H340 V284" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA5Green)"/>
+
+      <rect x="175" y="246" width="120" height="18" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+      <text x="235" y="258.5" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">🐌 N round trips</text>
+
+      <rect x="345" y="246" width="120" height="18" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1"/>
+      <text x="405" y="258.5" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">⚡ 1 round trip</text>
+
+      <g filter="url(#shA5)"><rect x="200" y="284" width="240" height="48" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="306" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🏁 Same rows updated</text>
+      <text x="320" y="321" text-anchor="middle" font-size="9.5" fill="#5b6472">cost is not remotely the same</text>
+    </svg>
+    <figcaption>Both paths update the same matching rows — only one of them loads a single entity to do it.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Looping and calling <code>SaveChanges()</code> is not "the EF Core way" to
+    bulk update.</b> It technically works, but it loads every matching row into memory and tracks
+    it just to change one column — a single <code>ExecuteUpdate()</code> call performs the same
+    change directly inside the database with zero entities ever materialized.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why can't <code>ExecuteUpdate()</code>/<code>ExecuteDelete()</code> run
+    arbitrary C# logic per row the way a loaded-and-mutated entity loop could?"</b> Because it
+    translates directly into one set-based SQL statement — there's no per-row C# execution at all,
+    only whatever can be expressed inside that statement's <code>SET</code> or <code>WHERE</code>
+    clause.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"By default, <code>SaveChanges()</code> has to load every matching row
+    into the change tracker, mutate each one, and generate one statement per entity — that doesn't
+    scale to millions of rows. <code>ExecuteUpdate()</code> and <code>ExecuteDelete()</code>, added
+    in EF Core 7, skip that entirely: they translate a filtered <code>IQueryable&lt;T&gt;</code>
+    straight into a single set-based UPDATE or DELETE statement, with zero entities ever loaded or
+    tracked."</p>
+    <ul>
+      <li>Default <code>SaveChanges()</code> path → <span class="hl hl-hot">loads, tracks, and diffs every affected row</span> before any SQL is generated.</li>
+      <li><code>ExecuteUpdate()</code> / <code>ExecuteDelete()</code> → <span class="hl hl-basic">one set-based SQL statement</span>, zero entities materialized.</li>
+      <li>Before EF Core 7 → <span class="hl hl-inter">raw SQL or a third-party bulk-extensions library</span> was the only way to skip the load-and-track cycle.</li>
+      <li>The trade-off → <span class="hl hl-adv">no per-row C# logic</span> — only what fits inside a SQL <code>SET</code>/<code>WHERE</code> clause.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-hot">SaveChanges()</span>'s default behavior for a batch update or
+      delete is a load→track→diff cycle: EF Core first runs a query to bring every matching row
+      into memory, registers each one with the Change Tracker, and only then does the application
+      mutate them — one at a time, in a loop. When <code>SaveChanges()</code> finally runs, it
+      generates a DML statement for every tracked change. Some providers batch those statements
+      into fewer round trips inside one <code>SaveChanges()</code> call, but every affected row
+      still has to be materialized and tracked first — for an operation touching millions of rows,
+      that's millions of tracked entities sitting in memory and millions of generated statements.</p>
+
+      <p><span class="hl hl-basic">ExecuteUpdate()</span> and <code>ExecuteDelete()</code>, added
+      in EF Core 7, skip the load→track→diff cycle entirely. Called directly on an
+      <code>IQueryable&lt;T&gt;</code>, they translate straight into a single UPDATE or DELETE
+      statement with a <code>WHERE</code> clause built from the query's filter — no entity is ever
+      loaded, tracked, or diffed.</p>
+
+      <p>Before EF Core 7, getting this same set-based behavior meant dropping to raw SQL or
+      reaching for a third-party bulk-extensions package — worth knowing as history, but
+      <code>ExecuteUpdate()</code>/<code>ExecuteDelete()</code> is the modern, built-in answer now.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>SaveChanges()</code> loop</th><th><code>ExecuteUpdate()</code> / <code>ExecuteDelete()</code></th></tr></thead>
+        <tbody>
+          <tr><th>Rows loaded into memory</th><td>every matching row</td><td>none</td></tr>
+          <tr><th>Change tracked?</th><td>yes, each entity</td><td>no tracking at all</td></tr>
+          <tr><th>SQL generated</th><td>one statement per entity (fewer round trips on some providers)</td><td>one set-based statement for the whole filter</td></tr>
+          <tr><th>Per-row C# logic?</th><td>yes — any code inside the loop</td><td>no — only what fits a SQL <code>SET</code>/<code>WHERE</code> clause</td></tr>
+          <tr><th>Available since</th><td>always</td><td>EF Core 7+</td></tr>
+          <tr><th>Scales to millions of rows?</th><td>❌ no — memory &amp; round trips grow with row count</td><td>✅ yes — cost stays close to constant</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> products = <span class="kw">await</span> db.Products
+    .Where(p => p.CategoryId == categoryId)
+    .ToListAsync();                       <span class="cx-err">// ❌ loads every matching row into memory</span>
+
+<span class="kw">foreach</span> (<span class="kw">var</span> p <span class="kw">in</span> products)
+{
+    p.Price *= <span class="num">1.10m</span>;                     <span class="cx-cmt">// tracked and mutated one at a time</span>
+}
+
+<span class="kw">await</span> db.SaveChangesAsync();           <span class="cx-err">// ❌ generates one UPDATE per product</span></code></pre>
+      </div>
+      <p class="cx-note">Correct, and fine for a handful of rows — for a million products, this
+      loads a million tracked entities just to change one column.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">await</span> db.Products
+    .Where(p => p.CategoryId == categoryId)
+    .ExecuteUpdateAsync(setters => setters
+        .SetProperty(p => p.Price, p => p.Price * <span class="num">1.10m</span>)); <span class="cx-ok">// ✅ one SQL UPDATE, no entities loaded</span></code></pre>
+      </div>
+      <p class="cx-note">Same result, translated directly into a single
+      <code>UPDATE ... WHERE ...</code> statement — nothing is ever tracked.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">await</span> db.Products
+    .Where(p => p.DiscontinuedOn &lt; cutoffDate)
+    .ExecuteDeleteAsync();                <span class="cx-ok">// ✅ one SQL DELETE, no entities loaded</span></code></pre>
+      </div>
+      <p class="cx-note">Same idea for deletes — <code>ExecuteDeleteAsync()</code> issues one
+      <code>DELETE ... WHERE ...</code> statement directly, no loop required.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your nightly job needs to mark 2 million stale orders as archived.</b> Looping over
+      them and calling <code>SaveChanges()</code> tries to track 2 million entities in one
+      process — memory climbs fast and the job can run for hours or crash outright. A single
+      <code>ExecuteUpdateAsync()</code> call does the same update as one statement, with cost that
+      stays close to constant no matter how many rows match.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="4.html">← Beyond N+1 — Common Performance Pitfalls</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="6.html">Connection Management →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

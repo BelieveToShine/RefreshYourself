@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tracking vs. AsNoTracking() — EF Core Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Tracking vs. AsNoTracking()</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 EF Core · Intermediate · Must Know</div>
+    <h1><code>Tracking</code> vs. <code>AsNoTracking()</code> — <span class="hl hl-hot">the bookkeeping you might be paying for without needing it</span></h1>
+    <p class="interview-q">"Tracking vs. <code>AsNoTracking()</code> — what does each actually cost and save? And which would you use for a read-only reporting endpoint?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Interviewers use this to check you understand what the Change Tracker is actually doing, not just that <code>AsNoTracking()</code> "makes queries faster."</li>
+        <li>Comes up in almost every code review of a query — a query that never saves anything back should almost always skip tracking.</li>
+        <li>A favorite follow-up trap: forgetting that a no-tracking entity can't be saved just by changing one of its properties.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><b>Tracking</b> <span class="rarrow">→</span> keeps a <b>snapshot</b>, can save changes</p>
+      <p class="rrow"><code>AsNoTracking()</code> <span class="rarrow">→</span> <b>no snapshot</b>, cheaper reads only</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Tracking</code></b> keeps a <b>diary</b> of every entity's original values. <b><code>AsNoTracking()</code></b> reads the page and <b>never opens the diary</b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 390" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI2" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI2Green" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arI2Rose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">SAME EDIT, SAME SaveChanges() CALL — DOES IT PERSIST?</text>
+
+      <g filter="url(#shI2)"><rect x="40" y="38" width="240" height="36" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="61" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Tracking (default)</text>
+      <g filter="url(#shI2)"><rect x="360" y="38" width="240" height="36" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="480" y="61" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">AsNoTracking()</text>
+
+      <path d="M160,74 V98" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI2)"/>
+      <path d="M480,74 V98" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI2)"/>
+
+      <g filter="url(#shI2)"><rect x="45" y="98" width="230" height="40" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="160" y="122" text-anchor="middle" font-size="10.5" font-weight="600" fill="#1d4ed8">Change Tracker keeps a snapshot</text>
+      <g filter="url(#shI2)"><rect x="365" y="98" width="230" height="40" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="480" y="122" text-anchor="middle" font-size="10.5" font-weight="600" fill="#475569">No snapshot — stays untracked</text>
+
+      <path d="M160,138 V164" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI2)"/>
+      <path d="M480,138 V164" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI2)"/>
+
+      <g filter="url(#shI2)"><rect x="45" y="164" width="230" height="40" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="160" y="188" text-anchor="middle" font-family="monospace" font-size="11" font-weight="600" fill="#1d4ed8">order.Status = "Shipped";</text>
+      <g filter="url(#shI2)"><rect x="365" y="164" width="230" height="40" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="480" y="188" text-anchor="middle" font-family="monospace" font-size="11" font-weight="600" fill="#475569">order.Status = "Shipped";</text>
+
+      <path d="M160,204 V240 H220" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI2)"/>
+      <path d="M480,204 V240 H420" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI2)"/>
+
+      <g filter="url(#shI2)"><rect x="220" y="222" width="200" height="38" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="246" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">SaveChanges()</text>
+
+      <path d="M250,260 V276 H160 V290" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arI2Green)"/>
+      <path d="M390,260 V276 H480 V290" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arI2Rose)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shI2)"><rect x="45" y="290" width="230" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="310" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ UPDATE written</text>
+      <text x="160" y="326" text-anchor="middle" font-size="10.5" fill="#5b6472">change detected &amp; saved</text>
+
+      <g filter="url(#shI2)"><rect x="365" y="290" width="230" height="48" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="480" y="310" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">❌ Nothing persisted 😮</text>
+      <text x="480" y="326" text-anchor="middle" font-size="10.5" fill="#5b6472">no snapshot to diff against</text>
+
+      <text x="320" y="358" text-anchor="middle" font-size="11" fill="#5b6472">Same edit, same SaveChanges() call — only the lane with a snapshot has anything to compare.</text>
+    </svg>
+    <figcaption>Same code change, same <code>SaveChanges()</code> call — the tracked lane can tell what changed, <code>AsNoTracking()</code> never recorded it in the first place.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>AsNoTracking()</code> doesn't stop you from changing a property</b> — it stops <code>SaveChanges()</code> from ever noticing you did, because the entity was never registered with the Change Tracker, so there's no snapshot left to diff against.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"You load an entity with <code>AsNoTracking()</code>, change one of its properties in code, then call <code>SaveChanges()</code> expecting that change to save. What actually happens?"</b> Nothing persists — the entity isn't tracked, so <code>SaveChanges()</code> has no idea anything changed on it.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Tracking registers every returned entity with the Change Tracker, which keeps a snapshot so <code>SaveChanges()</code> can detect what changed — that costs memory and CPU. <code>AsNoTracking()</code> skips that snapshot entirely, so reads are cheaper, but then there's nothing left for <code>SaveChanges()</code> to diff against — which is exactly why it's the right default for a read-only reporting endpoint."</p>
+    <ul>
+      <li><b>Tracking</b> <span class="hl hl-blue">→ snapshot kept</span>, so edits can be detected and saved.</li>
+      <li><code>AsNoTracking()</code> <span class="hl hl-inter">→ no snapshot, no bookkeeping</span> — cheaper, read-only.</li>
+      <li><span class="hl hl-basic">Read-only reporting endpoint</span> → default to <code>AsNoTracking()</code>, there's nothing to save back.</li>
+      <li>Need duplicate rows to still share identity? → <code>AsNoTrackingWithIdentityResolution()</code> <span class="hl hl-hot">keeps reference equality without full tracking cost</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>By default, every entity a query returns is registered with the <b>Change Tracker</b>. The
+      Change Tracker keeps a snapshot of each entity's original property values, so when
+      <code>SaveChanges()</code> runs later, it can compare the entity's current values against
+      that snapshot and figure out exactly what changed. Keeping that snapshot around — for every
+      row, for the lifetime of the <code>DbContext</code> — is real memory and CPU work, spent
+      whether or not anything ever actually changes.</p>
+
+      <p><code>AsNoTracking()</code> still materializes real objects from the query results — you
+      get back the same shape of data — it just never registers them with the Change Tracker. No
+      snapshot is taken, so that bookkeeping cost disappears. The trade-off is exactly what you'd
+      expect: EF Core has nothing to compare the entity against later, so it has no way to know a
+      property was ever changed.</p>
+
+      <p>If the same query can return the <span class="hl hl-hot">same logical entity more than
+      once</span> (a join that repeats a customer across several orders) and the code still needs
+      those duplicates to be the <b>same object reference</b>, <code>AsNoTrackingWithIdentityResolution()</code>
+      resolves that without paying for full change tracking.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Tracking (default)</th><th><code>AsNoTracking()</code></th></tr></thead>
+        <tbody>
+          <tr><th>Registered with Change Tracker?</th><td>✅ yes</td><td class="no">❌ no</td></tr>
+          <tr><th>Snapshot of original values?</th><td>✅ kept</td><td class="no">❌ none</td></tr>
+          <tr><th>Can <code>SaveChanges()</code> detect edits?</th><td>✅ yes</td><td class="no">❌ never</td></tr>
+          <tr><th>Read cost</th><td>higher — snapshot + bookkeeping per row</td><td>lower — nothing registered</td></tr>
+          <tr><th>Best used for</th><td>entities you plan to modify and save</td><td>read-only queries, reporting, display-only data</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> order = context.Orders.First(o =&gt; o.Id == <span class="num">1</span>);
+order.Status = <span class="str">"Shipped"</span>;   <span class="cx-cmt">// tracked — Change Tracker saw the original value</span>
+context.SaveChanges();          <span class="cx-ok">// ✅ UPDATE sent — diffed against the snapshot</span></code></pre>
+      </div>
+      <p class="cx-note">Default tracking is what makes this work — <b>no extra code needed</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> shipped = context.Orders
+    .AsNoTracking()              <span class="cx-cmt">// no snapshot taken for any row</span>
+    .Where(o =&gt; o.Status == <span class="str">"Shipped"</span>)
+    .ToList();                   <span class="cx-ok">// ✅ cheaper — nothing registered with the tracker</span></code></pre>
+      </div>
+      <p class="cx-note">Nothing here will ever be saved back — <b>that's exactly the point</b> for a read-only query.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> order = context.Orders.AsNoTracking().First(o =&gt; o.Id == <span class="num">1</span>);
+order.Status = <span class="str">"Shipped"</span>;   <span class="cx-cmt">// changes the in-memory object only</span>
+context.SaveChanges();          <span class="cx-err">// ❌ nothing written — no snapshot to diff against</span></code></pre>
+      </div>
+      <p class="cx-note"><code>SaveChanges()</code> has no idea anything changed — you'd have to <b>re-attach and mark it Modified</b> to actually save this.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A reporting endpoint that only ever reads and returns data should always query with
+      <code>AsNoTracking()</code>.</b> There's nothing to save back, so paying for a snapshot on
+      every row is pure waste — on a dashboard endpoint returning thousands of rows, that
+      bookkeeping is real, measurable memory and CPU spent for zero benefit.</p>
+      <p>If that same result set can contain the same entity more than once (a join that repeats a
+      customer across several of their orders) and the code still needs those duplicates to be the
+      same object reference, reach for <code>AsNoTrackingWithIdentityResolution()</code> instead —
+      it keeps that reference equality without paying for full change tracking.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="1.html">← LINQ → SQL Translation</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="3.html">The Change Tracker &amp; SaveChanges() →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

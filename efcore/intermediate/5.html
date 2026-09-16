@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IQueryable&lt;T&gt; vs. IEnumerable&lt;T&gt; — EF Core Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">IQueryable vs. IEnumerable</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 EF Core · Intermediate · Must Know</div>
+    <h1><code>IQueryable&lt;T&gt;</code> vs. <code>IEnumerable&lt;T&gt;</code> — <span class="hl hl-hot">who actually runs your query?</span></h1>
+    <p class="interview-q"><code>IQueryable&lt;T&gt;</code> vs. <code>IEnumerable&lt;T&gt;</code> — where does the query actually execute for each, and what's the practical consequence of switching between them mid-query?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Checks whether you actually know where LINQ executes — not just that both types "work with LINQ."</li>
+        <li>Comes up the moment you review or write a repository/service method that wraps an EF Core query.</li>
+        <li>A favorite trap question, because the mistake compiles and runs fine — nothing crashes, nothing warns you.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>IQueryable&lt;T&gt;</code> <span class="rarrow">→</span> <b>keeps building</b>, translates to SQL</p>
+      <p class="rrow"><code>IEnumerable&lt;T&gt;</code> <span class="rarrow">→</span> <b>already running</b>, LINQ-to-Objects only</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>IQueryable&lt;T&gt;</code></b> is still writing the SQL. <b><code>IEnumerable&lt;T&gt;</code></b> already stopped writing it.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI5" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI5" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI5Rose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">SAME QUERY — DECLARED TYPE DECIDES WHERE IT RUNS</text>
+
+      <g filter="url(#shI5)"><rect x="210" y="32" width="220" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="54" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">_context.Orders</text>
+      <text x="320" y="70" text-anchor="middle" font-size="10" fill="#5b6472">still building the query</text>
+
+      <path d="M320,78 V94" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,94 H480" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,94 V122" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI5)"/>
+      <path d="M480,94 V122" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI5)"/>
+
+      <g filter="url(#shI5)"><rect x="60" y="122" width="200" height="52" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="145" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">stays IQueryable&lt;T&gt;</text>
+      <text x="160" y="162" text-anchor="middle" font-size="10" fill="#5b6472">chain joins the same tree</text>
+
+      <g filter="url(#shI5)"><rect x="380" y="122" width="200" height="52" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="145" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">now IEnumerable&lt;T&gt;</text>
+      <text x="480" y="162" text-anchor="middle" font-size="10" fill="#5b6472">compiles to Enumerable now</text>
+
+      <path d="M160,174 V202" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI5)"/>
+      <path d="M480,174 V202" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arI5Rose)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shI5)"><rect x="60" y="202" width="200" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="226" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ WHERE hits SQL</text>
+      <text x="160" y="243" text-anchor="middle" font-size="10" fill="#5b6472">only matching rows fetched</text>
+
+      <g filter="url(#shI5)"><rect x="380" y="202" width="200" height="56" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="480" y="226" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">❌ every row pulled</text>
+      <text x="480" y="243" text-anchor="middle" font-size="10" fill="#5b6472">filtered in C# afterward</text>
+
+      <text x="320" y="279" text-anchor="middle" font-size="11" fill="#5b6472">the declared type decides which lane runs — not the runtime object</text>
+    </svg>
+    <figcaption>Same starting query, two declared types — one keeps writing SQL, the other silently drops back to plain C#.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>This is not a compile error or a runtime exception.</b> A repository method declared to return <code>IEnumerable&lt;Order&gt;</code> that actually does <code>return _context.Orders;</code> compiles and runs perfectly — it just silently pulls every row into memory before filtering, every single time, because the compiler resolved <code>.Where()</code> against the declared type.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"A repository method is declared to return <code>IEnumerable&lt;Order&gt;</code> but internally does <code>return _context.Orders;</code>. A caller chains <code>.Where(o =&gt; o.Status == "Open")</code> onto the result. Does that filter get pushed down to SQL?"</b> No — the compile-time type is <code>IEnumerable&lt;Order&gt;</code>, so <code>.Where()</code> resolves to <code>Enumerable.Where</code> at compile time; EF Core's SQL translator never sees it, so every row is pulled from the database first and filtered in memory afterward.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>IQueryable&lt;T&gt;</code> is a query that hasn't run yet — each LINQ method chains onto its expression tree, and EF Core translates the whole thing into one SQL statement only once something enumerates it. <code>IEnumerable&lt;T&gt;</code> is already executing or already materialized, so anything chained onto it compiles against LINQ-to-Objects and runs in memory in C#."</p>
+    <ul>
+      <li><code>IQueryable&lt;T&gt;</code> → <span class="hl hl-blue">expression tree, translated to SQL</span> once enumerated.</li>
+      <li><code>IEnumerable&lt;T&gt;</code> → <span class="hl hl-inter">already running or in memory</span>, further LINQ stays in C#.</li>
+      <li>Overload resolution always uses the <span class="hl hl-hot">compile-time declared type</span>, never the runtime object.</li>
+      <li>A method declared <code>IEnumerable&lt;T&gt;</code> that's really an <code>IQueryable&lt;T&gt;</code> underneath is a <span class="hl hl-hot">silent full-table fetch</span> waiting to happen — no error, just wasted rows.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">IQueryable&lt;T&gt;</span> is a query, not a result. Every LINQ method
+      chained onto it — <code>Where</code>, <code>Select</code>, <code>OrderBy</code> — gets captured into
+      the same expression tree instead of running immediately. EF Core only translates that whole tree
+      into one SQL statement once something actually enumerates it: a <code>foreach</code>,
+      <code>.ToList()</code>, <code>.First()</code>, and so on.</p>
+
+      <p><span class="hl hl-inter">IEnumerable&lt;T&gt;</span> means the sequence is already executing, or
+      already sitting fully in memory. Once something is typed as <code>IEnumerable&lt;T&gt;</code>, any
+      further LINQ chained onto it compiles against <code>Enumerable</code>'s in-memory extension
+      methods — plain C#, not SQL — regardless of what the object actually is underneath.</p>
+
+      <p>That last part is what makes the trap possible: C# resolves an extension method like
+      <code>.Where()</code> using a variable's <b>compile-time type</b>, never the object it happens to
+      be holding at runtime. A repository can return a real <code>IQueryable&lt;Order&gt;</code> from a
+      method declared to return <code>IEnumerable&lt;Order&gt;</code>, and the compiler still binds every
+      chained call to <code>Enumerable</code>, because that declared type is the only thing it can see.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>IQueryable&lt;T&gt;</code></th><th><code>IEnumerable&lt;T&gt;</code></th></tr></thead>
+        <tbody>
+          <tr><th>When it runs</th><td>deferred — builds an expression tree</td><td>already running / already materialized</td></tr>
+          <tr><th>Chained <code>.Where()</code> resolves to</th><td><code>Queryable.Where</code> — joins the tree</td><td><code>Enumerable.Where</code> — LINQ-to-Objects</td></tr>
+          <tr><th>Where filtering happens</th><td class="yes">✅ in the database (SQL)</td><td class="no">❌ in memory, in C#</td></tr>
+          <tr><th>Risk if declared type hides the real one</th><td>none — the tree keeps building</td><td class="no">❌ silently fetches every row first</td></tr>
+          <tr><th>Typical source</th><td><code>DbSet&lt;T&gt;</code>, an EF Core LINQ query</td><td>an already-materialized <code>List&lt;T&gt;</code>/array</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="ty">IQueryable</span>&lt;<span class="ty">Order</span>&gt; GetOpenOrders()
+{
+    <span class="kw">return</span> _context.Orders;   <span class="cx-ok">// ✅ declared AND returned as IQueryable&lt;Order&gt;</span>
+}
+
+<span class="kw">var</span> orders = repo.GetOpenOrders()
+                  .Where(o =&gt; o.Status == <span class="str">"Open"</span>);   <span class="cx-ok">// ✅ joins the SAME expression tree</span>
+
+<span class="kw">var</span> list = orders.ToList();   <span class="cx-ok">// ✅ ONE query — WHERE runs in SQL</span></code></pre>
+      </div>
+      <p class="cx-note">The declared return type is <b>IQueryable&lt;Order&gt;</b> — the caller's <code>.Where()</code> keeps building the same tree.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="ty">IEnumerable</span>&lt;<span class="ty">Order</span>&gt; GetOpenOrders()
+{
+    <span class="kw">return</span> _context.Orders;   <span class="cx-err">// ❌ still an IQueryable&lt;Order&gt; at runtime</span>
+}
+
+<span class="kw">var</span> orders = repo.GetOpenOrders()
+                  .Where(o =&gt; o.Status == <span class="str">"Open"</span>);   <span class="cx-cmt">// compiles against Enumerable.Where</span>
+
+<span class="kw">var</span> list = orders.ToList();   <span class="cx-err">// ❌ TWO steps: fetch everything, THEN filter in C#</span></code></pre>
+      </div>
+      <p class="cx-note">The <b>declared</b> type is <code>IEnumerable&lt;Order&gt;</code>, so the compiler picks <code>Enumerable.Where</code> — EF Core's SQL translator never sees this filter.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="ty">IQueryable</span>&lt;<span class="ty">Order</span>&gt; GetOpenOrders()   <span class="cx-ok">// ✅ fix: declare the real type</span>
+{
+    <span class="kw">return</span> _context.Orders;
+}</code></pre>
+      </div>
+      <p class="cx-note">Changing only the <b>declared return type</b> — same method body — restores SQL translation for every caller.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your API is fast in dev with 200 rows but times out in production with 2 million.</b> A
+      repository method is quietly declared <code>IEnumerable&lt;Order&gt;</code>, so it pulls the whole
+      <code>Orders</code> table into memory before every single filter runs. Fix: change the declared
+      return type to <code>IQueryable&lt;Order&gt;</code> (or return an already-filtered
+      <code>IQueryable</code>) so the SQL translator actually sees the <code>.Where()</code> the caller
+      chains on.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="4.html">← Eager vs. Explicit vs. Lazy Loading</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="6.html">Fluent API vs. Data Annotations →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
