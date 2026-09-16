@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rate Limiting — Web API Basic — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/basic">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Rate Limiting</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Web API · Basic · Should Know</div>
+    <h1>Rate limiting — <span class="hl hl-inter">crowd control</span>, not a <span class="hl hl-hot">security guard</span></h1>
+    <p class="interview-q">"What is rate limiting, and what is it actually protecting against?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Comes up for almost any public or metered API — interviewers want to know you've thought about abuse, not just features.</li>
+        <li>A buggy client stuck in a retry loop can take an API down just as fast as a real attacker — a good answer covers both.</li>
+        <li>A common opener right before the conversation moves into caching and scaling.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Rate limiting = <b>"cap the requests, reject the extra with a 429."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>100/min</code></b> allowed → request 101 gets <b><code>429</code></b> plus <b><code>Retry-After</code></b>, not silence.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 335" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="B5shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="B5arrow" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="B5arrowGreen" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="B5arrowRed" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="24" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">REQUESTS ARRIVE — LIMITER ALLOWS 100 / MINUTE</text>
+
+      <g filter="url(#B5shadow)"><rect x="20" y="95" width="170" height="120" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="105" y="125" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">📨 REQUESTS</text>
+      <text x="105" y="144" text-anchor="middle" font-size="10.5" fill="#5b6472">clients calling the API</text>
+      <circle cx="80" cy="168" r="5" fill="#94a3b8" opacity="0.55"/>
+      <circle cx="105" cy="168" r="5" fill="#94a3b8" opacity="0.55"/>
+      <circle cx="130" cy="168" r="5" fill="#94a3b8" opacity="0.55"/>
+
+      <path d="M190,155 H225" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#B5arrow)"/>
+      <circle r="4" fill="#64748b"><animateMotion dur="2s" repeatCount="indefinite" path="M190,155 H225"/></circle>
+
+      <g filter="url(#B5shadow)"><rect x="225" y="95" width="170" height="120" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="310" y="128" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🚦 RATE LIMITER</text>
+      <text x="310" y="148" text-anchor="middle" font-size="10.5" fill="#5b6472">checks: under 100/min?</text>
+      <text x="310" y="165" text-anchor="middle" font-size="10.5" fill="#5b6472">window resets every 60s</text>
+
+      <path d="M395,125 H430 V90.5 H470" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#B5arrowGreen)"/>
+
+      <g filter="url(#B5shadow)"><rect x="470" y="48" width="150" height="85" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="545" y="81" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ ALLOWED</text>
+      <text x="545" y="100" text-anchor="middle" font-size="10.5" fill="#5b6472">→ reaches the API</text>
+
+      <path d="M395,185 H430 V247.5 H470" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#B5arrowRed)">
+        <animate attributeName="stroke-dashoffset" values="10;0" dur="1s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#B5shadow)"><rect x="470" y="200" width="150" height="95" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="545" y="233" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🛑 429</text>
+      <text x="545" y="251" text-anchor="middle" font-size="10.5" fill="#5b6472">Too Many Requests</text>
+      <text x="545" y="267" text-anchor="middle" font-size="10.5" fill="#5b6472" font-family="Fira Code, Consolas, monospace">Retry-After: 30s</text>
+
+      <text x="320" y="316" text-anchor="middle" font-size="11" fill="#5b6472">Same request stream, two endings — under the cap moves on, over it comes back as 429</text>
+    </svg>
+    <figcaption>Every request passes through the limiter — under the cap reaches the API, over it comes back as <code>429</code> with a <code>Retry-After</code> hint.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Rate limiting is not a security feature on its own.</b> It's a resilience and fairness mechanism — an API can be fully rate-limited and still wide open to unauthorized access if authentication is missing; the two concerns are separate and both required.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What should a well-designed API tell the client when it's rate-limited?"</b> A <code>429</code> status plus headers like <code>X-RateLimit-Remaining</code> and <code>Retry-After</code> — telling the client not just THAT it's capped but roughly WHEN it can retry, so it can back off intelligently instead of guessing.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Rate limiting caps how many requests a client — identified by API key, IP, or account — can make in a given time window, rejecting the rest with a <code>429</code>. It protects against accidental abuse, deliberate abuse, and one noisy client degrading the API for everyone else — but it's a resilience concern, not a substitute for authentication."</p>
+    <ul>
+      <li>Identifies the caller by <span class="hl hl-blue">API key, IP address, or account</span> — not by what the request contains.</li>
+      <li>Excess requests get <span class="hl hl-hot">429 Too Many Requests</span>, ideally with a <code>Retry-After</code> header.</li>
+      <li>Protects against <span class="hl hl-inter">accidental abuse, deliberate abuse, noisy neighbors, and runaway cost</span> — four separate reasons, not just "attackers."</li>
+      <li>Common strategies: <span class="hl hl-basic">fixed window, sliding window, token bucket</span> — token bucket allows a short burst while still capping the average.</li>
+      <li>Never a replacement for <span class="hl hl-hot">authentication or authorization</span> — the two are complementary, not interchangeable.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-inter">Rate limiting</span> counts requests per identity — an API key, an
+      IP address, or a signed-in account — inside a rolling time window, and rejects anything past
+      the cap with a <code>429</code>. The point isn't to punish anyone; it's to keep one caller's
+      usage from eating the capacity every other caller is also relying on.</p>
+
+      <p>Three strategies show up by name in interviews: <b>fixed window</b> (a simple counter that
+      resets on a clock boundary), <b>sliding window</b> (a rolling period instead of a hard reset,
+      so usage near the boundary can't double up), and <b>token bucket</b> (a bucket that refills
+      over time and lets a client spend saved-up tokens in a quick burst). The mechanics behind each
+      rarely get quizzed at this level — knowing they exist, and that token bucket is the one built
+      for bursts, is enough.</p>
+
+      <p>It's easy to file this under "security" because both show up on the same API-hardening
+      checklist. But an attacker holding a stolen, valid API key sails straight through a rate
+      limiter — it only throttles volume, not legitimacy. Authentication and authorization decide
+      who's allowed in; rate limiting decides how much any one caller can do once they're there.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Program.cs — cap each client at 100 requests per 60-second window (.NET 7+)</span>
+builder.Services.AddRateLimiter(options =&gt;
+{
+    options.AddFixedWindowLimiter(<span class="str">"perClient"</span>, opt =&gt;
+    {
+        opt.PermitLimit = <span class="num">100</span>;
+        opt.Window = TimeSpan.FromSeconds(<span class="num">60</span>);
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
+app.UseRateLimiter();</code></pre>
+      </div>
+      <p class="cx-note">The built-in limiter still needs a <b>partition key</b> (API key, IP) so one caller's usage doesn't count against another's.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">if</span> (requestCount &gt; limit)
+{
+    context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+    context.Response.Headers[<span class="str">"Retry-After"</span>] = <span class="str">"30"</span>;             <span class="cx-cmt">// seconds until it should retry</span>
+    context.Response.Headers[<span class="str">"X-RateLimit-Remaining"</span>] = <span class="str">"0"</span>;     <span class="cx-cmt">// tells the client exactly where it stands</span>
+    <span class="kw">return</span>;
+}</code></pre>
+      </div>
+      <p class="cx-note">The status code alone says <b>"you're capped."</b> The headers say <b>what to do next</b> — that second part is what a well-designed API adds.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Scenario:</b> your public search endpoint starts timing out for every customer because
+      one integration partner's script got stuck in a retry loop, firing hundreds of requests a
+      second. <b>The direct fix:</b> a rate limiter keyed on that partner's API key returns
+      <code>429</code> the moment they cross their cap — their bug stays their own problem instead
+      of degrading the shared search cluster for every other tenant.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="4.html">← Versioning Strategies</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Basic</a>
+    <div class="side next"></div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pagination — Web API Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Pagination</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Web API · Intermediate · Must Know</div>
+    <h1><code>?page=3</code> vs. <code>?after=&lt;cursor&gt;</code> — <span class="hl hl-hot">the pagination that survives real traffic</span></h1>
+    <p class="interview-q">"What's the difference between offset-based and cursor-based pagination, and when would you reach for each?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Checks whether you understand pagination past "just add a <code>?page=</code>" — whether you know when that choice actually hurts once real data volume shows up.</li>
+        <li>Comes up on any endpoint returning more than a screenful of rows — feeds, order queues, admin tables, search results.</li>
+        <li>Sets up the natural follow-up about what a paginated response body should actually return besides the items.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>?page=3</code> <span class="rarrow">→</span> <b>counts</b> rows from the start</p>
+      <p class="rrow"><code>?after=&lt;cursor&gt;</code> <span class="rarrow">→</span> <b>anchors</b> to the last item</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>offset</code></b> counts. <b><code>cursor</code></b> points. Counting drifts when rows change; pointing doesn't.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI13" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI13Rose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arI13Green" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">HOW DO YOU ASK FOR THE NEXT PAGE?</text>
+
+      <path d="M320,30 V222" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <!-- LEFT: OFFSET -->
+      <text x="170" y="38" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">OFFSET · ?offset=40&amp;limit=20</text>
+      <text x="170" y="58" text-anchor="middle" font-size="10.5" fill="#5b6472">skips rows to reach a page</text>
+
+      <g filter="url(#shI13)">
+        <rect x="88" y="90" width="24" height="30" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+        <rect x="116" y="90" width="24" height="30" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+        <rect x="144" y="90" width="24" height="30" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+        <rect x="172" y="90" width="24" height="30" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+        <rect x="200" y="90" width="24" height="30" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+        <rect x="228" y="90" width="24" height="30" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+      </g>
+      <text x="142" y="144" text-anchor="middle" font-size="10.5" font-weight="600" fill="#5b6472">skip</text>
+      <text x="226" y="144" text-anchor="middle" font-size="10.5" font-weight="600" fill="#5b6472">keep</text>
+
+      <path d="M226,120 V160" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arI13Rose)">
+        <animate attributeName="stroke-dashoffset" values="7;0" dur="0.9s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shI13)"><rect x="45" y="160" width="210" height="46" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="150" y="178" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">⚠️ shifts if rows change</text>
+      <text x="150" y="198" text-anchor="middle" font-size="10" fill="#5b6472">rows shift → skip/duplicate</text>
+
+      <!-- RIGHT: CURSOR -->
+      <text x="470" y="38" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">CURSOR · ?after=&lt;lastId&gt;</text>
+      <text x="470" y="58" text-anchor="middle" font-size="10.5" fill="#5b6472">anchored to the last item sent</text>
+      <text x="456" y="76" text-anchor="middle" font-size="10" font-weight="600" fill="#166534">📍 cursor</text>
+
+      <g filter="url(#shI13)">
+        <rect x="388" y="90" width="24" height="30" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+        <rect x="416" y="90" width="24" height="30" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+        <rect x="444" y="90" width="24" height="30" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+        <rect x="472" y="90" width="24" height="30" rx="6" fill="#ffffff" stroke="#16a34a" stroke-width="1.6"/>
+        <rect x="500" y="90" width="24" height="30" rx="6" fill="#ffffff" stroke="#16a34a" stroke-width="1.6"/>
+        <rect x="528" y="90" width="24" height="30" rx="6" fill="#ffffff" stroke="#16a34a" stroke-width="1.6"/>
+      </g>
+      <text x="428" y="144" text-anchor="middle" font-size="10.5" font-weight="600" fill="#5b6472">sent</text>
+      <text x="512" y="144" text-anchor="middle" font-size="10.5" font-weight="600" fill="#5b6472">next</text>
+
+      <path d="M456,120 V160" fill="none" stroke="#16a34a" stroke-width="2" marker-end="url(#arI13Green)"/>
+
+      <g filter="url(#shI13)"><rect x="345" y="160" width="210" height="46" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="450" y="178" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ stable if rows change</text>
+      <text x="450" y="198" text-anchor="middle" font-size="10" fill="#5b6472">anchored, not counted</text>
+
+      <text x="320" y="240" text-anchor="middle" font-size="11" fill="#5b6472">Offset counts rows from the start; cursor remembers exactly where you stopped.</text>
+    </svg>
+    <figcaption>Offset re-scans every skipped row and drifts when data changes underneath it; cursor stays anchored to a specific item.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Offset pagination isn't just "the simpler choice" — it degrades at exactly the scale where pagination starts to matter,</b> re-scanning every discarded row on each request while inserts and deletes shift the count underneath it.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What should a paginated response actually include besides the items themselves?"</b> Metadata that tells the client how to get the next page without guessing — a <code>hasNextPage</code> flag and the next cursor (or a total count for offset-based, though total counts get expensive at scale too).</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Offset pagination skips a fixed number of rows to reach a page — simple, and it lets you jump straight to any page number, but the database still has to scan and discard every skipped row, and inserts or deletes between requests shift that count, causing skipped or duplicated items. Cursor-based pagination anchors each page to the last item returned and asks for items after it, so it stays stable under concurrent changes and scales better — the trade-off is you lose the ability to jump to an arbitrary page."</p>
+    <ul>
+      <li><code>?page=</code> <span class="hl hl-inter">→ fine for small, mostly-static lists</span> where jumping to page 47 genuinely matters.</li>
+      <li><code>?after=</code> <span class="hl hl-basic">→ the right default for large, changing data</span> — a feed, a live queue, real traffic.</li>
+      <li>Deep <code>OFFSET</code> <span class="hl hl-hot">→ still scans and discards</span> every skipped row — that's the performance cost, not a hypothetical one.</li>
+      <li>Cursor pagination <span class="hl hl-teal">→ trades away jump-to-page</span> — next/previous only, anchored to an item, not an index.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-inter">Offset pagination</span> (<code>?page=3&amp;pageSize=20</code>, or
+      <code>?offset=40&amp;limit=20</code>) tells the database to skip a fixed number of rows before
+      returning the next batch. It's simple to reason about and lets a client jump directly to any
+      page — but <code>OFFSET 10000</code> still makes the database walk past those 10,000 rows
+      every single request, so it gets slower the deeper someone pages. Worse, if a row is
+      inserted or deleted while someone is paging, the offset no longer points at the boundary it
+      used to — the same numeric skip now lands on a different row, so items get skipped or shown
+      twice.</p>
+
+      <p><span class="hl hl-basic">Cursor-based pagination</span> (<code>?after=&lt;cursor&gt;</code>)
+      sends back a token pointing at the last item on the current page; the next request asks for
+      whatever comes "after" that item. Because the query becomes "find rows after this specific
+      one" — an indexed lookup — instead of "skip this many rows," it stays fast regardless of how
+      deep the pages go, and it stays correct under concurrent inserts and deletes, since it's
+      anchored to an item's position, not a shifting count.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Offset</th><th>Cursor</th></tr></thead>
+        <tbody>
+          <tr><th>How it asks for the next page</th><td>skip N rows (<code>page</code>/<code>offset</code>)</td><td>anchor to the last item (<code>after</code>)</td></tr>
+          <tr><th>Cost as pages get deeper</th><td class="no">❌ scans &amp; discards more every time</td><td>✅ stays fast — an indexed lookup</td></tr>
+          <tr><th>Stable if rows change mid-page?</th><td class="no">❌ skips or duplicates items</td><td>✅ anchored to an item, unaffected</td></tr>
+          <tr><th>Jump to an arbitrary page?</th><td>✅ yes — "page 47" just works</td><td class="no">❌ no — next/previous only</td></tr>
+          <tr><th>Best fit</th><td>small, mostly-static lists</td><td>large, frequently-changing data</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">async</span> Task&lt;IActionResult&gt; GetOrders(<span class="kw">int</span> page = <span class="num">1</span>, <span class="kw">int</span> pageSize = <span class="num">20</span>)
+{
+    <span class="kw">var</span> items = <span class="kw">await</span> _db.Orders
+        .OrderBy(o =&gt; o.Id)
+        .Skip((page - <span class="num">1</span>) * pageSize)   <span class="cx-err">// ❌ still scans & discards every skipped row</span>
+        .Take(pageSize)
+        .ToListAsync();
+    <span class="kw">return</span> Ok(items);
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>Skip(10000)</code> makes the database <b>walk past 10,000 rows</b> before it can return anything.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">async</span> Task&lt;IActionResult&gt; GetOrders(<span class="kw">int</span>? after, <span class="kw">int</span> pageSize = <span class="num">20</span>)
+{
+    <span class="kw">var</span> query = _db.Orders.OrderBy(o =&gt; o.Id);
+    <span class="kw">if</span> (after <span class="kw">is not null</span>)
+        query = query.Where(o =&gt; o.Id &gt; after);   <span class="cx-ok">// ✅ anchored — no row count to shift</span>
+    <span class="kw">var</span> items = <span class="kw">await</span> query.Take(pageSize).ToListAsync();
+    <span class="kw">return</span> Ok(items);
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>WHERE Id &gt; after</code> uses the index directly — <b>no skipped rows to scan</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">PagedResponse</span>&lt;T&gt;
+{
+    <span class="kw">public</span> List&lt;T&gt; Items { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public</span> <span class="kw">int</span>? NextCursor { <span class="kw">get</span>; <span class="kw">set</span>; }   <span class="cx-cmt">// null once there's nothing left</span>
+    <span class="kw">public</span> <span class="kw">bool</span> HasNextPage { <span class="kw">get</span>; <span class="kw">set</span>; }
+}</code></pre>
+      </div>
+      <p class="cx-note">The client never guesses the next URL — the response <b>tells it exactly what to ask for next</b>.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A catalog endpoint pages fine at page 2, but times out by page two thousand — and
+      support tickets report products appearing twice or vanishing whenever new stock ships mid-
+      scroll.</b> Both symptoms point at offset pagination: a deep <code>OFFSET</code> forces a full
+      scan of every discarded row, and an insert ahead of the current page shifts everything after
+      it. Switching to a cursor (<code>?after=&lt;lastId&gt;</code>) fixes both — it stays anchored
+      to a specific product no matter what gets added or removed around it.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="12.html">← Async APIs &amp; API Security</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="14.html">Sorting &amp; Filtering Conventions →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

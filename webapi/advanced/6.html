@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>500 Errors in Production — Web API Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">500 Errors in Production</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Web API · Advanced · Should Know</div>
+    <h1>Intermittent 500s in prod, <span class="hl hl-hot">clean on your machine</span> — where do you actually look?</h1>
+    <p class="interview-q">"Your API starts throwing intermittent 500 errors in production that you can't reproduce locally. Walk me through your diagnostic approach."</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>One of the most common on-call scenarios there is — every production API eventually
+        throws something intermittent that a single local request never triggers.</li>
+        <li>Interviewers use this to see whether you reach for data first, or jump straight to a
+        guess and a code change.</li>
+        <li>A strong answer connects two other ideas — logging/tracing mechanics and what changes
+        with more than one instance — instead of treating this as its own isolated skill.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Prod 500s = <b>"correlate with data before you touch a single line of code."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <b>Correlate</b> → <b>narrow</b> → <b>reproduce
+    on purpose</b> → <b>fix</b> — skip a step and you're guessing, not diagnosing.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 230" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA6" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA6" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arA6Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">INTERMITTENT 500s IN PRODUCTION — THE DIAGNOSTIC PATH</text>
+
+      <g filter="url(#shA6)"><rect x="15" y="90" width="110" height="64" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="70" y="111" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">🐛 500s</text>
+      <text x="70" y="128" text-anchor="middle" font-size="10.5" fill="#5b6472">in production</text>
+      <text x="70" y="142" text-anchor="middle" font-size="10.5" fill="#5b6472">no local repro</text>
+
+      <path d="M125,122 H140" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA6)"/>
+
+      <g filter="url(#shA6)"><rect x="140" y="90" width="110" height="64" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="195" y="111" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🔎 Correlate</text>
+      <text x="195" y="128" text-anchor="middle" font-size="10.5" fill="#5b6472">logs &amp; traces</text>
+      <text x="195" y="142" text-anchor="middle" font-size="10.5" fill="#5b6472">+ timing</text>
+
+      <path d="M250,122 H265" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA6)"/>
+
+      <g filter="url(#shA6)"><rect x="265" y="90" width="110" height="64" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="111" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🎯 Narrow</text>
+      <text x="320" y="128" text-anchor="middle" font-size="10.5" fill="#5b6472">one hypothesis</text>
+
+      <path d="M375,122 H390" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA6Amber)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1.1s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shA6)"><rect x="390" y="90" width="110" height="64" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="445" y="111" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🧪 Reproduce</text>
+      <text x="445" y="128" text-anchor="middle" font-size="10.5" fill="#5b6472">deliberately</text>
+      <text x="445" y="142" text-anchor="middle" font-size="10.5" fill="#5b6472">under load</text>
+
+      <path d="M500,122 H515" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA6)"/>
+
+      <g filter="url(#shA6)"><rect x="515" y="90" width="110" height="64" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="570" y="111" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ Fix</text>
+      <text x="570" y="128" text-anchor="middle" font-size="10.5" fill="#5b6472">the root cause</text>
+
+      <text x="320" y="196" text-anchor="middle" font-size="11" fill="#5b6472">Every step still leans on data — a code change is always the last box, never the first.</text>
+    </svg>
+    <figcaption>Correlate, narrow, reproduce on purpose, then fix — never reorder the steps to skip straight to a code change.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Add a try/catch and swallow it" is not a fix.</b> It — and "just add more
+    logging and ship it" — suppresses the symptom without ever confirming the real cause, so the
+    intermittent failure keeps happening, just more quietly, which is worse than a visible 500.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Suppose the logs show the errors cluster tightly right after every
+    deploy, then taper off within a few minutes — what does that suggest?"</b> That points at a
+    deploy-time issue, not a load issue — new instances still warming up or cold-starting, a
+    rolling deploy briefly running old and new code side by side against a shared resource, or a
+    cache/connection-pool warming back up — a different diagnostic path than one driven by traffic
+    volume.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd start with data, not a guess — pull the failed requests' logs by
+    correlation ID to see the full stack trace and context, then check whether the 500s correlate
+    with a specific endpoint, client, load level, time of day, or deploy window. 'Intermittent' and
+    'can't reproduce locally' are themselves clues, often pointing at concurrency or an environment
+    difference. Once I have a real hypothesis, I reproduce it deliberately under production-like
+    conditions before shipping any fix."</p>
+    <ul>
+      <li>Correlation/trace IDs → <span class="hl hl-blue">tie one failed request to its full
+      stack trace and context</span> in the logs.</li>
+      <li>"Intermittent" + "won't repro locally" → <span class="hl hl-hot">often points at
+      concurrency, shared state, or an environment difference</span>, not just bad luck.</li>
+      <li>Narrow before touching code → <span class="hl hl-inter">correlate against deploys,
+      downstream status, and infra events first</span>.</li>
+      <li>Reproduce deliberately → <span class="hl hl-blue">simulate prod-like load and
+      concurrency</span>, not one request in an IDE.</li>
+      <li>A real fix → <span class="hl hl-basic">confirms the cause before shipping</span>, never
+      just suppresses the symptom.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>The first move is data, not a guess. Pull the failing requests from logs or an error
+      tracker and follow each one's <span class="hl hl-blue">correlation/trace ID</span> — the same
+      id threaded through every log line written while that request ran — back to its full stack
+      trace and request context. See <a href="../../dotnet/intermediate/15.html">Global Exception
+      Handling</a> for the middleware that actually captures an unhandled exception's details in
+      the first place. Once there are several failures to look at, check whether they correlate
+      with anything: a specific endpoint, a specific client, a time of day, a load level, or a
+      deployment window.</p>
+
+      <p><span class="hl hl-hot">"Intermittent" and "can't reproduce locally" are themselves
+      information</span>, not just an annoyance. A bug that only shows up in production under real
+      concurrency or scale is exactly the class of problem covered on
+      <a href="3.html">Distributed Systems Considerations</a> — a race condition, a shared-state
+      assumption that holds on one dev machine but breaks across multiple instances, a connection
+      pool or a downstream rate limit that only exhausts under real traffic — or it's an
+      environment difference: a config value, a certificate, an environment variable that's only
+      set (or wrong) in production.</p>
+
+      <p>Correlate the failure timestamps against deploys, downstream dependency status, and
+      infrastructure events — autoscaling, restarts — before changing a single line; a blind change
+      made on a guess can mask the real cause or introduce a new one. Once there's a real
+      hypothesis, reproduce it on purpose. That usually means simulating production-like
+      conditions — concurrent requests, multiple instances — since a single local request already
+      failed to show the bug once.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th>If the 500s correlate with…</th><th>That points toward…</th></tr></thead>
+        <tbody>
+          <tr><td>Right after every deploy, then taper off</td><td>a deploy-time issue — cold start, a rolling deploy briefly mixing old/new code, cache or pool warm-up</td></tr>
+          <tr><td>High traffic or concurrent load</td><td>a race condition, shared-state assumption, or an exhausted pool/rate limit</td></tr>
+          <tr><td>One specific endpoint or client</td><td>a code path or downstream dependency specific to that request shape</td></tr>
+          <tr><td>No pattern in traffic, deploys, or time</td><td>an environment difference — config, certificate, or env variable that only differs in prod</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">app</span>.Use(<span class="kw">async</span> (context, next) =&gt;
+{
+    <span class="cx-cmt">// every log line written during this request now carries the same id</span>
+    <span class="kw">using</span> (_logger.BeginScope(<span class="kw">new</span> <span class="ty">Dictionary</span>&lt;<span class="kw">string</span>, <span class="kw">object</span>&gt;
+    {
+        [<span class="str">"CorrelationId"</span>] = context.TraceIdentifier
+    }))
+    {
+        <span class="kw">await</span> next(context); <span class="cx-ok">// ✅ this is what a failed request's ID gets grepped for</span>
+    }
+});</code></pre>
+      </div>
+      <p class="cx-note">Without a correlation id tying every log line for one request together,
+      "check the logs" means scrolling through everyone else's requests too.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Monitoring shows 500s spiking sporadically — roughly 1 in 500 requests, no obvious
+      pattern in the alert, and every attempt to hit the same endpoint locally succeeds.</b> Pull
+      the failing requests' logs by correlation id first — is it always the same endpoint, the same
+      client, or the same downstream call? Check whether the spikes line up with a deploy, a
+      time of day, or a load spike. Only once a real hypothesis exists — a connection pool
+      exhausting under concurrent load, say — try to reproduce it deliberately, with real
+      concurrency, not a single request from an IDE.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="5.html">← Traffic Spike Scenario</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Advanced</a>
+    <div class="side next"></div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

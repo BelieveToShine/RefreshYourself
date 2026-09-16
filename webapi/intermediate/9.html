@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JWT &amp; Refresh Tokens — Web API Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">JWT &amp; Refresh Tokens</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Web API · Intermediate · Must Know</div>
+    <h1><code>JWT</code> — <span class="hl hl-inter">signed, not secret</span></h1>
+    <p class="interview-q">"What's actually inside a JWT, and why use a refresh token instead of a long-lived access token?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Interviewers ask this to check you know a JWT is <code>signed</code>, not encrypted — a real source of security bugs when secrets end up in the payload.</li>
+        <li>Comes up the moment an API design conversation moves past "just use JWT" into how access actually gets renewed and revoked.</li>
+        <li>A common lead-in to a revocation/security follow-up — see below.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>header</code> <span class="rarrow">→</span> <b>algorithm</b> + token type</p>
+      <p class="rrow"><code>payload</code> <span class="rarrow">→</span> <b>claims</b>, readable by anyone</p>
+      <p class="rrow"><code>signature</code> <span class="rarrow">→</span> <b>proof</b>, not encryption</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>JWT</code></b> is signed, not sealed — <b>readable</b> by anyone, <b>forgeable</b> by no one.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 215" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI9" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">JWT = HEADER . PAYLOAD . SIGNATURE</text>
+
+      <g filter="url(#shI9)"><rect x="39" y="55" width="170" height="86" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="124" y="89" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🏷️ HEADER</text>
+      <text x="124" y="113" text-anchor="middle" font-size="10.5" fill="#5b6472">alg + token type</text>
+
+      <text x="222" y="106" text-anchor="middle" font-size="22" font-weight="700" fill="#94a3b8">.</text>
+
+      <g filter="url(#shI9)"><rect x="235" y="55" width="170" height="86" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="89" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">📦 PAYLOAD</text>
+      <text x="320" y="113" text-anchor="middle" font-size="10.5" fill="#5b6472">user id, roles, exp</text>
+
+      <text x="418" y="106" text-anchor="middle" font-size="22" font-weight="700" fill="#94a3b8">.</text>
+
+      <g filter="url(#shI9)"><rect x="431" y="55" width="170" height="86" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="516" y="89" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🔏 SIGNATURE</text>
+      <text x="516" y="113" text-anchor="middle" font-size="10.5" fill="#5b6472">detects tampering</text>
+
+      <text x="320" y="195" text-anchor="middle" font-size="11" fill="#5b6472">Signed proves it wasn't changed — it does not hide the payload from anyone</text>
+    </svg>
+    <figcaption>Three dot-separated parts, base64url text — anyone can decode the header and payload; only the server holds the key to produce a valid signature.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 205" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI9b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI9b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI9bRose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">ACCESS TOKEN LIFECYCLE — WHERE REFRESH FITS IN</text>
+
+      <g filter="url(#shI9b)"><rect x="24" y="70" width="124" height="74" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="86" y="100" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🔑 Issued</text>
+      <text x="86" y="122" text-anchor="middle" font-size="10.5" fill="#5b6472">minutes, not days</text>
+
+      <path d="M148,107 H180" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arI9bRose)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shI9b)"><rect x="180" y="70" width="124" height="74" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="242" y="100" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">⏳ Expires</text>
+      <text x="242" y="122" text-anchor="middle" font-size="10.5" fill="#5b6472">small leak window</text>
+
+      <path d="M304,107 H336" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI9b)"/>
+
+      <g filter="url(#shI9b)"><rect x="336" y="70" width="124" height="74" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="398" y="100" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">🔄 Refresh</text>
+      <text x="398" y="122" text-anchor="middle" font-size="10.5" fill="#5b6472">server can revoke</text>
+
+      <path d="M460,107 H492" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI9b)"/>
+
+      <g filter="url(#shI9b)"><rect x="492" y="70" width="124" height="74" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="554" y="100" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">✅ Renewed</text>
+      <text x="554" y="122" text-anchor="middle" font-size="10.5" fill="#5b6472">cycle repeats</text>
+
+      <text x="320" y="180" text-anchor="middle" font-size="11" fill="#5b6472">Only the refresh token is checked against server state — that's the real revocation point</text>
+    </svg>
+    <figcaption>Short-lived on purpose — the access token ages fast, and only the refresh token is ever checked against server state.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A long-lived access token isn't "more convenient," it's unrevocable.</b> JWTs are self-contained by design — a leaked long-lived token stays valid for its entire lifetime with no way to cancel it early, unless extra server-side infrastructure (a denylist) is built specifically to check for that.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If JWTs are stateless, how do you actually revoke one immediately if it's compromised?"</b> Generally you can't cleanly — the practical answer is a short access-token lifetime plus a server-side revocation list checked on each request, which quietly reintroduces some of the statefulness JWT was meant to avoid.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A JWT has three base64url-encoded parts — header, payload, and signature — separated by dots. The signature proves the header and payload weren't tampered with; it does not encrypt them, so anyone can read the payload. Access tokens are kept short-lived on purpose, and a longer-lived refresh token is exchanged for a new access token so the user isn't forced to log in again — and because the refresh token, unlike the access token, is checked against server state, it's the one that can actually be revoked."</p>
+    <ul>
+      <li><code>header.payload.signature</code> <span class="hl hl-basic">→ signed, never encrypted</span>.</li>
+      <li>Payload claims → <span class="hl hl-inter">readable by anyone</span>, never put secrets in one.</li>
+      <li>Short access + long refresh → <span class="hl hl-blue">small exposure window, real revocation point</span>.</li>
+      <li>Long-lived access token instead → <span class="hl hl-hot">convenient but unrevocable</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A JWT is three base64url-encoded segments joined by dots — not an encrypted blob. The
+      <span class="hl hl-basic">signature</span> is a cryptographic hash computed over the header
+      and payload using a key only the server holds; verifying it means recomputing that same hash
+      and comparing, which proves the content wasn't altered. It proves nothing about who can
+      <b>read</b> the <span class="hl hl-inter">payload</span> — that part was always just base64,
+      decodable by anyone with no key at all.</p>
+
+      <p>That's exactly why access tokens are kept short-lived: a JWT can't be individually
+      cancelled once it's out in the world, so the only real defense against a leaked one is
+      making it expire soon. A <b>refresh token</b> is what makes that tolerable — it's
+      longer-lived, stored more carefully, and unlike the access token, the server actually keeps
+      a record of it. Exchanging it for a new access token means the user never re-enters
+      credentials, but every exchange is a chance for the server to say no.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Access Token</th><th>Refresh Token</th></tr></thead>
+        <tbody>
+          <tr><th>Lifetime</th><td>minutes to a few hours</td><td>days to weeks</td></tr>
+          <tr><th>Sent with every API call?</th><td>✅ yes, as the bearer token</td><td class="no">❌ no, only to the token endpoint</td></tr>
+          <tr><th>How it's verified</th><td>signature only, stateless</td><td>looked up against a stored server record</td></tr>
+          <tr><th>Revocable before it expires?</th><td class="no">❌ not without a denylist</td><td>✅ yes — delete/invalidate the record</td></tr>
+          <tr><th>If it leaks</th><td>valid until it naturally expires</td><td>can be revoked the moment it's noticed</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> parts = token.Split(<span class="str">'.'</span>);
+<span class="kw">var</span> payloadJson = Encoding.UTF8.GetString(
+    Base64UrlDecode(parts[<span class="num">1</span>]));   <span class="cx-ok">// ✅ no secret key needed to read this</span>
+
+Console.WriteLine(payloadJson);
+<span class="cx-cmt">// {"sub":"1234","role":"admin","exp":1735689600}</span></code></pre>
+      </div>
+      <p class="cx-note">Decoding the payload takes <b>zero cryptography</b> — only producing a valid new signature does.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err">// ❌ Never put secrets in the payload — anyone can decode this</span>
+<span class="kw">var</span> badClaims = <span class="kw">new</span>[] { <span class="kw">new</span> <span class="ty">Claim</span>(<span class="str">"password"</span>, user.PlainTextPassword) };
+
+<span class="cx-ok">// ✅ Claims should only carry identity/authorization data</span>
+<span class="kw">var</span> goodClaims = <span class="kw">new</span>[] {
+    <span class="kw">new</span> <span class="ty">Claim</span>(<span class="ty">JwtRegisteredClaimNames</span>.Sub, user.Id),
+    <span class="kw">new</span> <span class="ty">Claim</span>(<span class="ty">ClaimTypes</span>.Role, user.Role)
+};</code></pre>
+      </div>
+      <p class="cx-note">Same payload mechanics either way — the only difference is <b>what you choose to put in it</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>[<span class="ty">HttpPost</span>(<span class="str">"refresh"</span>)]
+<span class="kw">public</span> <span class="ty">IActionResult</span> Refresh(<span class="kw">string</span> refreshToken)
+{
+    <span class="kw">var</span> stored = _store.Find(refreshToken);     <span class="cx-ok">// ✅ checked against server state</span>
+    <span class="kw">if</span> (stored <span class="kw">is</span> <span class="kw">null</span> || stored.IsRevoked)
+        <span class="kw">return</span> Unauthorized();                <span class="cx-err">// ❌ this is the actual revocation point</span>
+
+    <span class="kw">var</span> newAccessToken = _tokens.IssueAccessToken(stored.UserId);  <span class="cx-cmt">// short-lived, e.g. 15 min</span>
+    <span class="kw">return</span> Ok(<span class="kw">new</span> { accessToken = newAccessToken });
+}</code></pre>
+      </div>
+      <p class="cx-note">The access token itself is <b>never</b> looked up in a database — only the refresh token is, and that's exactly where revocation becomes possible.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A JWT's payload is a printed name badge; the signature is the hologram sticker on it.</b>
+      Anyone nearby can read the badge — the hologram doesn't hide the print, it just proves the
+      badge wasn't forged.</p>
+      <p><b>Scenario:</b> a user's laptop is stolen while logged in. With only a long-lived access
+      token, nothing stops it working until it naturally expires — hours or days later. With the
+      short-access + refresh pattern, revoking that one refresh token blocks every future renewal;
+      the stolen access token still works for its last few minutes, but the account is effectively
+      locked out almost immediately after.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="8.html">← DTO vs. Entity Mapping</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="10.html">Backward Compatibility →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

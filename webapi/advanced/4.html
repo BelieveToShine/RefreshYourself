@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Large Payloads — Web API Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Large Payloads</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 Web API · Advanced · Deep Dive</div>
+    <h1>Large payloads — <span class="hl hl-blue">stream it</span>, don't <span class="hl hl-hot">hold the whole thing in memory</span></h1>
+    <p class="interview-q">"How do you handle a very large request or response payload without blowing up memory or timing out?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>An API that works fine in testing can still fall over in production the moment a few
+        large uploads land at the same time — the failure is about concurrent memory pressure,
+        not any single request being "too big."</li>
+        <li>Interviewers use this to check whether you reach for streaming and limits by design,
+        not "increase the timeout" as a first reflex.</li>
+        <li>A common opener before the interviewer pushes into what you'd do if the client itself
+        can't be changed.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Large payload = <b>"stream it in chunks, never buffer the whole thing."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> a <b><code>Stream</code></b> is a hallway one
+    box at a time. A buffered body is the whole truckload dumped in the hallway at once.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA4" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA4Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arA4Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="160" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b" letter-spacing="0.4">BUFFER WHOLE PAYLOAD</text>
+      <text x="480" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#166534" letter-spacing="0.4">STREAM IN CHUNKS</text>
+      <path d="M320,10 V292" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+
+      <g filter="url(#shA4)"><rect x="60" y="34" width="200" height="46" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="53" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">📦 Whole request body</text>
+      <text x="160" y="68" text-anchor="middle" font-size="10.5" fill="#5b6472">read into one byte[]/string</text>
+
+      <path d="M160,80 V104" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA4Red)"/>
+
+      <g filter="url(#shA4)"><rect x="35" y="104" width="250" height="70" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="128" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐛 One big memory block</text>
+      <text x="160" y="145" text-anchor="middle" font-size="10.5" fill="#5b6472">size scales with payload</text>
+      <text x="160" y="160" text-anchor="middle" font-size="10.5" fill="#5b6472">many at once → OOM / timeout</text>
+
+      <path d="M160,174 V198" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA4Red)"/>
+
+      <g filter="url(#shA4)"><rect x="60" y="198" width="200" height="46" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="160" y="217" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">⏳ Process after full read</text>
+      <text x="160" y="232" text-anchor="middle" font-size="10.5" fill="#5b6472">thread held the whole time</text>
+
+      <g filter="url(#shA4)"><rect x="380" y="34" width="200" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="53" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🧩 Chunk 1</text>
+      <text x="480" y="68" text-anchor="middle" font-size="10.5" fill="#5b6472">Stream / IAsyncEnumerable&lt;T&gt;</text>
+
+      <path d="M480,80 V102" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA4Green)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shA4)"><rect x="380" y="102" width="200" height="40" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="126" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ processed, released</text>
+
+      <path d="M480,142 V162" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA4Green)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shA4)"><rect x="380" y="162" width="200" height="40" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="186" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ chunk 2, chunk 3 …</text>
+
+      <path d="M480,202 V226" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA4Green)"/>
+
+      <g filter="url(#shA4)"><rect x="380" y="226" width="200" height="46" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="245" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">📉 constant memory</text>
+      <text x="480" y="260" text-anchor="middle" font-size="10.5" fill="#5b6472">thread freed between chunks</text>
+    </svg>
+    <figcaption>Same total data, two very different memory profiles — one grows with payload size, the other stays flat.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Just raise the timeout / give it more memory" is not a fix.</b> That
+    treats unbounded buffering as a config problem — it only delays the exact same crash to a
+    bigger payload or a busier hour, instead of fixing the design that never releases memory
+    until the whole body is in.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What if the client can't be changed to stream or chunk its upload — is
+    there still something you can do server-side?"</b> Yes — you can still read and process the
+    incoming body in chunks on the server even if the client sends it all in one shot; it won't
+    shrink the total transfer time, but it keeps server memory bounded instead of proportional to
+    payload size, and a request size limit still protects you either way.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd stream the body in chunks instead of buffering it whole — using
+    <code>Stream</code> or <code>IAsyncEnumerable&lt;T&gt;</code> — keep everything async so the
+    thread isn't held for the transfer, page large response sets instead of returning them in one
+    body, and set an explicit request size limit as a deliberate defensive cap, not an
+    afterthought."</p>
+    <ul>
+      <li>Streaming → <span class="hl hl-blue">bounded, constant memory</span> no matter the
+      payload size.</li>
+      <li>Large response sets → <span class="hl hl-inter">page them</span>, never return 500,000
+      rows in one JSON body.</li>
+      <li>Compression → <span class="hl hl-teal">trades CPU for bandwidth</span>, and does nothing
+      for already-compressed data like images or video.</li>
+      <li>Async I/O → <span class="hl hl-basic">releases the thread while waiting</span> instead of
+      blocking it for the whole transfer.</li>
+      <li>Request size limits → <span class="hl hl-hot">a deliberate defensive cap</span>, not an
+      oversight to raise without thinking.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Streaming</span> means reading or writing a payload piece by
+      piece — a <code>Stream</code>, or an <code>IAsyncEnumerable&lt;T&gt;</code> in ASP.NET
+      Core — instead of loading the entire request or response body into one in-memory object
+      first. Memory use stays roughly constant per request no matter how large the payload is,
+      which is the difference between an API that holds up under many concurrent large transfers
+      and one that runs out of memory or times out as soon as a few land together.</p>
+
+      <p>Several other techniques attack the same problem from different angles.
+      <b>Pagination</b> keeps a large response set from ever becoming one giant body — see
+      <a href="../intermediate/13.html">Pagination</a> for the request/response shape. <b>Response
+      compression</b> (gzip/br) trades CPU time for a smaller transfer, but it doesn't help
+      already-compressed data like images or video — compressing a JPEG again mostly just burns
+      CPU. <b>Chunked/multipart uploads</b> let ASP.NET Core stream a file straight to disk or blob
+      storage instead of holding the whole upload in a memory buffer. And a payload held on a
+      blocked synchronous thread ties up a thread-pool thread for the entire transfer — going
+      <b>async all the way down</b> releases that thread while the I/O is in flight.</p>
+
+      <p><b>Request size limits</b> (Kestrel's own limits, or <code>[RequestSizeLimit]</code>) are
+      a deliberate design choice, not a gap to close by raising them — they protect the server
+      from a single oversized request exhausting resources on their own, streaming or not.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Buffer whole body</th><th>Stream in chunks</th></tr></thead>
+        <tbody>
+          <tr><th>Memory use</th><td>grows with payload size</td><td>stays roughly constant</td></tr>
+          <tr><th>Thread while waiting</th><td>often held for the full transfer</td><td>released between chunks (with async)</td></tr>
+          <tr><th>Many concurrent large requests</th><td>❌ risks OOM / timeouts</td><td>scales far better</td></tr>
+          <tr><th>Total transfer time</th><td>unchanged either way</td><td>unchanged either way</td></tr>
+          <tr><th>Still needs a size limit?</th><td>yes</td><td>yes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err">// ❌ whole file loaded into memory before it's saved anywhere</span>
+[HttpPost(<span class="str">"upload"</span>)]
+<span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="ty">IActionResult</span>&gt; Upload(<span class="ty">IFormFile</span> file)
+{
+    <span class="kw">using</span> <span class="kw">var</span> ms = <span class="kw">new</span> <span class="ty">MemoryStream</span>(); <span class="cx-err">// buffers the entire upload</span>
+    <span class="kw">await</span> file.CopyToAsync(ms);
+    <span class="kw">await</span> _blob.SaveAsync(ms.ToArray());     <span class="cx-cmt">// one huge byte[] held at once</span>
+    <span class="kw">return</span> Ok();
+}</code></pre>
+      </div>
+      <p class="cx-note">Memory use here is proportional to the file's size — a few large uploads
+      at once can exhaust the server, regardless of the timeout setting.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-ok">// ✅ streamed straight through — memory stays flat regardless of file size</span>
+[HttpPost(<span class="str">"upload"</span>)]
+[<span class="ty">RequestSizeLimit</span>(<span class="num">100_000_000</span>)] <span class="cx-cmt">// still capped — defense, not an oversight</span>
+<span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="ty">IActionResult</span>&gt; Upload()
+{
+    <span class="kw">await</span> <span class="kw">using</span> <span class="kw">var</span> input = Request.Body;        <span class="cx-cmt">// the raw request stream</span>
+    <span class="kw">await</span> _blob.SaveStreamAsync(input);         <span class="cx-ok">// piped through in chunks</span>
+    <span class="kw">return</span> Ok();
+}</code></pre>
+      </div>
+      <p class="cx-note">Nothing here holds the whole file at once — bytes flow from the request
+      straight to storage, with a size limit as a separate, deliberate safety cap.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-ok">// ✅ a large response streamed row-by-row instead of built as one giant list</span>
+[HttpGet(<span class="str">"export"</span>)]
+<span class="kw">public</span> <span class="kw">async</span> <span class="ty">IAsyncEnumerable</span>&lt;<span class="ty">OrderRow</span>&gt; ExportOrders()
+{
+    <span class="kw">await</span> <span class="kw">foreach</span> (<span class="kw">var</span> row <span class="kw">in</span> _repo.StreamAllAsync())
+        <span class="kw">yield</span> <span class="kw">return</span> row;   <span class="cx-cmt">// one row in flight at a time, not 500,000 in a List&lt;T&gt;</span>
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>IAsyncEnumerable&lt;T&gt;</code> writes each row to the response as
+      it's produced — the server never assembles the full result set in memory first.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your export endpoint works fine in testing with a few thousand rows, then a customer
+      with 2 million rows triggers timeouts and, under a second concurrent export, an
+      out-of-memory crash.</b> The fix isn't a bigger timeout or more server RAM — both just move
+      the failure to a larger number. Stream the query results row-by-row with
+      <code>IAsyncEnumerable&lt;T&gt;</code> instead of materializing the full list, or offer
+      pagination for interactive callers and a background export job with a downloadable file for
+      the bulk case — either way, memory use stops scaling with row count.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="3.html">← Distributed Systems Considerations</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="5.html">Traffic Spike Scenario →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

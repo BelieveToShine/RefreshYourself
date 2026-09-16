@@ -226,5 +226,71 @@ window.NAV_INDEX = {
         ]
       }
     ]
+  },
+  "webapi/basic": {
+    track: "Web API",
+    trackIcon: "🔌",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1–5",
+        items: [
+          { n: 1, file: "1.html", short: "What Is REST",        title: "What Is REST", tail: "the constraints that actually define it.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Idempotency",          title: "Idempotency", tail: "and which verbs are supposed to guarantee it.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "CORS",                  title: "CORS", tail: "the API-consumer angle.", priority: "⭐" },
+          { n: 4, file: "4.html", short: "Versioning Strategies", title: "Versioning Strategies", tail: "URL segment, header, or query string.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Rate Limiting",         title: "Rate Limiting", tail: "what it's actually protecting against.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "webapi/intermediate": {
+    track: "Web API",
+    trackIcon: "🔌",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1–10",
+        items: [
+          { n: 1,  file: "1.html",  short: "HTTP Verbs",              title: "HTTP Verbs — Idempotency & Safety", tail: "idempotency & safety, verb by verb.", priority: "🔥" },
+          { n: 2,  file: "2.html",  short: "HTTP Status Codes",       title: "HTTP Status Codes", tail: "200 vs. 201 vs. 204, 400 vs. 422, 401 vs. 403.", priority: "🔥" },
+          { n: 3,  file: "3.html",  short: "Route vs. Query Params",  title: "Route Parameters vs. Query Parameters", tail: "when a value belongs in each.", priority: "⭐" },
+          { n: 4,  file: "4.html",  short: "Body vs. Headers",        title: "Request Body vs. Headers", tail: "what goes where.", priority: "⭐" },
+          { n: 5,  file: "5.html",  short: "DTOs",                    title: "DTOs", tail: "why not just return your entity.", priority: "🔥" },
+          { n: 6,  file: "6.html",  short: "IActionResult vs. AR<T>", title: "IActionResult vs. ActionResult<T>", tail: "the practical difference.", priority: "⭐" },
+          { n: 7,  file: "7.html",  short: "Validation & Swagger",    title: "Model Validation & Swagger/OpenAPI", tail: "what each actually gives you.", priority: "⭐" },
+          { n: 8,  file: "8.html",  short: "DTO vs. Entity Mapping",  title: "DTO vs. Entity Mapping", tail: "whose job is it, and where should it live.", priority: "⭐" },
+          { n: 9,  file: "9.html",  short: "JWT & Refresh Tokens",    title: "JWT & Refresh Tokens", tail: "what's actually inside one, and why not just make it long-lived.", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Backward Compatibility",  title: "Backward Compatibility", tail: "evolving a response shape without breaking existing clients.", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11–14",
+        items: [
+          { n: 11, file: "11.html", short: "Caching Strategies",      title: "Caching Strategies", tail: "response caching vs. a distributed cache.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Async APIs & Security",   title: "Async APIs & API Security", tail: "beyond async/await, and beyond authentication.", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Pagination",              title: "Pagination", tail: "offset vs. cursor-based.", priority: "🔥" },
+          { n: 14, file: "14.html", short: "Sorting & Filtering",     title: "Sorting & Filtering Conventions", tail: "what makes an API predictable to consume.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "webapi/advanced": {
+    track: "Web API",
+    trackIcon: "🔌",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1–6",
+        items: [
+          { n: 1, file: "1.html", short: "Multiple Client Types", title: "Designing for Multiple Client Types", tail: "web, mobile, and a partner integration, all well-served.", priority: "⭐" },
+          { n: 2, file: "2.html", short: "Retry vs. Resilience",  title: "Retry vs. Resilience", tail: "circuit breaking, timeouts, and fallback.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Distributed Systems",   title: "Distributed Systems Considerations", tail: "what changes once there's more than one instance.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Large Payloads",        title: "Large Payloads", tail: "streaming without blocking a thread or exhausting memory.", priority: "🧠" },
+          { n: 5, file: "5.html", short: "Traffic Spike Scenario", title: "Traffic Spike Scenario", tail: "10x traffic, what do you check first?", priority: "🔥" },
+          { n: 6, file: "6.html", short: "500 Errors in Prod",    title: "500-Errors-in-Production Scenario", tail: "how you'd actually investigate.", priority: "⭐" }
+        ]
+      }
+    ]
   }
 };

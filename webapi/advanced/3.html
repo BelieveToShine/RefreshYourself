@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Distributed Systems Considerations — Web API Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Distributed Systems Considerations</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Web API · Advanced · Must Know</div>
+    <h1>A load balancer changes your <span class="hl hl-hot">code</span>, not just your <span class="hl hl-blue">infrastructure</span></h1>
+    <p class="interview-q">"What actually changes once your API has more than one instance behind a load balancer?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Intermittent, hard-to-reproduce bugs that only show up under real load are very often
+        exactly one of these assumptions quietly breaking — never seen in QA on a single box.</li>
+        <li>Interviewers use this to see whether you treat scaling out as a code review trigger,
+        not only an ops checkbox.</li>
+        <li>A common opener right before the interviewer pushes into idempotency, retries, or a
+        "describe an intermittent bug you debugged" scenario.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Shared state <span class="rarrow">→</span> <b>move it out</b> of memory, into a store every instance can read</p>
+      <p class="rrow">Ordering <span class="rarrow">→</span> <b>not guaranteed</b> across two instances</p>
+      <p class="rrow">Clocks <span class="rarrow">→</span> <b>drift</b> — don't compare wall-clock time across instances</p>
+      <p class="rrow">Retries <span class="rarrow">→</span> <b>need an idempotency key</b>, not just a resend</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> one box became <b>many boxes</b> — anything
+    that quietly assumed "the same process handles every request" now needs a second look.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 385" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA3" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA3" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arA3Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arA3Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arA3Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">ONE CLIENT, TWO REQUESTS, ONE LOAD BALANCER</text>
+
+      <g filter="url(#shA3)"><rect x="220" y="28" width="200" height="44" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="48" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🧑‍💻 Client</text>
+      <text x="320" y="63" text-anchor="middle" font-size="10.5" fill="#5b6472">two quick requests</text>
+
+      <path d="M320,72 V98" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA3)"/>
+
+      <g filter="url(#shA3)"><rect x="220" y="98" width="200" height="44" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="118" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">⚖️ Load Balancer</text>
+      <text x="320" y="133" text-anchor="middle" font-size="10.5" fill="#5b6472">picks an instance</text>
+
+      <path d="M320,142 V164" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M150,164 H490" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+
+      <path d="M150,164 V196" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arA3Blue)"/>
+      <path d="M490,164 V196" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA3Amber)"><animate attributeName="stroke-dashoffset" values="9;0" dur="2s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shA3)"><rect x="60" y="196" width="180" height="44" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="150" y="216" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🖥️ Instance 1</text>
+      <text x="150" y="231" text-anchor="middle" font-size="10.5" fill="#5b6472">got request 1</text>
+
+      <g filter="url(#shA3)"><rect x="400" y="196" width="180" height="44" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="490" y="216" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🖥️ Instance 2</text>
+      <text x="490" y="231" text-anchor="middle" font-size="10.5" fill="#5b6472">got request 2 ❓</text>
+
+      <rect x="60" y="252" width="180" height="22" rx="11" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+      <text x="150" y="267" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">❌ in-memory only</text>
+
+      <rect x="400" y="252" width="180" height="22" rx="11" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+      <text x="490" y="267" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">❌ in-memory only</text>
+
+      <path d="M150,274 V290 H250 V314" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA3Green)"/>
+      <path d="M490,274 V290 H390 V314" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA3Green)"/>
+
+      <g filter="url(#shA3)"><rect x="180" y="314" width="280" height="46" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="336" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🗄️ Shared cache / DB</text>
+      <text x="320" y="351" text-anchor="middle" font-size="10.5" fill="#5b6472">same data, every instance</text>
+    </svg>
+    <figcaption>Same client, same load balancer — nothing guarantees both requests land on the same instance.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"We just added a load balancer" is not a purely infrastructure change.</b>
+    Shared state, ordering, clocks, and idempotent retries are all code-level assumptions —
+    skipping that review is exactly how teams end up chasing intermittent, load-correlated bugs
+    in production.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How would you even detect one of these bugs — they sound intermittent
+    by nature?"</b> Look for failures that correlate with load, or with the same client firing
+    concurrent requests, rather than with a specific input — that correlation is the signature.
+    See the <a href="6.html">500-errors-in-production scenario</a> for how that investigation
+    actually goes.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Going from one instance to many means no code can assume it owns the
+    only copy of state, that requests arrive in order, that clocks agree, or that a retry is safe
+    without an idempotency key — scaling out is a code review trigger, not just an infrastructure
+    change."</p>
+    <ul>
+      <li>Shared state → <span class="hl hl-blue">move it to a shared store</span>, or use sticky sessions if you must keep affinity.</li>
+      <li>Request ordering → <span class="hl hl-inter">not guaranteed across instances</span> — don't assume "create always beats update."</li>
+      <li>Clock drift → <span class="hl hl-teal">use a logical clock or sequence number</span>, never a raw wall-clock comparison.</li>
+      <li>Retry after a timeout → <span class="hl hl-hot">may hit a different instance</span> — always carry an idempotency key.</li>
+      <li>Sticky sessions → <span class="hl hl-adv">a real trade-off</span>, not a free fix — it defeats even load distribution.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>On a single instance, <span class="hl hl-blue">in-memory state</span> is the whole
+      world — a <code>Singleton</code> service holding a dictionary in memory (see
+      <a href="../../dotnet/intermediate/3.html">Service Lifetimes</a>) sees every request,
+      because there's only one process to see them. The moment a second instance joins behind a
+      load balancer, that Singleton's memory is only <b>that one instance's</b> view — a second
+      request can land on the other instance with no knowledge of the first. Session state,
+      in-memory caches, and rate-limit counters all need to move to a store both instances can
+      read, or the load balancer needs to pin a client to one instance every time
+      ("session affinity" / sticky sessions) — itself a trade-off, since it defeats even load
+      distribution and complicates scaling further.</p>
+
+      <p><span class="hl hl-inter">Ordering and timing</span> stop being free assumptions too.
+      Two requests from the same client can be handled by two different instances at the same
+      time, in either order, if the client fires them without waiting for the first to finish —
+      logic that assumes "the create always happens before the update" can break under real
+      concurrent load. Different instances' clocks can also drift slightly from each other;
+      anything comparing wall-clock time across instances needs a logical clock or a sequence
+      number instead, wherever the ordering actually matters.</p>
+
+      <p><span class="hl hl-hot">Retries matter more, not less.</span> A client or load balancer
+      retry after a timeout can land on a different instance than the original request. If that
+      original request actually succeeded but the response was lost in transit, a naive retry
+      with no idempotency key can create a duplicate — see
+      <a href="../basic/2.html">Idempotency</a> for the single-instance version of this
+      check; distributed, the key has to live somewhere every instance can see it.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Single instance</th><th>Behind a load balancer</th></tr></thead>
+        <tbody>
+          <tr><th>In-memory state</th><td>one process, one memory space</td><td>❌ each instance has its own — a second request may miss it</td></tr>
+          <tr><th>Request ordering</th><td>effectively sequential</td><td>❌ two concurrent requests can be handled out of order</td></tr>
+          <tr><th>Clock comparisons</th><td>one clock, always consistent</td><td>⚠️ each instance's clock can drift slightly</td></tr>
+          <tr><th>Retry after timeout</th><td>safe — same process still running</td><td>❌ may hit a different instance — needs an idempotency key</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">RateLimiterService</span> <span class="cx-cmt">// registered as Singleton</span>
+{
+    <span class="kw">private</span> <span class="kw">readonly</span> <span class="ty">Dictionary</span>&lt;<span class="kw">string</span>, <span class="kw">int</span>&gt; _hits = <span class="kw">new</span>(); <span class="cx-err">// ❌ lives in THIS instance's memory only</span>
+
+    <span class="kw">public</span> <span class="kw">bool</span> Allow(<span class="kw">string</span> clientId)
+    {
+        _hits.TryGetValue(clientId, <span class="kw">out</span> <span class="kw">var</span> count);
+        <span class="kw">if</span> (count &gt;= 100) <span class="kw">return</span> <span class="kw">false</span>; <span class="cx-err">// ❌ only counts requests THIS instance saw</span>
+        _hits[clientId] = count + 1;
+        <span class="kw">return</span> <span class="kw">true</span>;
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">A client bouncing between two instances gets up to <b>200</b> requests
+      through, not 100 — each instance's dictionary only ever sees its own half of the traffic.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">RateLimiterService</span>
+{
+    <span class="kw">private</span> <span class="kw">readonly</span> <span class="ty">IDistributedCache</span> _cache; <span class="cx-ok">// ✅ Redis, SQL — anything shared</span>
+
+    <span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="kw">bool</span>&gt; AllowAsync(<span class="kw">string</span> clientId)
+    {
+        <span class="kw">var</span> count = <span class="kw">await</span> _cache.GetIntAsync(clientId) ?? 0; <span class="cx-ok">// seen by EVERY instance</span>
+        <span class="kw">if</span> (count &gt;= 100) <span class="kw">return</span> <span class="kw">false</span>;
+        <span class="kw">await</span> _cache.SetIntAsync(clientId, count + 1);
+        <span class="kw">return</span> <span class="kw">true</span>;
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">Same 100-request limit, but now every instance reads and writes the
+      <b>same</b> counter — the limit holds no matter which instance a request lands on.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>[HttpPost(<span class="str">"orders"</span>)]
+<span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="ty">IActionResult</span>&gt; CreateOrder(<span class="ty">OrderDto</span> body, [FromHeader] <span class="kw">string</span> idempotencyKey)
+{
+    <span class="cx-ok">// ✅ checked against a shared table — a retry that lands on a</span>
+    <span class="cx-ok">// DIFFERENT instance still sees the same key</span>
+    <span class="kw">var</span> existing = <span class="kw">await</span> _db.Orders.FirstOrDefaultAsync(o =&gt; o.IdempotencyKey == idempotencyKey);
+    <span class="kw">if</span> (existing != <span class="kw">null</span>) <span class="kw">return</span> Ok(existing); <span class="cx-cmt">// same result, no duplicate</span>
+
+    <span class="kw">var</span> order = <span class="kw">new</span> <span class="ty">Order</span>(body) { IdempotencyKey = idempotencyKey };
+    _db.Orders.Add(order);
+    <span class="kw">await</span> _db.SaveChangesAsync();
+    <span class="kw">return</span> Ok(order);
+}</code></pre>
+      </div>
+      <p class="cx-note">This only works because the idempotency key lives in the database every
+      instance shares — the same check kept in a static in-memory set would miss a retry the load
+      balancer routes to a different instance.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your API scales from one instance to three behind a load balancer, and support starts
+      reporting a bug that only reproduces "sometimes" — never in QA on a single box.</b> Check
+      whether the failure correlates with load, or with a client firing two requests close
+      together, rather than with any specific input. That correlation is the tell: it points
+      straight at shared state, ordering, clock drift, or a missing idempotency key — not at the
+      business logic everyone starts by re-reading.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="2.html">← Retry vs. Resilience</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="4.html">Large Payloads →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

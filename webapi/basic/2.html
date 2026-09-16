@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Idempotency — Web API Basic — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/basic">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke="#4f46e5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke="#7c3aed" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Idempotency</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Web API · Basic · Must Know</div>
+    <h1><code>GET</code> / <code>PUT</code> / <code>DELETE</code> / <code>POST</code> — <span class="hl hl-hot">which ones can you safely call twice?</span></h1>
+    <p class="interview-q">"What is idempotency, and which HTTP verbs are supposed to guarantee it?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>A network retry after a timeout is a daily reality — knowing which calls are safe to
+        blindly repeat is what keeps a retry from becoming a duplicate.</li>
+        <li>A very common opener before an interviewer moves into deeper REST-verb questions.</li>
+        <li>Mixing up "idempotent" with "has no side effects" is an easy way to sound unsure of a
+        term you actually understand.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>GET / PUT / DELETE</code> <span class="rarrow">→</span> <b>same</b> end state, every time</p>
+      <p class="rrow"><code>POST</code> <span class="rarrow">→</span> <b>new</b> thing created, every time</p>
+      <p class="rrow"><code>PATCH</code> <span class="rarrow">→</span> <b>depends</b> on what it changes</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> call it <b><code>1</code></b> time or <b><code>100</code></b> times — does the end state change past the first call?</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shB2" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arB2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arB2Red" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">SAME REQUEST — SENT 3 TIMES 🔁</text>
+
+      <path d="M170,34 H470" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M170,34 V82" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arB2)"/>
+      <path d="M470,34 V82" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arB2)"/>
+      <path d="M320,34 V218" fill="none" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arB2)"/>
+
+      <g filter="url(#shB2)"><rect x="70" y="82" width="200" height="44" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="170" y="104" text-anchor="middle" font-size="14" font-weight="700" fill="#166534">PUT &amp; DELETE</text>
+      <text x="170" y="119" text-anchor="middle" font-size="10" fill="#5b6472">same request, sent 3×</text>
+
+      <g filter="url(#shB2)"><rect x="370" y="82" width="200" height="44" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="470" y="104" text-anchor="middle" font-size="14" font-weight="700" fill="#991b1b">POST</text>
+      <text x="470" y="119" text-anchor="middle" font-size="10" fill="#5b6472">same request, sent 3×</text>
+
+      <path d="M170,126 V150" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arB2)"/>
+      <path d="M470,126 V150" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arB2Red)">
+        <animate attributeName="stroke-dashoffset" values="7;0" dur="0.9s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shB2)"><rect x="70" y="150" width="200" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="170" y="172" text-anchor="middle" font-size="14" font-weight="700" fill="#166534">✅ Unchanged</text>
+      <text x="170" y="188" text-anchor="middle" font-size="10" fill="#5b6472">Same result on call 1, 2, 3</text>
+
+      <g filter="url(#shB2)"><rect x="370" y="150" width="200" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="470" y="172" text-anchor="middle" font-size="14" font-weight="700" fill="#991b1b">📦 New order</text>
+      <text x="470" y="188" text-anchor="middle" font-size="10" fill="#5b6472">Each call creates a new row</text>
+
+      <g filter="url(#shB2)"><rect x="190" y="218" width="260" height="48" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="240" text-anchor="middle" font-size="14" font-weight="700" fill="#92400e">PATCH</text>
+      <text x="320" y="256" text-anchor="middle" font-size="10.5" fill="#5b6472">→ depends on what it changes</text>
+
+      <text x="320" y="292" text-anchor="middle" font-size="11" fill="#5b6472">Repeat PUT or DELETE → same result. Repeat POST → a brand-new order each time.</text>
+    </svg>
+    <figcaption>Same request, sent three times: PUT/DELETE land on the same state, POST creates something new each time, PATCH depends on the operation.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Idempotent doesn't mean "safe" or "no side effects."</b> <code>DELETE</code> clearly changes something the first time — the resource is gone — it's still idempotent because repeating it never changes the outcome any further.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If POST isn't idempotent, how do you make a 'create' operation safe to retry over a flaky network?"</b> Idempotency keys — the client sends a unique key per logical operation, and the server checks whether it already processed that key before creating anything new, returning the original result instead of a duplicate. This is exactly how payment APIs like Stripe make retry-safe charge creation possible.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"An operation is idempotent if making the same request multiple times leaves the system in the same end state as making it once. <code>GET</code>, <code>PUT</code>, and <code>DELETE</code> are specified to be idempotent. <code>POST</code> is not, because its job is to create a new thing every time. <code>PATCH</code> depends on whether the patch sets an absolute value or something like an increment."</p>
+    <ul>
+      <li><code>GET</code> / <code>PUT</code> / <code>DELETE</code> → <span class="hl hl-basic">repeat it, the end state doesn't change further</span>.</li>
+      <li><code>POST</code> → <span class="hl hl-hot">repeat it, you likely get duplicates</span>.</li>
+      <li><code>PATCH</code> → <span class="hl hl-inter">idempotent only if it sets an absolute value</span>, not if it increments.</li>
+      <li>Retry-safe <code>POST</code> → use an <span class="hl hl-blue">idempotency key</span>, not the verb itself.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>An operation is <b>idempotent</b> when calling it once and calling it many times, back to
+      back, with the exact same input, ends with the system in the same state. It's a promise
+      about the end state the server lands in — not a promise that nothing happens, and not a
+      promise that the call is risk-free.</p>
+
+      <p><span class="hl hl-basic">PUT</span> replaces the whole resource with whatever body you
+      send, so sending the same replacement twice leaves the same object in place the second
+      time. <span class="hl hl-hot">POST</span>'s job is different by design: it means "create a
+      new thing," so the spec doesn't — and can't — promise idempotency; two identical
+      <code>POST</code> calls are two separate creates on purpose. <span class="hl hl-inter">PATCH</span>
+      sits in between: it's idempotent only when the patch itself is (setting a field to a fixed
+      value), not when it isn't (incrementing a counter).</p>
+
+      <p>This is exactly why retry logic differs by verb. A client or load balancer can safely
+      retry a <code>GET</code>, <code>PUT</code>, or <code>DELETE</code> after a timeout without
+      knowing whether the first attempt actually landed. Retrying a <code>POST</code> the same
+      blind way is what creates duplicate orders, duplicate charges, duplicate emails.</p>
+
+      <div style="overflow-x:auto;">
+        <table class="cmp-table">
+          <thead><tr><th></th><th><code>GET</code></th><th><code>POST</code></th><th><code>PUT</code></th><th><code>PATCH</code></th><th><code>DELETE</code></th></tr></thead>
+          <tbody>
+            <tr><th>Idempotent by spec?</th><td class="yes">✅ yes</td><td class="no">❌ no</td><td class="yes">✅ yes</td><td>depends</td><td class="yes">✅ yes</td></tr>
+            <tr><th>Repeat 3× → end state</th><td>same</td><td>3 separate resources</td><td>same</td><td>same, only if it sets a value</td><td>same — stays gone</td></tr>
+            <tr><th>Why</th><td>read-only, changes nothing</td><td>means "create a new one" every call</td><td>replaces the whole resource with the same body</td><td>depends entirely on the patch operation</td><td>end state is "gone," first call or third</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">[HttpPut(</span><span class="str">"orders/{id}"</span><span class="kw">)]</span>
+<span class="kw">public</span> <span class="ty">IActionResult</span> UpdateOrder(<span class="ty">int</span> id, <span class="ty">OrderDto</span> body)
+{
+    <span class="kw">var</span> order = _db.Orders.Find(id);
+    order.Quantity = body.Quantity;   <span class="cx-ok">// ✅ always sets the same absolute value</span>
+    _db.SaveChanges();
+    <span class="kw">return</span> Ok(order);
+}</code></pre>
+      </div>
+      <p class="cx-note">Call this twice with the same body and <code>Quantity</code> ends at the same value both times — idempotent by how <code>PUT</code> is written, not by luck.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">[HttpPost(</span><span class="str">"orders"</span><span class="kw">)]</span>
+<span class="kw">public</span> <span class="ty">IActionResult</span> CreateOrder(<span class="ty">OrderDto</span> body)
+{
+    <span class="kw">var</span> order = <span class="kw">new</span> <span class="ty">Order</span>(body);      <span class="cx-err">// ❌ a brand-new row, every call</span>
+    _db.Orders.Add(order);
+    _db.SaveChanges();
+    <span class="kw">return</span> Created($<span class="str">"/orders/{order.Id}"</span>, order);
+}</code></pre>
+      </div>
+      <p class="cx-note">Two identical calls make two different order rows with two different <code>Id</code>s — not idempotent, exactly as the spec expects from <code>POST</code>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">[HttpPost(</span><span class="str">"orders"</span><span class="kw">)]</span>
+<span class="kw">public</span> <span class="ty">IActionResult</span> CreateOrder(<span class="ty">OrderDto</span> body, [FromHeader] <span class="ty">string</span> idempotencyKey)
+{
+    <span class="kw">var</span> existing = _db.Orders.FirstOrDefault(o =&gt; o.IdempotencyKey == idempotencyKey);
+    <span class="kw">if</span> (existing != <span class="kw">null</span>)
+        <span class="kw">return</span> Ok(existing);            <span class="cx-ok">// ✅ same key → return the original, don't duplicate</span>
+
+    <span class="kw">var</span> order = <span class="kw">new</span> <span class="ty">Order</span>(body) { IdempotencyKey = idempotencyKey };
+    _db.Orders.Add(order);
+    _db.SaveChanges();
+    <span class="kw">return</span> Created($<span class="str">"/orders/{order.Id}"</span>, order);
+}</code></pre>
+      </div>
+      <p class="cx-note">The verb is still <code>POST</code> — the endpoint itself becomes idempotent because it checks the key before creating anything.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A mobile client's PUT request times out after the server already processed it.</b> The
+      app's retry logic fires automatically. Because <code>PUT</code> is idempotent, that blind
+      retry is safe — worst case, the same order gets updated to the same values twice. If that
+      had been a plain <code>POST</code> with no idempotency key, the exact same automatic retry
+      could double-order or double-charge the customer.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="1.html">← What Is REST</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="3.html">CORS →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

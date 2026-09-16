@@ -47,9 +47,9 @@ Phase 7.
 
 ## Current build status (one line each — see the track's own spec for detail)
 
-**Core backend path — C#, OOP, and .NET/ASP.NET Core are through all 7 phases; the other four
-tracks are still at Phase 1 (question taxonomy), awaiting the user's review before Phase 2
-(dedupe/gaps) starts on any of them:**
+**Core backend path — C#, OOP, .NET/ASP.NET Core, and Web API are through all 7 phases; the
+other three tracks are still at Phase 1 (question taxonomy), awaiting the user's review before
+Phase 2 (dedupe/gaps) starts on any of them:**
 
 - **C#** — **all 7 phases complete, 49/49 pages written** (2026-09-16):
   [`question-taxonomy.md`](superpowers/specs/csharp/question-taxonomy.md) →
@@ -76,8 +76,14 @@ tracks are still at Phase 1 (question taxonomy), awaiting the user's review befo
   never-written ".NET Framework" slot — different technology, same folder slug (`dotnet/`). Every
   diagram passed the mandatory automated verification script. See
   [`specs/dotnet/overview.md`](superpowers/specs/dotnet/overview.md).
-- **Web API** — [`question-taxonomy.md`](superpowers/specs/webapi/question-taxonomy.md) written.
-  Brand-new track; no site folder exists yet (that's Phase 6/7 work).
+- **Web API** — **all 7 phases complete, 25/25 pages written** (2026-09-16):
+  [`question-taxonomy.md`](superpowers/specs/webapi/question-taxonomy.md) →
+  [`roadmap.md`](superpowers/specs/webapi/roadmap.md) → 25 tiered/prioritized pages, live on the
+  site and on [`webapi/roadmap.html`](../webapi/roadmap.html). Deliberately scoped away from
+  general ASP.NET Core pipeline mechanics (that's the `dotnet/` track's job) — this track covers
+  only what's specific to designing/operating an HTTP API contract. Every diagram passed the
+  mandatory automated verification script. See
+  [`specs/webapi/overview.md`](superpowers/specs/webapi/overview.md).
 - **EF Core** — [`question-taxonomy.md`](superpowers/specs/efcore/question-taxonomy.md) written.
   Brand-new track; no site folder exists yet.
 - **SQL** — [`question-taxonomy.md`](superpowers/specs/sql/question-taxonomy.md) written. No old
