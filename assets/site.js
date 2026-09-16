@@ -31,7 +31,7 @@
   }
 
   function iconFor(item) {
-    var icons = { "C#": "🔷", "OOP's": "🧩", ".NET Framework": "🧱", "SQL": "🗄️", "React": "⚛️", "DSA": "🧠" };
+    var icons = { "C#": "🔷", "OOP": "🧩", ".NET": "🧱", "Web API": "🔌", "EF Core": "🗃️", "SQL": "🗄️", "Azure": "☁️", "AI": "🤖", "React": "⚛️", "DSA": "🧠" };
     return icons[item.track] || "📄";
   }
 

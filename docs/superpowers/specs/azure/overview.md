@@ -5,14 +5,17 @@ for what this file is and the process for keeping it in sync with the live pages
 
 ## Status
 
-**Cleared to start (as of 2026-09-15) — the user is working on Azure Basic in a parallel
-session while C# wraps up.** Roadmap and full topic lists already exist on the live tier-index
-pages below, zero topics written yet. Read in this order before writing the first page:
-[`docs/refreshyourself-overview.md`](../../refreshyourself-overview.md) →
-[`docs/rules/README.md`](../../rules/README.md) (starting with `product-principle.md`) → this
-file's tables below for the exact topic order/hot flags. The C# Basic tier (`csharp/basic/`) is
-the finished, user-approved reference implementation of every rule in `docs/rules/` — when in
-doubt about how a rule applies in practice, open the matching C# page and match its pattern.
+**Superseded by the interview-question-bank rebuild (locked 2026-09-15) — see
+[`question-taxonomy.md`](question-taxonomy.md).** The tables below are the **old, frozen**
+roadmap-only skeleton; they predate the rebuild and are not the source of truth for what gets
+built next. Read `question-taxonomy.md` (Phase 1 of the 7-phase pipeline, see
+[`specs/README.md`](../README.md)) before doing any further Azure roadmap work — it
+deliberately drops some of the tables' more service-encyclopedic Basic-tier entries in favor of
+the user's simplified, architecture/scenario-first framing. The C# Basic tier (`csharp/basic/`)
+remains the finished, user-approved reference implementation of every visual/template rule in
+`docs/rules/` — when in doubt how a *page* should look once Azure reaches Phase 7, match that
+pattern; it says nothing about *which* Azure topics to build, which is `question-taxonomy.md`'s
+job now.
 
 ## Basic (14 topics) — roadmap only, 0 written
 

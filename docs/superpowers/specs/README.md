@@ -6,17 +6,53 @@ or OOP's. Following the same format everywhere is the entire point: a session th
 worked on a given track should be able to open its folder and know exactly what's built, what's
 planned, and why, without re-deriving any of it from the live pages.
 
+## The site is mid-rebuild — read this before starting a new track's roadmap
+
+Locked with the user on 2026-09-15: RefreshYourself is moving from a topic-tutorial site to an
+**interview question bank** for 3+ year developers, across a new track pipeline (C# → OOP →
+.NET/ASP.NET Core → Web API → EF Core → SQL → Azure, plus React/DSA/AI unaffected). Every track
+now goes through 7 phases **before** any page gets built:
+
+1. **Question taxonomy** — what could an interviewer ask, grouped by concept, no tier/priority yet
+2. Review — dedupe, identify gaps
+3. Group questions into actual pages
+4. Assign Basic / Intermediate / Advanced — **by interview depth (recall-speed vs. internals/
+   trade-offs/architecture), never by "beginner vs. expert tutorial"**
+5. Assign interview priority — 🔥 Must Know / ⭐ Should Know / 🧠 Deep Dive (independent of tier)
+6. Build the roadmap/index
+7. Build or update the actual topic pages
+
+**[`csharp/question-taxonomy.md`](csharp/question-taxonomy.md) is the Phase-1 reference
+implementation** — its format (concept groups → Core concept/Understanding/Comparison/Pitfall/
+Scenario variants, `[new]`-tagging anything added beyond the original source lists) is the
+template every other track's Phase 1 should follow. C# Basic's existing 14 written pages are
+**frozen** through this rebuild — they get their own deliberate migration pass later, not folded
+into this process. The rest of this file (below) still governs the *eventual* `overview.md` a
+track ends up with once it reaches Phase 6 — just know that for any track still mid-rebuild, a
+`question-taxonomy.md` (or later, a grouped-but-untiered Phase 3 doc) may exist well before its
+`overview.md` looks "final."
+
 ## Existing categories
 
 | Track | Covers |
 |---|---|
-| [csharp/](csharp/overview.md) | The C# language track — Basic (14/14 written), Intermediate (14, roadmap only), Advanced (12, roadmap only). |
-| [azure/](azure/overview.md) | The Azure track — Basic/Intermediate/Advanced, all roadmap-only (0 written), sourced from `Azure-Interview-Topics.md`. |
-| [ai/](ai/overview.md) | The AI/GenAI track — Basic (16)/Intermediate (18)/Advanced (14), all roadmap-only (0 written), sourced from `AI-Interview-Topics.md`. |
+| [csharp/](csharp/overview.md) | **Phases 1–6 complete** — [question-taxonomy.md](csharp/question-taxonomy.md) → [roadmap.md](csharp/roadmap.md), 49 pages tiered+prioritized. Basic 14/14 written+frozen; 35 more planned, Phase 7 not started. |
+| [oops/](oops/question-taxonomy.md) | OOP — no old roadmap existed. [question-taxonomy.md](oops/question-taxonomy.md) (Phase 1, awaiting review) is the only doc so far. |
+| [dotnet/](dotnet/question-taxonomy.md) | .NET / ASP.NET Core (incl. MVC as a grouped subsection) — rescoped from the old, never-written ".NET Framework" slot. [question-taxonomy.md](dotnet/question-taxonomy.md) (Phase 1, awaiting review) is the only doc so far. |
+| [webapi/](webapi/question-taxonomy.md) | Web API — brand-new track, no site folder yet (Phase 6/7 work). [question-taxonomy.md](webapi/question-taxonomy.md) (Phase 1, awaiting review) is the only doc so far. |
+| [efcore/](efcore/question-taxonomy.md) | EF Core — brand-new track, no site folder yet (Phase 6/7 work). [question-taxonomy.md](efcore/question-taxonomy.md) (Phase 1, awaiting review) is the only doc so far. |
+| [sql/](sql/question-taxonomy.md) | SQL — no old roadmap existed. [question-taxonomy.md](sql/question-taxonomy.md) (Phase 1, awaiting review) is the only doc so far. |
+| [azure/](azure/overview.md) | Old three-tier roadmap (0 written, frozen) superseded by the simplified, scenario-first [question-taxonomy.md](azure/question-taxonomy.md) (Phase 1, awaiting review). |
+| [ai/](ai/overview.md) | The AI/GenAI track — Basic (16)/Intermediate (18)/Advanced (14), all roadmap-only (0 written), sourced from `AI-Interview-Topics.md`. **Not part of the interview-question-bank rebuild** — untouched, along with React and DSA. |
 
 Add a row here whenever a new track's roadmap is first planned — even before any page in it is
 written. This table is the map — a session should be able to tell from this file alone whether a
 track already has a spec before starting one.
+
+**While a `question-taxonomy.md` is still under review (Phase 1–2), edit it directly in place —
+don't track additions/removals separately.** If a topic gets added, cut, or reworded during
+review, that change overwrites the file itself immediately; the taxonomy file is the current
+draft, not a frozen snapshot, until the user approves it and Phase 3 begins.
 
 ## Folder and file convention
 
