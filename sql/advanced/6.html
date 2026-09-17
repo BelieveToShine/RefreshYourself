@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How the Optimizer Picks an Index — SQL Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">How the Optimizer Picks an Index</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 SQL · Advanced · Deep Dive</div>
+    <h1>How the optimizer <span class="hl hl-blue">picks</span> an index — and when it
+    <span class="hl hl-hot">decides not to</span></h1>
+    <p class="interview-q">How does the query optimizer decide which index to use, or decide not to use one at all?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>A common real bug report: "I added an index and the query still isn't using it" —
+        often the optimizer correctly deciding a scan is cheaper, not a broken index.</li>
+        <li>Useful the moment you're staring at an execution plan wondering why an index you
+        know exists never shows up in it.</li>
+        <li>A strong follow-up question, because it separates "knows indexes exist" from
+        "understands the optimizer actually reasons about cost."</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Optimizer = <b>"picks whichever plan it estimates does the least total work — not whichever plan has an index."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> a flag that's <b><code>true</code></b> 90% of the time → index skipped, plain scan wins.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shQ1" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arQ1" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">PICKS BY ESTIMATED COST, NOT "HAS AN INDEX?"</text>
+
+      <g filter="url(#shQ1)"><rect x="230" y="34" width="180" height="48" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="54" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🔎 Query</text>
+      <text x="320" y="70" text-anchor="middle" font-size="10.5" fill="#5b6472">e.g. WHERE IsActive = 1</text>
+
+      <path d="M320,82 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arQ1)"/>
+
+      <g filter="url(#shQ1)"><rect x="180" y="100" width="280" height="56" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="120" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">⚖️ Optimizer</text>
+      <text x="320" y="136" text-anchor="middle" font-size="10.5" fill="#5b6472">checks stats: row counts, histograms</text>
+
+      <text x="345" y="174" font-size="9.5" fill="#64748b">compares cost →</text>
+
+      <path d="M320,156 V182 H155 V206" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arQ1)"/>
+      <path d="M320,156 V182 H485 V206" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arQ1)"/>
+
+      <circle r="4" fill="#16a34a"><animateMotion dur="2.2s" repeatCount="indefinite" path="M320,156 V182 H485 V206"/></circle>
+
+      <g filter="url(#shQ1)"><rect x="50" y="206" width="210" height="54" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="5 4"/></g>
+      <text x="155" y="226" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🎯 Index Seek</text>
+      <text x="155" y="242" text-anchor="middle" font-size="10.5" fill="#5b6472">cost: 88 — not chosen</text>
+
+      <g filter="url(#shQ1)"><rect x="380" y="206" width="210" height="54" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/></g>
+      <text x="485" y="226" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">📄 Table Scan</text>
+      <text x="485" y="242" text-anchor="middle" font-size="10.5" fill="#5b6472">cost: 42 — ✅ chosen</text>
+    </svg>
+    <figcaption>Same query, two candidate plans — the optimizer always takes the lower estimated
+    cost. A more selective column could just as easily flip which side wins.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>An index existing doesn't mean it gets used.</b> The optimizer can
+    deliberately skip it if it estimates a full scan will be cheaper — common on a
+    low-selectivity column, where most rows match and the extra hops through the index end up
+    costing more than just scanning straight through the table.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why would the optimizer ignore an index on a low-selectivity column,
+    like a boolean <code>IsActive</code> flag?"</b> Because if most rows match (say 90% are
+    <code>IsActive = true</code>), using the index would mean almost as many row lookups as the
+    table has rows anyway, plus the added overhead of each index hop — a plain scan ends up
+    being the cheaper estimated plan.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"The optimizer always picks whichever plan it estimates does the
+    least total work, using table and column statistics to guess how many rows each candidate
+    plan would touch. An index sitting unused isn't automatically a bug — it can be the
+    optimizer correctly deciding a scan is cheaper for that specific query."</p>
+    <ul>
+      <li>Decision is by → <span class="hl hl-blue">estimated cost</span>, using row-count and value-distribution statistics.</li>
+      <li>Not "index exists → use it" → it's <span class="hl hl-basic">whichever plan does less total work</span>.</li>
+      <li>Low-selectivity column (most rows match) → <span class="hl hl-hot">index often skipped</span>, plain scan wins instead.</li>
+      <li>An unused index → not automatically a bug → <span class="hl hl-adv">can be the correct decision</span>.</li>
+      <li>Stale or missing statistics → <span class="hl hl-inter">bad cost estimates</span>, so the "cheapest" guess can turn out wrong.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>The optimizer is <span class="hl hl-blue">cost-based</span>: for a given query it works
+      out several candidate plans, and for each one estimates how many rows and pages it would
+      have to touch. Those estimates come from statistics the database keeps on each
+      table/column — row counts and a histogram-like summary of how values are distributed. It
+      then picks whichever candidate plan has the lowest total estimated cost, index or not.</p>
+
+      <p>An index seek isn't free even when it matches the filter — each match still needs a
+      lookup step to fetch the actual row. On a <span class="hl hl-hot">low-selectivity
+      column</span> (a large fraction of rows match, like a flag that's true 90% of the time),
+      that adds up to nearly as many lookups as the table has rows, on top of the extra hop
+      through the index itself. A single pass straight through the table ends up estimated as
+      less total work, so the optimizer takes that instead.</p>
+
+      <p>This whole decision only holds up if the statistics themselves are reasonably current.
+      Statistics drift out of date as a table's data changes, and stale row-count or
+      distribution numbers can make the optimizer's "cheapest" guess wrong even though its
+      reasoning process was correct.</p>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>If you only need <b>milk</b>, checking the store directory for "aisle 3" is a quick,
+      targeted shortcut — worth the extra step. But if you're already grabbing nearly everything
+      in the store, checking the directory for almost every single item on your list isn't
+      actually faster than just walking straight through every aisle once. That's the same
+      trade-off the optimizer is weighing when it chooses between an index and a scan.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="5.html">← Locking</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Advanced</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
