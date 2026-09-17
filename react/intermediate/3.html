@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>useRef & Ref Callbacks — React Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="react/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#cffafe;--crumb-ink:#0891b2;">⚛️ React</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">useRef &amp; Ref Callbacks</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ React · Intermediate · Should Know</div>
+    <h1><code>useRef</code> — a box that <span class="hl hl-inter">survives renders</span> without asking for one</h1>
+    <p class="interview-q">"What is <code>useRef</code>, and why doesn't changing <code>ref.current</code> trigger a re-render?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Interviewers use this to check you know which values live inside React's render cycle and which live outside it — not just "useRef holds a value."</li>
+        <li>Comes up any time you need to touch the DOM directly (focus, scroll, measure) or keep something around — a timer id, a previous value — without causing extra renders.</li>
+        <li>A common opener right before performance questions like <code>useMemo</code>/<code>useCallback</code>, since it sets up "not everything that changes needs to trigger a render."</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>ref.current</code> mutates <span class="rarrow">→</span> <b>invisible</b> to React, no re-render</p>
+      <p class="rrow"><code>useState</code> setter called <span class="rarrow">→</span> <b>triggers</b> one, every time</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> a <b><code>ref</code></b> is a box React doesn't watch; <b><code>state</code></b> is a box React does.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 310" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shR3" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arR3" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arR3Rose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">DOES CHANGING THE VALUE MAKE REACT RE-RENDER?</text>
+
+      <path d="M320,34 V256" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <g filter="url(#shR3)"><rect x="40" y="38" width="240" height="36" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="60" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">useState(0)</text>
+      <g filter="url(#shR3)"><rect x="360" y="38" width="240" height="36" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="60" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">useRef(0)</text>
+
+      <path d="M160,74 V98" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR3)"/>
+      <path d="M480,74 V98" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR3)"/>
+
+      <g filter="url(#shR3)"><rect x="40" y="98" width="240" height="44" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="160" y="118" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">setCount(1)</text>
+      <text x="160" y="134" text-anchor="middle" font-size="10.5" fill="#5b6472">calls the setter</text>
+
+      <g filter="url(#shR3)"><rect x="360" y="98" width="240" height="44" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="480" y="118" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">ref.current = 1</text>
+      <text x="480" y="134" text-anchor="middle" font-size="10.5" fill="#5b6472">direct mutation</text>
+
+      <path d="M160,142 V150" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M480,142 V150" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+
+      <g filter="url(#shR3)"><rect x="70" y="150" width="180" height="28" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/></g>
+      <text x="160" y="168" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">triggers re-render</text>
+
+      <g filter="url(#shR3)"><rect x="390" y="150" width="180" height="34" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/></g>
+      <text x="480" y="163" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">no re-render</text>
+      <text x="480" y="177" text-anchor="middle" font-size="9.5" fill="#991b1b">invisible to React</text>
+
+      <path d="M160,178 V208" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR3)"/>
+      <path d="M480,184 V208" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arR3Rose)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shR3)"><rect x="40" y="208" width="240" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="228" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ Re-render 🔁</text>
+      <text x="160" y="244" text-anchor="middle" font-size="10.5" fill="#5b6472">component runs again</text>
+
+      <g filter="url(#shR3)"><rect x="360" y="208" width="240" height="48" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="480" y="228" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">❌ No re-render</text>
+      <text x="480" y="244" text-anchor="middle" font-size="10.5" fill="#5b6472">React never finds out</text>
+
+      <text x="320" y="292" text-anchor="middle" font-size="11" fill="#5b6472">useState's setter is tracked by React; a ref's .current is a plain mutable box React never watches</text>
+    </svg>
+    <figcaption>Same idea — "change a value" — but only one side is wired up to make React re-render.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>useRef</code> and <code>useState</code> are not two interchangeable ways to store a value across renders.</b> Mutating <code>ref.current</code> never triggers a re-render — it's a mutable box entirely outside React's render cycle — while calling <code>useState</code>'s setter always does; store a value that needs to visibly appear on screen in a ref, and the UI silently never updates when it changes.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"When does the ref-callback FUNCTION form matter over a plain <code>useRef</code> object?"</b> When you need to run logic exactly when a specific DOM node mounts or unmounts — e.g. measuring it the instant it appears — rather than just holding a reference to it. React 19 also lets that callback return its own cleanup function, called on that node's unmount, mirroring <code>useEffect</code>'s cleanup.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>useRef</code> returns a mutable object whose <code>.current</code> property persists across renders without ever triggering one — it lives outside React's render-tracking entirely, by design. <code>useState</code>'s setter, by contrast, always triggers a re-render."</p>
+    <ul>
+      <li><code>useRef</code> <span class="hl hl-inter">→ persists, invisible to React</span> — mutating <code>.current</code> never re-renders.</li>
+      <li><code>useState</code> <span class="hl hl-blue">→ persists, tracked by React</span> — calling the setter always re-renders.</li>
+      <li>Good ref uses <span class="hl hl-basic">→ DOM access, previous values, timer ids</span> — anything the screen doesn't need to reflect.</li>
+      <li>Ref callback function <span class="hl hl-teal">→ runs on mount/unmount</span> — React 19 lets it return its own cleanup, like <code>useEffect</code>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-inter">useRef(initialValue)</span> hands back one plain object with a
+      single <code>current</code> property set to that initial value, and React keeps handing
+      back that exact same object on every render of that component instance. Nothing about
+      assigning
+      <code>ref.current = something</code> ever tells React a render is needed — React only
+      schedules a render in response to a state update (a <code>useState</code> setter, a
+      dispatch) or a parent re-rendering it, never because some object it once handed out got
+      mutated on the side.</p>
+
+      <p><span class="hl hl-blue">useState</span>'s setter is the opposite case on purpose: calling
+      it is exactly the signal React is listening for, so the component function runs again and
+      the new value shows up on screen. That's the whole distinction — both hooks give you a value
+      that survives across renders, only one of them is wired into React's own render-scheduling.</p>
+
+      <p>The ref-callback function is a separate but related tool: instead of a value that
+      survives across renders, it's a function React calls with the actual DOM node the moment
+      that node mounts, and again (in React 19, with whatever that function returned) the moment
+      it unmounts — useful when the thing you need to do is tied to *when* the node appears or
+      disappears, not just holding onto it.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>useRef</code></th><th><code>useState</code></th></tr></thead>
+        <tbody>
+          <tr><th>Triggers a re-render on change?</th><td class="no">❌ never</td><td>✅ every time</td></tr>
+          <tr><th>What it holds</th><td>a plain mutable <code>.current</code> box</td><td>a value React tracks itself</td></tr>
+          <tr><th>Typical use</th><td>DOM access, previous value, timer id</td><td>anything the UI must visibly reflect</td></tr>
+          <tr><th>Risk if misused</th><td class="no">UI silently never updates</td><td>extra renders if overused</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JSX</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">const</span> inputRef = useRef(<span class="kw">null</span>);   <span class="cx-cmt">// same object every render</span>
+
+<span class="cx-cmt">// &lt;input ref={inputRef} /&gt;</span>
+
+inputRef.current.focus();   <span class="cx-ok">// ✅ direct DOM access, no re-render triggered</span></code></pre>
+      </div>
+      <p class="cx-note">Focusing an input is a side effect on the DOM node itself — the screen doesn't need to "know" about it, so a ref is exactly right here.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JSX</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>&lt;div ref={node =&gt; {
+  <span class="kw">if</span> (node) {
+    <span class="cx-cmt">// measure node the instant it mounts</span>
+  }
+  <span class="kw">return</span> () =&gt; {
+    <span class="cx-cmt">// cleanup on unmount — React 19 only</span>
+  };
+}} /&gt;</code></pre>
+      </div>
+      <p class="cx-note">The <b>ref-callback function</b> form runs exactly on mount/unmount — the returned cleanup is new in React 19, the same shape as <code>useEffect</code>'s cleanup.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A sticky note on your monitor versus a shared team dashboard.</b> You can scribble a
+      new number on the sticky note (a ref) anytime, and no one else notices or reacts to it. The
+      shared dashboard (state) is different — the moment you update it, everyone watching it sees
+      the change immediately, because updating it is exactly the signal that tells everyone to
+      look again.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="2.html">← Effect Timing Variants &amp; StrictMode</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to React Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="4.html">useMemo, useCallback &amp; React.memo →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · React · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
