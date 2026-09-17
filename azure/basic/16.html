@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>High Availability vs. Disaster Recovery — Azure Basic — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="azure/basic">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0f2fe;--crumb-ink:#0078D4;">☁️ Azure</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">High Availability vs. Disaster Recovery</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Azure · Basic · Must Know</div>
+    <h1><span class="hl hl-blue">HA</span> vs. <span class="hl hl-inter">DR</span> — surviving an instance crash isn't surviving a region crash</h1>
+    <p class="interview-q">"What is high availability, and how is it different from disaster recovery?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Comes up the moment resilience, uptime commitments, or architecture design gets discussed.</li>
+        <li>A very common mix-up — candidates often describe redundant instances as "disaster recovery" when it's actually HA.</li>
+        <li>Usually the opener before deeper questions on RPO/RTO, failover design, or multi-region architecture.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>HA</code> <span class="rarrow">→</span> survive a <b>routine</b> failure, same region</p>
+      <p class="rrow"><code>DR</code> <span class="rarrow">→</span> survive the <b>whole region</b> going down</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>HA</code></b> keeps the lights on. <b><code>DR</code></b> is the plan for when the building itself is gone.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shHD" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arHD" markerWidth="10" markerHeight="10" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <line x1="320" y1="38" x2="320" y2="226" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <!-- LEFT: HA -->
+      <text x="160" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8" letter-spacing="0.2">HA — redundancy within region</text>
+
+      <g filter="url(#shHD)"><rect x="30" y="42" width="260" height="176" rx="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="64" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🌍 One Region</text>
+
+      <rect x="44" y="82" width="68" height="110" rx="10" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.4"/>
+      <text x="78" y="124" text-anchor="middle" font-size="18">🖥️</text>
+      <text x="78" y="162" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">Zone 1</text>
+
+      <rect x="126" y="82" width="68" height="110" rx="10" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.4"/>
+      <text x="160" y="124" text-anchor="middle" font-size="18">🖥️</text>
+      <text x="160" y="162" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">Zone 2</text>
+
+      <rect x="208" y="82" width="68" height="110" rx="10" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.4"/>
+      <text x="242" y="124" text-anchor="middle" font-size="18">🖥️</text>
+      <text x="242" y="162" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">Zone 3</text>
+
+      <!-- RIGHT: DR -->
+      <text x="480" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e" letter-spacing="0.2">DR — failover to another region</text>
+
+      <g filter="url(#shHD)"><rect x="350" y="70" width="90" height="130" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="395" y="98" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🌍 Region A</text>
+      <text x="395" y="120" text-anchor="middle" font-size="10" fill="#5b6472">primary</text>
+
+      <g filter="url(#shHD)"><rect x="520" y="70" width="90" height="130" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="565" y="98" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">🌍 Region B</text>
+      <text x="565" y="120" text-anchor="middle" font-size="10" fill="#5b6472">secondary</text>
+
+      <path d="M440,120 H520" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 5" marker-end="url(#arHD)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-22" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+      <rect x="452" y="90" width="56" height="18" rx="9" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="480" y="103" text-anchor="middle" font-size="9.5" fill="#92400e">failover</text>
+    </svg>
+    <figcaption>HA spreads instances across zones inside one region. DR is a separate, planned failover to a whole other region.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"We run 3 instances, so we have disaster recovery."</b> That's high availability, not DR — all 3 instances sit in the same region, so if the whole region goes down, all 3 go down with it. DR specifically needs a plan involving another region.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's an Availability Zone?"</b> A physically separate location with independent power, cooling, and networking inside the same region — spreading instances across zones is a common HA technique that doesn't require a second region at all.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"High availability survives routine failures within a region, using redundancy across instances and availability zones. Disaster recovery survives losing the whole region, and it's what actually gets measured by RPO and RTO."</p>
+    <ul>
+      <li><span class="hl hl-blue">High availability</span> → redundancy within one region, survives an instance or zone failure.</li>
+      <li><span class="hl hl-inter">Disaster recovery</span> → a plan to fail over to another region entirely, for a region-wide outage.</li>
+      <li><span class="hl hl-hot">RPO / RTO</span> → DR's real measurements: how much data loss is acceptable, and how long recovery is allowed to take.</li>
+      <li><span class="hl hl-basic">Availability Zone</span> → an independent power/cooling/network location inside a region — HA's main tool.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">High availability</span> is a design goal: keep the service answering through the failures that happen routinely — an instance crashing, a rack losing power, a process needing a restart. It's achieved with redundancy, usually multiple instances spread across several Availability Zones inside the same region, so one failure doesn't take the whole service down with it.</p>
+      <p><span class="hl hl-inter">Disaster recovery</span> covers a different scale of problem — not "an instance died" but "the entire region is unreachable." Every zone in that region goes down together, so HA alone can't survive it. DR is the documented (and ideally tested) plan for that case, typically a failover to a separate region, and it's judged by two numbers: <b>RPO</b> (how much data you can afford to lose, measured backward in time from the failure) and <b>RTO</b> (how long you're allowed to take to get the service back up).</p>
+      <table class="cmp-table">
+        <thead><tr><th></th><th>High Availability</th><th>Disaster Recovery</th></tr></thead>
+        <tbody>
+          <tr><th>Protects against</th><td>routine, expected failures (instance, rack)</td><td>a large-scale, unexpected event (region outage)</td></tr>
+          <tr><th>Scope</th><td>within one region</td><td>across two or more regions</td></tr>
+          <tr><th>Main mechanism</th><td>redundant instances across Availability Zones</td><td>failover to a secondary region</td></tr>
+          <tr><th>Measured by</th><td>uptime / SLA</td><td>RPO (data loss) and RTO (recovery time)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>An app runs across 3 Availability Zones for HA day-to-day — that's what keeps it up when a single zone has a bad day. Separately, it has a documented, tested failover runbook to a secondary region as its DR plan, for the day the whole primary region is the problem.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="15.html">← Scaling</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Azure Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="17.html">Azure API Management — What Problem It Solves →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Azure · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
