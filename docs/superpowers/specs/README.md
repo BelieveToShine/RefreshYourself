@@ -36,6 +36,12 @@ unaffected). Every track now goes through 7 phases **before** any page gets buil
    exact script/process to run against every page — not a sample — before handing the batch to
    the user for manual review.
 
+**Whenever reporting any of the above as "committed" or "pushed" in chat, name the exact branch
+and commit hash it landed on** — see [`rules/reporting.md`](../../rules/reporting.md) for the
+incident (an Angular Phase-7 report that said "pushed" without naming the non-`main` branch it
+was pinned to, which an outside reviewer checking `main` reasonably read as the work never having
+happened) that made this mandatory.
+
 **[`csharp/question-taxonomy.md`](csharp/question-taxonomy.md) is the Phase-1 reference
 implementation** — its format (concept groups → Core concept/Understanding/Comparison/Pitfall/
 Scenario variants, `[new]`-tagging anything added beyond the original source lists) is the
