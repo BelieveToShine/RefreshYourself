@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subqueries vs. Joins — SQL Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Subqueries vs. Joins</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 SQL · Intermediate · Must Know</div>
+    <h1>Subqueries vs. Joins — <span class="hl hl-blue">same answer</span>, <span class="hl hl-inter">different plan</span></h1>
+    <p class="interview-q">"What is a subquery, and when would you use one instead of a join?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Checks whether you understand what a subquery actually hands back (a value or a list) versus what a join actually produces (combined columns).</li>
+        <li>Comes up any time you're deciding how to write a filter that depends on data in another table.</li>
+        <li>A very common opener when an interviewer wants to see how you reason about query shape, not just syntax.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Subquery</code> <span class="rarrow">→</span> a <b>value</b> or a yes/no filter check</p>
+      <p class="rrow"><code>Join</code> <span class="rarrow">→</span> <b>columns</b> from both tables, side by side</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> need extra columns in the result → <b><code>join</code></b>. Just need a filter/check → <b><code>subquery</code></b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shSql" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arSql" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">SUBQUERY vs. JOIN — DIFFERENT SHAPES</text>
+
+      <path d="M320,26 V246" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+
+      <text x="160" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.5">SUBQUERY</text>
+      <text x="480" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.5">JOIN</text>
+
+      <g filter="url(#shSql)"><rect x="60" y="52" width="200" height="48" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🔍 Inner query</text>
+      <text x="160" y="90" text-anchor="middle" font-size="10" fill="#5b6472">runs first, on its own</text>
+
+      <path d="M160,100 V120" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSql)"/>
+
+      <g filter="url(#shSql)"><rect x="60" y="120" width="200" height="48" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📋 Value / list</text>
+      <text x="160" y="158" text-anchor="middle" font-size="10" fill="#5b6472">e.g. matching IDs</text>
+
+      <path d="M160,168 V188" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSql)"/>
+
+      <g filter="url(#shSql)"><rect x="60" y="188" width="200" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="208" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🎯 Outer query WHERE</text>
+      <text x="160" y="226" text-anchor="middle" font-size="10" fill="#5b6472">checks against it → rows</text>
+
+      <text x="160" y="262" text-anchor="middle" font-size="11" fill="#5b6472">One value/list checked in a filter</text>
+
+      <g filter="url(#shSql)"><rect x="360" y="52" width="110" height="48" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="415" y="72" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">📇 Customers</text>
+      <text x="415" y="90" text-anchor="middle" font-size="9.5" fill="#5b6472">one row each</text>
+
+      <g filter="url(#shSql)"><rect x="490" y="52" width="110" height="48" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="545" y="72" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🧾 Orders</text>
+      <text x="545" y="90" text-anchor="middle" font-size="9.5" fill="#5b6472">one row each</text>
+
+      <path d="M415,100 V116" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M545,100 V116" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M415,116 H545" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M480,116 V140" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSql)"/>
+
+      <g filter="url(#shSql)"><rect x="380" y="140" width="200" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="164" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🗂️ Joined rows</text>
+      <text x="480" y="182" text-anchor="middle" font-size="10" fill="#5b6472">columns from both tables</text>
+
+      <text x="480" y="262" text-anchor="middle" font-size="11" fill="#5b6472">Table rows combined, side by side</text>
+    </svg>
+    <figcaption>A subquery hands the outer query one value/list to check. A join lines both tables' rows up side by side.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Subqueries are always slower than joins."</b> Not universally true — a well-written correlated subquery (especially an <code>EXISTS</code> check) can perform the same as or comparably to an equivalent join under a modern optimizer; the real deciding factor is what you actually need in the result, not a blanket performance rule.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's a correlated subquery?"</b> A subquery that references a column from the outer query, so it's tied to each outer row — e.g. <code>WHERE EXISTS (SELECT 1 FROM Orders o WHERE o.CustomerId = c.Id)</code> — different from a simple, independent subquery that just runs once on its own.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A subquery is a query nested inside another one — in the <code>WHERE</code>, <code>SELECT</code>, or <code>FROM</code> clause — and I reach for it when I only need a single value or a filter/membership check. I reach for a join when I actually need columns from both tables side by side in the same result row."</p>
+    <ul>
+      <li><code>Subquery</code> <span class="hl hl-blue">→ use for a single value or a filter/membership check</span> against a list.</li>
+      <li><code>Join</code> <span class="hl hl-inter">→ use when you need real columns</span> from both tables in the result.</li>
+      <li>Correlated subquery <span class="hl hl-hot">→ references the outer row</span> — a plain subquery runs once, independently.</li>
+      <li>An <code>EXISTS</code> subquery <span class="hl hl-basic">→ isn't automatically slower</span> than an equivalent join.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <b>subquery</b> is a query nested inside another query — inside its <code>WHERE</code>,
+      <code>SELECT</code>, or <code>FROM</code> clause. It hands the outer query a single value, a
+      list to check membership against, or a yes/no result — nothing more. A <b>join</b> instead
+      combines rows from two tables directly, based on a matching condition, producing one wider
+      result set that carries columns from both sides in the same row.</p>
+
+      <p>The real decision isn't about speed — it's about shape. If the outer query only needs to
+      filter on a condition ("does this customer have a US order?"), a subquery says exactly that,
+      and nothing about the other table's own columns leaks into the result. If the query needs to
+      display or return columns that live in the other table, a subquery can't do that on its own —
+      only a join lines both tables' columns up in the same row.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Subquery</th><th>Join</th></tr></thead>
+        <tbody>
+          <tr><th>What it returns</th><td>a single value, or a list to check against</td><td>combined rows from both tables</td></tr>
+          <tr><th>Reach for it when</th><td>you only need a filter/membership check</td><td>you need columns from both tables in the result</td></tr>
+          <tr><th>Returns columns from the other table?</th><td class="no">❌ no</td><td>✅ yes</td></tr>
+          <tr><th>Can be correlated (reference the outer row)?</th><td>✅ yes — e.g. <code>EXISTS</code></td><td>not applicable — rows are already matched per row</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">SELECT</span> Name
+<span class="kw">FROM</span> Customers
+<span class="kw">WHERE</span> Id <span class="kw">IN</span> (<span class="cx-cmt">-- ✅ subquery: hands back a plain list of IDs</span>
+    <span class="kw">SELECT</span> CustomerId <span class="kw">FROM</span> Orders <span class="kw">WHERE</span> Country = <span class="str">'US'</span>
+);</code></pre>
+      </div>
+      <p class="cx-note">Only needs a filter — the result never touches <code>Orders</code>' own columns.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">SELECT</span> <span class="kw">DISTINCT</span> c.Name
+<span class="kw">FROM</span> Customers c
+<span class="kw">JOIN</span> Orders o <span class="kw">ON</span> o.CustomerId = c.Id
+<span class="kw">WHERE</span> o.Country = <span class="str">'US'</span>;
+<span class="cx-ok">-- ✅ same filtered customers, but this version could also SELECT o.OrderDate, o.Total, …</span>
+<span class="cx-cmt">-- DISTINCT is needed here: one customer can match more than one US order</span></code></pre>
+      </div>
+      <p class="cx-note">This version could also return real <code>Orders</code> columns in the same row — the subquery version above physically can't.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>"Which of my friends live in cities with a population over 1 million?"</b> A subquery
+      approach first builds the list of qualifying cities, then checks each friend's city against
+      that list — a plain yes/no per friend. A join approach lines your friends and the city data
+      up side by side in one combined table, so you could also see each friend's exact city
+      population in the same row, not just a yes/no.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev"></div>
+    <a class="to-index" href="index.html">↑ Back to SQL Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="2.html">CTEs →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

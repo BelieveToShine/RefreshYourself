@@ -349,5 +349,76 @@ window.NAV_INDEX = {
         ]
       }
     ]
+  },
+  "sql/basic": {
+    track: "SQL",
+    trackIcon: "🗃️",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 7,
+        items: [
+          { n: 1, file: "1.html", short: "PK vs FK", title: "Primary Key vs. Foreign Key", tail: "what each one actually enforces.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "WHERE vs HAVING", title: "WHERE vs. HAVING", tail: "why one can filter aggregates and the other can't.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "INNER vs LEFT JOIN", title: "INNER JOIN vs. LEFT JOIN", tail: "what changes about unmatched rows.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "GROUP BY", title: "GROUP BY", tail: "what it actually does to the rows returned.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "NULL Comparisons", title: "NULL in Comparisons", tail: "why = NULL never matches.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Aggregate Functions", title: "Aggregate Functions", tail: "and how each one treats NULL.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "ACID", title: "ACID", tail: "the four promises a transaction makes.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "ORDER BY", title: "ORDER BY", tail: "the one guarantee a plain SELECT doesn't give.", priority: "⭐" },
+          { n: 9, file: "9.html", short: "DISTINCT", title: "DISTINCT", tail: "what it actually costs on a large result set.", priority: "⭐" },
+          { n: 10, file: "10.html", short: "Stored Procedures", title: "Stored Procedures", tail: "and a real reason to reach for one.", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11–11",
+        items: [
+          { n: 11, file: "11.html", short: "Views", title: "Views", tail: "how it differs from just saving a query as text.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "sql/intermediate": {
+    track: "SQL",
+    trackIcon: "🗃️",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 5,
+        items: [
+          { n: 1, file: "1.html", short: "Subqueries vs Joins", title: "Subqueries vs. Joins", tail: "and when to reach for one instead of a join.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "CTEs", title: "CTEs (Common Table Expressions)", tail: "why use one over a subquery.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Window Functions", title: "Window Functions", tail: "seeing other rows without collapsing the result.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Clustered vs Non-Clustered", title: "Clustered vs. Non-Clustered Index", tail: "what's physically different.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Normalization", title: "Normalization vs. Denormalization", tail: "the actual trade-off.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Ranking Functions", title: "ROW_NUMBER() vs. RANK() vs. DENSE_RANK()", tail: "how ties are handled.", priority: "⭐" },
+          { n: 7, file: "7.html", short: "Covering Index", title: "Covering Index", tail: "what makes an index \"covering\".", priority: "⭐" },
+          { n: 8, file: "8.html", short: "Composite Index", title: "Composite Index", tail: "and why column order matters.", priority: "⭐" },
+          { n: 9, file: "9.html", short: "Pagination & OFFSET", title: "Pagination Strategies", tail: "and what breaks with a large OFFSET.", priority: "⭐" },
+          { n: 10, file: "10.html", short: "SARGable Queries", title: "SARGable Queries", tail: "what makes a predicate able to use an index.", priority: "🧠" }
+        ]
+      }
+    ]
+  },
+  "sql/advanced": {
+    track: "SQL",
+    trackIcon: "🗃️",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1–6",
+        hot: 4,
+        items: [
+          { n: 1, file: "1.html", short: "Isolation Levels", title: "Isolation Levels", tail: "dirty read, non-repeatable read, phantom read.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Deadlock vs Blocking", title: "Deadlock vs. Blocking", tail: "the actual difference.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Execution Plans", title: "Execution Plans", tail: "what reading one actually tells you.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Perf Regression", title: "Performance Degraded Over Time", tail: "how you'd investigate.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Locking", title: "Locking", tail: "mechanically, and how it leads to blocking.", priority: "⭐" },
+          { n: 6, file: "6.html", short: "Optimizer & Indexes", title: "How the Optimizer Picks an Index", tail: "or decides not to.", priority: "🧠" }
+        ]
+      }
+    ]
   }
 };

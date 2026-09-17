@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WHERE vs. HAVING — SQL Basic — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/basic">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">WHERE vs. HAVING</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 SQL · Basic · Must Know</div>
+    <h1><span class="hl hl-blue">WHERE</span> vs. <span class="hl hl-inter">HAVING</span> — know which one runs before grouping</h1>
+    <p class="interview-q">"What's the difference between <code>WHERE</code> and <code>HAVING</code>, and why can't you filter on an aggregate in <code>WHERE</code>?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>One of the first "gotcha" bugs a lot of people hit — a query fails with an error about <code>COUNT(*)</code> in a <code>WHERE</code> clause and it's not obvious why.</li>
+        <li>Comes up constantly in real reporting queries — anything that counts, sums, or averages per group needs this to filter correctly.</li>
+        <li>A near-guaranteed interview question the moment <code>GROUP BY</code> comes up at all.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>WHERE</code> <span class="rarrow">→</span> filters <b>rows</b>, before grouping</p>
+      <p class="rrow"><code>HAVING</code> <span class="rarrow">→</span> filters <b>groups</b>, after aggregation</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>WHERE</code></b> runs first. <b><code>HAVING</code></b> only sees what's left after <code>GROUP BY</code>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shS2" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arS2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arS2Amber" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arS2Rose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.3">ONE PIPELINE: ROWS → WHERE → GROUP BY → HAVING → RESULT</text>
+
+      <path d="M110,100 H140" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arS2)"/>
+      <path d="M240,100 H270" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arS2)"/>
+      <path d="M370,100 H400" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arS2Amber)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+      <path d="M500,100 H530" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arS2)"/>
+
+      <g filter="url(#shS2)"><rect x="10" y="68" width="100" height="64" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="60" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">📄 Raw Rows</text>
+      <text x="60" y="116" text-anchor="middle" font-size="10.5" fill="#5b6472">every row</text>
+
+      <g filter="url(#shS2)"><rect x="140" y="68" width="100" height="64" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="190" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🚪 WHERE</text>
+      <text x="190" y="116" text-anchor="middle" font-size="10.5" fill="#5b6472">filters rows</text>
+
+      <g filter="url(#shS2)"><rect x="270" y="68" width="100" height="64" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🪣 GROUP BY</text>
+      <text x="320" y="116" text-anchor="middle" font-size="10.5" fill="#5b6472">rows → groups</text>
+
+      <g filter="url(#shS2)"><rect x="400" y="68" width="100" height="64" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="450" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🚪 HAVING</text>
+      <text x="450" y="116" text-anchor="middle" font-size="10.5" fill="#5b6472">filters groups</text>
+
+      <g filter="url(#shS2)"><rect x="530" y="68" width="100" height="64" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="580" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ Result</text>
+      <text x="580" y="116" text-anchor="middle" font-size="10.5" fill="#5b6472">final rows</text>
+
+      <path d="M190,132 V162" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arS2Rose)"/>
+      <rect x="125" y="162" width="130" height="26" rx="13" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+      <text x="190" y="179" text-anchor="middle" font-size="10.5" fill="#991b1b">✕ rows dropped</text>
+
+      <path d="M450,132 V162" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arS2Rose)"/>
+      <rect x="380" y="162" width="140" height="26" rx="13" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+      <text x="450" y="179" text-anchor="middle" font-size="10.5" fill="#991b1b">✕ groups dropped</text>
+
+      <text x="320" y="217" text-anchor="middle" font-size="11" fill="#5b6472">WHERE filters raw rows first. HAVING filters the groups after GROUP BY runs.</text>
+    </svg>
+    <figcaption>Same job, different moment — WHERE filters before grouping, HAVING filters after.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"HAVING is just a slower WHERE."</b> They're not swappable — WHERE can't reference an aggregate result because aggregates don't exist yet at that point in the query; using HAVING for a plain, non-aggregate row filter technically runs, but it wastes effort grouping data that should have already been filtered out by WHERE first.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Can you use HAVING without GROUP BY?"</b> Yes — HAVING can filter on an aggregate over the whole table treated as one implicit group, e.g. <code>SELECT COUNT(*) FROM Orders HAVING COUNT(*) &gt; 100</code>.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>WHERE</code> filters individual rows before any grouping or aggregation happens. <code>HAVING</code> filters the groups after <code>GROUP BY</code> has run, which is why it's the only place you can put a condition on an aggregate like <code>COUNT(*)</code> — that value doesn't exist yet when <code>WHERE</code> runs."</p>
+    <ul>
+      <li><span class="hl hl-blue">WHERE</span> → use it for row-level conditions on real columns, and use it first — filtering early means less data to group.</li>
+      <li><span class="hl hl-inter">HAVING</span> → use it only when the condition is on an aggregate result, like <code>COUNT(*)</code> or <code>SUM(...)</code>.</li>
+      <li><span class="hl hl-hot">Can't swap them</span> → <code>WHERE COUNT(*) &gt; 5</code> fails because the count isn't computed yet at that stage.</li>
+      <li><span class="hl hl-basic">Works without GROUP BY too</span> → HAVING can filter an aggregate over the whole table as one implicit group.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">WHERE</span> filters individual rows <b>before</b> any grouping or aggregation happens — it only ever sees the raw columns of a single row at a time. By the time <span class="hl hl-inter">HAVING</span> runs, <code>GROUP BY</code> has already collapsed the matching rows into groups and computed any aggregate functions, so HAVING is filtering on groups and their aggregate results, not individual rows.</p>
+
+      <p>This ordering is exactly why an aggregate can't appear in <code>WHERE</code>: a value like <code>COUNT(*)</code> doesn't exist until grouping has actually happened, and <code>WHERE</code> runs before that point in the query. <code>HAVING</code> exists specifically to give aggregate results somewhere to be filtered.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>WHERE</th><th>HAVING</th></tr></thead>
+        <tbody>
+          <tr><th>Filters</th><td>individual rows</td><td>groups</td></tr>
+          <tr><th>Runs</th><td>before grouping/aggregation</td><td>after grouping/aggregation</td></tr>
+          <tr><th>Can filter on an aggregate?</th><td>❌ no</td><td>✅ yes</td></tr>
+          <tr><th>Needs GROUP BY?</th><td>no — works on any query</td><td>no — but usually paired with one</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">SELECT</span> CustomerId, <span class="kw">COUNT</span>(*) <span class="kw">AS</span> OrderCount
+<span class="kw">FROM</span> Orders
+<span class="kw">WHERE</span> Status = <span class="str">'Completed'</span>          <span class="cx-cmt">-- row filter: only completed orders count at all</span>
+<span class="kw">GROUP BY</span> CustomerId                <span class="cx-cmt">-- collapse the remaining rows into one group per customer</span>
+<span class="kw">HAVING</span> <span class="kw">COUNT</span>(*) &gt; <span class="num">5</span>              <span class="cx-cmt">-- group filter: only customers with more than 5 orders</span></code></pre>
+      </div>
+      <p class="cx-note"><code>WHERE</code> narrows the rows first, <code>GROUP BY</code> collapses what's left, then <code>HAVING</code> narrows the resulting groups.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">SELECT</span> CustomerId, <span class="kw">COUNT</span>(*)
+<span class="kw">FROM</span> Orders
+<span class="kw">WHERE</span> <span class="kw">COUNT</span>(*) &gt; <span class="num">5</span>                <span class="cx-err">-- ❌ error: COUNT(*) doesn't exist yet, WHERE runs before grouping</span>
+<span class="kw">GROUP BY</span> CustomerId
+
+<span class="cx-cmt">-- fixed: move the aggregate condition into HAVING, after GROUP BY</span>
+<span class="kw">SELECT</span> CustomerId, <span class="kw">COUNT</span>(*)
+<span class="kw">FROM</span> Orders
+<span class="kw">GROUP BY</span> CustomerId
+<span class="kw">HAVING</span> <span class="kw">COUNT</span>(*) &gt; <span class="num">5</span>               <span class="cx-ok">-- ✅ works: COUNT(*) is computed by the time HAVING runs</span></code></pre>
+      </div>
+      <p class="cx-note">Same intent, different clause — the aggregate condition only becomes legal once it moves to <code>HAVING</code>.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Sorting mail before delivery.</b> <code>WHERE</code> is tossing out mail with the wrong zip code before you even start sorting anything into bins. <code>HAVING</code> is what happens after — once the remaining mail is grouped into bins by street, you throw out any bin that ended up with fewer than 3 letters in it. You can't check "fewer than 3 letters" before the bins exist.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="1.html">← Primary Key vs. Foreign Key</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="3.html">INNER JOIN vs. LEFT JOIN →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
