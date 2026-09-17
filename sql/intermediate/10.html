@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SARGable Queries — SQL Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">SARGable Queries</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 SQL · Intermediate · Deep Dive</div>
+    <h1>SARGable — the difference between <span class="hl hl-basic">using an index</span> and <span class="hl hl-hot">ignoring it</span></h1>
+    <p class="interview-q">What makes a query SARGable, and what breaks it?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Wrapping an indexed column in a function or an implicit conversion is one of the most
+        common, easy-to-miss performance killers in real codebases — it compiles fine and looks
+        harmless in a code review.</li>
+        <li>Interviewers use it to check whether you understand indexing operationally, not just
+        "add an index and queries get faster."</li>
+        <li>A frequent follow-up right after any indexing question, and a common root cause behind
+        "this query used to be fast" investigations.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">SARGable = <b>"the engine can seek straight to matching rows using the index, without touching every row."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> wrap the column in a function, and the index usually can't help anymore.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shSg" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arSgGreen" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arSgRed" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="160" y="24" text-anchor="middle" font-size="13" font-weight="700" fill="#166534" letter-spacing="0.3">✅ SARGABLE</text>
+      <text x="480" y="24" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b" letter-spacing="0.3">❌ NON-SARGABLE</text>
+
+      <line x1="320" y1="38" x2="320" y2="196" stroke="#cbd5e1" stroke-width="1.5"/>
+
+      <g filter="url(#shSg)"><rect x="40" y="46" width="240" height="54" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="65" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🔍 The query</text>
+      <text x="160" y="86" text-anchor="middle" font-size="12" font-family="Fira Code, Consolas, monospace" fill="#1d4ed8">OrderDate &gt;= '2024-01-01'</text>
+
+      <path d="M160,100 V130" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arSgGreen)"/>
+
+      <g filter="url(#shSg)"><rect x="30" y="130" width="260" height="60" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="150" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🎯 Index seek</text>
+      <text x="160" y="170" text-anchor="middle" font-size="10.5" fill="#5b6472">jumps straight to the matching range</text>
+
+      <g filter="url(#shSg)"><rect x="360" y="46" width="240" height="54" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="65" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">⚠️ The query</text>
+      <text x="480" y="86" text-anchor="middle" font-size="12" font-family="Fira Code, Consolas, monospace" fill="#92400e">YEAR(OrderDate) = 2024</text>
+
+      <path d="M480,100 V130" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#arSgRed)">
+        <animate attributeName="stroke-dashoffset" values="11;0" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shSg)"><rect x="350" y="130" width="260" height="60" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="480" y="150" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐛 Full table scan</text>
+      <text x="480" y="170" text-anchor="middle" font-size="10.5" fill="#5b6472">every row checked with YEAR()</text>
+    </svg>
+    <figcaption>Same logical result on both sides — the left query lets the index seek straight to the range; the right query wraps the column, so the engine checks every row instead.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Wrapping a column in a function only slows things down a little.</b>
+    Wrapping an indexed column in a function (or an implicit type conversion) commonly defeats the
+    index entirely for that predicate, forcing a full scan of every row in the table — it's not a
+    minor slowdown, it can be a fundamentally different, much slower plan.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How would you fix <code>WHERE YEAR(OrderDate) = 2024</code> to stay
+    SARGable?"</b> Rewrite it as a range — <code>WHERE OrderDate &gt;= '2024-01-01' AND OrderDate
+    &lt; '2025-01-01'</code> — same logical result, but the column itself is left untouched, so the
+    index can still be used to seek directly to that range.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"SARGable means the predicate is written so the engine can seek directly
+    to matching rows using the index. Wrapping the indexed column in a function or letting an
+    implicit type conversion sneak in commonly defeats that seek entirely, forcing a full scan
+    instead — the fix is almost always rewriting it as a range on the bare column."</p>
+    <ul>
+      <li>SARGable → <span class="hl hl-basic">engine seeks directly</span> to matching rows via the index.</li>
+      <li>Wrapping the column in a function → <span class="hl hl-hot">defeats the index for that predicate</span>, not just a minor slowdown.</li>
+      <li><code>WHERE YEAR(OrderDate) = 2024</code> → <span class="hl hl-hot">not SARGable</span> — the column itself is wrapped.</li>
+      <li>Rewrite as a range (<code>&gt;=</code> ... <code>AND</code> ... <code>&lt;</code>) → <span class="hl hl-basic">SARGable again</span>, same result, column left untouched.</li>
+      <li>Same rule applies to → <span class="hl hl-inter">implicit type conversions</span>, not just explicit functions.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>"SARGable" stands for <b>Search ARGument-able</b> — a predicate is SARGable when it's
+      written so the engine can <span class="hl hl-basic">seek</span> directly to the matching rows
+      using an index, instead of pulling every row and computing something on each one just to
+      check the condition. It's the same index structure covered on the Clustered vs. Non-Clustered
+      Index page — SARGable is really asking whether a given predicate can actually use that
+      structure.</p>
+
+      <p>Wrapping the indexed column itself in a function (<code>YEAR()</code>, <code>UPPER()</code>,
+      a calculation) or letting an <span class="hl hl-hot">implicit type conversion</span> sneak in
+      commonly defeats the index for that predicate entirely. This isn't a minor slowdown — the
+      engine can no longer look up "where does this column's value fall in the index," so it can end
+      up with a fundamentally different plan for the whole query, typically scanning every row
+      instead of seeking straight to a range.</p>
+
+      <p>The fix is almost always the same shape: leave the column bare and move the transformation
+      to the other side of the comparison. <code>WHERE YEAR(OrderDate) = 2024</code> becomes
+      <code>WHERE OrderDate &gt;= '2024-01-01' AND OrderDate &lt; '2025-01-01'</code> — the same rows
+      come back, but now the column itself is untouched, so the index can seek straight to that
+      range.</p>
+
+      <div style="overflow-x:auto;">
+        <table class="cmp-table">
+          <thead><tr><th></th><th>SARGable</th><th>Non-SARGable</th></tr></thead>
+          <tbody>
+            <tr><th>What the engine does</th><td>seeks directly to matching rows via the index</td><td>scans rows, computing the expression on each one</td></tr>
+            <tr><th>Typical cause</th><td>column left bare, compared with a range/equality</td><td>column wrapped in a function or an implicit conversion</td></tr>
+            <tr><th>Example</th><td><code>OrderDate &gt;= '2024-01-01'</code></td><td><code>YEAR(OrderDate) = 2024</code></td></tr>
+            <tr><th>Fix needed</th><td>none — already index-friendly</td><td>rewrite as an equivalent range on the bare column</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">SELECT</span> * <span class="kw">FROM</span> Orders
+<span class="kw">WHERE</span> YEAR(OrderDate) = <span class="num">2024</span>;   <span class="cx-err">-- ❌ column wrapped in a function — forces a full table scan</span></code></pre>
+      </div>
+      <p class="cx-note">The column itself is wrapped in a function, so the engine can't seek using
+      the index — it scans every row to evaluate <code>YEAR()</code> on each one.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">SELECT</span> * <span class="kw">FROM</span> Orders
+<span class="kw">WHERE</span> OrderDate &gt;= <span class="str">'2024-01-01'</span>
+  <span class="kw">AND</span> OrderDate &lt; <span class="str">'2025-01-01'</span>;   <span class="cx-ok">-- ✅ same result, index-seekable</span></code></pre>
+      </div>
+      <p class="cx-note">Same logical result, but the column itself is left untouched — the engine
+      can seek directly to this date range using the index.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Looking up a word in a paper dictionary works instantly because it's alphabetically
+      sorted.</b> Asking "find every word whose reversed spelling starts with 'a'" makes that same
+      sorted order useless — you'd have to check every single word by hand. Wrapping a column in a
+      function does the same thing to a sorted index: the sort order is still there, it just
+      doesn't line up with the question you're asking anymore.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="9.html">← Pagination Strategies</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Intermediate</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
