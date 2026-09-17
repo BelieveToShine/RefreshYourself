@@ -37,15 +37,15 @@ keeping it in sync with the live pages.
   with `issueCount: 0`, run independently by the orchestrating session against every single page
   before this track was considered done. Every one of the 43 pages carries exactly one
   `svg.topic-diagram` (no page in this track needed a second diagram). **Re-confirmed 2026-09-17
-  with a live-rendered spot-check** (same script, run again via the Playwright harness against a
-  5-page sample spanning all three tiers, after an outside review questioned the original
-  aggregate claim) — actual per-page output:
-  `angular/basic/1.html [{"svgIndex":0,"issueCount":0,"issues":[]}]`,
-  `angular/intermediate/6.html [{"svgIndex":0,"issueCount":0,"issues":[]}]`,
-  `angular/intermediate/7.html [{"svgIndex":0,"issueCount":0,"issues":[]}]`,
-  `angular/advanced/6.html [{"svgIndex":0,"issueCount":0,"issues":[]}]`,
-  `angular/advanced/11.html [{"svgIndex":0,"issueCount":0,"issues":[]}]` — all 5 clean, matching
-  the original full-sweep result.
+  in two passes, after an outside review questioned the original aggregate claim:** first a
+  5-page spot-check (`angular/basic/1.html`, `angular/intermediate/6.html`,
+  `angular/intermediate/7.html`, `angular/advanced/6.html`, `angular/advanced/11.html` — all
+  `{"svgIndex":0,"issueCount":0,"issues":[]}`), then a full re-sweep of **all 43 pages, one at a
+  time, via the same Playwright harness** — every single page came back
+  `{"svgIndex":0,"issueCount":0,"issues":[]}` with zero exceptions (`angular/basic/1–10.html`,
+  `angular/intermediate/1–17.html`, `angular/advanced/1–16.html`), and the harness's own exit
+  code confirmed no page raised an issue. This is the full, reproducible confirmation of the
+  original Phase-7 claim, not a restated summary.
 
 ## Basic (10 topics) — 10 written
 
