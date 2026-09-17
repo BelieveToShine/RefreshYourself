@@ -637,5 +637,99 @@ window.NAV_INDEX = {
         ]
       }
     ]
-  }
+  },
+  "azure/basic": {
+    track: "Azure",
+    trackIcon: "☁️",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 10,
+        items: [
+          { n: 1, file: "1.html", short: "Subscriptions & RGs", title: "Subscriptions, Resource Groups & Regions", tail: "the basic building blocks.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "App Service", title: "App Service", tail: "what it manages for you.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Functions vs App Service", title: "Azure Functions", tail: "vs. App Service.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Storage Account", title: "Storage Account", tail: "what actually goes in one.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Azure SQL", title: "Azure SQL", tail: "how it relates to on-prem SQL Server.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Cosmos DB", title: "Cosmos DB", tail: "partition keys & RU/s.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Key Vault", title: "Key Vault", tail: "what belongs in it.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Managed Identity", title: "Managed Identity", tail: "no more secrets in config.", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Entra ID", title: "Microsoft Entra ID", tail: "app registrations & OAuth2/OIDC.", priority: "🔥" },
+          { n: 10, file: "10.html", short: "RBAC", title: "RBAC", tail: "roles, scope & least privilege.", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11–18",
+        hot: 6,
+        items: [
+          { n: 11, file: "11.html", short: "Service Bus", title: "Service Bus", tail: "what it's for.", priority: "🔥" },
+          { n: 12, file: "12.html", short: "App Insights", title: "Application Insights", tail: "what it captures.", priority: "🔥" },
+          { n: 13, file: "13.html", short: "VNets & Subnets", title: "Networking Basics", tail: "VNets & subnets.", priority: "🔥" },
+          { n: 14, file: "14.html", short: "Private Endpoint", title: "Private Endpoint", tail: "reaching a service privately.", priority: "🔥" },
+          { n: 15, file: "15.html", short: "Scaling", title: "Scaling", tail: "scale up vs. scale out.", priority: "🔥" },
+          { n: 16, file: "16.html", short: "HA vs DR", title: "High Availability", tail: "vs. Disaster Recovery.", priority: "🔥" },
+          { n: 17, file: "17.html", short: "API Management", title: "Azure API Management", tail: "what problem it solves.", priority: "⭐" },
+          { n: 18, file: "18.html", short: "Load Balancing", title: "Load Balancing", tail: "the basic idea before picking a service.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "azure/intermediate": {
+    track: "Azure",
+    trackIcon: "☁️",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 10,
+        items: [
+          { n: 1, file: "1.html", short: "Deployment Slots", title: "App Service Deployment Slots", tail: "avoiding downtime.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Containers", title: "Containers on Azure", tail: "ACI vs. Container Apps vs. AKS.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "MI vs Service Principal", title: "Managed Identity", tail: "vs. Service Principal.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Key Vault Access", title: "Key Vault Access Patterns", tail: "RBAC vs. access policies.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Queues vs Topics", title: "Queues", tail: "vs. Topics/Subscriptions.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "SB vs EG vs EH", title: "Service Bus", tail: "vs. Event Grid vs. Event Hubs.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Troubleshooting App Insights", title: "Troubleshooting", tail: "with Application Insights.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Front Door vs others", title: "Front Door", tail: "vs. App Gateway vs. Traffic Manager vs. Load Balancer.", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Resilience Patterns", title: "Resilience Patterns", tail: "retries, timeouts & fallback.", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Bicep vs ARM vs TF", title: "Bicep", tail: "vs. ARM vs. Terraform.", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11–19",
+        items: [
+          { n: 11, file: "11.html", short: "RG Lifecycle", title: "Resource Group Lifecycle", tail: "what it actually groups.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Durable Functions", title: "Durable Functions", tail: "orchestrator, activity & entity patterns.", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Secrets Management", title: "Secrets Management", tail: "as a practice.", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Logging vs App Insights", title: "Logging", tail: "vs. Application Insights.", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Monitor vs App Insights", title: "Azure Monitor", tail: "vs. Application Insights.", priority: "⭐" },
+          { n: 16, file: "16.html", short: "Caching", title: "Caching", tail: "at an architecture level.", priority: "⭐" },
+          { n: 17, file: "17.html", short: "Idempotent Deployment", title: "Idempotent Deployment", tail: "why IaC has to be safe to re-run.", priority: "⭐" },
+          { n: 18, file: "18.html", short: "Cosmos Consistency Levels", title: "Cosmos DB Consistency Levels", tail: "the tradeoff behind the 5 levels.", priority: "🧠" },
+          { n: 19, file: "19.html", short: "Service Bus Architecture", title: "Service Bus Architecture", tail: "wiring producers & consumers.", priority: "🧠" }
+        ]
+      }
+    ]
+  },
+  "azure/advanced": {
+    track: "Azure",
+    trackIcon: "☁️",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1–7",
+        hot: 3,
+        items: [
+          { n: 1, file: "1.html", short: "Well-Architected Framework", title: "Well-Architected Framework", tail: "the 5 pillars.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Scenario: 500s", title: "App Service Returns 500s", tail: "a troubleshooting scenario.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Disaster Recovery", title: "Disaster Recovery", tail: "RPO, RTO & multi-region strategy.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Hub-Spoke & Peering", title: "Hub-Spoke Topology", tail: "& VNet Peering.", priority: "⭐" },
+          { n: 5, file: "5.html", short: "Cost Optimization", title: "Cost Optimization", tail: "the levers beyond a cheaper SKU.", priority: "⭐" },
+          { n: 6, file: "6.html", short: "Landing Zones & Governance", title: "Landing Zones", tail: "& Governance.", priority: "⭐" },
+          { n: 7, file: "7.html", short: "Requirements-First", title: "Requirements-First Architecture", tail: "the questions before the design.", priority: "🧠" }
+        ]
+      }
+    ]
+  },
 };
