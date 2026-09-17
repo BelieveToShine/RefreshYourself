@@ -14,7 +14,7 @@ the user on 2026-09-15, audience/depth definition refined 2026-09-16, supersedin
 junior/mid-level interview. Two groups of tracks:
 
 - **Core backend interview path**, in this order: C# → OOP → .NET/ASP.NET Core (MVC lives inside
-  this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure.
+  this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure → AWS.
 - **Other tracks**, not part of the ordered path: React and Angular (both all 7 phases complete,
   see below), DSA and AI still fully untouched.
 
@@ -50,7 +50,8 @@ Phase 7.
 
 **Core backend path — C#, OOP, .NET/ASP.NET Core, Web API, EF Core, and SQL are through all 7
 phases; Azure is still at Phase 1 (question taxonomy), awaiting the user's review before Phase 2
-(dedupe/gaps) starts on it:**
+(dedupe/gaps) starts on it; AWS is through Phases 1–6 (taxonomy + full roadmap, tiered and
+prioritized) but Phase 7 (writing the 44 pages) has not started:**
 
 - **C#** — **all 7 phases complete, 49/49 pages written** (2026-09-16):
   [`question-taxonomy.md`](superpowers/specs/csharp/question-taxonomy.md) →
@@ -105,6 +106,15 @@ phases; Azure is still at Phase 1 (question taxonomy), awaiting the user's revie
   deliberately simplified/scenario-first per the user's later plan. Old three-tier roadmap (0
   written) is **frozen**, superseded by this taxonomy. See
   [`specs/azure/overview.md`](superpowers/specs/azure/overview.md).
+- **AWS** — **Phases 1–6 complete, Phase 7 not started** (2026-09-18):
+  [`question-taxonomy.md`](superpowers/specs/aws/question-taxonomy.md) (44 concept groups, incl.
+  a Phase 2 gap-hunt that added 6 items, one a whole new group) →
+  [`roadmap.md`](superpowers/specs/aws/roadmap.md) → 44 tiered/prioritized pages **planned but
+  not yet written**. `aws/roadmap.html` and the root tile's roadmap-badge are wired per the
+  Phase-1 mandate; the tile itself stays in "Coming soon" state until Phase 7 actually completes.
+  Single track (not split by concern) per the user's own instruction — IAM/security, networking,
+  serverless, and containers live as subsections inside Basic/Intermediate/Advanced. See
+  [`specs/aws/overview.md`](superpowers/specs/aws/overview.md).
 
 **Other tracks, outside the core backend path:**
 
