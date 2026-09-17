@@ -48,9 +48,8 @@ Phase 7.
 
 ## Current build status (one line each — see the track's own spec for detail)
 
-**Core backend path — C#, OOP, .NET/ASP.NET Core, Web API, EF Core, SQL, and Azure are all
-through all 7 phases; AWS is through Phases 1–6 (taxonomy + full roadmap, tiered and
-prioritized) but Phase 7 (writing the 44 pages) has not started:**
+**Core backend path — C#, OOP, .NET/ASP.NET Core, Web API, EF Core, SQL, Azure, and AWS are all
+through all 7 phases:**
 
 - **C#** — **all 7 phases complete, 49/49 pages written** (2026-09-16):
   [`question-taxonomy.md`](superpowers/specs/csharp/question-taxonomy.md) →
@@ -111,14 +110,17 @@ prioritized) but Phase 7 (writing the 44 pages) has not started:**
   needing a later addendum. Every diagram passed the mandatory automated verification script,
   run independently against every single page. The old, frozen three-tier roadmap (0 written) is
   fully superseded. See [`specs/azure/overview.md`](superpowers/specs/azure/overview.md).
-- **AWS** — **Phases 1–6 complete, Phase 7 not started** (2026-09-18):
+- **AWS** — **all 7 phases complete, 44/44 pages written** (2026-09-17):
   [`question-taxonomy.md`](superpowers/specs/aws/question-taxonomy.md) (44 concept groups, incl.
   a Phase 2 gap-hunt that added 6 items, one a whole new group) →
-  [`roadmap.md`](superpowers/specs/aws/roadmap.md) → 44 tiered/prioritized pages **planned but
-  not yet written**. `aws/roadmap.html` and the root tile's roadmap-badge are wired per the
-  Phase-1 mandate; the tile itself stays in "Coming soon" state until Phase 7 actually completes.
-  Single track (not split by concern) per the user's own instruction — IAM/security, networking,
-  serverless, and containers live as subsections inside Basic/Intermediate/Advanced. See
+  [`roadmap.md`](superpowers/specs/aws/roadmap.md) → 44 tiered/prioritized pages, live on the
+  site and on [`aws/roadmap.html`](../aws/roadmap.html). Single track (not split by concern) per
+  the user's own instruction — IAM/security, networking, serverless, and containers live as
+  subsections inside Basic/Intermediate/Advanced. Two deliberate post-feedback fixes carried
+  through Phase 7 unchanged: a burnt-orange accent color (`#c2410c`, not AWS's own navy) and a
+  `roadmap.html` grouped by 11 cross-tier concept clusters rather than by tier. Every diagram
+  passed the mandatory automated verification script, run independently against every single
+  page (48 diagrams across 44 pages). See
   [`specs/aws/overview.md`](superpowers/specs/aws/overview.md).
 
 **Other tracks, outside the core backend path:**
