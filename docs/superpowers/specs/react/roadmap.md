@@ -167,9 +167,10 @@ section, not tier — the site-wide convention). Numbering below is the tier-fol
   how much broader experienced-level React's interview surface is, not scope creep.
 - Code examples are JSX/TSX, matching how React is actually written; this is the one track on
   the site where that's the native example language rather than C#.
-- Icon and track color: not yet chosen — pick something unused by the time Phase 7 scaffolds
-  the site (used so far: C# 🎵 `#3b82f6`, OOP 🧩 `#16a34a`, .NET 🧱 `#7c3aed`, Web API 🔌
-  `#b91c1c`, EF Core 🗄️ `#0f766e`).
+- Icon and track color: ⚛️, cyan (`#0891b2`) — chosen when the live `react/roadmap.html` was
+  built, matching React's own real-world brand color and distinct from every track color
+  already in use (C# 🎵 `#3b82f6`, OOP 🧩 `#16a34a`, .NET 🧱 `#7c3aed`, Web API 🔌 `#b91c1c`,
+  EF Core 🗄️ `#0f766e`).
 
 ## Known gaps
 

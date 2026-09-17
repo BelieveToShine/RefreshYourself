@@ -106,15 +106,27 @@ each track's spec. A track's `overview.md` is only what's specific to *that* tra
 1. **List the full roadmap before writing a single topic page** — same rule as
    [content-writing.md](../../rules/content-writing.md), just written down here instead of only
    living in chat.
-2. Write the track's `overview.md` with that roadmap immediately — don't let it exist only in
-   the tier `index.html` files. The spec doc and the live pages are two views of the same roadmap
-   and must be updated together.
+2. Write the track's `overview.md` (or, before Phase 4/5, `roadmap.md`) with that roadmap
+   immediately — don't let it exist only in the tier `index.html` files. The spec doc and the
+   live pages are two views of the same roadmap and must be updated together.
 3. Add a row to the category table above.
-4. As topics get written, flip their `written?` column here at the same time the tier index row
+4. **Build the live `<track>/roadmap.html` and wire the root `index.html` tile's
+   `roadmap-badge` to it — the same moment the spec doc is written, not deferred to Phase 7.**
+   This is easy to forget precisely *because* it happens before any topic page exists (there's
+   no "finish the page, then wire it" reflex yet) — it was missed for the React track the first
+   time for exactly that reason, caught only when the user screenshotted the still-disabled
+   badge. SQL, Azure, and AI all already do this correctly (`sql/roadmap.html`,
+   `azure/roadmap.html`, `ai/roadmap.html`, each with a real `<a class="roadmap-badge">` on its
+   root tile) — match that pattern for every new track, at Phase 1 already if that's as far as
+   it's gotten, updated again in place as later phases complete. The tile itself stays
+   `soon`/"Coming soon" until Phase 7 actually finishes; only the badge and its `href`/`title`
+   change before then.
+5. As topics get written, flip their `written?` column here at the same time the tier index row
    flips from `planned` to a real link — same moment, not a follow-up task.
 
 ## When to create a new category
 
 The moment a track's full roadmap gets planned — even before the first topic page is written
 (Azure is the working example: roadmap-only, spec written, zero pages built). Don't wait until a
-track is finished to document it.
+track is finished to document it. This includes step 4 above — the live roadmap page and the
+root tile's badge link are part of "documenting it," not part of "building it."

@@ -20,8 +20,15 @@ bundling decisions, a Phase 4 tier table with reasoning for the non-obvious call
 priority table, and the final numbered Phase 6 table (concept → tier → page path). Only once that
 document exists does Phase 7 (writing the actual pages) start.
 
-**Scaffold the site before dispatching any page-writing subagent**, so every subagent's pager
-links, cross-links, and tier-index rows resolve against real files/known-good targets:
+**By the time Phase 7 starts, `<track>/roadmap.html` and the root `index.html` tile's
+`roadmap-badge` link should already exist** — see
+[`specs/README.md`](../superpowers/specs/README.md#process-to-follow-when-writing-one), step 4.
+That happens at Phase 1/6, not here; if it's somehow still missing when Phase 7 begins, fix it
+before scaffolding anything else, don't defer it further.
+
+**Scaffold the rest of the site before dispatching any page-writing subagent**, so every
+subagent's pager links, cross-links, and tier-index rows resolve against real files/known-good
+targets:
 - `<track>/index.html` (track landing page, tier-bulletin cards)
 - `<track>/basic/index.html`, `<track>/intermediate/index.html`, `<track>/advanced/index.html`
   (tier indexes, topic rows with priority badges)

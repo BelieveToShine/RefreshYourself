@@ -67,6 +67,7 @@ window.SEARCH_INDEX = [
   { title: "Web API — full roadmap", track: "Web API", tier: "", path: "webapi/roadmap.html", keywords: "web api rest http roadmap taxonomy" },
   { title: "EF Core — full roadmap", track: "EF Core", tier: "", path: "efcore/roadmap.html", keywords: "ef core entity framework orm linq roadmap taxonomy" },
   { title: "SQL — draft roadmap (taxonomy)", track: "SQL", tier: "", path: "sql/roadmap.html", keywords: "sql database query index transaction roadmap taxonomy draft" },
+  { title: "React — full roadmap (Phases 1–6)", track: "React", tier: "", path: "react/roadmap.html", keywords: "react hooks components jsx state roadmap taxonomy fiber suspense" },
   { title: "AI — track home", track: "AI", tier: "", path: "ai/index.html", keywords: "ai genai llm generative overview" },
   { title: "AI Basic — topic list", track: "AI", tier: "Basic", path: "ai/basic/index.html", keywords: "ai basic list roadmap tokens embeddings prompt" },
   { title: "AI Intermediate — topic list", track: "AI", tier: "Intermediate", path: "ai/intermediate/index.html", keywords: "ai intermediate list roadmap rag agents tools fine-tuning" },
