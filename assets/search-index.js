@@ -68,6 +68,7 @@ window.SEARCH_INDEX = [
   { title: "EF Core — full roadmap", track: "EF Core", tier: "", path: "efcore/roadmap.html", keywords: "ef core entity framework orm linq roadmap taxonomy" },
   { title: "SQL — full roadmap", track: "SQL", tier: "", path: "sql/roadmap.html", keywords: "sql database query index transaction roadmap taxonomy" },
   { title: "React — full roadmap", track: "React", tier: "", path: "react/roadmap.html", keywords: "react hooks components jsx state roadmap taxonomy fiber suspense" },
+  { title: "Angular — draft roadmap (Phases 1–6)", track: "Angular", tier: "", path: "angular/roadmap.html", keywords: "angular rxjs signals change detection roadmap taxonomy draft" },
   { title: "React — track home", track: "React", tier: "", path: "react/index.html", keywords: "react track overview jsx hooks fiber server components" },
   { title: "React Basic — topic list", track: "React", tier: "Basic", path: "react/basic/index.html", keywords: "react basic list interview questions roadmap jsx props state hooks" },
   { title: "React Intermediate — topic list", track: "React", tier: "Intermediate", path: "react/intermediate/index.html", keywords: "react intermediate list interview questions roadmap effects refs context forms" },

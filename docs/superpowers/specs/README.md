@@ -59,6 +59,7 @@ track ends up with once it reaches Phase 6 — just know that for any track stil
 | [azure/](azure/overview.md) | Old three-tier roadmap (0 written, frozen) superseded by the simplified, scenario-first [question-taxonomy.md](azure/question-taxonomy.md) (Phase 1, awaiting review). |
 | [ai/](ai/overview.md) | The AI/GenAI track — Basic (16)/Intermediate (18)/Advanced (14), all roadmap-only (0 written), sourced from `AI-Interview-Topics.md`. **Not part of the interview-question-bank rebuild** — untouched, along with DSA. |
 | [react/](react/overview.md) | **All 7 phases complete — 43/43 pages written** (41 original + 2 from a post-Phase-7 [gap-hunt](../../rules/gap-hunting.md)). [question-taxonomy.md](react/question-taxonomy.md) → [roadmap.md](react/roadmap.md) → 43 tiered/prioritized pages, live on the site and on [`react/roadmap.html`](../../../react/roadmap.html). Unusually large (37 concept groups, 43 pages) reflecting the outline's own depth. |
+| [angular/](angular/overview.md) | Phases 1–6 complete, Phase 7 not started — [question-taxonomy.md](angular/question-taxonomy.md) (37 content groups, including this track's own Phase-2 gap-hunt) → [roadmap.md](angular/roadmap.md) → 43 planned pages, awaiting page-writing. `angular/roadmap.html` and the root tile's badge are already wired per the Phase-1 mandate. |
 
 Add a row here whenever a new track's roadmap is first planned — even before any page in it is
 written. This table is the map — a session should be able to tell from this file alone whether a
