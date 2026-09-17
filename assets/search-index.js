@@ -66,7 +66,7 @@ window.SEARCH_INDEX = [
   { title: ".NET / ASP.NET Core — full roadmap", track: ".NET", tier: "", path: "dotnet/roadmap.html", keywords: "dotnet aspnet core mvc dependency injection middleware roadmap taxonomy" },
   { title: "Web API — full roadmap", track: "Web API", tier: "", path: "webapi/roadmap.html", keywords: "web api rest http roadmap taxonomy" },
   { title: "EF Core — full roadmap", track: "EF Core", tier: "", path: "efcore/roadmap.html", keywords: "ef core entity framework orm linq roadmap taxonomy" },
-  { title: "SQL — draft roadmap (taxonomy)", track: "SQL", tier: "", path: "sql/roadmap.html", keywords: "sql database query index transaction roadmap taxonomy draft" },
+  { title: "SQL — full roadmap", track: "SQL", tier: "", path: "sql/roadmap.html", keywords: "sql database query index transaction roadmap taxonomy" },
   { title: "AI — track home", track: "AI", tier: "", path: "ai/index.html", keywords: "ai genai llm generative overview" },
   { title: "AI Basic — topic list", track: "AI", tier: "Basic", path: "ai/basic/index.html", keywords: "ai basic list roadmap tokens embeddings prompt" },
   { title: "AI Intermediate — topic list", track: "AI", tier: "Intermediate", path: "ai/intermediate/index.html", keywords: "ai intermediate list roadmap rag agents tools fine-tuning" },
@@ -171,5 +171,9 @@ window.SEARCH_INDEX = [
   { title: "Optimistic Concurrency & Row Versioning", track: "EF Core", tier: "Advanced", path: "efcore/advanced/3.html", keywords: "optimistic concurrency row version concurrency token ef core" },
   { title: "Beyond N+1 — Common Performance Pitfalls", track: "EF Core", tier: "Advanced", path: "efcore/advanced/4.html", keywords: "ef core performance pitfalls over fetching tracking overhead indexes" },
   { title: "Bulk Operations", track: "EF Core", tier: "Advanced", path: "efcore/advanced/5.html", keywords: "bulk operations batch update delete ef core savechanges scale" },
-  { title: "Connection Management", track: "EF Core", tier: "Advanced", path: "efcore/advanced/6.html", keywords: "connection management pooling dbcontext ef core" }
+  { title: "Connection Management", track: "EF Core", tier: "Advanced", path: "efcore/advanced/6.html", keywords: "connection management pooling dbcontext ef core" },
+  { title: "SQL — track home", track: "SQL", tier: "", path: "sql/index.html", keywords: "sql database overview joins indexing transactions" },
+  { title: "SQL Basic — topic list", track: "SQL", tier: "Basic", path: "sql/basic/index.html", keywords: "sql basic list interview questions roadmap joins group by null acid" },
+  { title: "SQL Intermediate — topic list", track: "SQL", tier: "Intermediate", path: "sql/intermediate/index.html", keywords: "sql intermediate list interview questions roadmap cte window functions indexing" },
+  { title: "SQL Advanced — topic list", track: "SQL", tier: "Advanced", path: "sql/advanced/index.html", keywords: "sql advanced list interview questions roadmap isolation levels deadlock execution plan" }
 ];

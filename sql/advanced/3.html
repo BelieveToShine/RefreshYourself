@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Execution Plans — SQL Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Execution Plans</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 SQL · Advanced · Must Know</div>
+    <h1>Execution Plans — <span class="hl hl-blue">what the database actually did</span>, not <span class="hl hl-hot">what you asked for</span></h1>
+    <p class="interview-q">What is a query execution plan, and what does reading one actually tell you?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Reading a plan is the core skill behind almost every "why is this query slow"
+        interview question — you can't answer that question without one.</li>
+        <li>Interviewers use it to check whether you actually understand index seek vs. table
+        scan, not just that you know the term "execution plan."</li>
+        <li>A frequent follow-on trap: knowing the term but not knowing that an estimated plan's
+        percentages aren't real, measured timing.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Execution plan = <b>"the real route the engine took, not the destination you asked for."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> the same SQL text can get a
+    <b><code>different plan</code></b> next time — the engine decides fresh from the current
+    data and indexes, it isn't fixed by the query text alone.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shSQL3" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arSQL3" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arSQL3Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arSQL3Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#475569" letter-spacing="0.4">SAME QUERY, PLAN CHOSEN FRESH EACH TIME</text>
+
+      <g filter="url(#shSQL3)"><rect x="240" y="28" width="160" height="40" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="45" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">SELECT</text>
+      <text x="320" y="60" text-anchor="middle" font-size="10.5" fill="#5b6472">the query you wrote</text>
+
+      <path d="M320,68 V96" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSQL3)"/>
+
+      <g filter="url(#shSQL3)"><rect x="225" y="96" width="190" height="40" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="113" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">Filter</text>
+      <text x="320" y="128" text-anchor="middle" font-size="10.5" fill="#5b6472">matching rows only</text>
+
+      <path d="M320,136 V156" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M150,156 H490" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M150,156 V186" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arSQL3Green)"/>
+      <path d="M490,156 V186" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arSQL3Red)"><animate attributeName="stroke-dashoffset" values="9;0" dur="2.5s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shSQL3)"><rect x="35" y="186" width="230" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="150" y="208" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🔍 Index Seek — ~8% cost</text>
+      <text x="150" y="224" text-anchor="middle" font-size="10.5" fill="#5b6472">goes straight to matching rows</text>
+
+      <g filter="url(#shSQL3)"><rect x="375" y="186" width="230" height="56" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="490" y="208" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐛 Table Scan — ~92% cost</text>
+      <text x="490" y="224" text-anchor="middle" font-size="10.5" fill="#5b6472">reads every row in the table</text>
+    </svg>
+    <figcaption>Same query, plan decided fresh — an index seek jumps to the rows it needs; a
+    table scan reads all of them, and that's usually the expensive step.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A high percentage cost in the plan is not automatically the real
+    bottleneck.</b> In an <b>estimated</b> plan, that percentage is the optimizer's relative-cost
+    guess from statistics, not measured wall-clock time — to see real timing you need an
+    <b>actual/runtime</b> plan, one that actually ran the query.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's the difference between an estimated and an actual execution
+    plan?"</b> An estimated plan is generated without running the query, using statistics to
+    guess row counts and costs; an actual plan runs the query for real and reports the true row
+    counts and timings alongside the same plan shape — a big mismatch between estimated and
+    actual row counts is itself a red flag, often meaning stale statistics.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"An execution plan is the real step-by-step strategy the engine chose
+    to run the query — which operations it uses, in what order, and roughly how expensive each
+    step is estimated to be. Reading one tells you whether it's doing an index seek or a table
+    scan, and which step is doing the most work."</p>
+    <ul>
+      <li><code>Index Seek</code> → <span class="hl hl-basic">jumps straight to matching rows using an index</span> — usually the cheap step.</li>
+      <li><code>Table Scan</code> → <span class="hl hl-hot">reads every row in the table</span> — usually the expensive step.</li>
+      <li>Estimated cost → <span class="hl hl-inter">the optimizer's statistics-based guess</span>, not measured time.</li>
+      <li>Actual/runtime plan → <span class="hl hl-blue">run it to see the real row counts and real timings</span>, not just the estimate.</li>
+      <li>Same SQL text → <span class="hl hl-adv">can get a different plan later</span> if the data or indexes it depends on change.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>An <b>execution plan</b> is the step-by-step strategy the database engine actually
+      picked to run a query — which operations it performs (a scan, a seek, a join, a sort), in
+      what order, and roughly how much relative work the optimizer expects each step to cost.
+      It's produced by the query optimizer, which weighs the available indexes and the table's
+      statistics before choosing a route — that's why the same SQL text can get a different plan
+      later, once the data or the indexes it depends on have changed.</p>
+
+      <p>The two operations worth recognizing on sight are an
+      <span class="hl hl-basic"><code>Index Seek</code></span> — the engine jumps straight to
+      the rows it needs using an index, touching only what matches — and a
+      <span class="hl hl-hot"><code>Table Scan</code></span> — the engine reads every row in the
+      table to find what matches, because no useful index exists, or the optimizer decided one
+      wasn't worth using. A scan sitting on a large table is usually the first place to look when
+      a query is slow.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Estimated Plan</th><th>Actual Plan</th></tr></thead>
+        <tbody>
+          <tr><th>Query runs?</th><td>No — generated without executing it</td><td>Yes — the query actually runs</td></tr>
+          <tr><th>Row counts</th><td>Guessed, from statistics</td><td>The real row counts seen at each step</td></tr>
+          <tr><th>Costs shown</th><td>The optimizer's relative-cost guess</td><td>The same guess, alongside what really happened</td></tr>
+          <tr><th>Use it for</th><td>A quick look at the chosen strategy</td><td>Confirming where time is really being spent</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Illustrative</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- Illustrative only: real plan output looks different per database engine/tool</span>
+Filter                                 est. cost: <span class="num">5%</span>
+├─ Index Seek  [IX_Orders_CustomerId]   est. cost: <span class="num">8%</span>   <span class="cx-ok">-- used when the filter is selective</span>
+└─ Table Scan  [Orders]                 est. cost: <span class="num">92%</span>  <span class="cx-err">-- used when no useful index applies</span></code></pre>
+      </div>
+      <p class="cx-note">This is a simplified sketch of the shape of a plan, not a specific
+      tool's exact output — every database engine and GUI displays it a little differently.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>An execution plan is like getting a delivery driver's <b>actual route</b> instead of
+      just the destination — it tells you whether they took the highway (an index seek) or drove
+      down every side street first (a table scan) to get there.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="2.html">← Deadlock vs. Blocking</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="4.html">Performance Degraded Over Time →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
