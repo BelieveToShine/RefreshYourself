@@ -732,4 +732,99 @@ window.NAV_INDEX = {
       }
     ]
   },
+  "aws/basic": {
+    track: "AWS",
+    trackIcon: "📦",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1 – 10",
+        items: [
+          { n: 1, file: "1.html", short: "AWS Fundamentals", title: "AWS Fundamentals", tail: "Region vs. AZ vs. Edge Location, shared responsibility, elasticity vs. scalability.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Global Infrastructure", title: "AWS Global Infrastructure", tail: "designing to survive an AZ or Region failure.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "IAM", title: "IAM", tail: "roles vs. users, least privilege, STS, why not hard-coded keys.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "EC2", title: "EC2", tail: "instance types, EBS, On-Demand vs. Reserved vs. Spot.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "S3", title: "S3", tail: "storage classes, versioning, encryption, presigned URLs.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "VPC Fundamentals", title: "VPC Fundamentals", tail: "subnets, route tables, IGW/NAT, security groups vs. NACLs.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "LB & Auto Scaling", title: "Load Balancing & Auto Scaling", tail: "ALB vs. NLB, target groups, health checks.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "RDS", title: "RDS", tail: "Multi-AZ vs. read replica, automated backups, RDS vs. Aurora.", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Lambda", title: "Lambda", tail: "triggers, cold starts, concurrency, timeouts.", priority: "🔥" },
+          { n: 10, file: "10.html", short: "CloudWatch", title: "CloudWatch", tail: "metrics vs. logs, alarms, CloudWatch vs. CloudTrail.", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11 – 11",
+        items: [
+          { n: 11, file: "11.html", short: "Route 53", title: "Route 53", tail: "routing policies, health checks, its role in disaster recovery.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "aws/intermediate": {
+    track: "AWS",
+    trackIcon: "📦",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1 – 10",
+        items: [
+          { n: 1, file: "1.html", short: "VPC & Adv. Networking", title: "VPC & Advanced Networking", tail: "peering, Transit Gateway, endpoints, PrivateLink.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Hybrid Connectivity", title: "Hybrid Connectivity", tail: "VPN vs. Direct Connect, redundant hybrid links.", priority: "⭐" },
+          { n: 3, file: "3.html", short: "IAM & Security Arch.", title: "IAM & Security Architecture", tail: "cross-account roles, SCPs, KMS, secrets rotation.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Security Services", title: "AWS Security Services", tail: "WAF, Shield, GuardDuty, Inspector, Security Hub.", priority: "⭐" },
+          { n: 5, file: "5.html", short: "EC2 Scaling & Arch.", title: "EC2 Scaling & Architecture", tail: "launch templates, lifecycle hooks, zero-downtime deploys.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "S3 Advanced", title: "S3 Advanced", tail: "replication, Object Lock, multipart upload, S3 vs. EFS.", priority: "⭐" },
+          { n: 7, file: "7.html", short: "DynamoDB", title: "DynamoDB", tail: "partition keys, GSI vs. LSI, hot partitions.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Aurora & DB Arch.", title: "Aurora & Database Architecture", tail: "Aurora vs. RDS vs. DynamoDB, read scaling.", priority: "⭐" },
+          { n: 9, file: "9.html", short: "ElastiCache", title: "ElastiCache", tail: "Redis vs. Memcached, cache-aside, invalidation.", priority: "⭐" },
+          { n: 10, file: "10.html", short: "API Gateway", title: "API Gateway", tail: "REST vs. HTTP API, throttling, auth (incl. Cognito).", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11 – 19",
+        items: [
+          { n: 11, file: "11.html", short: "Messaging (SQS/SNS)", title: "Messaging", tail: "SQS vs. SNS, FIFO vs. standard, idempotent consumers.", priority: "🔥" },
+          { n: 12, file: "12.html", short: "EventBridge", title: "EventBridge", tail: "event buses, rules, event patterns.", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Kinesis", title: "Kinesis", tail: "Streams vs. Firehose, shards, ordering.", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Containers", title: "Containers", tail: "ECS vs. EKS, Fargate vs. EC2 launch type.", priority: "🔥" },
+          { n: 15, file: "15.html", short: "Observability", title: "Observability", tail: "metrics vs. logs vs. traces, distributed tracing.", priority: "🔥" },
+          { n: 16, file: "16.html", short: "Infra as Code", title: "Infrastructure as Code", tail: "CloudFormation vs. Terraform vs. CDK, drift.", priority: "🔥" },
+          { n: 17, file: "17.html", short: "CI/CD & Deployment", title: "CI/CD & Deployment", tail: "blue/green, canary, zero-downtime rollback.", priority: "⭐" },
+          { n: 18, file: "18.html", short: "Backup & DR", title: "Backup & Disaster Recovery", tail: "RPO/RTO, pilot light vs. warm standby.", priority: "🔥" },
+          { n: 19, file: "19.html", short: "CloudFront & CDN", title: "CloudFront & Content Delivery", tail: "origins, cache invalidation, signed URLs.", priority: "🔥" }
+        ]
+      }
+    ]
+  },
+  "aws/advanced": {
+    track: "AWS",
+    trackIcon: "📦",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1 – 10",
+        items: [
+          { n: 1, file: "1.html", short: "Well-Architected Fwk", title: "Well-Architected Framework", tail: "the six pillars, and how to actually use them during design.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "High Availability", title: "High Availability Architecture", tail: "eliminating single points of failure, statelessness.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Multi-Region Arch.", title: "Multi-Region Architecture", tail: "active/active vs. active/passive, avoiding split-brain.", priority: "🧠" },
+          { n: 4, file: "4.html", short: "Serverless Arch.", title: "Serverless Architecture", tail: "designing a serverless API, Step Functions, RDS Proxy.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Microservices", title: "Microservices on AWS", tail: "service discovery, Saga pattern, cascading-failure prevention.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Data Architecture", title: "Data Architecture", tail: "relational vs. NoSQL, data lakes, analytics separation.", priority: "🧠" },
+          { n: 7, file: "7.html", short: "Cost Opt. / FinOps", title: "Cost Optimization / FinOps", tail: "rightsizing, NAT/data-transfer cost traps, cost visibility.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Reliability Eng.", title: "Reliability Engineering", tail: "backoff, jitter, circuit breaker, bulkhead, backpressure.", priority: "🧠" },
+          { n: 9, file: "9.html", short: "Security Architecture", title: "AWS Security Architecture", tail: "securing a workload end-to-end, responding to compromised credentials.", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Migration", title: "Migration", tail: "rehost vs. replatform vs. refactor, minimizing downtime.", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11 – 14",
+        items: [
+          { n: 11, file: "11.html", short: "Prod. Troubleshooting", title: "Production Troubleshooting", tail: "13 real production-break scenarios, EC2 to billing spikes.", priority: "🔥" },
+          { n: 12, file: "12.html", short: "Architecture Design", title: "Architecture Design Questions", tail: "whiteboard designs with interviewer pushback chains.", priority: "🔥" },
+          { n: 13, file: "13.html", short: "Trade-off Questions", title: "Architect-Level Trade-off Questions", tail: "requirement → constraints → options → trade-off → decision.", priority: "🧠" },
+          { n: 14, file: "14.html", short: "Sustainability", title: "Sustainability", tail: "the sixth pillar, and where it conflicts with cost/performance.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
 };
