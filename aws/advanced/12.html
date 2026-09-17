@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture Design Questions — AWS Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="aws/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ffedd5;--crumb-ink:#c2410c;">📦 AWS</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Architecture Design Questions</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 AWS · Advanced · Must Know</div>
+    <h1>Every pushback extends <span class="hl hl-blue">the same design</span> — don't <span class="hl hl-hot">restart from scratch</span></h1>
+    <p class="interview-q">Design a highly available web application — then: what if AZ-1 fails? What if traffic increases 10x? What if the database becomes the bottleneck?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Whiteboard architecture questions are a core part of almost every AWS system-design
+        interview, and they almost never stop after the first design — the interviewer pushes
+        back to see how you think, not just what you know.</li>
+        <li>This exact pushback chain — AZ failure, a traffic spike, a database bottleneck — is
+        the single most common shape these questions take, whether the base design is a
+        traditional web app, a serverless API, or an event-driven system.</li>
+        <li>How well the pushback chain is handled is often the real signal being scored — the
+        first design is just the opening move, not the whole answer.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><b>AZ-1 fails</b> <span class="rarrow">→</span> other AZs already cover it</p>
+      <p class="rrow"><b>10x traffic</b> <span class="rarrow">→</span> scale out + cache reads</p>
+      <p class="rrow"><b>DB bottleneck</b> <span class="rarrow">→</span> replicas, cache, or repartition</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> every pushback <b>extends</b> the same diagram
+    — it never starts a new one.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— the base design, then every pushback branching off it</span></div>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="dShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="14" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.3">THE BASE DESIGN — ONE ANSWER, EVERY AZ COVERED</text>
+
+      <!-- pipeline connectors -->
+      <path d="M136,59 H156" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrow)"/>
+      <path d="M252,59 H272" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrow)"/>
+      <path d="M368,59 H388" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrow)"/>
+      <path d="M484,59 H504" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+      <!-- Route 53 -->
+      <g filter="url(#dShadow)"><rect x="40" y="28" width="96" height="62" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="88" y="50" text-anchor="middle" font-size="15">🧭</text>
+      <text x="88" y="68" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">ROUTE 53</text>
+      <text x="88" y="82" text-anchor="middle" font-size="7.5" fill="#5b6472">DNS entry</text>
+
+      <!-- CloudFront + WAF -->
+      <g filter="url(#dShadow)"><rect x="156" y="28" width="96" height="62" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="204" y="50" text-anchor="middle" font-size="15">🛡️</text>
+      <text x="204" y="68" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">CLOUDFRONT/WAF</text>
+      <text x="204" y="82" text-anchor="middle" font-size="7.5" fill="#5b6472">edge cache</text>
+
+      <!-- ALB -->
+      <g filter="url(#dShadow)"><rect x="272" y="28" width="96" height="62" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="50" text-anchor="middle" font-size="15">🌐</text>
+      <text x="320" y="68" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">ALB</text>
+      <text x="320" y="82" text-anchor="middle" font-size="7.5" fill="#5b6472">spans all AZs</text>
+
+      <!-- EC2/ECS ASG -->
+      <g filter="url(#dShadow)"><rect x="388" y="28" width="96" height="62" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="436" y="50" text-anchor="middle" font-size="15">⚙️</text>
+      <text x="436" y="68" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">EC2 / ECS</text>
+      <text x="436" y="82" text-anchor="middle" font-size="7.5" fill="#5b6472">ASG · 3 AZs</text>
+
+      <!-- RDS/Aurora -->
+      <g filter="url(#dShadow)"><rect x="504" y="28" width="96" height="62" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="552" y="50" text-anchor="middle" font-size="15">🗄️</text>
+      <text x="552" y="68" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">RDS/AURORA</text>
+      <text x="552" y="82" text-anchor="middle" font-size="7.5" fill="#5b6472">Multi-AZ</text>
+
+      <text x="320" y="126" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing="0.2" fill="#475569">ONE DESIGN, SPANNING MULTIPLE AZs AT THE ALB / COMPUTE / DB LAYER</text>
+    </svg>
+    <figcaption>The base answer to "design a highly available web app" — this exact chain is what
+    every pushback below extends, not replaces.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 288" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="dShadow2" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arrow2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+        <marker id="arRose2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="14" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.3">THE SAME DESIGN, BRANCHING TO ANSWER EACH PUSHBACK</text>
+
+      <!-- root: same design -->
+      <g filter="url(#dShadow2)"><rect x="220" y="26" width="200" height="50" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="48" text-anchor="middle" font-size="16">🏗️</text>
+      <text x="320" y="68" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">SAME DESIGN</text>
+
+      <!-- stem + distributor bar (no markers — routing lines, not connectors) -->
+      <path d="M320,76 V88" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M140,88 H500" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+
+      <!-- drop to AZ-1 FAILS — the risky/live branch, animated -->
+      <path d="M140,88 V108" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-dasharray="4 3" marker-end="url(#arRose2)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-14" dur="1.4s" repeatCount="indefinite"/>
+      </path>
+      <!-- drop to 10x TRAFFIC -->
+      <path d="M320,88 V108" fill="none" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow2)"/>
+      <!-- drop to DB BOTTLENECK -->
+      <path d="M500,88 V108" fill="none" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow2)"/>
+
+      <!-- column headers -->
+      <g filter="url(#dShadow2)"><rect x="60" y="108" width="160" height="44" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="140" y="126" text-anchor="middle" font-size="15">💥</text>
+      <text x="140" y="144" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">AZ-1 FAILS</text>
+
+      <g filter="url(#dShadow2)"><rect x="240" y="108" width="160" height="44" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="126" text-anchor="middle" font-size="15">📈</text>
+      <text x="320" y="144" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">10x TRAFFIC</text>
+
+      <g filter="url(#dShadow2)"><rect x="420" y="108" width="160" height="44" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="500" y="126" text-anchor="middle" font-size="15">🗄️</text>
+      <text x="500" y="144" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">DB BOTTLENECK</text>
+
+      <!-- drops from header to outcome -->
+      <path d="M140,152 V182" fill="none" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow2)"/>
+      <path d="M320,152 V182" fill="none" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow2)"/>
+      <path d="M500,152 V182" fill="none" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow2)"/>
+
+      <!-- outcomes -->
+      <g filter="url(#dShadow2)"><rect x="60" y="182" width="160" height="58" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="140" y="200" text-anchor="middle" font-size="14">✅</text>
+      <text x="140" y="216" text-anchor="middle" font-size="9.5" font-weight="600" fill="#166534">ALB + ASG</text>
+      <text x="140" y="232" text-anchor="middle" font-size="9.5" font-weight="600" fill="#166534">serve from other AZs</text>
+
+      <g filter="url(#dShadow2)"><rect x="240" y="182" width="160" height="58" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="200" text-anchor="middle" font-size="14">✅</text>
+      <text x="320" y="216" text-anchor="middle" font-size="9.5" font-weight="600" fill="#166534">ASG scales out</text>
+      <text x="320" y="232" text-anchor="middle" font-size="9.5" font-weight="600" fill="#166534">CDN caches reads</text>
+
+      <g filter="url(#dShadow2)"><rect x="420" y="182" width="160" height="58" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="500" y="200" text-anchor="middle" font-size="14">✅</text>
+      <text x="500" y="216" text-anchor="middle" font-size="9.5" font-weight="600" fill="#166534">add read replicas</text>
+      <text x="500" y="232" text-anchor="middle" font-size="9.5" font-weight="600" fill="#166534">or cache / repartition</text>
+
+      <text x="320" y="268" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing="0.2" fill="#475569">EACH BRANCH IS THE SAME DESIGN — JUST ANSWERING A DIFFERENT PUSHBACK</text>
+    </svg>
+    <figcaption>The dashed red branch is the one still "live" under real failure — everything else
+    is a scaling or capacity fix, not an outage.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Answering the first design question well, then floundering on the
+    pushback chain.</b> A strong architect answer treats each pushback as an extension of the
+    same design — showing how the architecture actually adapts — not restarting from scratch on
+    a fresh whiteboard each time.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What happens if DynamoDB throttles in a serverless-API design?"</b>
+    Check for a hot partition first, then consider on-demand capacity mode or redesigning the
+    partition key — throttling is almost always a partition-key or capacity-mode problem, not
+    "DynamoDB is slow."</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Each pushback extends the same design — I show how the architecture
+    adapts, I don't restart from scratch on a new whiteboard."</p>
+    <ul>
+      <li>AZ-1 fails → <span class="hl hl-blue">ALB + ASG already span multiple AZs</span>, so
+      traffic just shifts to the healthy ones.</li>
+      <li>10x traffic → <span class="hl hl-inter">scale the compute tier out</span>, and let
+      caching/CDN absorb the read-heavy load.</li>
+      <li>Database bottleneck → <span class="hl hl-teal">read replicas or caching for reads</span>,
+      repartitioning or a data-model rethink if it's specifically a write bottleneck.</li>
+      <li>DynamoDB throttling → <span class="hl hl-hot">check for a hot partition first</span>, not
+      "DynamoDB is slow."</li>
+      <li>Going multi-region → <span class="hl hl-basic">the same active/active vs.
+      active/passive decision</span>, just applied to this design.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A classic AWS architecture-design question starts with something like <b>"design a
+      highly available web application."</b> The expected first answer is almost always the same
+      base shape: <b>Route 53</b> for DNS, <b>CloudFront + WAF</b> in front for caching and edge
+      protection, an <b>Application Load Balancer</b> distributing traffic, an <b>EC2/ECS</b>
+      compute tier running in an Auto Scaling Group across multiple AZs, and <b>RDS/Aurora</b> as
+      the database, also spanning multiple AZs.</p>
+      <p>The interview rarely stops there — it turns into a pushback chain: "what if AZ-1
+      fails?", "what if traffic goes 10x?", "what if the database becomes the bottleneck?" Each
+      one gets answered by extending the exact design already on the whiteboard, not drawing a
+      new one. AZ-1 failing is already covered if the design genuinely spans multiple AZs — the
+      ALB and Auto Scaling Group keep serving from the healthy ones. 10x traffic means scaling the
+      compute tier out and letting CloudFront/caching absorb read-heavy load. A database
+      bottleneck usually means read replicas or a cache (ElastiCache) for read pressure — or, if
+      it's specifically a write bottleneck, rethinking the data model or partitioning instead,
+      since replicas don't help writes.</p>
+      <p>The same pushback-chain technique applies to the other classic whiteboard prompts too —
+      a serverless API, an event-driven system, a global application — each gets its own chain of
+      follow-ups (cost, multi-region, throttling) answered the same way: extend the design, don't
+      restart it.</p>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A candidate's design survives the "AZ-1 fails" pushback cleanly</b> because the base
+      design already spanned 3 AZs from the first sketch — the pushback chain rewards a design
+      that was built defensively from the start, not a scramble of fixes bolted on after the
+      interviewer points out the gap.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="index.html" style="color:var(--ink-soft);">Production Troubleshooting <em>(coming soon)</em></a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to AWS Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="index.html" style="color:var(--ink-soft);">Architect-Level Trade-off Questions <em>(coming soon)</em></a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · AWS · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
