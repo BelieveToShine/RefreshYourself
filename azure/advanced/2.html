@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App Service Returns 500s — A Troubleshooting Scenario — Azure Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="azure/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0f2fe;--crumb-ink:#0078D4;">☁️ Azure</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">App Service Returns 500s</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Azure · Advanced · Must Know</div>
+    <h1>500s in production — is it the code, or <span class="hl hl-hot">something downstream</span>?</h1>
+    <p class="interview-q">Your API is deployed to Azure App Service and suddenly starts returning 500 errors. How would you troubleshoot it?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>A production 500 spike is a real on-call scenario, not trivia — how you triage it
+        tells an interviewer more about seniority than knowing every Azure service name.</li>
+        <li>Jumping straight to "roll back the code" without checking evidence first can waste
+        precious minutes, or fix nothing, if the real cause is somewhere else entirely.</li>
+        <li>This is a favorite senior/architect scenario question because it tests process under
+        pressure, not memorized facts.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><b>1. Deploy</b> <span class="rarrow">→</span> did something just ship?</p>
+      <p class="rrow"><b>2. Dependency</b> <span class="rarrow">→</span> is something downstream down?</p>
+      <p class="rrow"><b>3. Metrics</b> <span class="rarrow">→</span> is CPU/memory maxed out?</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b>Log Stream</b> shows you what broke,
+    <b>App Insights</b> shows you when it broke — check both before you touch anything.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shAz2" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arAmberAz2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arGreenAz2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="340" y="14" text-anchor="middle" font-size="11" font-weight="700" fill="#475569" letter-spacing="0.3">500s IN PRODUCTION — TRIAGE ORDER</text>
+
+      <!-- top: the alert -->
+      <g filter="url(#shAz2)">
+        <rect x="250" y="24" width="180" height="42" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8">
+          <animate attributeName="stroke-width" values="1.8;3;1.8" dur="1.6s" repeatCount="indefinite"/>
+        </rect>
+      </g>
+      <text x="340" y="49" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🔥 500 ERRORS APPEAR</text>
+
+      <!-- trunk down to the bus -->
+      <path d="M340,66 V90" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <!-- bus -->
+      <path d="M140,90 H540" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+
+      <!-- drops into the 3 checks -->
+      <path d="M140,90 V118" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arAmberAz2)"/>
+      <path d="M340,90 V118" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arAmberAz2)"/>
+      <path d="M540,90 V118" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arAmberAz2)"/>
+
+      <!-- 3 check boxes -->
+      <g filter="url(#shAz2)"><rect x="45" y="118" width="190" height="46" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="140" y="145" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">Recent deploy?</text>
+
+      <g filter="url(#shAz2)"><rect x="245" y="118" width="190" height="46" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="340" y="145" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">Dependency down?</text>
+
+      <g filter="url(#shAz2)"><rect x="445" y="118" width="190" height="46" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="540" y="145" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">Metrics maxed?</text>
+
+      <!-- drops into the 3 fixes -->
+      <path d="M140,164 V196" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arGreenAz2)"/>
+      <path d="M340,164 V196" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arGreenAz2)"/>
+      <path d="M540,164 V196" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arGreenAz2)"/>
+
+      <!-- 3 fix boxes -->
+      <g filter="url(#shAz2)"><rect x="45" y="196" width="190" height="50" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="140" y="217" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Swap slot back</text>
+      <text x="140" y="233" text-anchor="middle" font-size="8.5" fill="#166534">reversible, near-instant</text>
+
+      <g filter="url(#shAz2)"><rect x="245" y="196" width="190" height="50" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="340" y="217" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Escalate / wait</text>
+      <text x="340" y="233" text-anchor="middle" font-size="8.5" fill="#166534">not your code to roll back</text>
+
+      <g filter="url(#shAz2)"><rect x="445" y="196" width="190" height="50" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="540" y="217" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Scale up / find leak</text>
+      <text x="540" y="233" text-anchor="middle" font-size="8.5" fill="#166534">timeout, not a real bug</text>
+
+      <text x="340" y="278" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing="0.2" fill="#475569">MATCH THE FIX TO WHAT'S ACTUALLY TRUE — DON'T GUESS</text>
+    </svg>
+    <figcaption>One alert, three real causes — check all three before picking a fix, because a
+    downstream dependency failing looks identical to a bad deploy from the outside.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A sudden batch of 500s doesn't always mean new code shipped.</b> A
+    downstream dependency (a database, an external API) failing produces the exact same
+    symptom, and checking dependency health or Application Insights takes minutes — rolling
+    back code as the first move can waste time, or be the wrong fix entirely.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's the fastest safe mitigation while you're still diagnosing?"</b>
+    If a deployment slot swap was involved, swap back immediately — it's near-instant and
+    reversible — while root-causing in parallel, rather than waiting for a full diagnosis before
+    doing anything.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Check recent deploys, dependency health, and resource metrics — in
+    that order — before assuming it's a code bug. If a slot swap shipped the change, swap back
+    immediately since it's fast and reversible, and keep root-causing the real issue in
+    parallel."</p>
+    <ul>
+      <li><code>Log Stream</code> / Diagnostics → <span class="hl hl-blue">first stop for the actual exception</span> — see the real error before guessing.</li>
+      <li>Application Insights <span class="hl hl-inter">Failures blade</span> → the exact stack trace, correlated against the deployment timeline.</li>
+      <li>Dependency health → <span class="hl hl-hot">produces an identical symptom to a bad deploy</span> — check it before rolling back code.</li>
+      <li>CPU/memory near 100% → <span class="hl hl-teal">timeouts that look like exceptions</span>, not a real code defect.</li>
+      <li>Slot swap involved → <span class="hl hl-basic">swap back immediately</span> — near-instant and fully reversible.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Start with the App Service's own <b>Diagnostics</b> / <b>Log Stream</b> — it's the
+      fastest way to see the actual exception as it's thrown, live, with no extra setup. From
+      there, <b>Application Insights</b>' Failures blade gives the exact stack trace and lets
+      you correlate the first failing request against the deployment timeline — a bad deploy is
+      the single most common real cause of a sudden 500 spike, so checking "did anything ship
+      recently" early is worth it.</p>
+
+      <p>If nothing shipped, check whether a <b>downstream dependency</b> — a database, an
+      external API, a queue — is actually healthy; a dependency outage produces the exact same
+      wall of 500s a bad deploy would, from the caller's point of view. Then check <b>resource
+      metrics</b>: CPU or memory pinned near 100% causes requests to time out and fail, which
+      looks like an application exception but is really a capacity problem. Also worth a glance:
+      a recent scale event, or a deployment <b>slot swap</b> that may have shipped untested
+      configuration along with the code.</p>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A 500 spike starts right after a deploy.</b> The direct answer: swap the deployment
+      slot back within a minute — the fast, reversible move — which immediately stops the
+      bleeding for users while the actual bug gets found and fixed properly before the next,
+      better-tested release goes out.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="1.html">← Well-Architected Framework</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Azure Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="3.html">Disaster Recovery — RPO, RTO & Multi-Region Strategy →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Azure · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
