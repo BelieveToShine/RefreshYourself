@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Bus Architecture — Wiring Producers &amp; Consumers — Azure Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="azure/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0f2fe;--crumb-ink:#0078D4;">☁️ Azure</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Service Bus Architecture</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 Azure · Intermediate · Deep Dive</div>
+    <h1><span class="hl hl-blue">Peek-lock</span>, complete, <span class="hl hl-hot">redeliver</span> — the real lifecycle of one message</h1>
+    <p class="interview-q">"How does a producer/consumer system actually get wired together around Service Bus?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Checks whether you understand how a real messaging system stays reliable — not just that Service Bus exists as a product name.</li>
+        <li>Comes up any time the conversation turns to distributed systems, event-driven design, or "how do you guarantee a message doesn't get lost."</li>
+        <li>A very common follow-up after any "why use a queue" question — interviewers want the actual mechanics, not the marketing pitch.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Peek-lock <span class="rarrow">→</span> <b>locked</b>, invisible to other consumers</p>
+      <p class="rrow">Complete <span class="rarrow">→</span> <b>gone for good</b></p>
+      <p class="rrow">No complete <span class="rarrow">→</span> <b>redelivered</b>, not lost</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>CompleteMessageAsync</code></b> is the only thing that removes a message for good.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 190" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shSb" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arSb" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arSbRed" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.5">SERVICE BUS MESSAGE LIFECYCLE</text>
+
+      <g filter="url(#shSb)"><rect x="24" y="40" width="104" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="76" y="63" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">📤 Producer</text>
+      <text x="76" y="80" text-anchor="middle" font-size="9" fill="#5b6472">sends message</text>
+
+      <path d="M128,70 H146" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSb)"/>
+
+      <g filter="url(#shSb)"><rect x="146" y="40" width="104" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="198" y="63" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">📬 Queue</text>
+      <text x="198" y="80" text-anchor="middle" font-size="9" fill="#5b6472">holds messages</text>
+
+      <path d="M250,70 H268" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSb)"/>
+
+      <g filter="url(#shSb)"><rect x="268" y="40" width="104" height="60" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="63" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🔒 Peek-Lock</text>
+      <text x="320" y="80" text-anchor="middle" font-size="9" fill="#5b6472">not visible now</text>
+
+      <path d="M372,70 H390" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSb)"/>
+
+      <g filter="url(#shSb)"><rect x="390" y="40" width="104" height="60" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="442" y="63" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">⚙️ Process</text>
+      <text x="442" y="80" text-anchor="middle" font-size="9" fill="#5b6472">consumer works</text>
+
+      <path d="M494,70 H512" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSb)"/>
+
+      <g filter="url(#shSb)"><rect x="512" y="40" width="104" height="60" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="564" y="63" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ Complete</text>
+      <text x="564" y="80" text-anchor="middle" font-size="9" fill="#5b6472">gone for good</text>
+
+      <path d="M442,100 V145 H198 V100" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#arSbRed)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-22" dur="1.4s" repeatCount="indefinite"/>
+      </path>
+      <text x="320" y="123" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">🐛 not completed in time</text>
+      <text x="320" y="136" text-anchor="middle" font-size="9" fill="#5b6472">lock expires → returns to queue → redelivered</text>
+    </svg>
+    <figcaption>A message stays peek-locked and invisible while a consumer works on it — only <code>Complete</code> removes it for good. Miss that window and it silently comes back for another try.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"It only got processed once, right?"</b> Forgetting to call <code>CompleteMessageAsync</code> — or crashing before it runs — lets the peek-lock expire, so the message becomes visible again and gets redelivered; that's Service Bus working correctly, not a bug, and it's exactly why a non-idempotent consumer can end up processing the same message twice.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"So does that mean consumers must be idempotent?"</b> Yes — Service Bus guarantees at-least-once delivery, so a message can arrive more than once in edge cases (a crash mid-processing, a lock timeout); a well-designed consumer has to handle a duplicate delivery safely.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A message is peek-locked while processing and only removed once explicitly completed — that's what makes retries safe, but it also means every consumer has to be idempotent, because the same message can be delivered more than once."</p>
+    <ul>
+      <li>Peek-lock <span class="hl hl-blue">→ locks a message for you</span>, it doesn't delete it yet.</li>
+      <li><code>CompleteMessageAsync</code> <span class="hl hl-basic">→ the only thing that removes it for good</span>.</li>
+      <li>No complete before the lock times out <span class="hl hl-hot">→ automatic redelivery</span>, not data loss.</li>
+      <li>Idempotency key <span class="hl hl-inter">→ the standard defense</span> against processing a duplicate twice.</li>
+      <li>Sessions <span class="hl hl-teal">→ guarantee ordered processing</span> for a related group of messages.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A real architecture around Service Bus has three moving parts. <b>Producers</b> send
+      messages — usually through a client SDK or a binding (e.g. an Azure Functions output
+      binding). The <b>Service Bus namespace</b> hosts the queues or topics that hold those
+      messages. One or more <b>consumers</b> pull messages out, either with a manual receive loop
+      or an event-driven trigger, such as a Function's Service Bus trigger, that fires per
+      message.</p>
+
+      <p>When a consumer receives a message under the default <b>peek-lock</b> mode, that message
+      is locked — it stays in the queue but becomes invisible to every other consumer — for a
+      set lock duration while it's being processed. If the consumer calls
+      <code>CompleteMessageAsync</code> before that lock expires, the message is removed for
+      good. If it doesn't — a crash, an unhandled exception, or simply forgetting the call — the
+      lock times out and the message becomes visible again, ready to be redelivered. That's the
+      mechanism that makes safe retries possible without ever losing a message.</p>
+
+      <p><b>Sessions</b> extend this for messages that have to stay in order. Instead of locking
+      one message at a time, a session lock hands a whole related group of messages (all sharing
+      a session ID — e.g. every message for one customer's order) to a single consumer, so they
+      get processed in the order they arrived rather than being picked up out of order by
+      whichever consumer happens to be free.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">processor</span>.ProcessMessageAsync += <span class="kw">async</span> args =>
+{
+    <span class="kw">var</span> order = args.Message.Body.ToObjectFromJson&lt;<span class="ty">OrderMessage</span>&gt;();
+    <span class="kw">await</span> ApplyOrderAsync(order); <span class="cx-cmt">// do the real work</span>
+
+    <span class="cx-ok">// ✅ explicit acknowledgement — this is what removes it from the queue</span>
+    <span class="kw">await</span> args.CompleteMessageAsync(args.Message);
+};</code></pre>
+      </div>
+      <p class="cx-note">Without that last line, the message stays peek-locked only until the lock times out — then it's redelivered, even though the work above already ran.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A payment-processing consumer checks an <b>idempotency key</b> — a unique ID carried on
+      the message — before applying its effect, and skips it if that key has already been
+      applied. So on the rare redelivery (a crash right after charging the card but before
+      completing the message), the consumer sees the same key again, does nothing, and the
+      customer is never charged twice.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="../intermediate/index.html" style="color:var(--ink-soft); font-weight:400;">Cosmos DB Consistency Levels (coming soon)</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Azure Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="../advanced/index.html">Continue to Advanced →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Azure · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
