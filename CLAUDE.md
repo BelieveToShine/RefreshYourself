@@ -6,9 +6,9 @@ editing any page — details live in the linked files, read the relevant one for
 
 ## What this project is
 
-A set of "tracks" — as of 2026-09-16: C#, OOP, .NET/ASP.NET Core, Web API, and EF Core are
-through all 7 rebuild phases (see below); SQL and Azure have a Phase 1 taxonomy awaiting Phase
-2+; AI/React/DSA are untouched. More can be added later. Each track has three tiers — **Basic →
+A set of "tracks" — as of 2026-09-17: C#, OOP, .NET/ASP.NET Core, Web API, EF Core, SQL, and
+React are through all 7 rebuild phases (see below); Azure has a Phase 1 taxonomy awaiting Phase
+2+; AI/DSA are untouched. More can be added later. Each track has three tiers — **Basic →
 Intermediate → Advanced** (question *type*, not difficulty or seniority — see
 [`docs/rules/interview-depth-and-priority.md`](docs/rules/interview-depth-and-priority.md)).
 Each topic is one page: a **diagram**, a **simple-words explanation**, and a **key points to

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concurrent Rendering — React Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="react/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#cffafe;--crumb-ink:#0891b2;">⚛️ React</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Concurrent Rendering</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 React · Advanced · Deep Dive</div>
+    <h1>Concurrent rendering — <span class="hl hl-blue">interruptible work</span>, not <span class="hl hl-hot">multiple threads</span></h1>
+    <p class="interview-q">"Does concurrent React mean it uses multiple threads?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Answering "concurrent = multi-threaded" is a common first mistake that immediately
+        signals shallow understanding to a senior interviewer.</li>
+        <li>It's what actually explains why a search box can stay instantly responsive while a
+        huge list is re-filtering behind it — a real UX problem, not just trivia.</li>
+        <li>A near-guaranteed Deep Dive follow-up the moment React 18+, <code>startTransition</code>,
+        or <code>useDeferredValue</code> comes up.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Concurrent ≠ <b>"multi-threaded."</b> It means render work is
+    <b>interruptible and prioritizable</b> — an urgent update can cut in line ahead of a big,
+    non-urgent one.</p>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>JS</code></b> is still
+    single-threaded — "concurrent" describes <b>scheduling</b>, not parallelism.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shR2" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arR2Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arR2Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arR2Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">ONE JS THREAD — REORDERED BY PRIORITY</text>
+
+      <!-- top: the two competing requests -->
+      <g filter="url(#shR2)"><rect x="20" y="30" width="250" height="50" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="145" y="50" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">📋 Filter 5,000 rows</text>
+      <text x="145" y="67" text-anchor="middle" font-size="10.5" fill="#5b6472">non-urgent update</text>
+
+      <g filter="url(#shR2)"><rect x="350" y="30" width="250" height="50" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="475" y="50" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">⌨️ User types</text>
+      <text x="475" y="67" text-anchor="middle" font-size="10.5" fill="#5b6472">urgent update</text>
+
+      <!-- jogged connectors down into the single-thread timeline -->
+      <path d="M145,80 V125 H91.5 V170" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arR2Amber)"/>
+      <path d="M475,80 V125 H319.5 V170" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arR2Blue)"/>
+
+      <!-- bottom: actual execution order on the one thread -->
+      <g filter="url(#shR2)"><rect x="20" y="170" width="143" height="50" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="91.5" y="190" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">▶ Render starts</text>
+      <text x="91.5" y="207" text-anchor="middle" font-size="10.5" fill="#5b6472">non-urgent update</text>
+
+      <g filter="url(#shR2)"><rect x="248" y="170" width="143" height="50" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="319.5" y="190" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">⚡ Cuts in now</text>
+      <text x="319.5" y="207" text-anchor="middle" font-size="10.5" fill="#5b6472">urgent update</text>
+
+      <g filter="url(#shR2)"><rect x="476" y="170" width="143" height="50" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="547.5" y="190" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ Finishes</text>
+      <text x="547.5" y="207" text-anchor="middle" font-size="10.5" fill="#5b6472">after urgent</text>
+
+      <path d="M163,195 H248" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arR2Blue)"/>
+      <path d="M391,195 H476" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arR2Green)"/>
+
+      <rect x="169.5" y="158" width="72" height="18" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1"/>
+      <text x="205.5" y="171" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">⏸ paused</text>
+
+      <rect x="397.5" y="158" width="72" height="18" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1"/>
+      <text x="433.5" y="171" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">▶ resumes</text>
+
+      <!-- the actual chronological order flowing across the one thread -->
+      <circle r="5" fill="#0f766e">
+        <animateMotion dur="4s" repeatCount="indefinite" path="M163,195 H619"/>
+      </circle>
+    </svg>
+    <figcaption>Both updates want to render — the urgent one cuts in and finishes first; the non-urgent one just resumes after, on the same single thread.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Concurrent rendering does not mean React runs render work on multiple
+    threads.</b> JavaScript stays single-threaded — "concurrent" means render work built on
+    Fiber can be interrupted and reprioritized, which solves an urgent update getting stuck
+    behind a big non-urgent render, not doing two things at the exact same instant.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's the actual difference between <code>useTransition</code> and
+    <code>useDeferredValue</code>?"</b> <code>useTransition</code> marks a <b>state update</b>
+    you're making as non-urgent, and gives you an <code>isPending</code> flag you control;
+    <code>useDeferredValue</code> takes a <b>value</b> you already have and gives you a lagging,
+    lower-priority copy of it — same underlying priority mechanism, shaped for different
+    situations.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"React stays single-threaded — 'concurrent' means Fiber makes render
+    work interruptible and prioritizable, so an urgent update like typing can cut ahead of a
+    big, non-urgent render like re-filtering a large list. <code>startTransition</code> and
+    <code>useTransition</code> mark a state update as non-urgent; <code>useDeferredValue</code>
+    does the same thing for a value I already have."</p>
+    <ul>
+      <li><code>startTransition</code> → <span class="hl hl-blue">marks a state update as non-urgent</span>, interruptible by anything more urgent.</li>
+      <li><code>useTransition</code> → same as <code>startTransition</code>, plus <span class="hl hl-teal">an <code>isPending</code> flag</span> your UI can show.</li>
+      <li><code>useDeferredValue</code> → <span class="hl hl-inter">lags a value you already have</span>, for when you can't wrap the update itself.</li>
+      <li>Concurrent rendering → <span class="hl hl-basic">still single-threaded, just reordered work</span>, not literal parallelism.</li>
+      <li>Misusing transitions → <span class="hl hl-hot">marking urgent work as non-urgent</span> makes the UI feel delayed when it should feel instant.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>JavaScript is still single-threaded — React never runs two pieces of render work at the
+      exact same instant. What Fiber changed is that render work is broken into small,
+      interruptible units, so React can pause a big render partway through, throw it away, or
+      let a higher-priority update go first. <span class="hl hl-blue">"Concurrent"</span> is the
+      name for that scheduling capability, not a claim about parallel execution.</p>
+
+      <p><code>startTransition</code> marks a state update as non-urgent, so React is free to
+      interrupt it the moment something more urgent — a keystroke, a click — comes in.
+      <code>useTransition</code> gives that same capability plus an <code>isPending</code> flag
+      so the UI can show that something is still catching up.
+      <span class="hl hl-inter"><code>useDeferredValue</code></span> solves a narrower problem:
+      sometimes you don't own the update itself — the value comes from a parent component, a
+      router, a library you don't control — so instead of wrapping an update, you take the
+      current value and get a deliberately lagging, lower-priority copy of it to render the
+      expensive part from.</p>
+
+      <p>Marking the wrong thing as non-urgent is a real cost, not just a theoretical one — if a
+      transition delays something the user actually expected instantly, the UI reads as
+      sluggish even though nothing "broke." Reach for a transition for the expensive-but-not-
+      urgent half of an update, never for the part the user is directly interacting with.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>startTransition</code></th><th><code>useTransition</code></th><th><code>useDeferredValue</code></th></tr></thead>
+        <tbody>
+          <tr><th>Wraps</th><td>a state update call</td><td>a state update call</td><td>an existing value</td></tr>
+          <tr><th>Extra</th><td>—</td><td><code>isPending</code> flag</td><td>a lagging copy of the value</td></tr>
+          <tr><th>Use when</th><td>you can call it directly around <code>setState</code></td><td>same, and you want a pending indicator</td><td>the value comes from somewhere you don't control</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JSX</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">const</span> [isPending, startTransition] = useTransition();
+
+<span class="kw">function</span> handleChange(e) {
+  <span class="kw">const</span> input = e.target.value;
+  setInputValue(input);          <span class="cx-ok">// ✅ urgent — updates instantly</span>
+
+  startTransition(() =&gt; {
+    setFilterText(input);        <span class="cx-cmt">// marks this update non-urgent</span>
+  });
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>setInputValue</code> stays urgent so the box feels instant — only
+      the expensive re-filter is marked non-urgent.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JSX</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">const</span> [query, setQuery] = useState(<span class="str">''</span>);
+<span class="kw">const</span> deferredQuery = useDeferredValue(query);
+
+<span class="cx-cmt">// input reads `query` directly — always instant</span>
+&lt;<span class="ty">input</span> value={query} onChange={e =&gt; setQuery(e.target.value)} /&gt;
+
+<span class="cx-cmt">// the expensive list renders off the lagging copy</span>
+&lt;<span class="ty">BigFilteredList</span> query={deferredQuery} /&gt;</code></pre>
+      </div>
+      <p class="cx-note">The input never waits on the big list — it renders from the
+      always-current <code>query</code>, while the list catches up on the deferred copy.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A barista working alone.</b> Someone walks up mid-order and says "just a coffee,
+      I'm in a rush" — the barista pauses the complicated custom drink they were already
+      building, makes the quick coffee, then goes back and finishes the complicated one. Still
+      one barista, one pair of hands — just reordering the work by urgency, exactly like one JS
+      thread reordering render work.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="1.html">← Reconciliation &amp; Fiber</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to React Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="3.html">Suspense →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · React · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

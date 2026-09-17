@@ -420,5 +420,97 @@ window.NAV_INDEX = {
         ]
       }
     ]
+  },
+  "react/basic": {
+    track: "React",
+    trackIcon: "⚛️",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1–8",
+        hot: 6,
+        items: [
+          { n: 1, file: "1.html", short: "What Is React",           title: "What Is React",                  tail: "a library that lets you describe UI, not command it.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Components & JSX",        title: "Components & JSX",               tail: "what JSX actually compiles into.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Props",                    title: "Props",                          tail: "one-way data flow, and how a child talks back.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "State",                    title: "State",                          tail: "why you can't mutate it directly.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Events",                   title: "Events",                         tail: "synthetic events, propagation, and passing handlers correctly.", priority: "⭐" },
+          { n: 6, file: "6.html", short: "Conditional Rendering",    title: "Conditional Rendering",          tail: "if/ternary/&&, and the classic && gotcha.", priority: "⭐" },
+          { n: 7, file: "7.html", short: "Lists & Keys",             title: "Lists & Keys",                   tail: "why unstable keys break component state.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Hooks — Rules",            title: "Hooks — Rules & Overview",       tail: "why a Hook can never live inside an if.", priority: "🔥" }
+        ]
+      }
+    ]
+  },
+  "react/intermediate": {
+    track: "React",
+    trackIcon: "⚛️",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 4,
+        items: [
+          { n: 1,  file: "1.html",  short: "useEffect Basics",          title: "useEffect — Fundamentals & Cleanup", tail: "when it runs, and when cleanup fires.", priority: "🔥" },
+          { n: 2,  file: "2.html",  short: "Effect Timing & StrictMode", title: "Effect Timing Variants & StrictMode", tail: "useLayoutEffect, and why effects fire twice in dev.", priority: "⭐" },
+          { n: 3,  file: "3.html",  short: "useRef & Callbacks",        title: "useRef & Ref Callbacks",         tail: "a value that survives renders without triggering one.", priority: "⭐" },
+          { n: 4,  file: "4.html",  short: "useMemo/useCallback/memo",  title: "useMemo, useCallback & React.memo", tail: "caching, not a guaranteed speedup.", priority: "⭐" },
+          { n: 5,  file: "5.html",  short: "Custom Hooks",              title: "Custom Hooks",                   tail: "shared logic, never shared state.", priority: "🔥" },
+          { n: 6,  file: "6.html",  short: "Context API",               title: "Context API",                    tail: "skipping prop drilling, not a state library.", priority: "🔥" },
+          { n: 7,  file: "7.html",  short: "Component Composition",     title: "Component Communication & Composition", tail: "composition over inheritance, plus Portals.", priority: "⭐" },
+          { n: 8,  file: "8.html",  short: "Forms",                     title: "Forms",                          tail: "controlled vs. uncontrolled, and who owns the value.", priority: "⭐" },
+          { n: 9,  file: "9.html",  short: "Data Fetching",             title: "Data Fetching",                  tail: "race conditions and requests that outlive the component.", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Routing",                   title: "Routing",                        tail: "route params, query params, and the refresh gotcha.", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11–15",
+        hot: 3,
+        items: [
+          { n: 11, file: "11.html", short: "Rendering Behaviour",       title: "Rendering Behaviour",            tail: "what actually causes a re-render.", priority: "🔥" },
+          { n: 12, file: "12.html", short: "Performance Basics",        title: "Performance Optimization Basics", tail: "profile first, memoize second.", priority: "🔥" },
+          { n: 13, file: "13.html", short: "Error Boundaries",          title: "Error Handling & Error Boundaries", tail: "what they catch, and what they don't.", priority: "🔥" },
+          { n: 14, file: "14.html", short: "Testing Components",        title: "Testing React Components",       tail: "test what the user sees, not internals.", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Accessibility",             title: "Accessibility",                  tail: "React gives you none of it for free.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "react/advanced": {
+    track: "React",
+    trackIcon: "⚛️",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 3,
+        items: [
+          { n: 1,  file: "1.html",  short: "Reconciliation & Fiber",       title: "Reconciliation & Fiber",         tail: "why rendering can pause partway through.", priority: "🧠" },
+          { n: 2,  file: "2.html",  short: "Concurrent Rendering",         title: "Concurrent Rendering",           tail: "interruptible work, not multiple threads.", priority: "🧠" },
+          { n: 3,  file: "3.html",  short: "Suspense",                      title: "Suspense",                       tail: "pausing a render, not just showing a spinner.", priority: "⭐" },
+          { n: 4,  file: "4.html",  short: "SSR & Hydration",               title: "Server-Side Rendering & Hydration", tail: "what causes a hydration mismatch.", priority: "🔥" },
+          { n: 5,  file: "5.html",  short: "Server Components",             title: "Server Components",              tail: "code that never ships to the browser.", priority: "🧠" },
+          { n: 6,  file: "6.html",  short: "Actions & use()",               title: "Actions, useOptimistic & the use() Hook", tail: "showing the answer before the server agrees.", priority: "🧠" },
+          { n: 7,  file: "7.html",  short: "State Mgmt Architecture",       title: "State Management Architecture",  tail: "matching the tool to how far state travels.", priority: "🔥" },
+          { n: 8,  file: "8.html",  short: "Architecture — One App",        title: "React Architecture — Structure Within One App", tail: "where a decision lives, not just a file.", priority: "🔥" },
+          { n: 9,  file: "9.html",  short: "Architecture — Beyond One App", title: "React Architecture — Beyond One App", tail: "micro-frontends, monorepos, React Native.", priority: "🧠" },
+          { n: 10, file: "10.html", short: "Design Patterns",               title: "Design Patterns",                 tail: "compound components, render props, and when to skip them.", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11–18",
+        hot: 6,
+        items: [
+          { n: 11, file: "11.html", short: "Testing at Scale",             title: "Testing at Scale",                tail: "a pyramid, not a wall.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Security",                      title: "Security",                        tail: "does JSX actually prevent XSS?", priority: "🔥" },
+          { n: 13, file: "13.html", short: "Production Performance",        title: "Production Performance",          tail: "where to look after it gets slower.", priority: "🔥" },
+          { n: 14, file: "14.html", short: "Scenario: Runaway Rendering",   title: "Scenario: Runaway Rendering & Requests", tail: "find the loop, not just the symptom.", priority: "🔥" },
+          { n: 15, file: "15.html", short: "Scenario: Scaling Under Load",  title: "Scenario: Scaling Under Load",    tail: "5,000 rows is a scale problem, not a bug.", priority: "🔥" },
+          { n: 16, file: "16.html", short: "Scenario: Incident Response",   title: "Scenario: Production Incident Response", tail: "diagnosing a blank page in prod.", priority: "🔥" },
+          { n: 17, file: "17.html", short: "Scenario: Team Growing Pains",  title: "Scenario: Codebase & Team Growing Pains", tail: "the codebase outgrew its own shape.", priority: "⭐" },
+          { n: 18, file: "18.html", short: "Scenario: Architecture Decisions", title: "Scenario: Architecture Decisions", tail: "CSR, SSR, or Server Components?", priority: "🔥" }
+        ]
+      }
+    ]
   }
 };

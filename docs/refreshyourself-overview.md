@@ -15,8 +15,8 @@ junior/mid-level interview. Two groups of tracks:
 
 - **Core backend interview path**, in this order: C# → OOP → .NET/ASP.NET Core (MVC lives inside
   this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure.
-- **Other tracks**, not part of the ordered path: React (Phase 1 started, see below), DSA and AI
-  still fully untouched.
+- **Other tracks**, not part of the ordered path: React (all 7 phases complete, see below), DSA
+  and AI still fully untouched.
 
 Every track goes through 7 phases before any page is built — see
 [`specs/README.md`](superpowers/specs/README.md) for the full pipeline, and
@@ -106,17 +106,14 @@ phases; Azure is still at Phase 1 (question taxonomy), awaiting the user's revie
 
 **Other tracks, outside the core backend path:**
 
-- **React** — **Phases 1–6 complete, Phase 7 not started** (2026-09-17):
+- **React** — **all 7 phases complete, 41/41 pages written** (2026-09-17):
   [`question-taxonomy.md`](superpowers/specs/react/question-taxonomy.md) →
-  [`roadmap.md`](superpowers/specs/react/roadmap.md) → 41 planned pages, awaiting the user's
-  review before any page gets written. Sourced from the user's own detailed, already
-  tier-organized outline rather than a short bullet list like every other track's seed —
-  unusually large (35 concept groups, 41 pages) as a direct result. See the taxonomy's own
-  Phase-2 coverage note for the full list of gaps identified and added, and what was
-  deliberately excluded (bundler internals, CSS-in-JS/state-library specifics, general JS
-  fundamentals); see the roadmap for the two adversarial-pass fixes (a missing "Testing
-  Strategy" section, two near-duplicate scenario questions) and the page-grouping/tier/priority
-  decisions.
+  [`roadmap.md`](superpowers/specs/react/roadmap.md) → 41 tiered/prioritized pages, live on the
+  site and on [`react/roadmap.html`](../react/roadmap.html). Sourced from the user's own
+  detailed, already tier-organized outline rather than a short bullet list like every other
+  track's seed — unusually large (35 concept groups, 41 pages) as a direct result. Every diagram
+  passed the mandatory automated verification script, run independently against every single
+  page. See [`specs/react/overview.md`](superpowers/specs/react/overview.md).
 - **AI** — roadmap-only skeleton across all three tiers, sourced from `AI-Interview-Topics.md`.
   **Do not write AI content until told to.** See
   [`specs/ai/overview.md`](superpowers/specs/ai/overview.md).
