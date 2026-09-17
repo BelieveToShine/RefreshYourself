@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disaster Recovery — RPO, RTO & Multi-Region Strategy — Azure Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="azure/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0f2fe;--crumb-ink:#0078D4;">☁️ Azure</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Disaster Recovery — RPO, RTO &amp; Multi-Region Strategy</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Azure · Advanced · Must Know</div>
+    <h1>Active-passive or active-active — <span class="hl hl-adv">the business decides</span>, not the engineers</h1>
+    <p class="interview-q">How do RPO and RTO actually drive the choice between an active-passive and an active-active multi-region design?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>A real disaster-recovery conversation starts as a <b>business</b> conversation — how
+        much data loss and downtime the business can actually survive — and only then becomes an
+        architecture decision.</li>
+        <li>Getting this wrong is expensive in both directions: too little resilience risks a real
+        outage with real data loss; too much burns budget and engineering effort on a guarantee
+        nobody actually asked for.</li>
+        <li>A common senior/architect scenario question — expect it phrased as "how would you
+        design DR for this system," with RPO/RTO as the very first thing you should ask about.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>RPO</code> <span class="rarrow">→</span> how much <b>data loss</b> is acceptable</p>
+      <p class="rrow"><code>RTO</code> <span class="rarrow">→</span> how long <b>recovery</b> is allowed to take</p>
+      <p class="rrow"><code>Active-Passive</code> <span class="rarrow">→</span> <b>cheaper</b>, slower failover</p>
+      <p class="rrow"><code>Active-Active</code> <span class="rarrow">→</span> <b>near-zero RTO</b>, real cost &amp; complexity</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> the <b>business</b> sets the RPO/RTO numbers
+    first — the architecture only exists to hit that target.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="drShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="drArPurple" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#7c3aed"/>
+        </marker>
+        <marker id="drArRed" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="drArAmber" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">WHO DECIDES: RPO / RTO SET THE ARCHITECTURE</text>
+
+      <!-- root: the business requirement -->
+      <g filter="url(#drShadow)"><rect x="210" y="28" width="220" height="44" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8"/></g>
+      <text x="320" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#6d28d9">RPO / RTO REQUIREMENT</text>
+      <text x="320" y="63" text-anchor="middle" font-size="8.5" font-weight="600" fill="#6d28d9">set by the business</text>
+
+      <!-- branches down to each option -->
+      <path d="M320,72 L150,108" fill="none" stroke="#7c3aed" stroke-width="1.8" marker-end="url(#drArPurple)"/>
+      <path d="M320,72 L490,108" fill="none" stroke="#7c3aed" stroke-width="1.8" marker-end="url(#drArPurple)"/>
+
+      <!-- left header: Active-Passive -->
+      <g filter="url(#drShadow)"><rect x="50" y="110" width="200" height="32" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="150" y="130" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">ACTIVE-PASSIVE</text>
+
+      <!-- right header: Active-Active -->
+      <g filter="url(#drShadow)"><rect x="390" y="110" width="200" height="32" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="490" y="130" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">ACTIVE-ACTIVE</text>
+
+      <!-- AP: Region A (active) -->
+      <g filter="url(#drShadow)"><rect x="55" y="152" width="85" height="54" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="97" y="175" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">REGION A</text>
+      <text x="97" y="192" text-anchor="middle" font-size="9">🟢 live</text>
+
+      <!-- AP: Region B (passive/idle) -->
+      <g filter="url(#drShadow)"><rect x="155" y="152" width="85" height="54" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="197" y="175" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">REGION B</text>
+      <text x="197" y="192" text-anchor="middle" font-size="9">⏸ idle</text>
+
+      <!-- AP: failover connector, animated (risky/waiting path) -->
+      <path id="drFailover" d="M97,206 L97,224 L197,224 L197,208" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#drArRed)">
+        <animate attributeName="stroke-dashoffset" from="36" to="0" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+      <text x="150" y="238" text-anchor="middle" font-size="8" font-weight="700" fill="#b91c1c">FAILOVER — SOME DELAY</text>
+      <text x="150" y="253" text-anchor="middle" font-size="8.5" fill="#475569">Higher RTO (failover time)</text>
+      <text x="150" y="267" text-anchor="middle" font-size="8.5" fill="#475569">Non-zero RPO (replication lag)</text>
+
+      <!-- AA: Region A (live) -->
+      <g filter="url(#drShadow)"><rect x="395" y="152" width="75" height="54" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="432" y="175" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">REGION A</text>
+      <text x="432" y="192" text-anchor="middle" font-size="9">🟢 live</text>
+
+      <!-- AA: Region B (live) -->
+      <g filter="url(#drShadow)"><rect x="505" y="152" width="75" height="54" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="542" y="175" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">REGION B</text>
+      <text x="542" y="192" text-anchor="middle" font-size="9">🟢 live</text>
+
+      <!-- AA: continuous sync, animated, no failover needed -->
+      <text x="487" y="170" text-anchor="middle" font-size="8" font-weight="700" fill="#92400e">SYNC</text>
+      <path d="M487.5,182 L470,182" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#drArAmber)">
+        <animate attributeName="stroke-dashoffset" from="14" to="0" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+      <path d="M487.5,182 L505,182" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#drArAmber)">
+        <animate attributeName="stroke-dashoffset" from="14" to="0" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+      <text x="490" y="238" text-anchor="middle" font-size="8" font-weight="700" fill="#92400e">NO FAILOVER NEEDED</text>
+      <text x="490" y="253" text-anchor="middle" font-size="8.5" fill="#475569">RTO ≈ 0 (already serving)</text>
+      <text x="490" y="267" text-anchor="middle" font-size="8.5" fill="#475569">consistency is the hard part</text>
+    </svg>
+    <figcaption>Same RPO/RTO requirement, two different ways to satisfy it — Active-Passive keeps
+    a region idle and pays for it in failover time; Active-Active keeps both live and pays for it
+    in cost and data-consistency complexity.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Active-Active is always the safer choice.</b> It's only the right choice
+    when the business actually needs near-zero RTO — it costs meaningfully more and adds real
+    data-consistency complexity across two live regions, so reaching for it just because it
+    "sounds more resilient" is over-engineering when a 30-minute RTO would have been fine.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What actually determines the RPO/RTO numbers?"</b> The business, not the
+    engineering team — a real DR conversation starts with how much data loss and downtime the
+    business can actually survive, then the architecture is chosen to meet that target, not the
+    other way around.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"RPO and RTO come from the business, and they decide active-passive vs.
+    active-active — not the other way around. RPO is how much data loss is acceptable, RTO is
+    how long recovery is allowed to take, and the architecture is chosen to hit those numbers."</p>
+    <ul>
+      <li><code>Active-Passive</code> → <span class="hl hl-blue">cheaper, higher RTO</span> — the secondary region sits mostly idle until failover.</li>
+      <li><code>Active-Active</code> → <span class="hl hl-inter">near-zero RTO, real cost &amp; complexity</span> — both regions serve live traffic, so data consistency between them is a genuine engineering problem.</li>
+      <li><span class="hl hl-adv">The business sets the target first</span> — the architecture exists to meet it, never picked for its own sake.</li>
+      <li>Active-Active's real cost is <span class="hl hl-hot">consistency across two live regions</span>, not just double the infrastructure bill.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>RPO</b> (Recovery Point Objective) is how much data loss is acceptable, measured in
+      time — an RPO of 5 minutes means the business can tolerate losing up to 5 minutes of data,
+      which is really a statement about how frequently data has to be replicated to the other
+      region. <b>RTO</b> (Recovery Time Objective) is how long the system is allowed to stay down
+      before it's back up and serving traffic again. Both numbers come from the business, before
+      any architecture gets chosen.</p>
+
+      <p>An <b>Active-Passive</b> design keeps a secondary region mostly idle, ready to take over
+      when the primary fails. It's cheaper to run, but failover takes real time — someone or
+      something has to detect the failure and redirect traffic — so RTO is higher, and there's
+      usually some replication lag, so RPO isn't zero either. An <b>Active-Active</b> design has
+      both regions serving live traffic at the same time, so RTO is near-zero — the other region
+      is already handling requests. The tradeoff is cost and complexity: keeping data consistent
+      across two regions that are both being written to at once is a real, ongoing engineering
+      problem, not a one-time setup cost.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Active-Passive</th><th>Active-Active</th></tr></thead>
+        <tbody>
+          <tr><th>RTO</th><td>Higher — failover takes real time</td><td>Near-zero — the other region is already live</td></tr>
+          <tr><th>RPO</th><td>Non-zero — some replication lag</td><td>Can be pushed close to zero, at a cost</td></tr>
+          <tr><th>Cost &amp; complexity</th><td>Lower — secondary region mostly idle</td><td>Higher — two live regions, consistency to manage</td></tr>
+          <tr><th>Best fit</th><td>Business tolerates minutes-to-hours of downtime</td><td>Business needs continuous availability</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A financial trading system versus an internal reporting tool.</b> A system processing
+      live financial transactions has a near-zero RPO/RTO requirement — even a few minutes of
+      data loss or downtime is unacceptable — so it justifies the cost and complexity of
+      Active-Active. An internal reporting dashboard that a few people check each morning can
+      tolerate a few hours of downtime just fine, so it stays comfortably Active-Passive; paying
+      for Active-Active there would be solving a problem the business never actually had.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="2.html">← App Service Returns 500s</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Azure Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="4.html">Hub-Spoke Topology &amp; VNet Peering →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Azure · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
