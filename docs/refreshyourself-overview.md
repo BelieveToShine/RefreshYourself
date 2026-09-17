@@ -108,14 +108,16 @@ phases; Azure is still at Phase 1 (question taxonomy), awaiting the user's revie
 
 **Other tracks, outside the core backend path:**
 
-- **React** — **all 7 phases complete, 41/41 pages written** (2026-09-17):
+- **React** — **all 7 phases complete, 43/43 pages written** (41 original + 2 from a post-Phase-7
+  [gap-hunt](rules/gap-hunting.md), 2026-09-17):
   [`question-taxonomy.md`](superpowers/specs/react/question-taxonomy.md) →
-  [`roadmap.md`](superpowers/specs/react/roadmap.md) → 41 tiered/prioritized pages, live on the
+  [`roadmap.md`](superpowers/specs/react/roadmap.md) → 43 tiered/prioritized pages, live on the
   site and on [`react/roadmap.html`](../react/roadmap.html). Sourced from the user's own
   detailed, already tier-organized outline rather than a short bullet list like every other
-  track's seed — unusually large (35 concept groups, 41 pages) as a direct result. Every diagram
+  track's seed — unusually large (37 concept groups, 43 pages) as a direct result. Every diagram
   passed the mandatory automated verification script, run independently against every single
-  page. See [`specs/react/overview.md`](superpowers/specs/react/overview.md).
+  page, including the 2 gap-hunt additions (`forwardRef`/`useImperativeHandle`; automatic
+  batching & `flushSync`). See [`specs/react/overview.md`](superpowers/specs/react/overview.md).
 - **AI** — roadmap-only skeleton across all three tiers, sourced from `AI-Interview-Topics.md`.
   **Do not write AI content until told to.** See
   [`specs/ai/overview.md`](superpowers/specs/ai/overview.md).

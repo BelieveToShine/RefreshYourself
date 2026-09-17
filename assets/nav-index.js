@@ -493,14 +493,16 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–15",
+        label: "Questions 11–17",
         hot: 3,
         items: [
           { n: 11, file: "11.html", short: "Rendering Behaviour",       title: "Rendering Behaviour",            tail: "what actually causes a re-render.", priority: "🔥" },
           { n: 12, file: "12.html", short: "Performance Basics",        title: "Performance Optimization Basics", tail: "profile first, memoize second.", priority: "🔥" },
           { n: 13, file: "13.html", short: "Error Boundaries",          title: "Error Handling & Error Boundaries", tail: "what they catch, and what they don't.", priority: "🔥" },
           { n: 14, file: "14.html", short: "Testing Components",        title: "Testing React Components",       tail: "test what the user sees, not internals.", priority: "⭐" },
-          { n: 15, file: "15.html", short: "Accessibility",             title: "Accessibility",                  tail: "React gives you none of it for free.", priority: "⭐" }
+          { n: 15, file: "15.html", short: "Accessibility",             title: "Accessibility",                  tail: "React gives you none of it for free.", priority: "⭐" },
+          { n: 16, file: "16.html", short: "forwardRef & Imperative",   title: "Refs — Forwarding & Imperative APIs", tail: "exposing an API, not the whole node.", priority: "⭐" },
+          { n: 17, file: "17.html", short: "Automatic Batching",        title: "Automatic Batching & flushSync", tail: "React 18 widened where batching happens.", priority: "⭐" }
         ]
       }
     ]

@@ -102,12 +102,15 @@ and stays 🧠.
 | Priority | Pages |
 |---|---|
 | 🔥 Must Know | What Is React; Components & JSX; Props; State; Lists & Keys; Hooks — Rules & Overview; useEffect — Fundamentals & Cleanup; Custom Hooks; Context API; Data Fetching; Rendering Behaviour; Performance Optimization Basics; Error Handling & Error Boundaries; Server-Side Rendering & Hydration; State Management Architecture; React Architecture — Structure Within One App; Security; Production Performance; Scenario: Runaway Rendering & Requests; Scenario: Scaling Under Load; Scenario: Production Incident Response; Scenario: Architecture Decisions |
-| ⭐ Should Know | Events; Conditional Rendering; Effect Timing Variants & StrictMode; useRef & Ref Callbacks; useMemo, useCallback & React.memo; Component Communication & Composition; Forms; Routing; Testing React Components; Accessibility; Suspense; Design Patterns; Testing at Scale; Scenario: Codebase & Team Growing Pains |
+| ⭐ Should Know | Events; Conditional Rendering; Effect Timing Variants & StrictMode; useRef & Ref Callbacks; useMemo, useCallback & React.memo; Component Communication & Composition; Forms; Routing; Testing React Components; Accessibility; Suspense; Design Patterns; Testing at Scale; Scenario: Codebase & Team Growing Pains; **Refs — Forwarding & Imperative APIs; Automatic Batching & flushSync** |
 | 🧠 Deep Dive | Reconciliation & Fiber; Concurrent Rendering; Server Components; Actions, useOptimistic & the use() Hook; React Architecture — Beyond One App |
 
 22 🔥 / 14 ⭐ / 5 🧠 across 41 pages — more 🔥-heavy than other tracks, proportionally, which
 tracks reality: a much larger share of experienced-level React interview content is genuinely
-"expect this," not a rare deep-cut, especially through Basic and Intermediate.
+"expect this," not a rare deep-cut, especially through Basic and Intermediate. The 2 gap-hunt
+additions are both ⭐ — real, commonly-asked practical topics, but neither is the kind of thing
+an interview routinely opens with (`useRef` and `useState`/batching themselves are the 🔥-tier
+entry points; these two are the natural, less-universal follow-ups to each).
 
 ## Phase 6 — Final roadmap
 
@@ -153,6 +156,22 @@ section, not tier — the site-wide convention). Numbering below is the tier-fol
 | 34 | Production Performance | Advanced | advanced/13.html |
 | 35 | Real-world Scenarios | Advanced | advanced/14.html (Runaway Rendering & Requests), advanced/15.html (Scaling Under Load), advanced/16.html (Production Incident Response), advanced/17.html (Codebase & Team Growing Pains), advanced/18.html (Architecture Decisions) |
 
+**Gap-hunt additions (2) — Phases 3–7 of their own, see the taxonomy's gap-hunt log:**
+
+| # | Concept section | Tier | Priority | Page |
+|---|---|---|---|---|
+| 36 | Refs — Forwarding & Imperative APIs | Intermediate | ⭐ | intermediate/16.html |
+| 37 | Automatic Batching & flushSync | Intermediate | ⭐ | intermediate/17.html |
+
+New totals: **Basic 8, Intermediate 17, Advanced 18 — 43 pages.**
+
+Both tiered Intermediate, not Basic or Advanced: each is a practical-usage/comparison question
+(the exact shape [`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)
+defines as Intermediate) that assumes the corresponding Basic-tier fundamental already landed —
+`forwardRef`/`useImperativeHandle` assumes `useRef` itself (§10, Intermediate) is already
+understood, and automatic batching assumes the base "what is batching" concept (§4, Basic) is
+already in place. Neither is internals/architecture-depth enough for Advanced.
+
 ## Track-specific decisions and boundaries
 
 - **General JavaScript fundamentals, plain HTML/CSS, and any specific third-party library's own
@@ -174,6 +193,6 @@ section, not tier — the site-wide convention). Numbering below is the tier-fol
 
 ## Known gaps
 
-None for Phases 1–6. Phase 7 (writing the 41 pages) has not started — awaiting the user's
-review of this roadmap first, per the standing rule that a track's full roadmap is listed and
-reviewable before a single page gets built.
+None in the 41 original pages, already written, verified, and live. The 2 gap-hunt additions
+above (Refs — Forwarding & Imperative APIs; Automatic Batching & flushSync) are the next and
+only remaining Phase 7 work for this track.

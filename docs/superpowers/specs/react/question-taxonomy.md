@@ -2,7 +2,11 @@
 
 **Phase 1 of the 7-phase pipeline** (see [`docs/superpowers/specs/README.md`](../README.md)).
 No tier lock-in, no priority, no page grouping yet. **[new]** marks anything added beyond the
-user's own detailed source outline for this track.
+user's own detailed source outline for this track. **§36–37 mark 2 further questions added by a
+third gap-hunt pass** (see [`gap-hunting.md`](../../rules/gap-hunting.md) and this file's own
+"Gap-hunt log" at the bottom) — this track had already gone through all 7 phases and was fully
+written (41 pages) before that hunt happened; those 2 additions are now going through Phases 3–7
+of their own.
 
 ## Where this came from, and how it differs from every other track's Phase 1
 
@@ -669,3 +673,99 @@ are real and worth *a* question, not a whole page's worth of independent visual 
 - **`useDebugValue`** — a real Hook, but purely a DevTools-label helper for custom-Hook authors
   building their own dev tooling; not a realistic interview differentiator at any level, and
   adding it would be padding for padding's sake.
+
+## 36. Refs — Forwarding & Imperative APIs **[new section]**
+- **[new] Core concept** — What is `forwardRef`, and what problem does it solve — a function
+  component doesn't accept `ref` as an ordinary prop, so this is how a parent gets a ref that
+  actually reaches a child's DOM node (or a chosen imperative handle) instead of `undefined`?
+- **[new] Core concept** — What is `useImperativeHandle`, and why reach for it instead of just
+  forwarding the raw DOM node — exposing a deliberately narrow, custom API (only `focus()` or
+  `scrollIntoView()`, say) instead of the entire underlying element?
+- **[new] Understanding** — What changed in React 19 — can a function component now receive
+  `ref` as a plain prop without `forwardRef` at all, and does that make `forwardRef` obsolete for
+  new code (not entirely — plenty of code still on 18 or earlier, and `useImperativeHandle`
+  still matters whenever the exposed API needs to be narrower than the raw node)?
+- **[new] Scenario** — How would you expose an imperative `focus()` method from a custom
+  `<Input>` wrapper component to whatever renders it?
+- **[new] Understanding** — What's the real risk of reaching for `useImperativeHandle` too
+  often — it bypasses React's normal data-flow (props down, callbacks up) and couples a parent
+  directly to a child's internal API surface, so it should stay the exception, not the default.
+
+## 37. Automatic Batching & flushSync **[new section]**
+- **[new] Core concept** — What is automatic batching in React 18, and how is it different from
+  the batching that existed before it?
+- **[new] Comparison** — Pre-React-18 batching (grouped updates only inside a React event
+  handler) vs. React 18's automatic batching (also grouups updates inside a promise's `.then()`,
+  a `setTimeout` callback, or a native DOM event listener)?
+- **[new] Understanding** — Why would two `setState` calls inside a `fetch(...).then(...)`
+  callback have caused two separate re-renders before React 18, but only one after?
+- **[new] Core concept** — What is `flushSync`, and when would you actually need it — forcing a
+  synchronous update and DOM flush before continuing, e.g. right before measuring a layout that
+  depends on the just-applied change?
+- **[new] Understanding** — Is reaching for `flushSync` usually a sign of a deeper design
+  problem worth reconsidering, rather than a routine tool?
+
+## Gap-hunt log (Phase 2, run after this track was already fully built)
+
+Per [`gap-hunting.md`](../../rules/gap-hunting.md): re-running the active gap-hunt method against
+outside React knowledge — not another re-read of this file's own two already-adversarial-passed
+337 questions — specifically checking the candidate list the user handed over for this pass:
+reconciliation/fiber internals, keys pitfalls beyond `props.key`, refs (`forwardRef`,
+`useImperativeHandle`), context performance pitfalls, `React.memo`/`useMemo`/`useCallback`
+correctness, Portals, `StrictMode` double-invoking effects, Server Components/RSC basics,
+controlled vs. uncontrolled inputs, synthetic events, batching in React 18,
+`useTransition`/`useDeferredValue`, Error Boundaries, and testing strategy.
+
+**Verified already covered, no action needed** (checked directly against the live, written pages
+— not assumed from the outline alone): reconciliation/Fiber internals (§23,
+`react/advanced/1.html`), keys pitfalls beyond `props.key` (§7, including the forced-remount
+trick and the `props.key` gotcha itself), context performance pitfalls (§13,
+`react/intermediate/6.html`), `React.memo`/`useMemo`/`useCallback` correctness (§11,
+`react/intermediate/4.html`), Portals (§14, `react/intermediate/7.html`), `StrictMode`
+double-invoking effects (§9, `react/intermediate/2.html`), Server Components/RSC basics (§27,
+`react/advanced/5.html`), controlled vs. uncontrolled inputs (§5 and §15, live on
+`react/basic/5.html` and `react/intermediate/8.html`), synthetic events (§5,
+`react/basic/5.html`), `useTransition`/`useDeferredValue` (§24, `react/advanced/2.html`), Error
+Boundaries including the Suspense pairing (§20 and §25, `react/intermediate/13.html` and
+`react/advanced/3.html`), and Testing Strategy (§32 `Testing at Scale`, confirmed to actually
+have real question content this time, not just a named-but-empty section — live on
+`react/advanced/11.html`).
+
+**Added (2), each a new standalone section** — genuinely absent from all 337 existing questions,
+confirmed by grepping the taxonomy, the roadmap, and every written page for the relevant terms
+before adding:
+
+| Added | Group | Why it's a real gap |
+|---|---|---|
+| `forwardRef` & `useImperativeHandle` | new §36 | Explicitly flagged by the user's own checklist; grepped for across every taxonomy/roadmap/page file with zero hits — a classic, commonly-asked "expose an imperative API from a child" topic with no home anywhere in the existing 337 questions, including the already-written `useRef` page (§10) which only covers the ref-object and ref-callback forms |
+| Automatic batching (React 18) & `flushSync` | new §37 | The existing "What is batching?" question (§4, live on `react/basic/4.html`) only explains same-event batching — it never distinguishes React 18's expansion of batching to promises/`setTimeout`/native event listeners, a genuinely common "why did this behave differently before React 18" comparison question with no existing slot |
+
+Both stayed out of the already-written, already-verified pages they're closest to
+(`react/intermediate/3.html` for refs, `react/basic/4.html` for batching) rather than being
+folded in as edits — per `gap-hunting.md`'s instruction to prefer new pages over touching
+already-verified ones, and because each is substantial enough (a real comparison, a real
+scenario, several sub-questions) to earn its own page rather than a bolted-on paragraph.
+
+**Considered and explicitly excluded**, same discipline as what got added:
+
+- **`createRoot` vs. legacy `ReactDOM.render`** — a real React 18 change, but dated migration
+  trivia at this point; the concurrent-features-need-`createRoot` fact is already implied by the
+  existing concurrent-rendering questions (§24) without needing its own bullet.
+- **`React.memo`'s optional custom-comparator second argument** — a minor implementation detail
+  of a Hook already covered in depth (§11); doesn't clear the bar for its own bullet on top of
+  what's already there.
+- **Async Server Components (`await` directly inside an RSC's function body)** — a real
+  mechanic, but adequately implied by §27's existing "what code belongs on the server" and
+  "performance benefits" bullets; doesn't need a separately-asked question to be answerable.
+- **The `<Profiler>` component** (as distinct from the DevTools Profiler extension already
+  covered under Performance, §19) — genuinely rare in practice; almost nobody reaches for the
+  programmatic API directly over the DevTools panel, so it doesn't clear this track's "real,
+  commonly-asked" bar.
+- **Synthetic event pooling** (removed in React 17, so not a factor in any codebase an interview
+  would realistically probe today) — legacy trivia with essentially zero current relevance.
+- **The new JSX transform / automatic runtime** — build-tooling territory, already excluded by
+  this taxonomy's own "Scope boundary" section (bundler/build-tool internals).
+
+**This extends an already-fully-built, live track.** Per `gap-hunting.md`, that means the 2
+additions get their own new pages through Phases 3–7 (see [`roadmap.md`](roadmap.md)'s own
+addendum), not edits to the 41 already-verified pages.

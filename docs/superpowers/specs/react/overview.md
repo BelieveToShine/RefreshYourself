@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 41 pages written
+## Status — Phases 1–7 complete, all 43 pages written
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): 337 raw questions across 35
   concept sections, through two independent adversarial passes (most recently commit `4831f58`).
@@ -23,6 +23,16 @@ keeping it in sync with the live pages.
   with `issueCount: 0`, run independently by the orchestrating session against every single page
   (not sampled) before this track was considered done, per
   [build-process.md](../../rules/build-process.md).
+- **Gap-hunt addendum (post Phase 7)** — a second active gap-hunt against outside domain
+  knowledge, per [gap-hunting.md](../../rules/gap-hunting.md), surfaced 2 real gaps not present
+  anywhere across the taxonomy's already-twice-adversarially-passed 337 questions:
+  `forwardRef`/`useImperativeHandle` and React 18's automatic batching/`flushSync`. Both were
+  added, taken through Phases 3–7 as their own mini-pass (grouped as new taxonomy sections §36
+  and §37, tiered Intermediate, prioritized ⭐, added to the roadmap, and written), and
+  independently re-verified with `issueCount: 0`. See
+  [`question-taxonomy.md`](question-taxonomy.md)'s "Gap-hunt log" and
+  [`roadmap.md`](roadmap.md)'s gap-hunt addendum for the full reasoning, including what was
+  checked and explicitly excluded.
 
 ## Basic (8 topics) — 8 written
 
@@ -37,7 +47,7 @@ keeping it in sync with the live pages.
 | 7 | Lists & Keys | 🔥 | ✅ |
 | 8 | Hooks — Rules & Overview | 🔥 | ✅ |
 
-## Intermediate (15 topics) — 15 written
+## Intermediate (17 topics) — 17 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -56,6 +66,8 @@ keeping it in sync with the live pages.
 | 13 | Error Handling & Error Boundaries | 🔥 | ✅ |
 | 14 | Testing React Components | ⭐ | ✅ |
 | 15 | Accessibility | ⭐ | ✅ |
+| 16 | Refs — Forwarding & Imperative APIs **[gap-hunt]** | ⭐ | ✅ |
+| 17 | Automatic Batching & flushSync **[gap-hunt]** | ⭐ | ✅ |
 
 ## Advanced (18 topics) — 18 written
 
@@ -111,6 +123,8 @@ re-review.
 
 ## Known gaps
 
-None — every page passed the mandatory independent diagram-verification sweep (41/41,
-`issueCount: 0`, run one page at a time, not sampled). Expect a review/feedback pass once the
-user goes through it, same as every other completed track.
+None currently known. The original 41-page pass went through the full 7-phase pipeline and
+every page passed the mandatory independent diagram-verification sweep; a subsequent active
+gap-hunt (see the addendum above and [`roadmap.md`](roadmap.md)) found and closed 2 more, also
+independently verified (`issueCount: 0`, run one page at a time, not sampled). Expect a
+review/feedback pass once the user goes through it, same as every other completed track.

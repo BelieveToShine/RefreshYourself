@@ -95,6 +95,8 @@ window.SEARCH_INDEX = [
   { title: "Error Handling & Error Boundaries", track: "React", tier: "Intermediate", path: "react/intermediate/13.html", keywords: "error boundary componentdidcatch getderivedstatefromerror react" },
   { title: "Testing React Components", track: "React", tier: "Intermediate", path: "react/intermediate/14.html", keywords: "testing library render screen user event react" },
   { title: "Accessibility", track: "React", tier: "Intermediate", path: "react/intermediate/15.html", keywords: "accessibility a11y aria semantic html focus react" },
+  { title: "Refs — Forwarding & Imperative APIs", track: "React", tier: "Intermediate", path: "react/intermediate/16.html", keywords: "forwardref useimperativehandle imperative handle ref focus react" },
+  { title: "Automatic Batching & flushSync", track: "React", tier: "Intermediate", path: "react/intermediate/17.html", keywords: "automatic batching flushsync react 18 setstate render batch react" },
   { title: "Reconciliation & Fiber", track: "React", tier: "Advanced", path: "react/advanced/1.html", keywords: "reconciliation fiber diffing tree interruptible react" },
   { title: "Concurrent Rendering", track: "React", tier: "Advanced", path: "react/advanced/2.html", keywords: "concurrent rendering interruptible priority transition react" },
   { title: "Suspense", track: "React", tier: "Advanced", path: "react/advanced/3.html", keywords: "suspense fallback lazy loading pause render react" },
