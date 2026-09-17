@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cosmos DB Consistency Levels — Azure Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="azure/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0f2fe;--crumb-ink:#0078D4;">☁️ Azure</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Cosmos DB Consistency Levels</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 Azure · Intermediate · Deep Dive</div>
+    <h1>5 <span class="hl hl-blue">consistency levels</span> — how much <span class="hl hl-inter">correctness</span> are you actually paying for?</h1>
+    <p class="interview-q">"What's the actual tradeoff between strong consistency and the weaker levels, and why would you ever pick weaker on purpose?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Checks whether you understand the real CAP-theorem tradeoff Cosmos DB exposes as a dial, not just that "5 levels exist."</li>
+        <li>Comes up any time someone asks "why not just use Strong everywhere" on a multi-region Cosmos DB design.</li>
+        <li>A common way interviewers separate a memorized list of names from someone who's actually reasoned about the latency/availability cost.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Strong</code> <span class="rarrow">→</span> <b>latest write</b>, always</p>
+      <p class="rrow"><code>Bounded Staleness</code> <span class="rarrow">→</span> <b>lag capped</b> by time/count</p>
+      <p class="rrow"><code>Session</code> <span class="rarrow">→</span> <b>your own writes</b>, always (default)</p>
+      <p class="rrow"><code>Consistent Prefix</code> <span class="rarrow">→</span> <b>order kept</b>, staleness allowed</p>
+      <p class="rrow"><code>Eventual</code> <span class="rarrow">→</span> <b>no order guarantee</b>, fastest</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> one slider from <b><code>Strong</code></b> to <b><code>Eventual</code></b> — every notch right trades a correctness guarantee for lower latency and higher availability.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 160" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shCos" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arCosGrey" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+        <marker id="arCosRed" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">CONSISTENCY SPECTRUM — STRONG TO EVENTUAL</text>
+
+      <g filter="url(#shCos)"><rect x="19" y="34" width="98" height="76" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="68" y="58" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">🔒 Strong</text>
+      <text x="68" y="74" text-anchor="middle" font-size="9.2" fill="#5b6472">latest write</text>
+      <text x="68" y="90" text-anchor="middle" font-size="9.2" fill="#5b6472">high latency</text>
+
+      <path d="M117,72 H145" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arCosGrey)"/>
+
+      <g filter="url(#shCos)"><rect x="145" y="34" width="98" height="76" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="194" y="58" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">⏳ Bounded</text>
+      <text x="194" y="74" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">Staleness</text>
+      <text x="194" y="90" text-anchor="middle" font-size="9.2" fill="#5b6472">lag has a cap</text>
+
+      <path d="M243,72 H271" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arCosGrey)"/>
+
+      <g filter="url(#shCos)"><rect x="271" y="34" width="98" height="76" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="58" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">👤 Session</text>
+      <text x="320" y="74" text-anchor="middle" font-size="9.2" fill="#5b6472">default choice</text>
+      <text x="320" y="90" text-anchor="middle" font-size="9.2" fill="#5b6472">own writes</text>
+
+      <path d="M369,72 H397" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arCosGrey)"/>
+
+      <g filter="url(#shCos)"><rect x="397" y="34" width="98" height="76" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="446" y="58" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">📶 Consistent</text>
+      <text x="446" y="74" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">Prefix</text>
+      <text x="446" y="90" text-anchor="middle" font-size="9.2" fill="#5b6472">order kept</text>
+
+      <path d="M495,72 H523" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arCosRed)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="1.8s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shCos)"><rect x="523" y="34" width="98" height="76" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="572" y="58" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">🌊 Eventual</text>
+      <text x="572" y="74" text-anchor="middle" font-size="9.2" fill="#5b6472">no ordering</text>
+      <text x="572" y="90" text-anchor="middle" font-size="9.2" fill="#5b6472">guarantee</text>
+
+      <text x="19" y="138" text-anchor="start" font-size="10.5" font-weight="600" fill="#475569">🐢 strongest, slowest</text>
+      <text x="621" y="138" text-anchor="end" font-size="10.5" font-weight="600" fill="#475569">⚡ weakest, fastest</text>
+    </svg>
+    <figcaption>Same slider, 5 stops. The red, moving connector into Eventual is the one still "catching up" over time — every level to its left already settled its guarantee.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Just use Strong everywhere to be safe."</b> In a multi-region Cosmos DB account, Strong consistency significantly raises write latency and can reduce availability during a regional failure — a guarantee most applications never actually need.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why is Session the default, and is that usually fine?"</b> Yes, for most apps — a user reliably seeing their own writes covers the vast majority of real UX needs, without paying Strong's full latency cost.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"5 levels on a spectrum from Strong to Eventual — Session is the default because it covers 'seeing your own writes' cheaply, without paying for the global Strong guarantee almost nothing actually needs."</p>
+    <ul>
+      <li><code>Strong</code> <span class="hl hl-blue">→ always the latest write</span>, at the highest latency cost.</li>
+      <li><code>Session</code> <span class="hl hl-basic">→ the default</span> — a client always sees its own writes, cheaply.</li>
+      <li><code>Bounded Staleness</code> &amp; <code>Consistent Prefix</code> <span class="hl hl-inter">→ middle-ground tradeoffs</span> — capped lag, or in-order but stale.</li>
+      <li><code>Eventual</code> <span class="hl hl-hot">→ no ordering guarantee at all</span>, for the lowest latency and highest availability.</li>
+      <li><span class="hl hl-hot">Strong in a multi-region account</span> raises write latency and can hurt availability during a regional failure.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Cosmos DB doesn't force an all-or-nothing choice between correctness and speed. It exposes
+      <b>5 consistency levels</b> on one spectrum, set at the account level and overridable per
+      request, so you pick exactly how much freshness and ordering guarantee a given read actually
+      needs — instead of paying the most expensive guarantee for every read by default.</p>
+
+      <p>The cost is real, not theoretical. <b>Strong</b> means a write has to be durably confirmed
+      across enough regions before it's considered committed, so a multi-region account pays real
+      cross-region round-trip latency on every write, and can lose write availability if too many
+      regions are unreachable during a network partition. <b>Session</b> sits in the middle by only
+      guaranteeing consistency for the single client that made the write — cheap to track, and it
+      covers what users actually perceive almost all of the time, which is exactly why it's the
+      account default.</p>
+
+      <div style="overflow-x:auto;">
+        <table class="cmp-table">
+          <thead><tr><th></th><th>Strong</th><th>Bounded Staleness</th><th>Session</th><th>Consistent Prefix</th><th>Eventual</th></tr></thead>
+          <tbody>
+            <tr><th>What it guarantees</th><td>always the latest committed write</td><td>lag bounded by time/version count</td><td>the writing client always sees its own writes</td><td>writes never seen out of order (may be stale)</td><td>no ordering guarantee at all</td></tr>
+            <tr><th>Latency / availability cost</th><td>highest latency, lowest availability during a partition</td><td>higher than Session, bounded by the staleness window</td><td>low — close to Eventual for the common case</td><td>low, close to Eventual</td><td>lowest latency, highest availability</td></tr>
+            <tr><th>Reach for it when</th><td>correctness can never lag — rare for most apps</td><td>a known, bounded lag is acceptable</td><td>default — users need to see their own actions</td><td>order matters more than freshness</td><td>raw speed matters more than freshness or order</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> options = <span class="kw">new</span> CosmosClientOptions
+{
+    ConsistencyLevel = ConsistencyLevel.<span class="ty">Session</span> <span class="cx-cmt">// ✅ matches the account default</span>
+};
+<span class="kw">var</span> client = <span class="kw">new</span> CosmosClient(endpoint, key, options);</code></pre>
+      </div>
+      <p class="cx-note">Setting <code>ConsistencyLevel</code> here picks the level per request — it doesn't change what the account itself defaults to.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A social app uses <b>Session</b> consistency so a user always sees their own new post the
+      instant they refresh their own feed. Another user browsing at that exact moment might see the
+      same post appear a moment later, once it replicates — a tradeoff almost nobody actually
+      notices, and exactly the gap Strong consistency would close at a real latency cost.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="17.html">← Idempotent Deployment for IaC</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Azure Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="../intermediate/index.html" style="opacity:.62; color:var(--ink-soft);">Service Bus Architecture — Wiring Producers &amp; Consumers (coming soon) →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Azure · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
