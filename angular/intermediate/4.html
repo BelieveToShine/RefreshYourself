@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RxJS Higher-Order Mapping — Angular Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="angular/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fde8e8;--crumb-ink:#dd0031;">🅰️ Angular</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">RxJS Higher-Order Mapping</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Angular · Intermediate · Must Know</div>
+    <h1><code>switchMap</code>, <code>mergeMap</code>, <code>concatMap</code>, <code>exhaustMap</code> — <span class="hl hl-inter">one of the strongest practical Angular interview differentiators</span>: four operators, four different answers to what happens to the previous inner request.</h1>
+    <p class="interview-q">"switchMap, mergeMap, concatMap, exhaustMap — what's the actual difference, and how do you pick the right one?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Reciting four definitions isn't enough — the interview is really testing whether you can say which one fits a given scenario, on the spot.</li>
+        <li>Comes up any time a stream of user actions (typing, clicking, navigating) triggers an HTTP call — search boxes, submit buttons, and parallel or sequential API calls each lean on a different one of these four.</li>
+        <li>The most common wrong answer is treating <code>switchMap</code> as the universal default for "any Observable that maps to an HTTP call" — see the Common Trap below.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>switchMap</code> <span class="rarrow">→</span> <b>cancels</b> the old one</p>
+      <p class="rrow"><code>mergeMap</code> <span class="rarrow">→</span> <b>runs all</b> in parallel</p>
+      <p class="rrow"><code>concatMap</code> <span class="rarrow">→</span> <b>queues</b>, one at a time</p>
+      <p class="rrow"><code>exhaustMap</code> <span class="rarrow">→</span> <b>ignores</b> new while busy</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line">Search box → <b><code>switchMap</code></b> (only the latest keystroke's answer matters)</span>
+      <span class="tc-line">Submit button → <b><code>exhaustMap</code></b> (never let a second click start a second request)</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA4" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <g filter="url(#shA4)"><rect x="60" y="12" width="520" height="32" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="320" y="33" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.2">A NEW VALUE ARRIVES MID-FLIGHT — WHAT HAPPENS TO THE OLD ONE?</text>
+
+      <g filter="url(#shA4)"><rect x="10" y="64" width="140" height="100" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="80" y="92" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">🔄 switchMap</text>
+      <text x="80" y="114" text-anchor="middle" font-size="10.5" fill="#5b6472">cancels the</text>
+      <text x="80" y="130" text-anchor="middle" font-size="10.5" fill="#5b6472">old one</text>
+
+      <g filter="url(#shA4)"><rect x="170" y="64" width="140" height="100" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="240" y="92" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🔀 mergeMap</text>
+      <text x="240" y="114" text-anchor="middle" font-size="10.5" fill="#5b6472">runs all</text>
+      <text x="240" y="130" text-anchor="middle" font-size="10.5" fill="#5b6472">in parallel</text>
+
+      <g filter="url(#shA4)"><rect x="330" y="64" width="140" height="100" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="400" y="92" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">⏳ concatMap</text>
+      <text x="400" y="114" text-anchor="middle" font-size="10.5" fill="#5b6472">queues,</text>
+      <text x="400" y="130" text-anchor="middle" font-size="10.5" fill="#5b6472">one at a time</text>
+
+      <g filter="url(#shA4)"><rect x="490" y="64" width="140" height="100" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="560" y="92" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">🚫 exhaustMap</text>
+      <text x="560" y="114" text-anchor="middle" font-size="10.5" fill="#5b6472">ignores new</text>
+      <text x="560" y="130" text-anchor="middle" font-size="10.5" fill="#5b6472">while busy</text>
+
+      <text x="320" y="204" text-anchor="middle" font-size="11" fill="#5b6472">Four equal, independent options — the only thing that changes is what happens to the request already running.</text>
+      <text x="320" y="224" text-anchor="middle" font-size="10.5" fill="#94a3b8">Not a hierarchy — pick by what SHOULD happen to the old one, never by habit.</text>
+    </svg>
+    <figcaption>Same first step for all four — map an outer value into a new inner Observable. The only real difference: what happens to the old inner Observable.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>switchMap</code> is not "the one you always use for HTTP calls."</b> It's the right choice specifically when a newer request should invalidate an older one (search-as-you-type) — it's the wrong choice for a form submission (cancelling the first submission could lose it) or for anything that needs every request to actually finish, like parallel or sequential work.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why is <code>exhaustMap</code> specifically right for submit-button de-duplication, instead of <code>switchMap</code>?"</b> <code>switchMap</code> would cancel the first, already-in-flight submission on every extra click — a fast double-click could mean the form never actually finishes submitting at all. <code>exhaustMap</code> instead lets that first submission finish undisturbed and simply drops the extra clicks that arrive while it's still running.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"All four map each outer value into a new inner Observable — the only difference is what happens to the previous inner Observable when a new outer value shows up. <code>switchMap</code> cancels it, <code>mergeMap</code> runs everything concurrently, <code>concatMap</code> queues it strictly in order, and <code>exhaustMap</code> ignores the new value until the current one finishes."</p>
+    <ul>
+      <li><code>switchMap</code> → <span class="hl hl-inter">search-as-you-type</span>: cancel the stale request, only the latest query's result matters.</li>
+      <li><code>mergeMap</code> → <span class="hl hl-blue">independent parallel requests</span>: nothing waits, nothing gets cancelled.</li>
+      <li><code>concatMap</code> → <span class="hl hl-basic">order-dependent requests</span>: the next one doesn't start until the current one completes.</li>
+      <li><code>exhaustMap</code> → <span class="hl hl-hot">submit-button de-duplication</span>: drop extra clicks, never queue or cancel the one in flight.</li>
+      <li>Cancelling an inner HTTP request isn't just ignoring its response — <code>HttpClient</code> wires the unsubscribe through to <span class="hl hl-teal">actually abort the request</span> at the network level.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>All four operators start the same way: take a value from an <b>outer</b> Observable and map it into a brand-new <b>inner</b> Observable — usually an HTTP call. Where they genuinely differ is what happens if a new outer value shows up while the previous inner Observable is still running.</p>
+
+      <p><span class="hl hl-inter">switchMap</span> cancels whatever inner Observable is in flight and switches straight to the new one — only the latest result is ever kept. <span class="hl hl-blue">mergeMap</span> (also called <code>flatMap</code>) never cancels anything — every inner Observable runs concurrently, and results land in whatever order they actually finish. <span class="hl hl-basic">concatMap</span> queues them instead: the next inner Observable doesn't even start until the current one completes, so order is guaranteed. <span class="hl hl-hot">exhaustMap</span> takes the opposite approach from <code>switchMap</code> — while an inner Observable is running, any new outer value is simply dropped, not queued and not run; a new inner Observable only starts once the current one finishes.</p>
+
+      <p>For an HTTP-backed inner Observable specifically, "<code>switchMap</code> cancels it" is a concrete technical fact, not a figure of speech: Angular's <code>HttpClient</code> wires the RxJS unsubscription through to actually abort the underlying network request — the same mechanism used when unsubscribing from an HTTP call manually.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>switchMap</code></th><th><code>mergeMap</code></th><th><code>concatMap</code></th><th><code>exhaustMap</code></th></tr></thead>
+        <tbody>
+          <tr><th>Previous inner request</th><td>cancelled</td><td>kept running</td><td>kept running, next one queued</td><td>kept running</td></tr>
+          <tr><th>New value mid-flight</th><td>starts immediately, cancels old</td><td>starts immediately too, in parallel</td><td>queued, waits its turn</td><td>dropped entirely</td></tr>
+          <tr><th>Result order</th><td>only the latest ever matters</td><td>whatever order they finish</td><td>guaranteed, same as input order</td><td>only the non-dropped ones, in order</td></tr>
+          <tr><th>Best used for</th><td>search-as-you-type</td><td>independent parallel requests</td><td>order-dependent/sequential requests</td><td>submit-button de-duplication</td></tr>
+        </tbody>
+      </table>
+
+      <p>One more distinction worth knowing: for a fixed, known batch of parallel requests that all need to run to completion, <code>forkJoin</code> is the more common tool — <code>mergeMap</code> is for an ongoing stream that keeps mapping new values into parallel inner requests as they arrive.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// search box — only the LATEST query's results should ever win</span>
+<span class="kw">this</span>.searchInput$.pipe(
+  debounceTime(<span class="num">300</span>),                          <span class="cx-cmt">// wait for typing to settle</span>
+  switchMap(q =&gt; <span class="kw">this</span>.api.search(q))         <span class="cx-ok">// cancels the previous search request</span>
+).subscribe(results =&gt; <span class="kw">this</span>.results = results);</code></pre>
+      </div>
+      <p class="cx-note">Every new keystroke's request <b>cancels</b> whatever search request was still in flight — no stale response can overwrite a newer one.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// submit button — never let a second click start a second request</span>
+<span class="kw">this</span>.submitClicks$.pipe(
+  exhaustMap(() =&gt; <span class="kw">this</span>.api.submit(<span class="kw">this</span>.form.value)) <span class="cx-ok">// ignores clicks while one is in flight</span>
+).subscribe();</code></pre>
+      </div>
+      <p class="cx-note"><code>switchMap</code> here would have <b>cancelled</b> the first, real submission on every extra click — <code>exhaustMap</code> instead lets it finish and just <b>drops</b> the extra clicks.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Four ways to handle a new customer walking in while you're serving someone else.</b> <code>switchMap</code> drops the current customer to help the new one — only the latest one matters. <code>mergeMap</code> calls in more staff so both get helped at once. <code>concatMap</code> makes the new customer wait in line until the current one is done. <code>exhaustMap</code> tells the new customer "sorry, come back later" and keeps serving the current one — no line, no callback, just gone.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="3.html">← RxJS — Common Operators</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Angular Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="5.html">RxJS Error Handling &amp; Subscription Lifetime →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Angular · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

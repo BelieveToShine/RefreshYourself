@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signals + RxJS — Angular Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="angular/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fde8e8;--crumb-ink:#dd0031;">🅰️ Angular</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Signals + RxJS</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Should Know</div>
+    <h1>Signals + RxJS — <span class="hl hl-inter">two models that convert into each other, not compete</span></h1>
+    <p class="interview-q">How do <code>toSignal()</code> and <code>toObservable()</code> actually bridge the two models, and should every Observable become a Signal?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Interviewers use this to check whether you understand the actual boundary between the two models, not just whether you can define Signals and Observables separately.</li>
+        <li>Comes up any time an HTTP call or a router-derived value needs to become template-friendly state, or a Signal-held form value needs to be debounced.</li>
+        <li>A near-guaranteed follow-up once you mention either function: whether converting is always a good idea — it isn't, and that's the trap below.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>toSignal(obs$)</code> <span class="rarrow">→</span> <b>Signal</b>, latest value</p>
+      <p class="rrow"><code>toObservable(sig)</code> <span class="rarrow">→</span> <b>Observable</b>, value stream</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line">done streaming → <b><code>toSignal()</code></b></span>
+      <span class="tc-line">need a stream again → <b><code>toObservable()</code></b></span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh13" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar13sig" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="ar13obs" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="24" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.5">OBSERVABLE ⇄ SIGNAL — WHICH MODEL OWNS THIS DATA?</text>
+
+      <g filter="url(#sh13)"><rect x="30" y="55" width="230" height="120" rx="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="145" y="100" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🌊 Observable</text>
+      <text x="145" y="120" text-anchor="middle" font-size="10.5" fill="#5b6472">stream of events over time</text>
+      <text x="145" y="140" text-anchor="middle" font-size="10" fill="#5b6472">debounce · switchMap · retry</text>
+
+      <g filter="url(#sh13)"><rect x="380" y="55" width="230" height="120" rx="16" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="495" y="100" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">📌 Signal</text>
+      <text x="495" y="120" text-anchor="middle" font-size="10.5" fill="#5b6472">the value right now</text>
+      <text x="495" y="140" text-anchor="middle" font-size="10" fill="#5b6472">value(), computed()</text>
+
+      <path d="M268,80 H372" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ar13sig)"/>
+      <rect x="268" y="92" width="104" height="20" rx="10" fill="#ffffff" stroke="#16a34a" stroke-width="1.3"/>
+      <text x="320" y="106" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">toSignal()</text>
+
+      <path d="M372,150 H268" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#ar13obs)"/>
+      <rect x="256" y="126" width="128" height="20" rx="10" fill="#ffffff" stroke="#3b82f6" stroke-width="1.3"/>
+      <text x="320" y="140" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">toObservable()</text>
+
+      <text x="320" y="215" text-anchor="middle" font-size="11" fill="#5b6472">Convert at the boundary — done streaming, or need to stream again — never mid-pipeline</text>
+    </svg>
+    <figcaption><code>toSignal()</code> hands an Observable's latest value to Signal-land; <code>toObservable()</code> hands a Signal's changes back into RxJS.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Signals are the newer, better way — just convert everything to one."</b> Once an in-progress RxJS pipeline (still being composed with <code>switchMap</code>/<code>debounceTime</code>) becomes a Signal partway through, you're out of the Observable operator world — convert deliberately at a genuine boundary, not mid-pipeline out of habit.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If you <code>toSignal()</code> an HTTP Observable, what value does the Signal have before the first response arrives?"</b> Whatever <code>initialValue</code> you explicitly pass in — commonly <code>undefined</code>, <code>null</code>, or a sensible default — there's necessarily a gap between "the Signal exists" and "the real data has arrived," and the template needs to handle that state explicitly.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>toSignal()</code> subscribes to an Observable and keeps a Signal updated with its latest emitted value, so templates and <code>computed()</code>s can just read it synchronously. <code>toObservable()</code> does the reverse — it emits whenever the Signal changes, handing that value back into RxJS's operators. Not every Observable should become a Signal, though — only convert once you're actually done streaming, not while you're still composing operators on it."</p>
+    <ul>
+      <li><code>toSignal()</code> <span class="hl hl-basic">→ Observable's latest value, read synchronously</span>.</li>
+      <li><code>toObservable()</code> <span class="hl hl-blue">→ Signal's changes, as a stream you can pipe again</span>.</li>
+      <li>Still mid-pipeline with <code>switchMap</code>/<code>debounceTime</code>? <span class="hl hl-hot">Stay an Observable</span> — converting early throws away the composability.</li>
+      <li>Shared value that's also piped through RxJS elsewhere? <span class="hl hl-inter"><code>BehaviorSubject</code>, not a Signal</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>The real decision isn't "which model is generally better" — it's whether this particular
+      piece of data is fundamentally a <span class="hl hl-blue">stream of async events over
+      time</span> (debounced search input, combining multiple sources, retry/cancellation — RxJS's
+      strength) or a value that's already resolved and you mostly just need to
+      <span class="hl hl-basic">read and derive from synchronously</span> right now (a Signal's
+      strength). <code>toSignal()</code> and <code>toObservable()</code> are the two doors between
+      those rooms, not a replacement for either one.</p>
+
+      <p><code>toSignal(observable$)</code> subscribes internally and keeps a Signal pointed at the
+      Observable's latest emitted value — reach for it once an async operation has resolved into
+      "the current value I have," and what's left is simple template/<code>computed()</code>
+      reads. <code>toObservable(signal)</code> goes the other way, emitting an event every time the
+      Signal's value changes, so a Signal-held value can start a new RxJS pipeline (debounce,
+      <code>switchMap</code>, and the rest) when it needs to.</p>
+
+      <p>Handling an HTTP call with Signals is the direct combination of the two: fetch with
+      <code>HttpClient</code> exactly as before — still an Observable — then <code>toSignal()</code>
+      the result with an explicit initial value, since the HTTP call is async and the Signal needs
+      some value before the first response arrives. The newer <code>resource()</code>/
+      <code>httpResource()</code> family, covered on a later Advanced page, is a more purpose-built
+      tool for exactly this pattern — worth knowing it exists, not needed to answer this question.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Signal</th><th><code>BehaviorSubject</code></th></tr></thead>
+        <tbody>
+          <tr><th>Holds a current value?</th><td>✅ yes</td><td>✅ yes</td></tr>
+          <tr><th>Reading it</th><td><code>value()</code>, plain call</td><td><code>value$</code> + async pipe or manual subscribe</td></tr>
+          <tr><th>Change detection</th><td>built-in, fine-grained</td><td>needs the async pipe or a subscription to wire up</td></tr>
+          <tr><th>RxJS operators alongside it?</th><td class="no">❌ not directly</td><td>✅ pipe it anywhere</td></tr>
+          <tr><th>Pick this when</th><td>simple shared state, mostly template reads</td><td>the value is also debounced/filtered elsewhere</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">readonly</span> user = toSignal(
+  <span class="kw">this</span>.http.get&lt;User&gt;(<span class="str">'/api/me'</span>),
+  { initialValue: <span class="kw">undefined</span> }  <span class="cx-cmt">// HTTP is async — Signal needs a value before the first response</span>
+);</code></pre>
+      </div>
+      <p class="cx-note">No <code>initialValue</code> and the Signal has <b>nothing to read</b> on the very first render — the template has to handle that gap.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>toObservable(<span class="kw">this</span>.searchTerm).pipe(
+  debounceTime(<span class="num">300</span>),
+  switchMap(q =&gt; <span class="kw">this</span>.api.search(q))
+).subscribe(results =&gt; <span class="kw">this</span>.results.set(results));</code></pre>
+      </div>
+      <p class="cx-note"><code>searchTerm</code> is a Signal from the template — but <code>debounceTime</code>/<code>switchMap</code> only exist as <b>RxJS operators</b>, so it has to cross back into Observable-land first.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Observables and Signals are like two currencies at a border crossing.</b>
+      <code>toSignal()</code> and <code>toObservable()</code> are the exchange booths — you convert
+      one into the other exactly when you're crossing from "still actively trading/composing"
+      (RxJS) into "just need to hold and spend a current amount simply" (Signals). You exchange at
+      the border, not constantly back and forth mid-transaction.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="12.html">← Subjects</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Angular Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="14.html">Routing — Advanced →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Angular · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RxJS — Core Concepts — Angular Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="angular/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fde8e8;--crumb-ink:#dd0031;">🅰️ Angular</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">RxJS — Core Concepts</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Must Know</div>
+    <h1><code>Promise</code> vs. <code>Observable</code> — <span class="hl hl-inter">nothing happens until you subscribe</span></h1>
+    <p class="interview-q">"When does an Observable actually start doing anything, and how is that different from a Promise?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>RxJS underlies almost everything async in Angular — HTTP, forms, router events, reactive state — so misunderstanding when a stream actually runs causes silent bugs everywhere.</li>
+        <li>A very common early interview question, used to check whether you've actually built with Observables or only skimmed the syntax.</li>
+        <li>Explains a real bug pattern: an HTTP call that looks fine in code but never fires because nothing ever subscribed to it.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Promise</code> <span class="rarrow">→</span> starts <b>immediately</b></p>
+      <p class="rrow"><code>Observable</code> <span class="rarrow">→</span> starts <b>on subscribe</b></p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> a <b><code>Promise</code></b> is already cooking. An <b><code>Observable</code></b> waits for someone to order.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shRx" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arRxSlate" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arRxBlue" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arRxRose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arRxGreen" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">WHEN DOES THE WORK ACTUALLY START?</text>
+
+      <path d="M320,24 V34" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,34 H480" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,34 V54" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arRxSlate)"/>
+      <path d="M480,34 V54" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arRxBlue)"/>
+
+      <g filter="url(#shRx)"><rect x="40" y="54" width="240" height="74" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="160" y="76" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">Promise</text>
+      <text x="160" y="94" text-anchor="middle" font-size="10.5" fill="#5b6472">the moment it's created —</text>
+      <text x="160" y="111" text-anchor="middle" font-size="10.5" fill="#5b6472">already running</text>
+
+      <g filter="url(#shRx)"><rect x="360" y="54" width="240" height="74" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="76" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Observable</text>
+      <text x="480" y="94" text-anchor="middle" font-size="10.5" fill="#5b6472">only once subscribed —</text>
+      <text x="480" y="111" text-anchor="middle" font-size="10.5" fill="#5b6472">lazy</text>
+
+      <path d="M160,128 V150" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arRxRose)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+      <path d="M480,128 V150" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arRxGreen)"/>
+
+      <g filter="url(#shRx)"><rect x="40" y="150" width="240" height="74" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="172" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🔒 Can't be cancelled</text>
+      <text x="160" y="190" text-anchor="middle" font-size="10.5" fill="#5b6472">already running —</text>
+      <text x="160" y="207" text-anchor="middle" font-size="10.5" fill="#5b6472">no way to stop it</text>
+
+      <g filter="url(#shRx)"><rect x="360" y="150" width="240" height="74" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="172" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">unsubscribe() cancels it</text>
+      <text x="480" y="190" text-anchor="middle" font-size="10.5" fill="#5b6472">stops work still</text>
+      <text x="480" y="207" text-anchor="middle" font-size="10.5" fill="#5b6472">in progress</text>
+
+      <text x="320" y="246" text-anchor="middle" font-size="11" fill="#5b6472">Two async values — one already started, the other hasn't begun</text>
+    </svg>
+    <figcaption>Same async idea, opposite timing — a <code>Promise</code> already started; a cold <code>Observable</code> is still waiting to be asked.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>this.http.get(url)</code> on its own sends nothing.</b> A cold Observable does nothing until something actually subscribes — no request, no error, just silence, until <code>.subscribe()</code> or the <code>async</code> pipe triggers it.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If two components both subscribe to the same cold HTTP Observable, do they share one request or get two?"</b> Two, independently — a cold Observable re-executes its producer for each new subscription, so two separate <code>.subscribe()</code> calls trigger two separate HTTP requests; sharing one execution across subscribers takes deliberately making it hot (e.g. <code>shareReplay</code>, covered next).</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"An Observable is lazy — it represents a stream of values but does nothing until something subscribes. A Promise starts running the instant it's created, whether or not anything is listening. Subscribing both starts a cold Observable's work and gives you a Subscription you can unsubscribe from to stop it."</p>
+    <ul>
+      <li><code>Promise</code> <span class="hl hl-inter">→ already running</span> the moment it's created — no way to cancel it.</li>
+      <li><code>Observable</code> <span class="hl hl-blue">→ lazy</span>, does nothing until <code>.subscribe()</code> is called.</li>
+      <li><span class="hl hl-hot">Cold vs. hot</span> → cold re-runs per subscriber (its own HTTP call each time); hot broadcasts to whoever's listening right now.</li>
+      <li><code>async</code> pipe <span class="hl hl-basic">→ subscribes and unsubscribes for you</span> — no manual cleanup needed in the template.</li>
+      <li>Manual <code>.subscribe()</code> with no matching <code>.unsubscribe()</code> <span class="hl hl-hot">→ the classic memory leak</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>RxJS</b> is the library Angular leans on for asynchronous and event-based code — HTTP
+      calls, forms, router events, and reactive state all flow through it as
+      <span class="hl hl-blue">Observables</span>. A <span class="hl hl-inter">Promise</span>
+      represents exactly one eventual value and starts executing the instant it's created,
+      whether or not anything is listening yet. An <span class="hl hl-blue">Observable</span>
+      represents a stream of zero, one, or many values over time, and — for the common "cold"
+      kind — does nothing at all until something subscribes.</p>
+
+      <p>Calling <code>.subscribe()</code> is the act that actually starts a cold Observable's
+      producer running, and it hands back a <code>Subscription</code> you can call
+      <code>.unsubscribe()</code> on later — which can genuinely cancel underlying work, like an
+      in-flight HTTP request. A Promise has no equivalent: once created, it's already committed,
+      with no built-in way to cancel it. A cold Observable also re-runs its producer for every
+      new subscriber, each getting its own independent execution; a <b>hot</b> Observable is
+      already producing values regardless of subscribers, so a new subscriber just taps into
+      whatever's currently happening, missing anything that already went by.</p>
+
+      <p>Operators like <code>map</code> and <code>filter</code> are pure functions chained
+      through <code>.pipe()</code> to build a processing pipeline without touching the original
+      source — the next page covers these in depth. In a template, the <code>async</code> pipe
+      subscribes to an Observable directly, unwraps its latest value, and unsubscribes
+      automatically when the component is destroyed — which is exactly why it's the recommended
+      default over a manual <code>ngOnInit</code> subscribe that's easy to forget to clean up.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>Promise</code></th><th><code>Observable</code></th></tr></thead>
+        <tbody>
+          <tr><th>When work starts</th><td>the moment it's created</td><td>only once subscribed (lazy)</td></tr>
+          <tr><th>Values over time</th><td>exactly one (or a rejection)</td><td>zero, one, or many, over time</td></tr>
+          <tr><th>Cancellable?</th><td class="no">❌ no built-in cancel</td><td class="yes">✅ <code>unsubscribe()</code> can stop it</td></tr>
+          <tr><th>Two listeners (cold)</th><td>share the same one result</td><td>each <code>subscribe()</code> re-runs independently</td></tr>
+          <tr><th>Typical Angular use</th><td>a one-off <code>async</code>/<code>await</code> call</td><td>HTTP, forms, router events, ongoing streams</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">const</span> request$ = <span class="kw">this</span>.http.get(url);   <span class="cx-err">// ❌ nothing sent yet — no subscriber</span>
+
+request$.subscribe();                     <span class="cx-ok">// ✅ NOW the HTTP request actually fires</span></code></pre>
+      </div>
+      <p class="cx-note">Defining an Observable never runs it — only <code>.subscribe()</code> (or the <code>async</code> pipe) starts a cold Observable's work.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> HTML</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>&lt;<span class="ty">div</span> *ngIf=<span class="str">"user$ | async as user"</span>&gt;{{ user.name }}&lt;/<span class="ty">div</span>&gt;</code></pre>
+      </div>
+      <p class="cx-note">The <code>async</code> pipe subscribes when the template renders and unsubscribes automatically when the component is destroyed — <b>never needs a manual unsubscribe</b>.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A food order already cooking vs. a recipe card waiting to be used.</b> A Promise is
+      like placing a food order — the kitchen starts cooking the moment you order, whether or not
+      anyone's there to pick it up. A cold Observable is like a recipe card: nothing gets cooked
+      until someone actually asks for a plate — and if two people ask, the kitchen cooks it twice,
+      independently, unless someone deliberately sets up one shared pot everyone eats from.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="1.html">← Standalone Components</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Angular Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="3.html">RxJS — Common Operators →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Angular · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

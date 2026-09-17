@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RxJS Error Handling &amp; Subscription Lifetime — Angular Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="angular/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fde8e8;--crumb-ink:#dd0031;">🅰️ Angular</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">RxJS Error Handling &amp; Subscription Lifetime</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Must Know</div>
+    <h1>One error, <span class="hl hl-inter">one dead stream — forever, unless you plan for it</span></h1>
+    <p class="interview-q">If one request inside a stream errors, does the whole stream die — and how do you stop a subscription from leaking after a component is destroyed?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Interviewers use this to check you understand what an "unhandled error" actually does to an Observable — not just that "something went wrong."</li>
+        <li>Comes up constantly in real code: a type-ahead search, a polling stream, any long-lived subscription that has to survive one bad request.</li>
+        <li>Subscription leaks are a favorite senior-level follow-up — they don't crash anything, they just quietly waste memory and keep firing after a component is gone.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>catchError</code> on the <b>inner</b> call <span class="rarrow">→</span> outer stream survives</p>
+      <p class="rrow"><code>catchError</code> missing / on the <b>outer</b> <span class="rarrow">→</span> outer stream dies, forever</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>catchError</code></b> wrapped around the inner call = one bad search, line stays open. <b><code>catchError</code></b> missing, or wrapping the outer, = the whole line goes dead.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shR5" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arR5" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arR5Green" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.5">ONE SEARCH FAILS — DOES THE WHOLE FEATURE DIE?</text>
+
+      <g filter="url(#shR5)"><rect x="170" y="32" width="300" height="50" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="54" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Outer stream: search$ (keystrokes)</text>
+      <text x="320" y="72" text-anchor="middle" font-size="10.5" fill="#5b6472">one value per keystroke</text>
+
+      <path d="M320,82 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR5)"/>
+
+      <g filter="url(#shR5)"><rect x="150" y="100" width="340" height="50" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="122" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">switchMap → this.api.search(q)</text>
+      <text x="320" y="140" text-anchor="middle" font-size="10.5" fill="#5b6472">makes ONE inner HTTP call per outer value</text>
+
+      <path d="M320,150 V166" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M320,166 H165" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M165,166 V188" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR5)"/>
+      <path d="M320,166 H475" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M475,166 V188" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR5)"/>
+
+      <g filter="url(#shR5)"><rect x="25" y="188" width="280" height="82" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="165" y="208" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">❌ catchError missing on inner</text>
+      <text x="165" y="226" text-anchor="middle" font-size="10.5" fill="#5b6472">error propagates outward</text>
+      <text x="165" y="252" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">💀 no more searches, ever</text>
+
+      <g filter="url(#shR5)"><rect x="335" y="188" width="280" height="82" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="475" y="208" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ catchError on the inner call</text>
+      <text x="475" y="226" text-anchor="middle" font-size="10.5" fill="#5b6472">returns a fallback (e.g. of([]))</text>
+      <text x="475" y="252" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">🔁 outer stream keeps living</text>
+
+      <path d="M590,188 V57 H470" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arR5Green)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1.2s" repeatCount="indefinite"/></path>
+
+      <text x="320" y="298" text-anchor="middle" font-size="11" fill="#5b6472">Same failed request, two placements — one keeps taking keystrokes, one never does again</text>
+    </svg>
+    <figcaption>catchError placed around the inner call keeps the outer search stream alive; missing it (or placing it on the outer stream) ends it for good.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Wrapping <code>catchError</code> around the outer <code>switchMap</code>-based stream instead of the inner request Observable.</b> One failed search then silently kills the entire search feature for the rest of the component's life — no crash, no visible error — so it can go unnoticed until a real user hits it in production.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Does <code>takeUntilDestroyed()</code> work anywhere, or only inside a component?"</b> It needs an injection context (or an explicit <code>DestroyRef</code> passed as an argument) to know which "destroy" event to key off — callable directly as a field initializer inside an injectable class (same injection-context rule as <code>inject()</code> from the DI page), or from outside one if you explicitly pass in the relevant <code>DestroyRef</code>.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"An unhandled error is a terminal notification — the Observable stops for good, so <code>catchError</code> has to wrap the exact call that might fail, not the whole outer stream, or one bad request kills everything after it. And any subscription that doesn't complete on its own needs <code>takeUntilDestroyed()</code>, the <code>takeUntil</code> pattern, or the <code>async</code> pipe so it doesn't outlive the component."</p>
+    <ul>
+      <li><span class="hl hl-hot">catchError on the inner call</span> → wraps just the risky request, so only that one attempt fails, not the whole stream.</li>
+      <li><code>takeUntil(destroy$)</code> → <span class="hl hl-blue">the classic pattern</span> — a Subject you call <code>.next()</code> on inside <code>ngOnDestroy</code>.</li>
+      <li><code>takeUntilDestroyed()</code> → <span class="hl hl-inter">the modern replacement</span> — hooks into Angular's own <code>DestroyRef</code>, no manual Subject.</li>
+      <li><span class="hl hl-basic">async pipe</span> → subscribes and unsubscribes for you automatically; reach for it whenever you're just displaying a value.</li>
+      <li>Manual <code>.subscribe()</code> → still justified <span class="hl hl-teal">only for a side effect</span> — navigation, a toast — never just to display a value.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>An RxJS stream treats an error very differently from a value. A value emission just means
+      "here's the next thing" — the stream keeps going. An error is a <b>terminal</b> notification:
+      the Observable stops completely and nothing else it would have emitted ever arrives, unless
+      something intercepts that error first. <code>catchError</code> intercepts it and lets you
+      return a replacement Observable instead — a fallback value (<code>of(...)</code>), an empty
+      stream (<code>EMPTY</code>), or the original error rethrown after logging it, if you still
+      want it to propagate.</p>
+
+      <p>Where <code>catchError</code> sits in the pipe decides whose life it saves. Wrapped around
+      just the inner call inside <code>switchMap</code> (or immediately after it, still inside that
+      inner pipe), it only catches failures from that one request — the outer stream, and its
+      subscription, keep running for the next value. Wrapped around the whole outer stream instead,
+      an inner failure propagates all the way out and the outer stream dies for good — a search box
+      with no <code>catchError</code> on its inner request simply stops responding to every
+      keystroke after the first failed search.</p>
+
+      <p>A subscription that never completes on its own has to be told when to stop, or it leaks —
+      still listening, still doing work, after the component that created it is gone. The
+      <code>takeUntil(destroy$)</code> pattern, the newer <code>takeUntilDestroyed()</code>, and the
+      <code>async</code> pipe are three ways to guarantee that cleanup; a manual
+      <code>.subscribe()</code> is still the right call when you need to run actual logic —
+      navigation, a toast, another method call — in response to a value, not just show it.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>takeUntil(destroy$)</code></th><th><code>takeUntilDestroyed()</code></th><th><code>async</code> pipe</th></tr></thead>
+        <tbody>
+          <tr><th>Setup</th><td>Create + <code>.next()</code> a Subject in <code>ngOnDestroy</code></td><td>Call in an injection context, or pass a <code>DestroyRef</code></td><td>None — bind in the template</td></tr>
+          <tr><th>What triggers cleanup</th><td>Your own <code>destroy$.next()</code></td><td>Angular's own <code>DestroyRef</code>, automatically</td><td>The template's own lifecycle</td></tr>
+          <tr><th>Can run side-effect logic?</th><td>Yes, inside <code>.subscribe()</code></td><td>Yes, inside <code>.subscribe()</code></td><td class="no">❌ display only</td></tr>
+          <tr><th>Best for</th><td>Older codebases, pre-<code>DestroyRef</code></td><td>New component/directive code</td><td>"Just show this value" in the template</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>this.results$ = this.search$.pipe(
+  switchMap(q =&gt; this.api.search(q)),
+  catchError(() =&gt; of([]))   <span class="cx-err">// ❌ catches AFTER switchMap — one failure kills the whole outer stream</span>
+);</code></pre>
+      </div>
+      <p class="cx-note">By the time this <code>catchError</code> runs, the <b>outer</b> stream has already errored — it's done, forever.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>this.results$ = this.search$.pipe(
+  switchMap(q =&gt; this.api.search(q).pipe(
+    catchError(() =&gt; of([]))   <span class="cx-ok">// ✅ catches only THIS search — outer stream keeps running</span>
+  ))
+);</code></pre>
+      </div>
+      <p class="cx-note"><code>catchError</code> wraps just the inner Observable — only that one search fails gracefully; the next keystroke still triggers a new search.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>this.data$.pipe(takeUntilDestroyed()).subscribe(value =&gt; this.handle(value));</code></pre>
+      </div>
+      <p class="cx-note"><code>takeUntilDestroyed()</code> completes the stream automatically when this component's <code>DestroyRef</code> fires — no manual <code>destroy$</code> Subject needed.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>An unhandled error in a stream is like a single dropped call permanently disconnecting
+      your entire phone line, not just that one call — the next call, and every call after it,
+      goes nowhere. Catching the error at the right, inner level is like having call waiting
+      instead: one bad connection gets logged and dismissed, and the line itself stays open for
+      the next call.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="4.html">← RxJS Higher-Order Mapping</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Angular Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="6.html">Signals →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Angular · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

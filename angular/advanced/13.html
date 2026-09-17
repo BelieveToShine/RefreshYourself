@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scenario: Change Detection Gone Wrong — Angular Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="angular/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fde8e8;--crumb-ink:#dd0031;">🅰️ Angular</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: Change Detection Gone Wrong</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Must Know</div>
+    <h1><code>OnPush</code> isn't broken — it's <span class="hl hl-adv">following its own rules, exactly</span></h1>
+    <p class="interview-q">An OnPush component isn't updating — what's the actual, ordered checklist you go through?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>"The UI isn't updating" is one of the most common real bugs in an Angular codebase,
+        and almost every case traces back to one of a very small number of causes.</li>
+        <li>Interviewers use this scenario to check whether you actually have a diagnostic
+        process, not just definitions of <code>OnPush</code> and Signals memorized separately.</li>
+        <li>A near-guaranteed follow-up once you name the mutation-in-place cause — see the trap
+        below.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Mutated in place <span class="rarrow">→</span> <b>same reference</b>, OnPush never sees it</p>
+      <p class="rrow">Outside Zone.js <span class="rarrow">→</span> <b>nothing told Angular</b>, no trigger fired</p>
+      <p class="rrow">Signal never read <span class="rarrow">→</span> <b>not tracked</b>, template missed it</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> every "why isn't this updating" bug is one of
+    three things — a <b>reference</b> that didn't really change, <b>nothing</b> that told Angular
+    to look, or a <b><code>Signal()</code></b> that was never actually read.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 350" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA13" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA13" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">CHECK IN THIS ORDER — NOT A BRANCHING TREE</text>
+
+      <g filter="url(#shA13)"><rect x="170" y="30" width="300" height="50" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="52" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🧩 OnPush component not updating</text>
+      <text x="320" y="68" text-anchor="middle" font-size="10" fill="#5b6472">check the following, in order ↓</text>
+
+      <path d="M320,80 V102" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA13)"/>
+
+      <g filter="url(#shA13)"><rect x="90" y="102" width="460" height="60" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="125" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">1️⃣ New reference, or mutated in place?</text>
+      <text x="320" y="143" text-anchor="middle" font-size="10" fill="#5b6472">the single most common cause</text>
+      <text x="320" y="156" text-anchor="middle" font-size="10" fill="#5b6472">— check this one first</text>
+
+      <path d="M320,162 V184" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA13)"/>
+
+      <g filter="url(#shA13)"><rect x="70" y="184" width="500" height="74" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="207" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">2️⃣ Did the update happen outside anything</text>
+      <text x="320" y="224" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Angular was told to watch?</text>
+      <text x="320" y="242" text-anchor="middle" font-size="10" fill="#5b6472">no Zone.js patch, no markForCheck(), no Signal</text>
+
+      <path d="M320,258 V280" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA13)"/>
+
+      <g filter="url(#shA13)"><rect x="90" y="280" width="460" height="60" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="303" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">3️⃣ Is a Signal actually being read</text>
+      <text x="320" y="320" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">in the template?</text>
+      <text x="320" y="335" text-anchor="middle" font-size="10" fill="#5b6472">must be called, not just referenced</text>
+    </svg>
+    <figcaption>Three checks, always in this order — not three separate branches to pick from.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Switching a broken <code>OnPush</code> component back to <code>Default</code>
+    is not a fix.</b> It papers over the real bug — almost always a mutation instead of a new
+    reference — so the same mutation resurfaces the next time that same data feeds any other
+    <code>OnPush</code> component.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If switching back to <code>Default</code> 'fixes' it, was
+    <code>OnPush</code> actually the problem?"</b> No — <code>Default</code> checks unconditionally
+    on every run, so it happens to paper over the mutation bug by accident; the actual bug (data
+    mutated in place instead of replaced) is still there and will resurface the next time that
+    same data feeds an <code>OnPush</code> component.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd check three things, in order: first, whether the bound
+    <code>@Input</code> is getting a genuinely new reference or the same object mutated in place —
+    that's the most common cause by far. Second, whether the update happened through something
+    Zone.js wouldn't have noticed at all, like a raw third-party callback, with no
+    <code>markForCheck()</code> and no Signal involved. Third, if the value is a Signal, whether
+    the template is actually calling it — a Signal read wires up its own update path regardless of
+    the component's change-detection strategy."</p>
+    <ul>
+      <li><span class="hl hl-inter">Mutation instead of a new reference</span> → the #1 cause; <code>this.items.push(x)</code> keeps the same reference, <code>OnPush</code> never sees it.</li>
+      <li><span class="hl hl-blue">Outside anything Angular watches</span> → a raw callback with no <code>markForCheck()</code> and no Signal never triggers a check, under <code>Default</code> or <code>OnPush</code>.</li>
+      <li><span class="hl hl-basic">Signal not actually read</span> → the template has to call it (<code>value()</code>), not just hold a reference to the Signal object.</li>
+      <li>Diagnosing a too-frequent render → <span class="hl hl-adv">Angular DevTools Profiler</span> shows exactly what's triggering each check.</li>
+      <li>An inline object literal passed as an <code>@Input</code> → <span class="hl hl-adv">recreated every parent render</span>; stabilize its reference in the parent, not the child.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Almost every "change detection isn't doing what I expect" bug reduces to one of three
+      things: a reference that didn't actually change, an update that happened somewhere Angular
+      was never told to watch, or a Signal that was never actually read in the right place. The
+      checklist here is just "which of these three is it" — worked in a sensible order, most
+      common cause first.</p>
+
+      <p><b>Check 1 — reference vs. mutation.</b> <span class="hl hl-inter">OnPush</span> compares
+      the <code>@Input</code>'s reference to its last-known one. Mutating the same array or object
+      in place (<code>.push()</code>, <code>.length = 0</code>, setting a nested property) never
+      changes that reference, so the component has no signal anything happened — even though the
+      data itself is genuinely different now.</p>
+
+      <p><b>Check 2 — did anything actually tell Angular?</b> If the update comes from a raw
+      callback that isn't one of Zone.js's patched async APIs — a third-party library calling its
+      own event handlers directly — neither <code>Default</code> nor <code>OnPush</code> would
+      have any reason to run, because nothing scheduled a check at all. The fix is an explicit
+      <code>markForCheck()</code> inside that callback, or converting the state to a Signal.</p>
+
+      <p><b>Check 3 — is the Signal actually read?</b> A Signal's update should work regardless of
+      the component's change-detection strategy, because reading it in a template wires up its own
+      direct notification path. If it's still not updating, confirm the template is actually
+      calling the Signal, not just holding a reference to the Signal object without calling it —
+      and confirm it's the <em>same</em> Signal instance being updated, not a new one the template
+      never switched to.</p>
+
+      <p>Diagnosing the opposite problem — a component checked <b>far more often</b> than
+      expected — starts the same way: open the Angular DevTools Profiler and see exactly what's
+      triggering each check. The usual causes are a <code>Default</code>-strategy ancestor sitting
+      in the path of frequent async events, a <code>markForCheck()</code> called inside a tight
+      loop or very frequent event, or an <code>@Input</code>-bound object recreated with a new
+      reference on every parent render (an inline object literal passed as a prop) even though its
+      content barely changes — the fix there is stabilizing that reference in the parent, not
+      changing the child's own strategy.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Check 1: Reference</th><th>Check 2: Outside Angular</th><th>Check 3: Signal read</th></tr></thead>
+        <tbody>
+          <tr><th>What to look for</th><td>same array/object mutated in place</td><td>a callback Zone.js never patched</td><td>template never calls the Signal</td></tr>
+          <tr><th>How common</th><td>the #1 cause, by far</td><td>common with third-party libraries</td><td>less common, but an easy typo-level miss</td></tr>
+          <tr><th>Fix</th><td>replace with a new reference</td><td><code>markForCheck()</code>, or a Signal</td><td>call it — <code>value()</code>, not <code>value</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// @Input() items: Item[] — this component is OnPush</span>
+<span class="kw">this</span>.items.push(newItem);        <span class="cx-err">// ❌ same reference — OnPush sees nothing</span>
+<span class="kw">this</span>.items = [...<span class="kw">this</span>.items, newItem];  <span class="cx-ok">// ✅ new reference — OnPush sees it</span></code></pre>
+      </div>
+      <p class="cx-note">Check 1 in code — the array's <b>reference</b> is exactly what
+      <code>OnPush</code> compares on an <code>@Input</code>; mutating in place never changes it.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>thirdPartyLib.onUpdate(() =&gt; {
+  <span class="kw">this</span>.value = thirdPartyLib.getValue();
+  <span class="kw">this</span>.cdr.markForCheck();  <span class="cx-ok">// ✅ tell Angular explicitly</span>
+});
+<span class="cx-cmt">// thirdPartyLib's own callback runs outside anything Zone.js patched</span></code></pre>
+      </div>
+      <p class="cx-note">Check 2 in code — without this explicit call, nothing told Angular the
+      callback even ran, under <code>Default</code> or <code>OnPush</code>.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A product-list component is <code>OnPush</code>, receiving its <code>products</code>
+      array through an <code>@Input</code> from a parent that fetches and periodically refreshes
+      it.</b> After a refresh, the network tab confirms fresh data arrived, but the list on screen
+      never changes. Investigation shows the parent's refresh logic does
+      <code>this.products.length = 0; this.products.push(...newProducts);</code> — mutating the
+      exact same array reference every time. The fix: change the parent to
+      <code>this.products = newProducts;</code>, a genuinely new reference, which the
+      <code>OnPush</code> child picks up on its very next input-binding check, with nothing else
+      in the codebase touched.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="12.html">← Scenario: RxJS in Production</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Angular Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="14.html">Scenario: State Management at Scale →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Angular · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

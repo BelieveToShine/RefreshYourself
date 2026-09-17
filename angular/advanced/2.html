@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Change Detection Internals — Angular Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="angular/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fde8e8;--crumb-ink:#dd0031;">🅰️ Angular</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Change Detection Internals</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 Deep Dive</div>
+    <h1><code>Zone.js</code> isn't the change-detector — it's a <span class="hl hl-adv">monkey-patch</span> that only knows "something async just happened"</h1>
+    <p class="interview-q">"Mechanically, how does Zone.js actually trigger Angular's change detection, and what does OnPush skip at that level?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>The natural follow-up once someone says "Zone.js triggers change detection" —
+        interviewers push for the actual mechanism, not the one-line summary.</li>
+        <li>Explains the real cause behind "why does my whole app re-check on one keystroke" and
+        "why won't this OnPush component update," not just the trigger list from Intermediate.</li>
+        <li>Sets up zoneless Angular directly — reasoning about removing Zone.js only makes sense
+        once you know exactly what it was doing underneath.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Zone.js <span class="rarrow">→</span> monkey-patches async, notices it <b>finished</b></p>
+      <p class="rrow"><code>tick()</code> <span class="rarrow">→</span> walks <b>every</b> component, no exceptions</p>
+      <p class="rrow">OnPush skip <span class="rarrow">→</span> happens <b>per component</b>, not in the walk</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> Zone.js is a <b>doorbell</b>, not a cleaner —
+    it only rings <b>"something happened,"</b> it never decides who actually has to clean.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shAdv2" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arAdv2Grey" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arAdv2Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arAdv2Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shAdv2)"><rect x="190" y="16" width="260" height="46" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="35" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">⚡ Async event fires</text>
+      <text x="320" y="50" text-anchor="middle" font-size="10.5" fill="#5b6472">Zone.js-patched API callback</text>
+
+      <path d="M320,62 V84" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arAdv2Grey)"/>
+
+      <g filter="url(#shAdv2)"><rect x="170" y="84" width="300" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="103" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🔔 NgZone notices</text>
+      <text x="320" y="118" text-anchor="middle" font-size="10.5" fill="#5b6472">schedules ApplicationRef.tick()</text>
+
+      <path d="M320,130 V152" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arAdv2Grey)"/>
+
+      <g filter="url(#shAdv2)"><rect x="140" y="152" width="360" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="171" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🌳 ApplicationRef.tick()</text>
+      <text x="320" y="186" text-anchor="middle" font-size="10.5" fill="#5b6472">walks the whole tree, unconditionally</text>
+
+      <path d="M320,198 V218" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M140,218 H500" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+
+      <path d="M140,218 V242" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arAdv2Blue)"/>
+      <path d="M500,218 V242" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arAdv2Amber)"/>
+
+      <g filter="url(#shAdv2)"><rect x="20" y="242" width="240" height="58" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="140" y="263" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">✅ Default component</text>
+      <text x="140" y="278" text-anchor="middle" font-size="10.5" fill="#5b6472">own update instructions run</text>
+      <text x="140" y="291" text-anchor="middle" font-size="10.5" fill="#5b6472">checked this tick, as usual</text>
+
+      <g filter="url(#shAdv2)"><rect x="380" y="242" width="240" height="58" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="500" y="263" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">⏸️ OnPush component</text>
+      <text x="500" y="278" text-anchor="middle" font-size="10.5" fill="#5b6472">update instructions skipped</text>
+      <text x="500" y="291" text-anchor="middle" font-size="10.5" fill="#5b6472">unless marked dirty first</text>
+    </svg>
+    <figcaption><code>tick()</code> reaches every branch of the tree — only OnPush's own update
+    work gets skipped, unless it's marked dirty.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>tick()</code> doesn't prune OnPush branches from its walk.</b> The
+    walk still reaches every component structurally — it's that OnPush component's own update
+    instructions that don't run, unless something marked it dirty first.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If <code>markForCheck()</code> walks up marking ancestors, does that
+    mean it also marks the component's own children as needing a check?"</b> No — it walks toward
+    the root, not down. The component's children still get checked through the normal top-down
+    walk, based on their own strategy and dirty state, which <code>markForCheck()</code> has
+    nothing to do with.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Zone.js monkey-patches common async APIs so Angular's
+    <code>NgZone</code> notices when a callback finishes, which schedules
+    <code>ApplicationRef.tick()</code> to walk the whole component tree — a <code>Default</code>
+    component gets checked outright, but an <code>OnPush</code> component's own update
+    instructions are skipped unless something marked it dirty first: a new <code>@Input</code>
+    reference, a template event, <code>markForCheck()</code>, an async pipe, or a changed
+    Signal."</p>
+    <ul>
+      <li>Zone.js → <span class="hl hl-inter">monkey-patches async APIs</span> (timers, promises,
+      DOM events, XHR/fetch) so Angular notices when one finishes.</li>
+      <li><code>tick()</code> → <span class="hl hl-blue">walks the whole tree unconditionally</span>;
+      the skip happens at each component's own execution, not the walk itself.</li>
+      <li><code>markForCheck()</code> → <span class="hl hl-hot">flags ancestors dirty</span> for
+      the next tick — it checks nothing right now.</li>
+      <li><code>detectChanges()</code> → <span class="hl hl-basic">runs the check immediately</span>,
+      synchronously, without waiting for a tick.</li>
+      <li>Signals → <span class="hl hl-adv">notify Angular directly, per binding</span>, with no
+      need for Zone.js to have noticed anything.</li>
+      <li>Zoneless Angular → removes Zone.js's auto-trigger entirely, so it
+      <span class="hl hl-adv">requires Signals</span> (or manual scheduling) to render at all.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-inter">Zone.js</span> doesn't run change detection itself — it
+      monkey-patches the common asynchronous browser APIs (<code>setTimeout</code>, promises, DOM
+      event listeners, XHR/fetch) so Angular's own zone wraps every callback that goes through
+      them. When any patched operation completes and its callback runs inside that zone,
+      <code>NgZone</code> gets notified that some async work just finished — once the current
+      batch of callbacks has fully drained, that notification is what schedules
+      <code>ApplicationRef.tick()</code>. Zone.js's job stops there: it's a signal that something
+      happened, not a decision about what to check.</p>
+
+      <p><code>tick()</code> then walks the <span class="hl hl-blue">whole component tree from
+      the root, unconditionally</span> — every component is structurally visited on every run.
+      What actually happens at each one depends on its own strategy: a <code>Default</code>
+      component's update instructions run outright, while an <code>OnPush</code> component's own
+      instructions are skipped unless it was already marked dirty — by one of the specific
+      triggers from the Intermediate Change Detection page (a new <code>@Input</code> reference,
+      an internal template event, <code>markForCheck()</code>, an async-pipe emission, or a
+      changed Signal). <code>detach()</code> goes further than any of those: it pulls a component
+      out of <code>tick()</code>'s walk entirely, so even a <code>Default</code> component stops
+      being checked automatically until <code>reattach()</code> — or a direct
+      <code>detectChanges()</code> call — brings it back.</p>
+
+      <p>Signals skip this whole path. Reading a Signal inside a template wires up a fine-grained
+      dependency between that exact binding and that Signal, so when its value changes it can
+      mark the relevant view directly — no dependence on Zone.js having noticed some unrelated
+      async event at all. That's exactly why removing Zone.js (zoneless Angular, next in this
+      track) forces a Signals-first architecture: without Zone.js's automatic "something
+      happened, let's tick" signal, and without Signals telling Angular precisely what changed,
+      nothing would render on its own.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>markForCheck()</code></th><th><code>detectChanges()</code></th><th><code>detach()</code></th></tr></thead>
+        <tbody>
+          <tr><th>What it does</th><td>walks up, flags ancestors dirty</td><td>runs the check right now</td><td>removes it from <code>tick()</code>'s walk</td></tr>
+          <tr><th>When the check happens</th><td>next scheduled tick</td><td>immediately, synchronously</td><td>never automatically, until <code>reattach()</code></td></tr>
+          <tr><th>Use it when</th><td>state changed outside Zone.js's reach</td><td>the update needs to be visible right now</td><td>you want full manual control over a component</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">this</span>.websocket.onmessage = (msg) =&gt; {
+  <span class="kw">this</span>.data = msg.data;
+  <span class="kw">this</span>.cdr.markForCheck();  <span class="cx-ok">// ✅ tell Angular this component needs checking</span>
+};
+<span class="cx-cmt">// WebSocket's onmessage runs outside anything Zone.js patches</span></code></pre>
+      </div>
+      <p class="cx-note">This callback never runs inside Angular's zone, so nothing would notice
+      <code>this.data</code> changed without the explicit <code>markForCheck()</code> call.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// markForCheck() — flags it, waits for the next tick</span>
+<span class="kw">this</span>.cdr.markForCheck();
+
+<span class="cx-cmt">// detectChanges() — runs the check right now, synchronously</span>
+<span class="kw">this</span>.cdr.detectChanges();</code></pre>
+      </div>
+      <p class="cx-note"><code>markForCheck()</code> only sets a flag for the next scheduled
+      tick; <code>detectChanges()</code> runs the check immediately, without waiting for one.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A fire-drill supervisor checking every floor.</b> After any alarm, the supervisor
+      walks every single floor of the building — that's <code>tick()</code>'s walk, unconditional.
+      Floors running <code>OnPush</code> have their own "please check me" light that has to be
+      switched on before the supervisor actually inspects that floor, even though the supervisor
+      still walks right past its door. Calling <code>markForCheck()</code> is someone on a high
+      floor flipping on their own light — and every floor's light between them and the ground —
+      so the next patrol doesn't walk past any of them.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="1.html">← Angular Rendering Internals</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Angular Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="3.html">Zoneless Angular →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Angular · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

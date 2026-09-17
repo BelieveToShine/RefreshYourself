@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced RxJS Architecture — Angular Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="angular/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fde8e8;--crumb-ink:#dd0031;">🅰️ Angular</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Advanced RxJS Architecture</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 Deep Dive</div>
+    <h1><span class="hl hl-adv">One shared stream</span> — or is every subscriber quietly running <span class="hl hl-hot">its own private copy</span>?</h1>
+    <p class="interview-q">"What's the actual difference between <code>share()</code> and <code>shareReplay()</code>, and how do you design a stream that's safe to subscribe to from multiple places?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>A stream reused across a codebase without a deliberate sharing strategy either
+        re-runs the same expensive work per subscriber, or silently drops values a late
+        subscriber needed — both are real production bugs, not theoretical.</li>
+        <li>Nested <code>.subscribe()</code> calls are one of the most commonly flagged
+        issues in real RxJS-heavy Angular code review — interviewers use this to check whether
+        you actually design streams, not just call operators.</li>
+        <li>A common trap for anyone who assumes RxJS quietly handles backpressure and
+        memory cleanup for them — neither is automatic.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>share()</code> <span class="rarrow">→</span> multicasts, <b>no replay</b> for late joiners</p>
+      <p class="rrow"><code>shareReplay()</code> <span class="rarrow">→</span> multicasts <b>+ buffers/replays</b> last N values</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>share()</code></b> joins the live
+    meeting, hears nothing said before. <b><code>shareReplay()</code></b> joins the recorded
+    meeting, gets a quick replay first.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA4" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA4Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arA4Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arA4Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shA4)"><rect x="170" y="20" width="300" height="50" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="42" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🚪 A LATE SUBSCRIBER JOINS</text>
+      <text x="320" y="58" text-anchor="middle" font-size="10.5" fill="#5b6472">the source is already running</text>
+
+      <path d="M320,70 V95" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M150,95 H490" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+
+      <path d="M150,95 V120" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA4Amber)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+      <path d="M490,95 V120" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA4Blue)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shA4)"><rect x="40" y="120" width="220" height="104" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="150" y="150" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">📡 share()</text>
+      <text x="150" y="168" text-anchor="middle" font-size="10.5" fill="#5b6472">nothing from before</text>
+      <text x="150" y="186" text-anchor="middle" font-size="10.5" fill="#5b6472">only future values</text>
+
+      <g filter="url(#shA4)"><rect x="380" y="120" width="220" height="104" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="490" y="150" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">💾 shareReplay()</text>
+      <text x="490" y="168" text-anchor="middle" font-size="10.5" fill="#5b6472">buffers last N values</text>
+      <text x="490" y="186" text-anchor="middle" font-size="10.5" fill="#5b6472">replays them, then stays live</text>
+    </svg>
+    <figcaption>Same late subscriber, same shared source — only one of them gets the recent past.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Nested <code>.subscribe()</code> calls are not just messy — they're
+    broken.</b> Subscribing inside another subscription's callback loses the outer stream's
+    ability to cancel/clean up the inner one and silently swallows the inner stream's errors —
+    always compose the two with <code>switchMap</code>/<code>mergeMap</code>/<code>concatMap</code>/<code>exhaustMap</code> instead.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If <code>shareReplay()</code> keeps its most recent value cached for
+    late subscribers, can it leak memory if nobody ever unsubscribes?"</b> Yes — a plain
+    <code>shareReplay()</code> keeps the source subscription alive indefinitely once started,
+    even after every consumer leaves, unless configured with
+    <code>{ bufferSize: 1, refCount: true }</code> so it tears the source down once the last
+    subscriber unsubscribes.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>share()</code> multicasts to whoever's currently subscribed but
+    replays nothing to a late joiner; <code>shareReplay()</code> does the same multicasting but
+    also buffers and replays a set number of recent values. I design a shared stream as one
+    named, documented function so the sharing/retry/error behavior lives in one place, and I
+    always compose dependent streams with a mapping operator instead of nesting subscribes."</p>
+    <ul>
+      <li><code>share()</code> → <span class="hl hl-inter">multicasts current subscribers, no replay</span> to anyone who joins late.</li>
+      <li><code>shareReplay({ bufferSize, refCount: true })</code> → <span class="hl hl-blue">buffers &amp; replays</span>, and <code>refCount</code> stops it leaking once everyone leaves.</li>
+      <li>Nested subscriptions → <span class="hl hl-hot">always the wrong tool</span> — a mapping operator composes properly instead.</li>
+      <li>Hot vs. cold sharing → <span class="hl hl-adv">a deliberate design decision</span>, not something to stumble into by accident.</li>
+      <li>Backpressure in RxJS → <span class="hl hl-teal">a real gap, not solved</span> — mitigated with <code>debounceTime</code>/<code>throttleTime</code>/<code>sample</code>/<code>bufferCount</code>.</li>
+      <li>An error boundary → <span class="hl hl-basic">its own scoped <code>catchError</code></span> so one bounded failure doesn't take down unrelated streams.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A pipeline meant to be reused across a codebase shouldn't live as a raw
+      <code>.pipe()</code> chain copy-pasted everywhere it's needed — expose it as one
+      well-named, documented function or getter that returns an <code>Observable</code>. The
+      actual retry policy, sharing behavior, and error handling then live in exactly one place,
+      and every consumer inherits the same behavior automatically instead of quietly drifting
+      apart over time.</p>
+
+      <p>Underneath that pipeline is often a <b>higher-order Observable</b> — an
+      <code>Observable</code> that itself emits other Observables, exactly the shape
+      <code>switchMap</code>/<code>mergeMap</code>/<code>concatMap</code>/<code>exhaustMap</code>
+      exist to flatten back into one stream of real values. Sharing the resulting execution
+      across multiple subscribers, instead of each one triggering its own independent run, is
+      <b>multicasting</b> — the general idea behind both <code>share()</code> and
+      <code>shareReplay()</code>.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>share()</code></th><th><code>shareReplay()</code></th></tr></thead>
+        <tbody>
+          <tr><th>Replays to a late subscriber</th><td>❌ no — future values only</td><td>✅ yes — last N buffered values</td></tr>
+          <tr><th>Extra state kept</th><td>none</td><td>a buffer of recent values</td></tr>
+          <tr><th>Best for</th><td>a stream where "join in progress" is fine</td><td>shared app state a late consumer still needs</td></tr>
+          <tr><th>Risk if misused</th><td>late joiner misses real data</td><td>can leak the source without <code>refCount</code></td></tr>
+        </tbody>
+      </table>
+
+      <p>Whether a piece of shared state should genuinely be <b>hot</b> (one execution via
+      <code>shareReplay</code>) or stay <b>cold</b> (a fresh run per consumer — something that
+      must always fetch fresh) is a deliberate architectural choice, not an accident: get it
+      wrong and you either burn extra network calls or serve stale data. RxJS also has a real
+      limit worth knowing — it has no dedicated backpressure system for a source that produces
+      faster than a consumer can keep up. The practical fix is operators that intentionally
+      drop, limit, or batch values (<code>debounceTime</code>, <code>throttleTime</code>,
+      <code>sample</code>, <code>bufferCount</code>), not a formal protocol RxJS is quietly
+      running for you.</p>
+
+      <p>Cancellation at the architecture level means more than one <code>switchMap</code>
+      cancelling one HTTP call — abandoning a whole feature should reliably tear down every
+      subscription, timer, and side effect that feature's own pipeline spawned along the way.
+      Reasoning about several independent streams means deciding, per relationship, whether they
+      run fully independently, need combining once each has a value, or need to be sequenced/
+      gated by each other — the real skill is identifying which relationship actually applies,
+      not memorizing operator names. And a bounded piece of the architecture carrying its own
+      <code>catchError</code> is an <b>error boundary</b>: a failure there shouldn't take down
+      unrelated parts of the app's reactive architecture.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>user$.subscribe(user => {
+  orders$(user.id).subscribe(orders => { <span class="cx-err">// ❌ nested — no cancel, swallows errors</span>
+    this.orders = orders;
+  });
+});
+
+user$.pipe(
+  switchMap(user => orders$(user.id))    <span class="cx-ok">// ✅ composed — cancels the old orders$ call</span>
+).subscribe(orders => this.orders = orders);</code></pre>
+      </div>
+      <p class="cx-note">The nested version loses <code>user$</code>'s ability to cancel the
+      inner <code>orders$</code> call and never propagates its errors — <code>switchMap</code>
+      fixes both by composing the two streams into one.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">export const</span> appConfig$ = configRequest$.pipe(
+  <span class="cx-cmt">// one shared execution, last value cached for late subscribers</span>
+  shareReplay({ bufferSize: <span class="num">1</span>, refCount: <span class="kw">true</span> })
+);</code></pre>
+      </div>
+      <p class="cx-note"><code>refCount: true</code> tears the underlying
+      <code>configRequest$</code> subscription down once the last subscriber leaves, instead of
+      keeping it (and its cached value) alive forever.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">function</span> withRetryAndLog&lt;T&gt;(label: <span class="ty">string</span>) {
+  <span class="cx-cmt">// composed from existing operators — one reusable, named operator</span>
+  <span class="kw">return</span> (source: Observable&lt;T&gt;) => source.pipe(
+    tap(value => console.log(label, value)), <span class="cx-cmt">// 🔎 log each stage while diagnosing</span>
+    retry({ count: <span class="num">2</span> }),
+    catchError(err => { console.error(label, err); <span class="kw">return</span> EMPTY; })
+  );
+}</code></pre>
+      </div>
+      <p class="cx-note">The standard "retry + log + handle" combo, packaged once instead of
+      repeated everywhere — <code>tap()</code> at each stage is also the fastest way to see
+      exactly where a suspect multi-stage pipeline's real behavior diverges from what's expected.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b><code>share()</code> is like joining a live meeting already in progress</b> — you
+      only hear what's said from the moment you walk in. <code>shareReplay()</code> is like
+      joining a meeting that's being recorded: you instantly get a quick replay of the last few
+      minutes before continuing to listen live. Both let multiple people share the
+      <b>same</b> meeting instead of each person getting their own private, separately-run copy
+      of it.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="3.html">← Zoneless Angular</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Angular Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="5.html">Signal Architecture →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Angular · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

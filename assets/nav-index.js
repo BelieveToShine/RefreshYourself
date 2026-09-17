@@ -543,5 +543,99 @@ window.NAV_INDEX = {
         ]
       }
     ]
+  },
+  "angular/basic": {
+    track: "Angular",
+    trackIcon: "🅰️",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 9,
+        items: [
+          { n: 1,  file: "1.html",  short: "Angular Fundamentals",     title: "Angular Fundamentals",             tail: "what actually makes it a framework, not a library.", priority: "🔥" },
+          { n: 2,  file: "2.html",  short: "Components",               title: "Components",                       tail: "the piece everything else attaches to.", priority: "🔥" },
+          { n: 3,  file: "3.html",  short: "Templates & Data Binding",  title: "Templates & Data Binding",         tail: "interpolation vs. property binding, and [()].", priority: "🔥" },
+          { n: 4,  file: "4.html",  short: "Directives",                title: "Directives",                       tail: "attribute vs. structural, and the new @if/@for.", priority: "🔥" },
+          { n: 5,  file: "5.html",  short: "Pipes",                     title: "Pipes",                            tail: "pure by default, and why that's the whole story.", priority: "⭐" },
+          { n: 6,  file: "6.html",  short: "Lifecycle",                 title: "Lifecycle",                        tail: "not a list to memorize — a sequence with a reason.", priority: "🔥" },
+          { n: 7,  file: "7.html",  short: "Services & DI",             title: "Services & Dependency Injection",  tail: "who hands you your dependencies, and how long they live.", priority: "🔥" },
+          { n: 8,  file: "8.html",  short: "Routing Fundamentals",      title: "Routing Fundamentals",             tail: "what happens on a hard refresh of a deep route.", priority: "🔥" },
+          { n: 9,  file: "9.html",  short: "Forms Fundamentals",        title: "Forms Fundamentals",               tail: "who actually owns the form's state.", priority: "🔥" },
+          { n: 10, file: "10.html", short: "HTTP Fundamentals",         title: "HTTP Fundamentals",                tail: "why HttpClient returns an Observable, not a Promise.", priority: "🔥" }
+        ]
+      }
+    ]
+  },
+  "angular/intermediate": {
+    track: "Angular",
+    trackIcon: "🅰️",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 10,
+        items: [
+          { n: 1,  file: "1.html",  short: "Standalone Components",     title: "Standalone Components",            tail: "a component declaring its own dependencies.", priority: "🔥" },
+          { n: 2,  file: "2.html",  short: "RxJS — Core Concepts",      title: "RxJS — Core Concepts",             tail: "nothing happens until something subscribes.", priority: "🔥" },
+          { n: 3,  file: "3.html",  short: "RxJS — Common Operators",   title: "RxJS — Common Operators",          tail: "map, tap, filter, takeUntil, catchError, shareReplay.", priority: "🔥" },
+          { n: 4,  file: "4.html",  short: "RxJS Higher-Order Mapping", title: "RxJS Higher-Order Mapping",        tail: "switchMap vs. mergeMap vs. concatMap vs. exhaustMap.", priority: "🔥" },
+          { n: 5,  file: "5.html",  short: "RxJS Error Handling",       title: "RxJS Error Handling & Subscription Lifetime", tail: "where catchError belongs, and how leaks happen.", priority: "🔥" },
+          { n: 6,  file: "6.html",  short: "Signals",                   title: "Signals",                          tail: "a value that knows who's reading it.", priority: "🔥" },
+          { n: 7,  file: "7.html",  short: "Change Detection",          title: "Change Detection",                 tail: "Default checks everything, OnPush only when told.", priority: "🔥" },
+          { n: 8,  file: "8.html",  short: "HTTP Interceptors",         title: "HTTP Interceptors",                tail: "every request/response passing through one funnel.", priority: "🔥" },
+          { n: 9,  file: "9.html",  short: "State Management",         title: "State Management",                 tail: "justifying NgRx vs. Signals + services.", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Performance",               title: "Performance",                      tail: "diagnose before you reach for a fix.", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11–17",
+        hot: 0,
+        items: [
+          { n: 11, file: "11.html", short: "DI — Advanced Usage",       title: "Dependency Injection — Advanced Usage", tail: "every injector in the tree gets a chance to answer first.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Subjects",                  title: "Subjects",                         tail: "both an Observable and an Observer at once.", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Signals + RxJS",            title: "Signals + RxJS",                   tail: "two models that convert into each other.", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Routing — Advanced",        title: "Routing — Advanced",                tail: "a guard is just a function now, not a class.", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Forms — Advanced",          title: "Forms — Advanced",                  tail: "teaching a custom control to speak Angular's forms language.", priority: "⭐" },
+          { n: 16, file: "16.html", short: "Accessibility",             title: "Accessibility",                    tail: "Angular gives you zero of this for free.", priority: "⭐" },
+          { n: 17, file: "17.html", short: "Testing",                   title: "Testing",                          tail: "what a user would see, not how it's wired inside.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "angular/advanced": {
+    track: "Angular",
+    trackIcon: "🅰️",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 2,
+        items: [
+          { n: 1,  file: "1.html",  short: "Rendering Internals",       title: "Angular Rendering Internals",      tail: "templates are compiled ahead of time, not interpreted.", priority: "🧠" },
+          { n: 2,  file: "2.html",  short: "Change Detection Internals", title: "Change Detection Internals",       tail: "what OnPush actually skips, mechanism-level.", priority: "🧠" },
+          { n: 3,  file: "3.html",  short: "Zoneless Angular",          title: "Zoneless Angular",                 tail: "removing the safety net that caught every async event.", priority: "🧠" },
+          { n: 4,  file: "4.html",  short: "Advanced RxJS Architecture", title: "Advanced RxJS Architecture",      tail: "one shared stream vs. everyone running their own copy.", priority: "🧠" },
+          { n: 5,  file: "5.html",  short: "Signal Architecture",       title: "Signal Architecture",              tail: "effect() is the escape hatch you reach for last.", priority: "🧠" },
+          { n: 6,  file: "6.html",  short: "SSR & Hydration",           title: "SSR & Hydration",                  tail: "the server and client need to agree on the page.", priority: "🔥" },
+          { n: 7,  file: "7.html",  short: "Deferrable Views",          title: "Deferrable Views",                 tail: "part of the template doesn't exist until it's needed.", priority: "⭐" },
+          { n: 8,  file: "8.html",  short: "Angular Security",          title: "Angular Security",                 tail: "the frontend is never a trusted place to enforce anything.", priority: "🔥" },
+          { n: 9,  file: "9.html",  short: "Large App Architecture",    title: "Large Application Architecture",   tail: "organize by what a feature does, not file type.", priority: "🧠" },
+          { n: 10, file: "10.html", short: "Micro Frontends",           title: "Micro Frontends",                  tail: "independently deployed, but one app to the user.", priority: "🧠" }
+        ]
+      },
+      {
+        label: "Questions 11–16",
+        hot: 4,
+        items: [
+          { n: 11, file: "11.html", short: "Scenario: Performance",     title: "Scenario: Performance Under Load", tail: "profile first, then pick which fix actually applies.", priority: "🔥" },
+          { n: 12, file: "12.html", short: "Scenario: RxJS in Prod",     title: "Scenario: RxJS in Production",     tail: "the same handful of mistakes, again and again.", priority: "🔥" },
+          { n: 13, file: "13.html", short: "Scenario: CD Gone Wrong",    title: "Scenario: Change Detection Gone Wrong", tail: "an OnPush component just following its own rules.", priority: "🔥" },
+          { n: 14, file: "14.html", short: "Scenario: State at Scale",  title: "Scenario: State Management at Scale", tail: "state scattered everywhere, no single source of truth.", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Scenario: Modernizing Legacy", title: "Scenario: Modernizing a Legacy Angular App", tail: "gradual, not a big-bang rewrite.", priority: "🔥" },
+          { n: 16, file: "16.html", short: "Scenario: SSR & Hydration",  title: "Scenario: SSR & Hydration Issues", tail: "the server and client computing something differently.", priority: "⭐" }
+        ]
+      }
+    ]
   }
 };

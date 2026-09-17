@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTTP Interceptors — Angular Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="angular/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fde8e8;--crumb-ink:#dd0031;">🅰️ Angular</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">HTTP Interceptors</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Must Know</div>
+    <h1>HTTP Interceptors — every request and response funnels through <span class="hl hl-inter">one place</span> before you ever see it</h1>
+    <p class="interview-q">"How do HTTP interceptors chain together, and how do you stop a refresh-token interceptor from intercepting its own refresh request?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Interviewers use this to check whether you actually understand chain order and immutability, not just that interceptors "exist."</li>
+        <li>Comes up on almost every real Angular app that talks to an authenticated API — auth headers, logging, and error handling all live here.</li>
+        <li>The refresh-token recursion question is a favorite follow-up: it separates candidates who've only read about interceptors from ones who've actually built one.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Interceptor = <b>"a checkpoint every HTTP call is forced to pass through."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line">Outbound → <b><code>A</code></b> → <b><code>B</code></b> → network</span>
+      <span class="tc-line">Response → <b><code>B</code></b> → <b><code>A</code></b> → back to you, reversed</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 310" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA8" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA8" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arA8Amber" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">OUTBOUND LEFT → RIGHT — RESPONSE COMES BACK THROUGH THE SAME CHAIN, REVERSED</text>
+
+      <!-- top row: outbound chain -->
+      <g filter="url(#shA8)"><rect x="15" y="45" width="130" height="54" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="80" y="68" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">HttpClient.get()</text>
+      <text x="80" y="86" text-anchor="middle" font-size="10" fill="#5b6472">your app's code</text>
+
+      <g filter="url(#shA8)"><rect x="175" y="45" width="130" height="54" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="240" y="68" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">Interceptor A</text>
+      <text x="240" y="86" text-anchor="middle" font-size="10" fill="#5b6472">adds auth header</text>
+
+      <g filter="url(#shA8)"><rect x="335" y="45" width="130" height="54" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="400" y="68" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">Interceptor B</text>
+      <text x="400" y="86" text-anchor="middle" font-size="10" fill="#5b6472">logs the request</text>
+
+      <g filter="url(#shA8)"><rect x="495" y="45" width="130" height="54" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="560" y="68" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">Real network call</text>
+      <text x="560" y="86" text-anchor="middle" font-size="10" fill="#5b6472">leaves the browser</text>
+
+      <path d="M145,72 H175" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+      <path d="M305,72 H335" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+      <path d="M465,72 H495" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+
+      <!-- return path: network -> B -> A -> subscriber, reversed order -->
+      <path d="M560,99 V175 H95 V224" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arA8Amber)">
+        <animate attributeName="stroke-dashoffset" values="10;0" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+
+      <rect x="445" y="110" width="90" height="20" rx="10" fill="#ffffff" stroke="#d97706" stroke-width="1.3"/>
+      <text x="490" y="124" text-anchor="middle" font-size="9.5" fill="#92400e">response ↩</text>
+
+      <rect x="340" y="145" width="120" height="20" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.3"/>
+      <text x="400" y="159" text-anchor="middle" font-size="9.5" fill="#475569">back through B</text>
+
+      <rect x="180" y="145" width="120" height="20" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.3"/>
+      <text x="240" y="159" text-anchor="middle" font-size="9.5" fill="#475569">back through A</text>
+
+      <g filter="url(#shA8)"><rect x="10" y="224" width="170" height="54" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="95" y="247" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">Subscriber</text>
+      <text x="95" y="265" text-anchor="middle" font-size="10" fill="#5b6472">.subscribe(res =&gt; …)</text>
+
+      <text x="320" y="298" text-anchor="middle" font-size="10.5" fill="#5b6472">Registration order sets the outbound order — the response always walks back in reverse</text>
+    </svg>
+    <figcaption>Every request travels outbound through the registered chain in order — the response comes back through the same chain, reversed.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>req.headers.set(...)</code> doesn't work.</b> <code>HttpRequest</code> objects are immutable — any change needs <code>req.clone({...})</code> to produce a new request, then that clone is passed to <code>next()</code>; mutating the original silently does nothing.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If two interceptors both set the same header, whose value wins?"</b> Whichever interceptor runs <b>last</b> in the outbound chain — it receives the already-cloned request from every interceptor before it, so its change is the one that actually reaches the network. Registration order is a real design decision, not an arbitrary list.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"An interceptor sits between <code>HttpClient</code> and the network — every request passes through the whole registered chain in order, then the response comes back through that same chain in reverse. I register a functional interceptor with <code>provideHttpClient(withInterceptors([...]))</code>, clone the request with <code>req.clone()</code> for any change since requests are immutable, and guard a refresh-token interceptor by checking the request URL so it never tries to refresh its own refresh call."</p>
+    <ul>
+      <li>Chain order → <span class="hl hl-inter">outbound follows registration order, response comes back reversed</span>.</li>
+      <li>Requests are immutable → <span class="hl hl-hot">always <code>req.clone({...})</code> before calling <code>next()</code></span>.</li>
+      <li>Two registration styles → <span class="hl hl-blue"><code>HttpInterceptorFn</code> via <code>withInterceptors()</code></span>, or a class implementing <code>HttpInterceptor</code> via the <code>HTTP_INTERCEPTORS</code> multi-provider.</li>
+      <li>Refresh-token recursion → <span class="hl hl-basic">skip the interceptor's own logic for the refresh endpoint's URL</span> (or a custom <code>HttpContext</code> token) so it can't call itself forever.</li>
+      <li>Everyday uses → <span class="hl hl-teal">auth headers, logging, global error handling, retry, correlation IDs</span> — one place instead of every call site.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>An <span class="hl hl-blue">interceptor</span> sits between <code>HttpClient</code> and the
+      actual network call, so it can inspect or change the outgoing request and the incoming
+      response for <b>every</b> call that goes through <code>HttpClient</code> — one place for
+      cross-cutting concerns like auth headers, logging, or error handling, instead of repeating
+      that logic at every <code>.get()</code>/<code>.post()</code> call site.</p>
+
+      <p>Chaining works because each interceptor calls <code>next(req)</code> (or
+      <code>next.handle(req)</code> for the older class-based style) to hand control to whichever
+      interceptor is registered right after it. That makes the interceptors registered earlier
+      effectively wrap the ones after them: the request flows through in registration order on the
+      way out, and the response flows back through the same interceptors in the <b>opposite</b>
+      order.</p>
+
+      <p>Two registration styles exist today, doing the same job through a different shape. Modern
+      code uses a plain function matching <code>HttpInterceptorFn</code>; older code (still fully
+      supported) uses a class implementing <code>HttpInterceptor</code>.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Functional</th><th>Class-based</th></tr></thead>
+        <tbody>
+          <tr><th>Signature</th><td><code>(req, next) =&gt; next(req)</code></td><td><code>intercept(req, next)</code> method</td></tr>
+          <tr><th>Registration</th><td><code>provideHttpClient(withInterceptors([fn]))</code></td><td><code>HTTP_INTERCEPTORS</code> multi-provider, <code>useClass</code></td></tr>
+          <tr><th>Calling the next step</th><td><code>next(req)</code></td><td><code>next.handle(req)</code></td></tr>
+          <tr><th>Where you'll see it</th><td>modern standalone apps, new code</td><td>older/NgModule-based apps, still supported</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">export</span> <span class="kw">const</span> authInterceptor: <span class="ty">HttpInterceptorFn</span> = (req, next) =&gt; {
+  <span class="kw">const</span> token = inject(<span class="ty">AuthService</span>).token();   <span class="cx-cmt">// read current token</span>
+  <span class="kw">return</span> next(req.clone({                     <span class="cx-cmt">// req is immutable — clone it</span>
+    setHeaders: { <span class="ty">Authorization</span>: <span class="str">`Bearer ${token}`</span> }
+  }));
+};</code></pre>
+      </div>
+      <p class="cx-note">Registered once via <code>provideHttpClient(withInterceptors([authInterceptor]))</code> — <b>every</b> <code>HttpClient</code> call gets this header automatically.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">export</span> <span class="kw">const</span> authInterceptor: <span class="ty">HttpInterceptorFn</span> = (req, next) =&gt; {
+  <span class="kw">if</span> (req.url.includes(<span class="str">'/auth/refresh'</span>)) {
+    <span class="kw">return</span> next(req);   <span class="cx-ok">// ✅ skip — don't recurse into ourselves</span>
+  }
+  <span class="cx-cmt">// ...normal auth-header / 401-handling logic goes here</span>
+  <span class="kw">return</span> next(req.clone({ <span class="cx-cmt">/* ... */</span> }));
+};</code></pre>
+      </div>
+      <p class="cx-note">Without this check, a 401 on the refresh call itself would trigger <b>another</b> refresh attempt — the same interceptor calling itself, forever.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>HTTP interceptors are like a mail sorting facility every letter must pass through.</b>
+      One station stamps a return-address label (the auth token) on every outgoing letter, another
+      logs a copy before it leaves, and a third checks incoming mail for a "return to sender" stamp
+      (error handling). The one thing the facility has to get right: it can't sort its own internal
+      "please issue a new stamp" request the same way, or it gets stuck sorting mail to itself
+      forever.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="7.html">← Change Detection</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Angular Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="9.html">State Management →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Angular · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

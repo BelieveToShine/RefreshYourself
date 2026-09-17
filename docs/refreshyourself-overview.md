@@ -15,8 +15,8 @@ junior/mid-level interview. Two groups of tracks:
 
 - **Core backend interview path**, in this order: C# → OOP → .NET/ASP.NET Core (MVC lives inside
   this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure.
-- **Other tracks**, not part of the ordered path: React (all 7 phases complete, see below), DSA
-  and AI still fully untouched.
+- **Other tracks**, not part of the ordered path: React and Angular (both all 7 phases complete,
+  see below), DSA and AI still fully untouched.
 
 Every track goes through 7 phases before any page is built — see
 [`specs/README.md`](superpowers/specs/README.md) for the full pipeline, and
@@ -118,6 +118,19 @@ phases; Azure is still at Phase 1 (question taxonomy), awaiting the user's revie
   passed the mandatory automated verification script, run independently against every single
   page, including the 2 gap-hunt additions (`forwardRef`/`useImperativeHandle`; automatic
   batching & `flushSync`). See [`specs/react/overview.md`](superpowers/specs/react/overview.md).
+- **Angular** — **all 7 phases complete, 43/43 pages written** (2026-09-17), a brand-new track
+  built from zero: [`question-taxonomy.md`](superpowers/specs/angular/question-taxonomy.md) →
+  [`roadmap.md`](superpowers/specs/angular/roadmap.md) → 43 tiered/prioritized pages, live on the
+  site and on [`angular/roadmap.html`](../angular/roadmap.html). Sourced from the user's own
+  detailed, already tier-organized outline, with a Phase-2 gap-hunt folded into the initial pass
+  (7 additions, incl. a new standalone Accessibility section). Deliberately covers both modern
+  Angular (Standalone, Signals, the new control flow, zoneless, SSR/hydration) and existing
+  enterprise Angular (`NgModule`s, Zone.js, RxJS, Reactive Forms) side by side, treating RxJS/
+  Signals/change detection as the track's conceptual spine rather than three ordinary topics.
+  `angular/roadmap.html` and the root tile's badge were wired at Phase 1, per the mandate this
+  track was the first to follow correctly. Every diagram passed the mandatory automated
+  verification script, run independently against every single page. See
+  [`specs/angular/overview.md`](superpowers/specs/angular/overview.md).
 - **AI** — roadmap-only skeleton across all three tiers, sourced from `AI-Interview-Topics.md`.
   **Do not write AI content until told to.** See
   [`specs/ai/overview.md`](superpowers/specs/ai/overview.md).

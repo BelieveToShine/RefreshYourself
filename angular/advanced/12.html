@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scenario: RxJS in Production — Angular Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="angular/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fde8e8;--crumb-ink:#dd0031;">🅰️ Angular</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: RxJS in Production</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Must Know</div>
+    <h1>RxJS in production — <span class="hl hl-adv">the same handful of mistakes</span>, over and over</h1>
+    <p class="interview-q">"A subscription keeps running after the user navigates away — how do you actually find and fix the leak?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Almost every real "RxJS bug in production" ticket traces back to one of a small,
+        recognizable set of causes — recognizing which one is the actual skill being tested, not
+        reciting operator definitions.</li>
+        <li>This is the kind of question a senior/staff interview asks instead of "define
+        switchMap" — a symptom first, and an expectation that you diagnose it live.</li>
+        <li>The most common wrong turn is reaching for <code>switchMap</code> as the default fix
+        for any "prevent duplicate/stale results" problem, without checking whether the situation
+        is actually the race pattern it's built for.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Stale / out-of-order results <span class="rarrow">→</span> <b>switchMap</b></p>
+      <p class="rrow">Sequential dependency <span class="rarrow">→</span> <b>concatMap</b></p>
+      <p class="rrow">Prevent duplicate submits <span class="rarrow">→</span> <b>exhaustMap</b></p>
+      <p class="rrow">Fixed parallel batch <span class="rarrow">→</span> <b>forkJoin</b></p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line">Subscription still running after navigation → missing <b><code>takeUntilDestroyed()</code></b></span>
+      <span class="tc-line">Stream goes dead after one error → <b><code>catchError</code></b> on the wrong (outer) level</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shD12" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <g filter="url(#shD12)"><rect x="60" y="17" width="520" height="28" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="320" y="34.5" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.3">SAME BUG, DIFFERENT DISGUISE — MATCH THE SYMPTOM TO THE FIX</text>
+
+      <g filter="url(#shD12)"><rect x="40" y="57" width="260" height="94" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="170" y="83" text-anchor="middle" font-size="14" font-weight="700" fill="#991b1b">🔄 switchMap</text>
+      <text x="170" y="107" text-anchor="middle" font-size="10.5" fill="#5b6472">fixes: stale / out-of-order results</text>
+      <text x="170" y="125" text-anchor="middle" font-size="10.5" fill="#5b6472">newest request always wins</text>
+
+      <g filter="url(#shD12)"><rect x="340" y="57" width="260" height="94" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="470" y="83" text-anchor="middle" font-size="14" font-weight="700" fill="#92400e">⏳ concatMap</text>
+      <text x="470" y="107" text-anchor="middle" font-size="10.5" fill="#5b6472">fixes: sequential dependency</text>
+      <text x="470" y="125" text-anchor="middle" font-size="10.5" fill="#5b6472">next call waits its turn</text>
+
+      <g filter="url(#shD12)"><rect x="40" y="165" width="260" height="94" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="170" y="191" text-anchor="middle" font-size="14" font-weight="700" fill="#475569">🚫 exhaustMap</text>
+      <text x="170" y="215" text-anchor="middle" font-size="10.5" fill="#5b6472">fixes: duplicate submit clicks</text>
+      <text x="170" y="233" text-anchor="middle" font-size="10.5" fill="#5b6472">extra clicks dropped, not queued</text>
+
+      <g filter="url(#shD12)"><rect x="340" y="165" width="260" height="94" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="470" y="191" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">🔗 forkJoin</text>
+      <text x="470" y="215" text-anchor="middle" font-size="10.5" fill="#5b6472">fixes: fixed parallel batch</text>
+      <text x="470" y="233" text-anchor="middle" font-size="10.5" fill="#5b6472">waits for every one to finish</text>
+    </svg>
+    <figcaption>A lookup, not a flow — match what you're actually seeing to the fix, don't reach for the same operator out of habit.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>switchMap</code> is not the universal fix for "prevent duplicate or
+    stale results."</b> It's right when a newer request should cancel an older one of the same
+    kind — search, live status polling — but wrong for a duplicate submit click, where cancelling
+    the in-flight submission to start a new one is worse than just ignoring the click; that's
+    exactly what <code>exhaustMap</code> is for.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If <code>takeUntilDestroyed()</code> is the modern default for
+    subscription cleanup, is there ever still a reason to use the <code>async</code> pipe
+    instead?"</b> Yes — the <code>async</code> pipe means the component never even needs a manual
+    <code>.subscribe()</code> call in the first place, so there's nothing to clean up at all.
+    <code>takeUntilDestroyed()</code> matters specifically for a manual subscription that has to
+    exist because the component needs to DO something in response to each emission, not just
+    display a value.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Real RxJS production bugs are almost always one of three things: the
+    wrong higher-order operator for how two requests actually relate, a <code>catchError</code>
+    sitting around the outer stream instead of the inner call that can fail, or a subscription
+    with no completion or cleanup mechanism — matching the symptom to the cause is the actual
+    skill."</p>
+    <ul>
+      <li><code>switchMap</code> → <span class="hl hl-hot">a newer request should cancel an older one</span> of the same kind — search, live status, any race.</li>
+      <li><code>concatMap</code> → <span class="hl hl-basic">strict order, one at a time</span> — the next call waits for the current one to finish.</li>
+      <li><code>exhaustMap</code> → <span class="hl hl-adv">ignore extra clicks while one is in flight</span> — never cancel or duplicate a submission.</li>
+      <li><code>forkJoin</code> vs. <code>mergeMap</code> → <span class="hl hl-blue">a fixed, known batch vs. an ongoing stream</span> of parallel work.</li>
+      <li>Leaked subscription → <span class="hl hl-inter">takeUntilDestroyed(), or the async pipe if it's just a displayed value</span>.</li>
+      <li>Stream goes dead after one error → <span class="hl hl-teal">catchError was on the outer stream, not the inner call</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Real production RxJS bugs almost never need a new concept — they trace back to one of
+      three familiar causes: the <span class="hl hl-hot">wrong higher-order operator</span> for how
+      two requests relate, a misplaced <code>catchError</code>, or a subscription with no
+      completion or cleanup mechanism. A search box debounced with <code>debounceTime</code> and
+      then piped through <code>switchMap</code> fixes two different problems at once — debounce
+      cuts down how often a search fires at all, and <code>switchMap</code> guarantees that if a
+      couple still fire close together, only the newest one's result ever wins. That's the same
+      relationship behind any "old request vs. new request" race, not just search boxes.
+      <code>concatMap</code> is the fix instead when calls are sequential and order-dependent — the
+      next one doesn't start until the current one completes. <code>exhaustMap</code> solves a
+      different shape entirely: dropping extra clicks while a submission is still in flight,
+      rather than cancelling it (<code>switchMap</code>) or running duplicates in parallel
+      (<code>mergeMap</code>). For a fixed, known batch that all need to finish and combine,
+      <code>forkJoin</code> is the tool — <code>mergeMap</code> is for an ongoing stream still
+      mapping new values into parallel work.</p>
+
+      <p>A stream that goes silent after one error almost always has <code>catchError</code> in
+      the wrong spot — wrapped around the whole outer, long-lived stream instead of the one inner
+      request that can actually fail. Moving it inside, around just the inner Observable, means
+      one bad attempt gets swallowed and the outer subscription keeps living for the next value.</p>
+
+      <p>A subscription that keeps running after its component is gone is missing one of three
+      protections: it isn't a one-shot call that already completes on its own, it isn't piped
+      through <code>takeUntilDestroyed()</code> (or the older <code>takeUntil(destroy$)</code>
+      pattern), and it isn't consumed through the <code>async</code> pipe instead of a manual
+      subscribe. Any manual <code>.subscribe()</code> on a long-lived Observable with none of the
+      three is the leak — checking each subscription against that short list is the actual
+      diagnostic move.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">this</span>.searchTerm$.pipe(
+  debounceTime(<span class="num">300</span>),                          <span class="cx-cmt">// wait for typing to pause</span>
+  distinctUntilChanged(),                     <span class="cx-cmt">// skip if the value didn't actually change</span>
+  switchMap(term =&gt; <span class="kw">this</span>.api.search(term))    <span class="cx-ok">// ✅ cancels the previous in-flight search</span>
+).subscribe(results =&gt; <span class="kw">this</span>.results = results);</code></pre>
+      </div>
+      <p class="cx-note"><code>debounceTime</code> cuts down how often a search fires at all;
+      <code>switchMap</code> guarantees only the latest one's result ever wins if a couple still
+      fire close together.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> TypeScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">this</span>.data$.pipe(
+  takeUntilDestroyed()   <span class="cx-ok">// ✅ auto-completes on component destroy</span>
+).subscribe(data =&gt; <span class="kw">this</span>.process(data));</code></pre>
+      </div>
+      <p class="cx-note">The unguarded version — the same line with no <code>takeUntilDestroyed()</code>,
+      no <code>takeUntil(destroy$)</code>, and no <code>async</code> pipe — keeps running silently
+      after the component is gone; this line is the fix, not an optional extra.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Operational scenario <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A component polls order status every 5 seconds inside <code>ngOnInit</code>,
+      subscribing manually with no cleanup.</b> Users navigate away from the order page and back
+      several times over a session, and each visit starts a brand-new polling subscription that
+      never stops — every one of them still hitting the API independently in the background. In
+      production this shows up as unexplained extra API load that scales with how much people
+      navigate around the app, not with how many people are actually looking at the order page
+      right now.</p>
+      <p>The direct fix: pipe the polling Observable through <code>takeUntilDestroyed()</code> so
+      each subscription is guaranteed to stop the moment its component is destroyed — then confirm
+      in the network tab that request volume tracks active viewers again, not navigation history.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="11.html">← Scenario: Performance Under Load</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Angular Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="13.html">Scenario: Change Detection Gone Wrong →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Angular · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
