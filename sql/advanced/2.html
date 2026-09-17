@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deadlock vs. Blocking — SQL Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Deadlock vs. Blocking</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 SQL · Advanced · Must Know</div>
+    <h1><span class="hl hl-hot">Deadlock</span> vs. <span class="hl hl-basic">Blocking</span> — one resolves itself, one doesn't</h1>
+    <p class="interview-q">What's the actual difference between a deadlock and blocking?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Blocking is completely normal under load — a genuine deadlock is the thing an
+        interviewer actually wants you to be able to spot and explain.</li>
+        <li>Interviewers use this to check whether you understand <b>why</b> a deadlock can never
+        clear on its own, not just that "the database throws an error."</li>
+        <li>A frequent follow-on tests whether you know how the database decides which
+        transaction to kill.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><b>Blocking</b> <span class="rarrow">→</span> waiting your turn, <b>resolves on its own</b></p>
+      <p class="rrow"><b>Deadlock</b> <span class="rarrow">→</span> a real cycle, <b>only the engine can break it</b></p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> blocking ends when the other transaction
+    finishes; a deadlock never ends on its own.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shB1" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arB1" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">BLOCKING — B WAITS, THEN PROCEEDS</text>
+
+      <g filter="url(#shB1)"><rect x="190" y="32" width="260" height="50" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="52" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🔒 Transaction A</text>
+      <text x="320" y="69" text-anchor="middle" font-size="10.5" fill="#5b6472">holds the lock on Row 7</text>
+
+      <path d="M320,82 V104" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arB1)"/>
+
+      <g filter="url(#shB1)"><rect x="190" y="104" width="260" height="50" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="124" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">⏳ Transaction B</text>
+      <text x="320" y="141" text-anchor="middle" font-size="10.5" fill="#5b6472">wants Row 7 — waits its turn</text>
+
+      <path d="M320,154 V176" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arB1)"/>
+
+      <g filter="url(#shB1)"><rect x="190" y="176" width="260" height="50" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="196" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ Transaction B proceeds</text>
+      <text x="320" y="213" text-anchor="middle" font-size="10.5" fill="#5b6472">A finished — lock released</text>
+    </svg>
+    <figcaption>Blocking is just a queue of one — it clears the moment Transaction A commits or rolls back.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shDl" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arDlAmber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arDlRose" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">DEADLOCK — EACH WAITS ON THE OTHER</text>
+
+      <text x="320" y="35" text-anchor="middle" font-size="10" fill="#92400e">T1 wants Row B (T2 holds it)</text>
+      <path d="M180,68 V46 H460 V68" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arDlAmber)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="2.5s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shDl)"><rect x="70" y="68" width="220" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="180" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🔒 Transaction 1</text>
+      <text x="180" y="109" text-anchor="middle" font-size="10.5" fill="#5b6472">holds Row A, wants Row B</text>
+
+      <g filter="url(#shDl)"><rect x="350" y="68" width="220" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="460" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🔒 Transaction 2</text>
+      <text x="460" y="109" text-anchor="middle" font-size="10.5" fill="#5b6472">holds Row B, wants Row A</text>
+
+      <text x="320" y="152" text-anchor="middle" font-size="10" fill="#92400e">T2 wants Row A (T1 holds it)</text>
+      <path d="M460,128 V162 H180 V128" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arDlAmber)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="2.5s" repeatCount="indefinite"/>
+      </path>
+
+      <path d="M320,162 V190" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arDlRose)"/>
+
+      <g filter="url(#shDl)"><rect x="170" y="190" width="300" height="56" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="210" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐛 Deadlock detected</text>
+      <text x="320" y="227" text-anchor="middle" font-size="10.5" fill="#5b6472">kills one transaction — the victim</text>
+    </svg>
+    <figcaption>A closed loop, not a long wait — the cycle never opens on its own, so the engine breaks it by killing the cheaper transaction to roll back.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A deadlock is not just a really long block.</b> No amount of waiting
+    resolves it — it's a genuine cycle where neither transaction can ever proceed, so the engine
+    has to detect the cycle and forcibly kill one transaction to break it; blocking, by contrast,
+    always ends on its own once the blocking transaction finishes.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How does the database decide which transaction to kill in a
+    deadlock?"</b> It typically picks whichever is cheaper or faster to roll back — for example,
+    the one that's done less work so far — not necessarily the transaction that "caused" or
+    started the problem.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Blocking is one transaction simply waiting its turn for a lock held by
+    another — it always resolves on its own once the lock-holding transaction finishes. A
+    deadlock is two or more transactions each waiting on a lock the other one holds — a real
+    cycle that can never resolve by itself, so the database has to detect it and kill one
+    transaction, the deadlock victim, to break the cycle."</p>
+    <ul>
+      <li><b>Blocking</b> → <span class="hl hl-basic">resolves on its own</span> the moment the lock-holding transaction commits or rolls back.</li>
+      <li><b>Deadlock</b> → <span class="hl hl-hot">a real cycle</span>, each transaction waiting on a lock the other one holds.</li>
+      <li>Neither side in a deadlock can move → <span class="hl hl-hot">it never resolves on its own</span>, no matter how long you wait.</li>
+      <li>The engine detects the cycle → <span class="hl hl-inter">picks a "victim" to kill</span>, usually whichever is cheaper to roll back.</li>
+      <li>Not about who's "at fault" → <span class="hl hl-blue">rollback cost decides the victim</span>, not who started it.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-basic">Blocking</span> is completely ordinary: one transaction asks
+      for a lock another transaction already holds, and it simply waits in line. There's nothing
+      stuck about it — the moment the lock-holding transaction commits or rolls back, the lock is
+      released, the waiting transaction picks it up, and everything carries on normally.</p>
+
+      <p>A <span class="hl hl-hot">deadlock</span> is a different shape entirely. Transaction 1
+      holds a lock Transaction 2 wants, and Transaction 2 holds a lock Transaction 1 wants — each
+      side is waiting for the other to let go first, and neither ever will, because neither can
+      reach the point where it releases its own lock. Waiting longer changes nothing; the cycle
+      doesn't loosen on its own.</p>
+
+      <p>Because a deadlock can never resolve by itself, the database engine has to step in. It
+      periodically checks for exactly this kind of waiting cycle, and once it finds one, it picks
+      one transaction — the <b>deadlock victim</b>, usually whichever is cheapest to undo — rolls
+      it back, and lets the other one continue.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Blocking</th><th>Deadlock</th></tr></thead>
+        <tbody>
+          <tr><th>What's happening</th><td>one transaction waits for a lock another holds</td><td>two (or more) transactions each wait on a lock the other holds</td></tr>
+          <tr><th>Resolves how</th><td>on its own, once the lock is released</td><td>never on its own — it's a genuine cycle</td></tr>
+          <tr><th>Who breaks it</th><td>nobody has to — the lock is simply freed</td><td>the database engine — it detects the cycle and kills the victim</td></tr>
+          <tr><th>How long it can last</th><td>only as long as the blocking transaction takes</td><td>indefinitely, until the engine steps in</td></tr>
+          <tr><th>Common trap</th><td>mistaking slowness for a deadlock</td><td>assuming it will eventually clear like blocking does</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- Transaction 1</span>
+<span class="kw">BEGIN TRANSACTION</span>;
+<span class="kw">UPDATE</span> Accounts <span class="kw">SET</span> Balance = Balance - <span class="num">100</span> <span class="kw">WHERE</span> Id = <span class="num">1</span>;   <span class="cx-cmt">-- locks Row 1</span>
+<span class="cx-cmt">-- ...pauses here — Transaction 2 has already locked Row 2...</span>
+<span class="kw">UPDATE</span> Accounts <span class="kw">SET</span> Balance = Balance + <span class="num">100</span> <span class="kw">WHERE</span> Id = <span class="num">2</span>;   <span class="cx-err">-- ❌ waits on Row 2 — held by Transaction 2</span>
+
+<span class="cx-cmt">-- Transaction 2 (running at the same time)</span>
+<span class="kw">BEGIN TRANSACTION</span>;
+<span class="kw">UPDATE</span> Accounts <span class="kw">SET</span> Balance = Balance - <span class="num">50</span> <span class="kw">WHERE</span> Id = <span class="num">2</span>;    <span class="cx-cmt">-- locks Row 2</span>
+<span class="kw">UPDATE</span> Accounts <span class="kw">SET</span> Balance = Balance + <span class="num">50</span> <span class="kw">WHERE</span> Id = <span class="num">1</span>;    <span class="cx-err">-- ❌ waits on Row 1 — held by Transaction 1</span>
+<span class="cx-cmt">-- 🐛 classic deadlock: each transaction locked the two rows in the opposite order</span></code></pre>
+      </div>
+      <p class="cx-note">Both transactions touch the same two rows, just in reverse order — each
+      ends up waiting on the row the other one already locked, closing the cycle.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Blocking is one person waiting outside a single bathroom for it to free up</b> —
+      annoying, but the moment the person inside is done, the door opens and the wait is over.
+      <b>A deadlock is two people locked in two different rooms, each holding the only key to the
+      OTHER person's door.</b> Neither can move, no matter how long they wait — someone from
+      outside (the database engine) has to step in, force one door open, and let that person out
+      so the other can finally get their key back.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="1.html">← Isolation Levels</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="3.html">Execution Plans →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

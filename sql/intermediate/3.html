@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Window Functions — SQL Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Window Functions</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 SQL · Intermediate · Must Know</div>
+    <h1>Window functions — <span class="hl hl-blue">see the other rows</span> <span class="hl hl-inter">without collapsing them</span></h1>
+    <p class="interview-q">"What are window functions, and how are they different from <code>GROUP BY</code>?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Checks whether you know <code>OVER()</code> is a completely separate mechanism from <code>GROUP BY</code>, not a fancier version of it.</li>
+        <li>Comes up constantly in real reporting — running totals, rankings, and "top N per group" all lean on window functions.</li>
+        <li>A very common follow-on question the moment <code>GROUP BY</code> and aggregate functions have already come up in the same interview.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Window function = <b>"calculate across related rows, but keep every row."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>GROUP BY</code></b> collapses rows down to one row per group. A <b>window function</b> keeps every row and just adds a column.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shS3" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arS3" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <!-- divider -->
+      <path d="M320,26 V258" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="3 4"/>
+
+      <!-- LEFT PANEL: GROUP BY -->
+      <text x="160" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">GROUP BY — ROWS COLLAPSE</text>
+
+      <g filter="url(#shS3)"><rect x="50" y="32" width="220" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🧾 4 rows in</text>
+      <text x="160" y="74" text-anchor="middle" font-size="10.5" fill="#5b6472">same source rows</text>
+
+      <path d="M160,92 V108" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arS3)"/>
+
+      <g filter="url(#shS3)"><rect x="50" y="108" width="220" height="48" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="160" y="130" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🪣 GROUP BY</text>
+      <text x="160" y="146" text-anchor="middle" font-size="10.5" fill="#5b6472">collapses rows per group</text>
+
+      <path d="M160,156 V172" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arS3)"/>
+
+      <g filter="url(#shS3)"><rect x="50" y="172" width="220" height="60" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="196" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🔻 2 rows out</text>
+      <text x="160" y="214" text-anchor="middle" font-size="10.5" fill="#5b6472">detail per row is gone</text>
+
+      <text x="160" y="256" text-anchor="middle" font-size="11" fill="#5b6472">Fewer rows out — per-row detail is gone.</text>
+
+      <!-- RIGHT PANEL: window function -->
+      <text x="480" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">OVER(...) — ALL ROWS KEPT</text>
+
+      <g filter="url(#shS3)"><rect x="370" y="32" width="220" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🧾 4 rows in</text>
+      <text x="480" y="74" text-anchor="middle" font-size="10.5" fill="#5b6472">same source rows</text>
+
+      <path d="M480,92 V108" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arS3)"/>
+
+      <g filter="url(#shS3)"><rect x="370" y="108" width="220" height="48" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="130" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">⚙️ OVER(...)</text>
+      <text x="480" y="146" text-anchor="middle" font-size="10.5" fill="#5b6472">PARTITION BY / ORDER BY</text>
+
+      <path d="M480,156 V172" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arS3)"/>
+
+      <g filter="url(#shS3)"><rect x="370" y="172" width="220" height="60" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="196" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ 4 rows out</text>
+      <text x="480" y="214" text-anchor="middle" font-size="10.5" fill="#5b6472">same row, +1 new column</text>
+
+      <text x="480" y="256" text-anchor="middle" font-size="11" fill="#5b6472">Same row count in and out, +1 column each.</text>
+    </svg>
+    <figcaption>Same 4 rows in, two different shapes out — <code>GROUP BY</code> collapses them, <code>OVER(...)</code> keeps every one and just adds a column.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Window functions need GROUP BY to work."</b> They don't — a window function uses its own <code>OVER(...)</code> clause (with <code>PARTITION BY</code> / <code>ORDER BY</code> inside it) completely independently of <code>GROUP BY</code>; you can use one, the other, or both together for different purposes in the same query.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What does PARTITION BY do inside OVER()?"</b> It resets the window per group, like a <code>GROUP BY</code> just for the window function alone — e.g. <code>SUM(Amount) OVER (PARTITION BY CustomerId)</code> gives each row that customer's own running total without collapsing any rows.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A window function calculates across a set of related rows — the window, defined by <code>OVER(...)</code> — without collapsing them, so every row survives in the output with one extra calculated column. <code>GROUP BY</code> collapses matching rows into a single row per group; a window function never does that, and <code>PARTITION BY</code> inside <code>OVER()</code> resets its window per group completely independently of any <code>GROUP BY</code> in the query."</p>
+    <ul>
+      <li><code>OVER(...)</code> <span class="hl hl-blue">→ defines the window</span> — the rows a calculation looks across, without collapsing anything.</li>
+      <li><code>PARTITION BY</code> <span class="hl hl-inter">→ resets the window per group</span>, like a <code>GROUP BY</code> just for the window function.</li>
+      <li>Doesn't need <code>GROUP BY</code> <span class="hl hl-hot">→ OVER() is fully independent</span> — use one, the other, or both.</li>
+      <li>Row count <span class="hl hl-basic">→ never shrinks</span> — every original row stays, just with a new column.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <b>window function</b> calculates something across a set of related rows — the
+      "window," defined by an <code>OVER(...)</code> clause — without collapsing those rows.
+      Every original row survives in the output; each one just gains an extra calculated column
+      holding the result of that calculation over its own window.</p>
+
+      <p><code>PARTITION BY</code> inside <code>OVER()</code> resets the window per group, the
+      same idea as a <code>GROUP BY</code> but scoped only to the window function itself — and
+      it's a completely separate mechanism, independent of any actual <code>GROUP BY</code>
+      clause in the query. You can write <code>PARTITION BY</code> without ever writing
+      <code>GROUP BY</code> at all.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>GROUP BY</code></th><th>Window function (<code>OVER</code>)</th></tr></thead>
+        <tbody>
+          <tr><th>Rows out</th><td>fewer — one per group</td><td>same — every original row stays</td></tr>
+          <tr><th>Extra column?</th><td class="no">❌ no, only the aggregated columns</td><td>✅ yes, added alongside the original columns</td></tr>
+          <tr><th>Needs GROUP BY?</th><td>is the GROUP BY</td><td>no — works with or without one</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">SELECT</span> OrderId, CustomerId, Amount,
+       <span class="kw">SUM</span>(Amount) <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> CustomerId) <span class="kw">AS</span> CustomerTotal
+<span class="kw">FROM</span> Orders;                       <span class="cx-ok">-- ✅ every order row is still here</span></code></pre>
+      </div>
+      <p class="cx-note">Every original order row is still present — each one now also shows its own customer's running total.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">SELECT</span> OrderDate, Amount,
+       <span class="kw">SUM</span>(Amount) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> OrderDate) <span class="kw">AS</span> RunningTotal
+<span class="kw">FROM</span> Orders;                       <span class="cx-ok">-- ✅ each row adds itself to the running total</span></code></pre>
+      </div>
+      <p class="cx-note">No <code>PARTITION BY</code> needed here — <code>ORDER BY</code> inside <code>OVER()</code> is enough to build a running total across all rows.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A leaderboard.</b> It shows every player's own row plus their rank, without hiding
+      anyone — that's a window function. A plain <code>GROUP BY</code> would leave you with just
+      totals per group, with no individual rows left to look at.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="2.html">← CTEs</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="4.html">Clustered vs. Non-Clustered Index →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

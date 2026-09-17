@@ -48,9 +48,9 @@ Phase 7.
 
 ## Current build status (one line each — see the track's own spec for detail)
 
-**Core backend path — C#, OOP, .NET/ASP.NET Core, Web API, and EF Core are through all 7 phases;
-the other two tracks are still at Phase 1 (question taxonomy), awaiting the user's review before
-Phase 2 (dedupe/gaps) starts on either of them:**
+**Core backend path — C#, OOP, .NET/ASP.NET Core, Web API, EF Core, and SQL are through all 7
+phases; Azure is still at Phase 1 (question taxonomy), awaiting the user's review before Phase 2
+(dedupe/gaps) starts on it:**
 
 - **C#** — **all 7 phases complete, 49/49 pages written** (2026-09-16):
   [`question-taxonomy.md`](superpowers/specs/csharp/question-taxonomy.md) →
@@ -92,8 +92,13 @@ Phase 2 (dedupe/gaps) starts on either of them:**
   layer — LINQ translation, tracking, loading, migrations — leaving raw SQL/database-engine
   internals to the `sql/` track. Every diagram passed the mandatory automated verification
   script. See [`specs/efcore/overview.md`](superpowers/specs/efcore/overview.md).
-- **SQL** — [`question-taxonomy.md`](superpowers/specs/sql/question-taxonomy.md) written. No old
-  roadmap existed.
+- **SQL** — **all 7 phases complete, 27/27 pages written** (2026-09-17):
+  [`question-taxonomy.md`](superpowers/specs/sql/question-taxonomy.md) →
+  [`roadmap.md`](superpowers/specs/sql/roadmap.md) → 27 tiered/prioritized pages, live on the
+  site and on [`sql/roadmap.html`](../sql/roadmap.html). Owns raw SQL/database-engine internals
+  — indexing, execution plans, isolation levels/locking, query optimization — leaving the ORM
+  layer to `efcore/`. Every diagram passed the mandatory automated verification script. See
+  [`specs/sql/overview.md`](superpowers/specs/sql/overview.md).
 - **Azure** — [`question-taxonomy.md`](superpowers/specs/azure/question-taxonomy.md) written,
   deliberately simplified/scenario-first per the user's later plan. Old three-tier roadmap (0
   written) is **frozen**, superseded by this taxonomy. See

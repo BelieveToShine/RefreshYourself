@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROW_NUMBER() vs. RANK() vs. DENSE_RANK() — SQL Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">ROW_NUMBER() vs. RANK() vs. DENSE_RANK()</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ SQL · Intermediate · Should Know</div>
+    <h1><code>ROW_NUMBER()</code> vs. <code>RANK()</code> vs. <code>DENSE_RANK()</code> — <span class="hl hl-hot">what happens on a tie</span></h1>
+    <p class="interview-q">"What's the difference between ROW_NUMBER(), RANK(), and DENSE_RANK() when there are ties?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Comes up any time you're numbering results — leaderboards, "top N per group," or deduplication logic.</li>
+        <li>The interviewer is really testing whether you know these only diverge <b>at a tie</b> — data with no ties looks identical across all three.</li>
+        <li>A common follow-up right after window functions in general, to check you understand ties, not just the syntax.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>ROW_NUMBER()</code> <span class="rarrow">→</span> always <b>unique</b>, ties broken arbitrarily</p>
+      <p class="rrow"><code>RANK()</code> <span class="rarrow">→</span> ties <b>share a rank</b>, leaves a gap after</p>
+      <p class="rrow"><code>DENSE_RANK()</code> <span class="rarrow">→</span> ties <b>share a rank</b>, no gap after</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> they only <b>diverge</b> exactly at a tie.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 310" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI6" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.4">SAME 4 ROWS — WHO GETS WHICH NUMBER?</text>
+
+      <text x="95" y="46" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">NAME · SCORE</text>
+      <text x="252.5" y="46" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">ROW_NUMBER()</text>
+      <text x="402.5" y="46" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">RANK()</text>
+      <text x="552.5" y="46" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">DENSE_RANK()</text>
+      <line x1="20" y1="54" x2="620" y2="54" stroke="#cbd5e1" stroke-width="1"/>
+
+      <line x1="177.5" y1="54" x2="177.5" y2="262" stroke="#e2e8f0" stroke-width="1"/>
+      <line x1="327.5" y1="54" x2="327.5" y2="262" stroke="#e2e8f0" stroke-width="1"/>
+      <line x1="477.5" y1="54" x2="477.5" y2="262" stroke="#e2e8f0" stroke-width="1"/>
+
+      <line x1="20" y1="111" x2="620" y2="111" stroke="#eef2f6" stroke-width="1"/>
+      <line x1="20" y1="163" x2="620" y2="163" stroke="#eef2f6" stroke-width="1"/>
+      <line x1="20" y1="215" x2="620" y2="215" stroke="#eef2f6" stroke-width="1"/>
+
+      <!-- Row 1: Alice, 95 -->
+      <text x="95" y="82" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">Alice</text>
+      <text x="95" y="98" text-anchor="middle" font-size="10.5" fill="#5b6472">Score: 95</text>
+      <text x="252.5" y="89" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">1</text>
+      <text x="402.5" y="89" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">1</text>
+      <text x="552.5" y="89" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">1</text>
+
+      <!-- Row 2: Bob, 90 (tie) -->
+      <text x="95" y="134" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">Bob</text>
+      <text x="95" y="150" text-anchor="middle" font-size="10.5" fill="#5b6472">Score: 90 <tspan fill="#92400e" font-weight="700">(tie)</tspan></text>
+      <text x="252.5" y="141" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">2</text>
+      <g filter="url(#shI6)"><rect x="377.5" y="125" width="50" height="24" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="402.5" y="141" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">2</text>
+      <g filter="url(#shI6)"><rect x="527.5" y="125" width="50" height="24" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="552.5" y="141" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">2</text>
+
+      <!-- Row 3: Carol, 90 (tie) -->
+      <text x="95" y="186" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">Carol</text>
+      <text x="95" y="202" text-anchor="middle" font-size="10.5" fill="#5b6472">Score: 90 <tspan fill="#92400e" font-weight="700">(tie)</tspan></text>
+      <text x="252.5" y="193" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">3</text>
+      <g filter="url(#shI6)"><rect x="377.5" y="177" width="50" height="24" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="402.5" y="193" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">2</text>
+      <g filter="url(#shI6)"><rect x="527.5" y="177" width="50" height="24" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="552.5" y="193" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">2</text>
+
+      <!-- Row 4: Dave, 80 -->
+      <text x="95" y="238" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">Dave</text>
+      <text x="95" y="254" text-anchor="middle" font-size="10.5" fill="#5b6472">Score: 80</text>
+      <text x="252.5" y="245" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">4</text>
+      <g filter="url(#shI6)"><rect x="357.5" y="224" width="90" height="34" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="402.5" y="238" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">4</text>
+      <text x="402.5" y="253" text-anchor="middle" font-size="10.5" fill="#5b6472">⚠️ skips 3</text>
+      <g filter="url(#shI6)"><rect x="507.5" y="224" width="90" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="552.5" y="238" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">3</text>
+      <text x="552.5" y="253" text-anchor="middle" font-size="10.5" fill="#5b6472">✅ no gap</text>
+
+      <text x="320" y="290" text-anchor="middle" font-size="11" fill="#5b6472">ROW_NUMBER breaks the tie. RANK skips a number after it. DENSE_RANK doesn't.</text>
+    </svg>
+    <figcaption>Bob and Carol tie at 90 — watch what each function does to the number right after them (Dave).</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"RANK() and DENSE_RANK() are just two names for the same thing."</b> They diverge exactly at a tie — RANK() leaves a gap (skips a number) right after a tie, DENSE_RANK() doesn't; on data with no ties they'd look identical, which is exactly why people miss the real difference until they hit tied data.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Which one would you use to show '1st, 2nd, 3rd place' with no skipped ranks even when there are ties?"</b> <code>DENSE_RANK()</code> — it never leaves a gap, so the visible rank sequence stays consecutive even across ties.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"All three number rows using OVER() with an ORDER BY, but they treat ties differently. ROW_NUMBER() always gives unique, sequential numbers — a tie gets split arbitrarily. RANK() gives tied rows the same number, then skips ahead, leaving a gap. DENSE_RANK() also gives tied rows the same number, but keeps counting consecutively right after — no gap."</p>
+    <ul>
+      <li><code>ROW_NUMBER()</code> → <span class="hl hl-blue">always unique</span>; a tie is broken arbitrarily, not meaningfully.</li>
+      <li><code>RANK()</code> → <span class="hl hl-inter">ties share a rank</span>, then the next value skips a number.</li>
+      <li><code>DENSE_RANK()</code> → <span class="hl hl-basic">ties share a rank</span>, next value stays consecutive — no gap.</li>
+      <li>No ties in the data → <span class="hl hl-hot">all three look identical</span>, which is exactly what hides the real difference.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>All three are window functions that number rows using <code>OVER (ORDER BY ...)</code> — same syntax shape, different rule for handling ties. On data with <b>no ties at all</b>, they produce identical output, which is exactly why the real difference goes unnoticed until tied values show up.</p>
+
+      <p><span class="hl hl-blue">ROW_NUMBER()</span> always hands out unique, sequential integers; when two rows tie on the <code>ORDER BY</code> expression, which one gets the smaller number is arbitrary — whichever order the tie happens to land in. <span class="hl hl-inter">RANK()</span> gives every tied row the same rank, then the next distinct value jumps to the number it would have reached if the tie had never happened — skipping the numbers in between. <span class="hl hl-basic">DENSE_RANK()</span> also gives tied rows the same rank, but the next distinct value simply gets the very next integer — nothing is ever skipped.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>ROW_NUMBER()</code></th><th><code>RANK()</code></th><th><code>DENSE_RANK()</code></th></tr></thead>
+        <tbody>
+          <tr><th>Ties get</th><td>different numbers (arbitrary order)</td><td>the same rank</td><td>the same rank</td></tr>
+          <tr><th>After a tie</th><td>— (no ties to begin with)</td><td class="no">❌ skips a number (gap)</td><td>✅ next number, no gap</td></tr>
+          <tr><th>Always unique?</th><td>✅ yes</td><td class="no">❌ no</td><td class="no">❌ no</td></tr>
+          <tr><th>With no ties in the data</th><td>identical output</td><td>identical output</td><td>identical output</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">SELECT</span> Name, Score,
+       <span class="kw">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> Score <span class="kw">DESC</span>) <span class="kw">AS</span> RN,
+       <span class="kw">RANK</span>()       <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> Score <span class="kw">DESC</span>) <span class="kw">AS</span> Rnk,
+       <span class="kw">DENSE_RANK</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> Score <span class="kw">DESC</span>) <span class="kw">AS</span> DRnk
+<span class="kw">FROM</span> Scores;
+
+<span class="cx-cmt">-- Name    Score  RN  Rnk  DRnk</span>
+<span class="cx-cmt">-- Alice    95     1    1    1</span>
+<span class="cx-ok">-- Bob      90     2    2    2   -- tied with Carol</span>
+<span class="cx-ok">-- Carol    90     3    2    2   -- tied with Bob</span>
+<span class="cx-err">-- Dave     80     4    4    3   -- RN keeps counting, Rnk skips 3, DRnk doesn't</span></code></pre>
+      </div>
+      <p class="cx-note">Same tie, three different outcomes: <code>RN</code> keeps counting straight through, <code>Rnk</code> skips a number right after the tie, <code>DRnk</code> doesn't.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Two runners tie for 2nd place in a race.</b> <code>ROW_NUMBER()</code> arbitrarily calls one of them 2nd and the other 3rd — as if the tie never happened. <code>RANK()</code> calls them both 2nd, and the next real runner is 4th — "3rd" is never handed out. <code>DENSE_RANK()</code> also calls them both 2nd, but the next runner is 3rd — no place gets skipped.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="5.html">← Normalization vs. Denormalization</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="7.html">Covering Index →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
