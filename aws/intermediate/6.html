@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S3 Advanced — AWS Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="aws/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ffedd5;--crumb-ink:#c2410c;">📦 AWS</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">S3 Advanced</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ AWS · Intermediate · Should Know</div>
+    <h1>S3 vs. EFS — most "shared storage" needs are actually <span class="hl hl-blue">S3</span> in disguise</h1>
+    <p class="interview-q">"S3 vs. EFS — when does a workload actually need shared, networked file storage instead of object storage?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Tests whether you reach for the familiar-sounding managed service or actually reason about what the workload needs.</li>
+        <li>Comes up any time a design mentions "multiple instances need access to the same files."</li>
+        <li>A common follow-up once someone proposes shared storage in an architecture review — the interviewer wants to hear you justify EFS specifically, not default to it.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>S3</code> <span class="rarrow">→</span> <b>object API</b>, no mount</p>
+      <p class="rrow"><code>EFS</code> <span class="rarrow">→</span> <b>real filesystem</b>, mounted by many at once</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>S3</code></b> is a bucket you call. <b><code>EFS</code></b> is a drive you mount.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arrBlue" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arrAmber" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">OBJECT API vs. A REAL SHARED FILESYSTEM</text>
+
+      <!-- Divider -->
+      <line x1="320" y1="42" x2="320" y2="302" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 5"/>
+
+      <!-- LEFT: S3 -->
+      <g filter="url(#cardShadow)"><rect x="20" y="44" width="280" height="250" rx="16" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="40" y="70" font-size="13.5" font-weight="700" fill="#1d4ed8">🪣 Amazon S3</text>
+      <text x="40" y="86" font-size="10.5" fill="#5b6472">object storage, via API</text>
+
+      <rect x="90" y="104" width="140" height="30" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.4"/>
+      <text x="160" y="123" text-anchor="middle" font-size="11" font-weight="600" fill="#1d4ed8">🌐 API calls</text>
+
+      <path d="M160,134 V158" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrBlue)"/>
+
+      <g filter="url(#cardShadow)"><rect x="60" y="158" width="200" height="70" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="188" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🪣 S3 bucket</text>
+      <text x="160" y="207" text-anchor="middle" font-size="10.5" fill="#5b6472">objects, addressed by key</text>
+
+      <rect x="60" y="246" width="200" height="28" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/>
+      <text x="160" y="264" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🚫 no filesystem mount</text>
+
+      <!-- RIGHT: EFS -->
+      <g filter="url(#cardShadow)"><rect x="340" y="44" width="280" height="250" rx="16" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="360" y="70" font-size="13.5" font-weight="700" fill="#92400e">📁 Amazon EFS</text>
+      <text x="360" y="86" font-size="10.5" fill="#5b6472">shared NFS filesystem</text>
+
+      <rect x="365" y="104" width="70" height="44" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+      <text x="400" y="127" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">🖥️ EC2-1</text>
+
+      <rect x="445" y="104" width="70" height="44" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+      <text x="480" y="127" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">🖥️ EC2-2</text>
+
+      <rect x="525" y="104" width="70" height="44" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+      <text x="560" y="127" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">🖥️ EC2-3</text>
+
+      <path d="M400,148 V196" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrAmber)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+      <path d="M480,148 V196" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrAmber)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+      <path d="M560,148 V196" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrAmber)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#cardShadow)"><rect x="370" y="196" width="220" height="88" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="220" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">📁 EFS filesystem</text>
+      <text x="480" y="239" text-anchor="middle" font-size="10.5" fill="#5b6472">POSIX: directories &amp; file locking</text>
+      <text x="480" y="255" text-anchor="middle" font-size="10.5" fill="#5b6472">mounted by all 3 instances at once</text>
+    </svg>
+    <figcaption>S3 is an object API with no filesystem mount. EFS is a real NFS filesystem — the same three instances mount it at the same time, with true directories and file locking.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Multiple instances need access, so it must be EFS."</b> Most of those workloads can be redesigned around S3's object API instead — cheaper and more scalable; EFS earns its place only when the app genuinely needs POSIX filesystem semantics (directories, file locking), not just multi-instance access.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How would you design S3 for compliance?"</b> Combine <code>Object Lock</code> (WORM) with versioning, cross-region replication, and access logging — so retained records can't be altered or deleted, even by an account admin, until the retention period ends.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"S3 is object storage accessed through an API — it's not a mountable filesystem. EFS is a real shared filesystem that multiple EC2 instances or containers mount at the same time, with POSIX semantics like directories and file locking. Most workloads that seem to need shared storage are actually a better fit for S3; I'd only reach for EFS when the application genuinely expects that filesystem behavior."</p>
+    <ul>
+      <li><code>S3</code> <span class="hl hl-blue">→ object storage via an API</span>, not mountable — virtually unlimited scale, pay per GB stored + requests.</li>
+      <li><code>EFS</code> <span class="hl hl-inter">→ a real shared filesystem</span> — mounted by multiple EC2 instances/containers at once, with POSIX semantics.</li>
+      <li>CRR / SRR <span class="hl hl-teal">→ automatic S3 replication</span> across or within Regions, for compliance, DR, or latency.</li>
+      <li><code>Object Lock</code> <span class="hl hl-hot">→ WORM retention</span> — even an account admin can't alter or delete a locked object early.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>S3</b> is object storage: files ("objects") are addressed by key and read/written through
+      API calls (GET, PUT, and so on), not through a traditional filesystem mount. It scales to
+      effectively unlimited storage and is priced by GB stored plus requests made — no server
+      capacity to plan for.</p>
+
+      <p><b>EFS</b> is a fully-managed NFS filesystem that multiple EC2 instances or containers can
+      mount at the same time, giving real POSIX filesystem semantics — directories, file paths,
+      file locking — that S3 simply doesn't have. That's the only reason to reach for it: an
+      application that genuinely expects to open, lock, and write files through normal filesystem
+      calls, not one that merely happens to run on more than one instance.</p>
+
+      <p>For compliance and durability, S3 adds two more pieces on top of the object model: <b>Cross-
+      Region Replication (CRR)</b> and <b>Same-Region Replication (SRR)</b> automatically copy objects
+      to another bucket for disaster recovery, latency, or regulatory reasons, and <b>Object Lock</b>
+      enforces write-once-read-many (WORM) retention — its stricter <i>Compliance</i> mode locks
+      objects so even the account's root user cannot delete or overwrite them until the retention
+      period passes.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>S3</th><th>EFS</th></tr></thead>
+        <tbody>
+          <tr><th>What it is</th><td>object storage, accessed via API</td><td>fully-managed NFS filesystem</td></tr>
+          <tr><th>Mountable?</th><td>no — no traditional filesystem mount</td><td>yes — mounted by many EC2/containers at once</td></tr>
+          <tr><th>Semantics</th><td>objects addressed by key, no directories/locking</td><td>POSIX — real directories, file locking</td></tr>
+          <tr><th>Scale &amp; cost</th><td>virtually unlimited, pay per GB stored + requests</td><td>scales automatically with usage, pay per GB used</td></tr>
+          <tr><th>Reach for it when</th><td>the app can work through an object API (almost always)</td><td>the app genuinely expects a shared POSIX filesystem</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A legacy content-management app expects a real shared filesystem — every web-tier instance
+      needs to read and write the same files through normal file paths. Rewriting it to call S3's
+      object API would be a large change, so it gets migrated onto <b>EFS</b> instead, mounted by
+      every web-tier instance, and keeps working exactly like it did on-premises.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="5.html">← EC2 Scaling &amp; Architecture</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to AWS Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="7.html">DynamoDB →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · a personal brush-up site · content added track by track, tier by tier.
+  <a href="../../index.html">← Back to all tracks</a>
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
