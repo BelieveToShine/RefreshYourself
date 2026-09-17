@@ -48,9 +48,8 @@ Phase 7.
 
 ## Current build status (one line each — see the track's own spec for detail)
 
-**Core backend path — C#, OOP, .NET/ASP.NET Core, Web API, EF Core, and SQL are through all 7
-phases; Azure is still at Phase 1 (question taxonomy), awaiting the user's review before Phase 2
-(dedupe/gaps) starts on it:**
+**Core backend path — C#, OOP, .NET/ASP.NET Core, Web API, EF Core, SQL, and Azure are all
+through all 7 phases:**
 
 - **C#** — **all 7 phases complete, 49/49 pages written** (2026-09-16):
   [`question-taxonomy.md`](superpowers/specs/csharp/question-taxonomy.md) →
@@ -101,10 +100,16 @@ phases; Azure is still at Phase 1 (question taxonomy), awaiting the user's revie
   layer to `efcore/`. Every diagram passed the mandatory automated verification script,
   including a full independent re-sweep of the 12 gap-hunt additions. See
   [`specs/sql/overview.md`](superpowers/specs/sql/overview.md).
-- **Azure** — [`question-taxonomy.md`](superpowers/specs/azure/question-taxonomy.md) written,
-  deliberately simplified/scenario-first per the user's later plan. Old three-tier roadmap (0
-  written) is **frozen**, superseded by this taxonomy. See
-  [`specs/azure/overview.md`](superpowers/specs/azure/overview.md).
+- **Azure** — **all 7 phases complete, 44/44 pages written** (2026-09-17):
+  [`question-taxonomy.md`](superpowers/specs/azure/question-taxonomy.md) →
+  [`roadmap.md`](superpowers/specs/azure/roadmap.md) → 44 tiered/prioritized pages, live on the
+  site and on [`azure/roadmap.html`](../azure/roadmap.html). Deliberately simplified/
+  scenario-first per the user's later plan, not a full Azure-service encyclopedia — a Phase-2
+  active [gap-hunt](rules/gap-hunting.md) still found 16 real gaps (Entra ID, RBAC, containers,
+  Cosmos DB, IaC, Well-Architected Framework, and more) folded into the initial pass rather than
+  needing a later addendum. Every diagram passed the mandatory automated verification script,
+  run independently against every single page. The old, frozen three-tier roadmap (0 written) is
+  fully superseded. See [`specs/azure/overview.md`](superpowers/specs/azure/overview.md).
 
 **Other tracks, outside the core backend path:**
 
