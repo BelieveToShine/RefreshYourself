@@ -172,6 +172,33 @@ naming):
 | 43 | Architect-Level Trade-off Questions | Advanced | 🧠 | `aws/advanced/13.html` |
 | 44 | Sustainability | Advanced | ⭐ | `aws/advanced/14.html` |
 
+## Phase 6 addendum — concept clusters for the live roadmap page
+
+`aws/roadmap.html` groups the 44 pages by **related category, cutting across tiers** — the same
+pattern `sql/roadmap.html` and `azure/roadmap.html` use — rather than tier-first, since a reader
+scanning "everything about networking" or "everything about security" shouldn't have to check
+three separate tier sections. This is a display grouping on top of the tier/priority table above,
+not a replacement for it; the per-page tier and priority in the table above are still what each
+page actually gets built with in Phase 7. 11 clusters, 44 pages, matching the live page:
+
+| # | Cluster | Pages included |
+|---|---|---|
+| 1 | AWS Fundamentals & Global Infrastructure | AWS Fundamentals, AWS Global Infrastructure |
+| 2 | Identity & Security | IAM, IAM & Security Architecture, AWS Security Services, AWS Security Architecture |
+| 3 | Networking | VPC Fundamentals, Load Balancing & Auto Scaling, VPC & Advanced Networking, Hybrid Connectivity, CloudFront & Content Delivery |
+| 4 | Compute & Containers | EC2, Lambda, EC2 Scaling & Architecture, Containers |
+| 5 | Storage & Database | S3, RDS, S3 Advanced, DynamoDB, Aurora & Database Architecture, ElastiCache |
+| 6 | API & Serverless | API Gateway, Serverless Architecture |
+| 7 | Messaging & Events | Messaging, EventBridge, Kinesis |
+| 8 | Observability & Operations | CloudWatch, Observability, Infrastructure as Code, CI/CD & Deployment |
+| 9 | Resilience, HA & DR | Route 53, Backup & Disaster Recovery, High Availability Architecture, Multi-Region Architecture, Reliability Engineering |
+| 10 | Architecture, Cost & Governance | Well-Architected Framework, Microservices on AWS, Data Architecture, Cost Optimization / FinOps, Sustainability |
+| 11 | Migration & Production Scenarios | Migration, Production Troubleshooting, Architecture Design Questions, Architect-Level Trade-off Questions |
+
+If a page is later added, renamed, or moved during Phase 7, update this table **and**
+`aws/roadmap.html` together — they must stay in sync, same requirement as every other track's
+roadmap doc vs. its live page.
+
 ## Track-specific decisions and boundaries
 
 - **Single track, not split by concern** — per the user's own explicit structural instruction,
