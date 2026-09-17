@@ -55,7 +55,7 @@ track ends up with once it reaches Phase 6 — just know that for any track stil
 | [sql/](sql/question-taxonomy.md) | SQL — no old roadmap existed. [question-taxonomy.md](sql/question-taxonomy.md) (Phase 1, awaiting review) is the only doc so far. |
 | [azure/](azure/overview.md) | Old three-tier roadmap (0 written, frozen) superseded by the simplified, scenario-first [question-taxonomy.md](azure/question-taxonomy.md) (Phase 1, awaiting review). |
 | [ai/](ai/overview.md) | The AI/GenAI track — Basic (16)/Intermediate (18)/Advanced (14), all roadmap-only (0 written), sourced from `AI-Interview-Topics.md`. **Not part of the interview-question-bank rebuild** — untouched, along with DSA. |
-| [react/](react/question-taxonomy.md) | React — sourced from the user's own detailed, already tier-organized outline. [question-taxonomy.md](react/question-taxonomy.md) (Phase 1, awaiting review) is the only doc so far — unusually large (34 concept groups) reflecting the outline's own depth; see its Phase-2 coverage note for the full gap-analysis of additions evaluated. |
+| [react/](react/roadmap.md) | React — sourced from the user's own detailed, already tier-organized outline. **Phases 1–6 complete, Phase 7 not started** — [question-taxonomy.md](react/question-taxonomy.md) → [roadmap.md](react/roadmap.md) → 41 planned pages, awaiting the user's review before any page gets written. Unusually large (35 concept groups, 41 pages) reflecting the outline's own depth. |
 
 Add a row here whenever a new track's roadmap is first planned — even before any page in it is
 written. This table is the map — a session should be able to tell from this file alone whether a

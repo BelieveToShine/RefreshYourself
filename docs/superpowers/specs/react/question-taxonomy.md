@@ -507,7 +507,20 @@ territory, not a beginner topic.
 - **Core concept** — State reducer pattern?
 - **Understanding** — When should a pattern *not* be used?
 
-### 32. Security
+### 32. Testing at Scale **[new section]**
+Your own "Recommended structure" tree names "Testing Strategy" as an Advanced subsection, but no
+detailed question list for it existed — Testing (§21) only went to Intermediate depth.
+Closing that real gap between the outline's shape and its content.
+- **[new] Scenario** — What does a testing strategy/pyramid look like for a large React
+  application (unit-heavy, a thinner layer of integration tests, minimal true end-to-end)?
+- **[new] Understanding** — How do you test a component that suspends, or a Server Component's
+  server-rendered output — what changes about testing once Suspense/RSC are involved?
+- **[new] Core concept** — What is visual regression testing, and where does it sit alongside
+  functional tests (catching *unintended* visual change, not behavior)?
+- **[new] Scenario** — How do you decide test-coverage priorities across a large team — critical
+  user paths first, versus chasing exhaustive coverage?
+
+### 33. Security
 - **Understanding** — How does XSS affect React applications?
 - **Understanding** — Does JSX automatically prevent XSS?
 - **Understanding** — What makes `dangerouslySetInnerHTML` dangerous?
@@ -518,12 +531,15 @@ territory, not a beginner topic.
 - **Understanding** — How should authorization be enforced?
 - **Understanding** — Why is hiding a UI element not authorization?
 
-### 33. Production Performance
+### 34. Production Performance
 - **Scenario** — A React application became slow after adding a feature — how do you
   investigate?
 - **Understanding** — How do you identify unnecessary renders?
-- **Understanding** — How do you analyze bundle size?
-- **Scenario** — How do you optimize initial page load?
+- **Understanding** — How do you analyze or investigate a significant increase in bundle size?
+  **[merged]** — was asked twice (once here, once as a Real-world Scenario below); one question,
+  kept once.
+- **Scenario** — How do you optimize initial page load? **[merged]** — same merge as above; "how
+  do you optimize" and "it's slow, how do you investigate" are the same underlying question.
 - **Scenario** — How do you optimize large tables?
 - **Scenario** — How do you handle thousands of components?
 - **Scenario** — How would you diagnose memory leaks?
@@ -531,9 +547,11 @@ territory, not a beginner topic.
 - **Understanding** — How do caching and CDN affect React performance?
 - **Understanding** — How do you decide whether optimization is actually necessary?
 
-### 34. Real-world Scenarios
+### 35. Real-world Scenarios
 Particularly important for senior/architect interviews — every bullet is already Scenario type
-by nature.
+by nature. Two items that duplicated Production Performance (§34) verbatim — "initial page load
+is slow" and "bundle size increased" — were merged into that section instead of kept twice; see
+the Phase 2 coverage note below.
 - A page renders 5000 rows and is slow. What do you do?
 - A component keeps rendering indefinitely. How do you diagnose it?
 - An API request fires repeatedly. What would you check?
@@ -541,8 +559,6 @@ by nature.
 - Two API requests return out of order. How do you prevent stale data?
 - A large application has excessive prop drilling. How would you redesign it?
 - Context changes are causing the entire application to re-render. What would you do?
-- Initial page load is slow. How would you investigate?
-- Bundle size has increased significantly. What would you check?
 - Users report a blank page in production. How would you diagnose it?
 - A React page has hydration errors. What would you investigate?
 - A component has become 1000+ lines long. How would you refactor it?
@@ -560,13 +576,21 @@ by nature.
 vocabulary this site's taxonomies use). Nothing from the original list was cut to make room for
 additions, per the user's explicit instruction.
 
-**This track is unusually large — 34 concept groups versus 5–8 for every other track** — a
+**This track is unusually large — 35 concept groups versus 5–8 for every other track** — a
 direct, deliberate reflection of how much more interview surface area experienced-level React
 actually has (and of how much more detailed the user's own source outline was) than the other
-tracks built so far. Expect Phase 3 to bundle several of these 34 groups onto shared pages
+tracks built so far. Expect Phase 3 to bundle several of these 35 groups onto shared pages
 (e.g. `useMemo`/`useCallback`/React-Compiler-awareness as one page, or Portals folded onto the
-Component Communication page rather than standing alone) rather than producing 34 separate
+Component Communication page rather than standing alone) rather than producing 35 separate
 pages — that bundling decision is Phase 3's job, not this one's.
+
+**Two adversarial-pass findings, fixed in place per the "edit Phase 1–2 directly" rule:**
+- The outline's own "Recommended structure" tree named an Advanced "Testing Strategy"
+  subsection that no detailed question list ever existed for — added as **§32 Testing at
+  Scale [new section]**, closing the gap between the outline's shape and its written content.
+- §34 (Production Performance) and §35 (Real-world Scenarios) each separately asked "initial
+  page load is slow" and "bundle size increased" — genuine duplicates, not two distinct question
+  types. Merged into one instance each, kept in §34, noted `[merged]` in place.
 
 ### Additions evaluated and included (with placement + rationale)
 
@@ -583,6 +607,7 @@ pages — that bundling decision is Phase 3's job, not this one's.
 | Portals | §14 Component Comm. | Fold-in | Real, classic, was entirely absent |
 | RTL query-by-role philosophy | §21 Testing | Fold-in | Natural bridge into Accessibility |
 | **Accessibility** | **new §22** | **Standalone section** | Entirely absent; now a standard senior/staff topic |
+| **Testing at Scale** | **new §32** | **Standalone section** | Outline's own tree named it; no content existed yet |
 | Request waterfalls | §25 Suspense | Fold-in | Important Suspense-for-data gotcha |
 | Streaming SSR | §26 Server Rendering | Fold-in | Natural extension of hydration/SSR content |
 | **Actions / `useActionState` / `useOptimistic` / Server Actions / `use()`** | **new §28** | **Standalone section** | Genuinely new React 19 mental model, no existing slot fit it |

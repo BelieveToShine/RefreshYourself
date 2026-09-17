@@ -101,13 +101,17 @@ Phase 2 (dedupe/gaps) starts on either of them:**
 
 **Other tracks, outside the core backend path:**
 
-- **React** — [`question-taxonomy.md`](superpowers/specs/react/question-taxonomy.md) written
-  (2026-09-17), Phase 1, awaiting the user's review. Sourced from the user's own detailed,
-  already tier-organized outline rather than a short bullet list like every other track's
-  seed — unusually large (34 concept groups) as a direct result. See the taxonomy's own
+- **React** — **Phases 1–6 complete, Phase 7 not started** (2026-09-17):
+  [`question-taxonomy.md`](superpowers/specs/react/question-taxonomy.md) →
+  [`roadmap.md`](superpowers/specs/react/roadmap.md) → 41 planned pages, awaiting the user's
+  review before any page gets written. Sourced from the user's own detailed, already
+  tier-organized outline rather than a short bullet list like every other track's seed —
+  unusually large (35 concept groups, 41 pages) as a direct result. See the taxonomy's own
   Phase-2 coverage note for the full list of gaps identified and added, and what was
   deliberately excluded (bundler internals, CSS-in-JS/state-library specifics, general JS
-  fundamentals).
+  fundamentals); see the roadmap for the two adversarial-pass fixes (a missing "Testing
+  Strategy" section, two near-duplicate scenario questions) and the page-grouping/tier/priority
+  decisions.
 - **AI** — roadmap-only skeleton across all three tiers, sourced from `AI-Interview-Topics.md`.
   **Do not write AI content until told to.** See
   [`specs/ai/overview.md`](superpowers/specs/ai/overview.md).
