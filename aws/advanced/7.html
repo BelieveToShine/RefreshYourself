@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cost Optimization / FinOps — AWS Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="aws/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ffedd5;--crumb-ink:#c2410c;">📦 AWS</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Cost Optimization / FinOps</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 AWS · Advanced · Must Know</div>
+    <h1>NAT Gateway data processing is the <span class="hl hl-hot">cost trap</span> nobody optimizes for</h1>
+    <p class="interview-q">How do you find unexpected AWS spend, and what are the biggest cost traps beyond just picking a cheaper instance type?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Cost questions in senior/architect AWS interviews test whether you know where hidden
+        spend actually lives — not just whether you can name a cheaper instance type.</li>
+        <li>A real, recurring production problem: a team spends months rightsizing EC2 instances
+        while NAT Gateway or cross-AZ transfer quietly outgrows the entire compute bill.</li>
+        <li>A common opener before a "your AWS bill just doubled — what do you check first?"
+        scenario question.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><b>Rightsizing</b> <span class="rarrow">→</span> match instance to real usage</p>
+      <p class="rrow"><b>Savings Plans / RI</b> <span class="rarrow">→</span> discount, steady load only</p>
+      <p class="rrow"><b>Spot</b> <span class="rarrow">→</span> cheap, interruptible capacity</p>
+      <p class="rrow"><b>NAT Gateway</b> <span class="rarrow">→</span> billed per GB processed (hidden)</p>
+      <p class="rrow"><b>Cross-AZ / Region</b> <span class="rarrow">→</span> also billed per GB (hidden)</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b>obvious levers</b> → rightsizing, commitments, Spot, tiering</span>
+      <span class="tc-line"><b>hidden traps</b> → NAT Gateway + cross-AZ/region transfer, billed per GB nobody watches</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 356" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="dShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arGray" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+        <marker id="arRed" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="14" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.2">ONE AWS BILL — LEVERS YOU OPTIMIZE vs. TRAPS THAT SNEAK UP</text>
+
+      <!-- root: the bill -->
+      <g filter="url(#dShadow)"><rect x="140" y="22" width="360" height="40" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">💵 YOUR MONTHLY AWS BILL</text>
+      <text x="320" y="55" text-anchor="middle" font-size="9" fill="#5b6472">many small line items add up</text>
+
+      <!-- connector into the levers zone: static, neutral -->
+      <path d="M164,62 V88" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arGray)"/>
+
+      <!-- connector into the traps zone: animated, red — the "still live" risk -->
+      <path d="M476,62 V88" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arRed)">
+        <animate attributeName="stroke-dashoffset" from="22" to="0" dur="2.2s" repeatCount="indefinite"/>
+      </path>
+
+      <!-- left zone: levers you actively optimize -->
+      <rect x="14" y="88" width="300" height="166" rx="16" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="6 4"/>
+      <text x="164" y="106" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.2">🎛️ LEVERS YOU ACTIVELY OPTIMIZE</text>
+
+      <g filter="url(#dShadow)"><rect x="26" y="120" width="134" height="58" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="93" y="136" text-anchor="middle" font-size="14">📏</text>
+      <text x="93" y="153" text-anchor="middle" font-size="9.3" font-weight="700" fill="#1d4ed8">RIGHTSIZING</text>
+      <text x="93" y="168" text-anchor="middle" font-size="7.6" fill="#5b6472">match size to real use</text>
+
+      <g filter="url(#dShadow)"><rect x="168" y="120" width="134" height="58" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="235" y="136" text-anchor="middle" font-size="14">💳</text>
+      <text x="235" y="153" text-anchor="middle" font-size="9.3" font-weight="700" fill="#1d4ed8">SAVINGS PLANS / RI</text>
+      <text x="235" y="168" text-anchor="middle" font-size="7.6" fill="#5b6472">steady, predictable load</text>
+
+      <g filter="url(#dShadow)"><rect x="26" y="186" width="134" height="58" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="93" y="202" text-anchor="middle" font-size="14">🎯</text>
+      <text x="93" y="219" text-anchor="middle" font-size="9.3" font-weight="700" fill="#1d4ed8">SPOT</text>
+      <text x="93" y="234" text-anchor="middle" font-size="7.6" fill="#5b6472">interruptible workloads</text>
+
+      <g filter="url(#dShadow)"><rect x="168" y="186" width="134" height="58" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="235" y="202" text-anchor="middle" font-size="14">🗄️</text>
+      <text x="235" y="219" text-anchor="middle" font-size="9.3" font-weight="700" fill="#1d4ed8">LIFECYCLE TIERING</text>
+      <text x="235" y="234" text-anchor="middle" font-size="7.6" fill="#5b6472">cold data → cheap tier</text>
+
+      <!-- right zone: traps that sneak up -->
+      <rect x="326" y="88" width="300" height="166" rx="16" fill="#fef2f2" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="6 4"/>
+      <text x="476" y="106" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing="0.2">🕳️ TRAPS THAT SNEAK UP</text>
+
+      <g filter="url(#dShadow)"><rect x="344" y="120" width="264" height="56" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="476" y="136" text-anchor="middle" font-size="14">🌐</text>
+      <text x="476" y="153" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">NAT GATEWAY</text>
+      <text x="476" y="168" text-anchor="middle" font-size="8" fill="#5b6472">billed per GB processed</text>
+
+      <g filter="url(#dShadow)"><rect x="344" y="188" width="264" height="56" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="476" y="204" text-anchor="middle" font-size="14">🔀</text>
+      <text x="476" y="221" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">CROSS-AZ / REGION TRANSFER</text>
+      <text x="476" y="236" text-anchor="middle" font-size="8" fill="#5b6472">also per GB — easy to miss</text>
+
+      <!-- both zones feed into the tool that actually reveals them -->
+      <path d="M164,254 V276 H260 V294" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arGray)"/>
+      <path d="M476,254 V276 H380 V294" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arGray)"/>
+
+      <g filter="url(#dShadow)"><rect x="170" y="294" width="300" height="46" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="313" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.2">🔍 COST EXPLORER + TAGS</text>
+      <text x="320" y="329" text-anchor="middle" font-size="9" fill="#5b6472">shows where the money actually goes</text>
+    </svg>
+    <figcaption>NAT Gateway data processing and cross-AZ/region transfer are billed the same way as
+    everything else — per GB — but almost nobody watches them the way they watch instance size or
+    Reserved Instance coverage. Cost Explorer and tags are what actually surface both zones.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Serverless is always cheaper" is not true.</b> Per-request/per-duration
+    billing can cost more than a provisioned server or container once volume is high and steady —
+    the right choice depends on real usage patterns, not on which service is newest.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Give me a concrete cost vs. reliability trade-off."</b> Multi-AZ RDS
+    roughly doubles database cost in exchange for automatic failover — worth it for a critical
+    production database, probably not for a low-criticality internal tool; the right call depends
+    on what downtime or data loss actually costs the business.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"NAT Gateway data processing and cross-AZ/region transfer are the cost
+    traps that catch people who only optimize compute pricing — the fix is rightsizing plus a real
+    look at data-transfer patterns, backed by Cost Explorer and tagging, not just picking a
+    cheaper instance type."</p>
+    <ul>
+      <li><span class="hl hl-hot">NAT Gateway & cross-AZ/region transfer</span> are billed per GB
+      and are the traps most people never check.</li>
+      <li><span class="hl hl-blue">Rightsizing</span> means matching instance size to actual
+      utilization, not a guess made at launch time.</li>
+      <li><span class="hl hl-basic">Savings Plans / Reserved Instances</span> only pay off for
+      genuinely steady, predictable usage.</li>
+      <li><span class="hl hl-teal">Spot</span> is the right lever for interruptible workloads, not
+      steady production traffic.</li>
+      <li>"Serverless is always cheaper" is false — at <span class="hl hl-inter">high, steady
+      volume</span> a provisioned server can cost less than per-invocation billing.</li>
+      <li><span class="hl hl-adv">Cost Explorer, budgets, and tagging</span> are how you actually
+      find where the money is going, not guessing.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Rightsizing</b> means matching an EC2 instance's size to what the workload actually
+      uses, based on real utilization data, not a guess made when it was launched. <b>Savings
+      Plans</b> and <b>Reserved Instances</b> trade a spend commitment for a discount — they only
+      pay off for genuinely steady, predictable usage; committing capacity for a spiky or
+      short-lived workload can lose money instead of saving it. <b>Spot</b> capacity is priced far
+      below on-demand but can be reclaimed, so it's the right lever for interruptible,
+      fault-tolerant workloads, not steady production traffic. <b>S3 lifecycle rules</b> move data
+      that's gone cold into cheaper storage tiers automatically, without anyone having to remember
+      to do it.</p>
+
+      <p>The costs that actually catch people off guard live in data movement, not compute. A
+      <b>NAT Gateway</b> charges per GB of traffic it processes, and that number gets surprisingly
+      large for a chatty, high-volume architecture — a real, commonly-missed line item. Traffic
+      that crosses an <b>Availability Zone or Region boundary</b> is billed per GB too, and it's
+      just as easy to underestimate. <b>CloudFront</b> helps on both fronts at once: fewer
+      requests reach the origin, which lowers both latency and the origin's own compute/transfer
+      cost.</p>
+
+      <p>The <b>serverless cost model</b> bills per request and per duration, which is genuinely
+      cheap at low or spiky volume — but "serverless is always cheaper" isn't universally true; at
+      high, steady volume, a provisioned server or container can cost less than paying per
+      invocation. None of this is guesswork: <b>Cost Explorer</b>, budgets/alerts, and
+      cost-allocation tags are how real spend actually gets found, not by assuming which service
+      should be expensive.</p>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A team running a chatty microservices architecture reviews Cost Explorer</b> and finds
+      NAT Gateway data-processing charges are a bigger line item than anyone expected — services
+      are calling other AWS services across Availability Zones, and every gigabyte is metered. The
+      fix isn't a smaller instance type: they add VPC endpoints for the AWS services being called,
+      routing that traffic privately and avoiding the NAT Gateway entirely for it.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="index.html" style="color:var(--ink-soft);">Data Architecture <em>(coming soon)</em></a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to AWS Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="index.html" style="color:var(--ink-soft);">Reliability Engineering <em>(coming soon)</em></a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · AWS · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

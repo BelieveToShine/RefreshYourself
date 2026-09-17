@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Architecture — AWS Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="aws/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ffedd5;--crumb-ink:#c2410c;">📦 AWS</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Data Architecture</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 AWS · Advanced · Deep Dive</div>
+    <h1>Analytics should never query the <span class="hl hl-blue">production database</span> directly</h1>
+    <p class="interview-q">How would you design an analytics platform that doesn't compete with your transactional database for resources?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Tests whether you see OLTP vs. OLAP as an architecture decision, not just a list of
+        AWS service names.</li>
+        <li>A very common real production incident — slow checkout, timeouts, locking — traces
+        straight back to analytics queries hitting the app's own database.</li>
+        <li>A senior/architect-level Data Architecture question almost always asks you to justify
+        why the analytics layer is kept separate from the transactional one.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Analytics = <b>"never query the production database directly."</b></p>
+    <p class="rthink">Think: <b><code>OLTP</code></b> runs the app. <b><code>OLAP</code></b>
+    (data lake + Athena/Redshift) answers questions about it — kept separate on purpose.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="dShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arFlow" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#2563eb"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.3">OLTP FEEDS AN OLAP LAYER — NEVER QUERIED DIRECTLY</text>
+
+      <!-- App / Users -->
+      <g filter="url(#dShadow)"><rect x="30" y="40" width="170" height="46" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="115" y="59" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🖥️ APP / USERS</text>
+      <text x="115" y="75" text-anchor="middle" font-size="8" fill="#5b6472">live transactional traffic</text>
+
+      <!-- App -> Production DB -->
+      <path d="M115,86 V150" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#arFlow)"/>
+
+      <!-- Production DB (OLTP) -->
+      <g filter="url(#dShadow)"><rect x="30" y="150" width="170" height="76" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="115" y="172" text-anchor="middle" font-size="16">🗄️</text>
+      <text x="115" y="194" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.2">PRODUCTION DB (OLTP)</text>
+      <text x="115" y="212" text-anchor="middle" font-size="8.5" fill="#5b6472">transactions &amp; joins</text>
+
+      <!-- Production DB -> S3 Data Lake -->
+      <path d="M200,188 H250" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#arFlow)"/>
+      <text x="225" y="140" text-anchor="middle" font-size="8.5" font-weight="700" fill="#1d4ed8">replication</text>
+      <text x="225" y="151" text-anchor="middle" font-size="8.5" font-weight="700" fill="#1d4ed8">/ ETL</text>
+
+      <!-- S3 Data Lake -->
+      <g filter="url(#dShadow)"><rect x="250" y="150" width="170" height="76" rx="14" fill="#e2e8f0" stroke="#64748b" stroke-width="1.8"/></g>
+      <text x="335" y="172" text-anchor="middle" font-size="16">🪣</text>
+      <text x="335" y="194" text-anchor="middle" font-size="11" font-weight="700" fill="#334155" letter-spacing="0.2">S3 DATA LAKE</text>
+      <text x="335" y="212" text-anchor="middle" font-size="8.5" fill="#5b6472">raw data, native format</text>
+
+      <!-- Data Lake -> Athena -->
+      <path d="M420,168 L470,116" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#arFlow)"/>
+      <!-- Data Lake -> Redshift -->
+      <path d="M420,208 L470,250" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#arFlow)"/>
+
+      <!-- Athena -->
+      <g filter="url(#dShadow)"><rect x="470" y="88" width="150" height="64" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="545" y="107" text-anchor="middle" font-size="15">🔍</text>
+      <text x="545" y="125" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e" letter-spacing="0.3">ATHENA</text>
+      <text x="545" y="141" text-anchor="middle" font-size="8" fill="#5b6472">ad-hoc queries on S3</text>
+
+      <!-- Redshift -->
+      <g filter="url(#dShadow)"><rect x="470" y="222" width="150" height="64" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="545" y="241" text-anchor="middle" font-size="15">📊</text>
+      <text x="545" y="259" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e" letter-spacing="0.3">REDSHIFT</text>
+      <text x="545" y="275" text-anchor="middle" font-size="8" fill="#5b6472">fast, consistent queries</text>
+
+      <!-- forbidden direct-query path -->
+      <path d="M115,150 V106" fill="none" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3"/>
+      <path d="M115,106 H545" fill="none" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3"/>
+      <path d="M545,106 V187" fill="none" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3"/>
+      <circle cx="545" cy="187" r="3" fill="#dc2626"/>
+
+      <rect x="262" y="96" width="136" height="20" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="330" y="110" text-anchor="middle" font-size="9.5" font-weight="700" fill="#b91c1c">🚫 NO DIRECT QUERIES</text>
+    </svg>
+    <figcaption>The production database (OLTP) feeds a data lake through replication or ETL —
+    Athena and Redshift query the lake, never the production database directly.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"I'll just optimize the reporting query" is not the fix.</b> Running
+    heavy analytics directly against the production OLTP database is a very common real-world
+    mistake — the real fix is architecturally separating OLTP from OLAP (a data lake or warehouse
+    fed by replication or ETL), not tuning the same query against the same database.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Kinesis vs. MSK for high-volume event data feeding this kind of
+    platform?"</b> Reach for Kinesis for a fully-managed, AWS-native pipeline with less
+    operational overhead; reach for MSK specifically when you need the Kafka ecosystem or API
+    for portability or existing tooling.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"OLTP and OLAP need to be architecturally separate — analytics should
+    never query the production database directly."</p>
+    <ul>
+      <li><code>Athena</code> → use for <span class="hl hl-inter">ad-hoc, serverless queries</span>
+      straight against S3, with nothing to provision.</li>
+      <li><code>Redshift</code> → use for <span class="hl hl-inter">frequent, complex queries</span>
+      that need consistent, fast performance at scale.</li>
+      <li>A <span class="hl hl-blue">data lake</span> holds raw data in S3, separate from any
+      single app's database, ready for later processing.</li>
+      <li><span class="hl hl-hot">Replication or ETL</span> is what feeds the lake — never a live
+      query against the production database itself.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Relational databases</b> (RDS, Aurora) fit structured data that needs strong
+      consistency, joins, and transactions — the natural home for an application's live
+      transactional data. <b>NoSQL</b> (DynamoDB) fits key-value or document access patterns at
+      massive scale, without needing complex joins. Neither is built to keep serving live app
+      traffic well while also absorbing heavy analytical queries at the same time.</p>
+
+      <p>A <b>data lake</b> solves this by storing raw data — often in S3 — in its native format,
+      separate from any single application's transactional database, ready for later processing
+      and analysis. A common serverless analytics stack is <b>S3 + Glue + Athena</b>: S3 holds
+      the raw data, Glue catalogs it and runs ETL, and Athena runs serverless SQL directly against
+      the data sitting in S3, with nothing to provision. <b>Redshift</b> is a managed data
+      warehouse built for structured, heavily-queried analytical workloads at scale. Separating
+      this OLAP side from the app's OLTP database is what stops a reporting query from competing
+      with production traffic for the same resources.</p>
+
+      <p>Athena and Redshift aren't interchangeable — which one fits depends on how often, and how
+      demanding, the queries actually are:</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Athena</th><th>Redshift</th></tr></thead>
+        <tbody>
+          <tr><th>Best for</th><td>ad-hoc, infrequent queries</td><td>frequent, complex queries</td></tr>
+          <tr><th>Setup</th><td>none — queries S3 directly</td><td>provisioned, managed cluster</td></tr>
+          <tr><th>Performance</th><td>fine for occasional lookups</td><td>consistent and fast at scale</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A company's reporting dashboards were querying the production RDS database
+      directly</b> — and it was slowing down checkout. Moving reporting onto a Redshift warehouse
+      fed by a nightly ETL job fixed both problems at once: checkout traffic stopped competing
+      with reporting queries for the same database resources, and reporting got faster, more
+      consistent performance running against a warehouse actually built for it.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="index.html" style="color:var(--ink-soft);">Microservices on AWS <em>(coming soon)</em></a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to AWS Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="index.html" style="color:var(--ink-soft);">Cost Optimization / FinOps <em>(coming soon)</em></a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · AWS · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
