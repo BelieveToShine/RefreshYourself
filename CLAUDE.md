@@ -6,40 +6,51 @@ editing any page — details live in the linked files, read the relevant one for
 
 ## What this project is
 
-A set of "tracks" (C#, OOP's, .NET Framework, SQL, React, DSA — more can be added later). Each
-track has three tiers — **Basic → Intermediate → Advanced**. Each tier is a list of interview
-topics. Each topic is one page: a **diagram**, a **simple-words explanation**, and a **key points
-to remember** box. Built for quick brush-up before an interview, not for deep study — see
+A set of "tracks" — as of 2026-09-16: C#, OOP, .NET/ASP.NET Core, Web API, and EF Core are
+through all 7 rebuild phases (see below); SQL and Azure have a Phase 1 taxonomy awaiting Phase
+2+; AI/React/DSA are untouched. More can be added later. Each track has three tiers — **Basic →
+Intermediate → Advanced** (question *type*, not difficulty or seniority — see
+[`docs/rules/interview-depth-and-priority.md`](docs/rules/interview-depth-and-priority.md)).
+Each topic is one page: a **diagram**, a **simple-words explanation**, and a **key points to
+remember** box. Built for quick brush-up before an interview, not for deep study — see
 [`docs/rules/content-writing.md`](docs/rules/content-writing.md) for exactly what that means.
 
-## Mandatory workflow
+## Mandatory workflow — the 7-phase pipeline
+
+**Every track goes through 7 phases before any page is built** — see
+[`docs/superpowers/specs/README.md`](docs/superpowers/specs/README.md) for the full definition
+of each phase, and [`docs/rules/build-process.md`](docs/rules/build-process.md) for exactly how
+Phase 7 gets executed (subagent dispatch, machine-sharing safety rules, mandatory two-pass
+diagram verification, site-wiring checklist). This supersedes any older, simpler per-page
+workflow this file may have described in the past — the 7-phase pipeline is the only current
+process, locked with the user 2026-09-15/16.
 
 0. **Read the whole-project picture first** — [`docs/refreshyourself-overview.md`](docs/refreshyourself-overview.md).
-   The full topic catalog (built vs. planned, every track/tier) and the build order. This file
-   tells you *what's* left; the rules below tell you *how* to build it.
+   What's built vs. planned, every track/tier, and which phase each track is currently at.
 1. **Know the structure** — [`docs/rules/content-structure.md`](docs/rules/content-structure.md).
    Folder layout, URL/file naming, `data-root`, what an index page contains vs. a topic page.
-2. **List the topic roadmap before writing any page** — [`docs/rules/content-writing.md`](docs/rules/content-writing.md).
-   A tier index shows every planned topic (written or not) grouped in tens, hot-first. Decide the
-   full list for that tier first; implement pages one at a time after. **Write that roadmap into
-   the track's spec** (`docs/superpowers/specs/<track>/overview.md` — see
-   [`docs/superpowers/specs/README.md`](docs/superpowers/specs/README.md)) at the same time, not
-   as a follow-up — the spec and the live tier-index page are two views of one roadmap.
-3. **Know the writing rules** — same file. Simple words, the "why it matters" bullets, the
-   real-world example, the exact topic-page template.
+2. **Phases 1–6 are the orchestrating session's own work** (taxonomy → review/dedupe → group
+   into pages → tier → priority → final roadmap), written to
+   `docs/superpowers/specs/<track>/roadmap.md` *before* any page gets built — see
+   [`docs/rules/build-process.md`](docs/rules/build-process.md) for the exact shape to follow
+   and which files to scaffold first.
+3. **Know the writing rules** — [`docs/rules/content-writing.md`](docs/rules/content-writing.md).
+   Simple words, the "why it matters" bullets, the real-world example, the exact topic-page
+   template.
 4. **Know the diagram style** — [`docs/rules/diagram-style.md`](docs/rules/diagram-style.md).
-   Hand-authored inline SVG, small and crisp, no overlap, purposeful animation.
+   Hand-authored inline SVG, small and crisp, no overlap, purposeful animation, and the
+   **mandatory automated verification script** — a page is not done until that exact script has
+   been run against the live rendered page with `issueCount: 0`.
 5. **Know the visual style** — [`docs/rules/visual-style.md`](docs/rules/visual-style.md). Fonts,
    `.hl` highlight spans, logos, colourful breadcrumb pills, eyebrow badges.
 6. **Never write a claim you're not actually sure is true** — [`docs/rules/accuracy.md`](docs/rules/accuracy.md).
    Outranks every other writing rule. Read it before writing any diagram, explanation, code
    snippet, or key point.
-7. **Do the work** — add/edit pages following those docs.
-8. **Update the tier index row** (flip `planned` → a real link), **the track's spec doc** (flip
-   its `written?` column the same way), **and** add the page to
-   [`assets/search-index.js`](assets/search-index.js) — see
-   [`docs/rules/search.md`](docs/rules/search.md). A topic page is not done until all three
-   happen.
+7. **Do the work (Phase 7)** — [`docs/rules/build-process.md`](docs/rules/build-process.md) is
+   the step-by-step for this phase specifically: dispatching page-writing subagents, the safety
+   rules for a machine other sessions are also using, the independent verification sweep, and
+   the site-wiring checklist (nav-index.js, search-index.js, roadmap.html, tier/track index
+   pages, root tile, spec docs) that a page/track isn't done without.
 
 ## Rules
 
@@ -53,6 +64,8 @@ Full action → rule lookup table: [`docs/rules/README.md`](docs/rules/README.md
 - **Visual style (fonts, highlights, logos, breadcrumb):** [`docs/rules/visual-style.md`](docs/rules/visual-style.md)
 - **Global search:** [`docs/rules/search.md`](docs/rules/search.md)
 - **"Say this in the interview" box:** [`docs/rules/keypoints.md`](docs/rules/keypoints.md)
+- **Tier/priority assignment (Phase 4/5):** [`docs/rules/interview-depth-and-priority.md`](docs/rules/interview-depth-and-priority.md)
+- **Running Phase 7 itself (subagents, safety, verification, wiring):** [`docs/rules/build-process.md`](docs/rules/build-process.md)
 
 ## Quick reminders
 

@@ -23,3 +23,11 @@
     repeat when wiring it up for a new tier.
   - [`rules/keypoints.md`](rules/keypoints.md) — the "Say this in the interview" box: highlight
     every bullet's main point, plain professional wording, the "when do I use X vs. Y" pattern.
+  - [`rules/interview-depth-and-priority.md`](rules/interview-depth-and-priority.md) — the two
+    independent axes (tier = question type, priority = interview likelihood) used in every
+    track's Phase 4/5.
+  - [`rules/build-process.md`](rules/build-process.md) — **read before running Phase 7 on any
+    track.** The operational half of the 7-phase pipeline: how to dispatch page-writing
+    subagents safely (this machine runs other sessions too), the mandatory two-pass diagram
+    verification, subagent concurrency limits, the site-wiring checklist, and how two sessions
+    can build two different tracks in parallel without clobbering each other's shared files.
