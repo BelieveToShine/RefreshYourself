@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cosmos DB — Partition Keys & RU/s — Azure Basic — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="azure/basic">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0f2fe;--crumb-ink:#0078D4;">☁️ Azure</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Cosmos DB — Partition Keys &amp; RU/s</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Azure · Basic · Must Know</div>
+    <h1><span class="hl hl-blue">Cosmos DB</span> — why the same RU/s can feel fast or <span class="hl hl-hot">throttled</span></h1>
+    <p class="interview-q">"What is Cosmos DB, and what makes it different from a relational database — partition key design and RU/s as the throughput/cost model?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Comes up any time NoSQL vs. relational storage is discussed in an Azure data-tier design question.</li>
+        <li>Explains a real production issue: getting throttled (429 responses) even though plenty of RU/s is provisioned overall.</li>
+        <li>A common opener before a deeper Cosmos DB conversation about modeling, indexing, or consistency levels.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>RU/s</code> <span class="rarrow">→</span> the <b>throughput budget</b>, billed per request</p>
+      <p class="rrow">Partition key <span class="rarrow">→</span> decides who actually <b>gets</b> to spend it</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> a <b>high-cardinality</b> key spreads traffic across lanes. A <b>low-cardinality</b> key jams one lane and leaves the rest empty — same RU/s, still throttled.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 290" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="cdS6" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">Same total RU/s — different partition keys</text>
+
+      <line x1="320" y1="6" x2="320" y2="266" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <!-- LEFT: even distribution -->
+      <text x="160" y="42" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ Good: high-cardinality key</text>
+
+      <g filter="url(#cdS6)"><rect x="20" y="56" width="280" height="194" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/></g>
+      <text x="160" y="74" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">🗄️ Container</text>
+      <text x="160" y="92" text-anchor="middle" font-size="10" fill="#5b6472">customerId → many values</text>
+
+      <rect x="44" y="104" width="68" height="110" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.3"/>
+      <text x="78" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">P1</text>
+      <rect x="58" y="166" width="40" height="44" rx="4" fill="#16a34a"/>
+      <text x="78" y="232" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">~33%</text>
+
+      <rect x="126" y="104" width="68" height="110" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.3"/>
+      <text x="160" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">P2</text>
+      <rect x="140" y="166" width="40" height="44" rx="4" fill="#16a34a"/>
+      <text x="160" y="232" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">~33%</text>
+
+      <rect x="208" y="104" width="68" height="110" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.3"/>
+      <text x="242" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">P3</text>
+      <rect x="222" y="166" width="40" height="44" rx="4" fill="#16a34a"/>
+      <text x="242" y="232" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">~33%</text>
+
+      <!-- RIGHT: hot partition -->
+      <text x="480" y="42" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">❌ Bad: low-cardinality key</text>
+
+      <g filter="url(#cdS6)"><rect x="340" y="56" width="280" height="194" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/></g>
+      <text x="480" y="74" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">🗄️ Container</text>
+      <text x="480" y="92" text-anchor="middle" font-size="10" fill="#5b6472">type → only a few values</text>
+
+      <rect x="364" y="104" width="68" height="110" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="1.3"/>
+      <text x="398" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">P1</text>
+      <rect x="378" y="140" width="40" height="70" rx="4" fill="#dc2626">
+        <animate attributeName="opacity" values="1;0.55;1" dur="1.6s" repeatCount="indefinite"/>
+      </rect>
+      <text x="398" y="232" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🔥 92%</text>
+
+      <rect x="446" y="104" width="68" height="110" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.3"/>
+      <text x="480" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">P2</text>
+      <rect x="460" y="202" width="40" height="8" rx="3" fill="#94a3b8"/>
+      <text x="480" y="232" text-anchor="middle" font-size="10.5" fill="#64748b">~4%</text>
+
+      <rect x="528" y="104" width="68" height="110" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.3"/>
+      <text x="562" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">P3</text>
+      <rect x="542" y="202" width="40" height="8" rx="3" fill="#94a3b8"/>
+      <text x="562" y="232" text-anchor="middle" font-size="10.5" fill="#64748b">~4%</text>
+    </svg>
+    <figcaption>Same total RU/s provisioned on both containers — the high-cardinality key spreads load evenly, the low-cardinality key crowds nearly all traffic onto one physical partition and gets throttled.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Just add more RU/s and throttling goes away.</b> Not if the partition key is low-cardinality (e.g. a fixed <code>type</code> field with only a few distinct values) — nearly all the data lands on the same one or two physical partitions, so that hot partition throttles no matter how much RU/s the whole container has provisioned.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What makes a good partition key?"</b> A high-cardinality value that's also evenly accessed and matches your most common query pattern — e.g. <code>customerId</code> for a per-customer access pattern.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"RU/s is the throughput budget; the partition key decides whether you can actually use it evenly. Every read, write, and query costs a measurable number of RUs, and a poorly chosen key crowds data into a few hot partitions that throttle no matter how much RU/s is provisioned overall."</p>
+    <ul>
+      <li><span class="hl hl-blue">RU/s</span> → the throughput/cost model — every operation has a measurable RU cost.</li>
+      <li><span class="hl hl-hot">Low-cardinality key</span> → avoid it — a fixed field with only a few values crowds data into a few hot partitions.</li>
+      <li><span class="hl hl-basic">Good key</span> → high-cardinality, evenly accessed, matches your main query pattern (e.g. <code>customerId</code>).</li>
+      <li><span class="hl hl-inter">Distribution, not just budget</span> → provisioned RU/s only helps if it's actually reachable evenly across partitions.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Cosmos DB</span> is Azure's globally-distributed, multi-model NoSQL database. Instead of billing by CPU time or by the hour, every read, write, and query costs a measurable number of <b>Request Units (RUs)</b>, and a container is provisioned with a throughput budget expressed as <b>RU/s</b>. That budget is physically split across every partition the container's data lives on — it isn't one shared pool an application can draw from anywhere.</p>
+      <p>The <span class="hl hl-hot">partition key</span> is the field Cosmos DB uses to decide which physical partition a document is stored on. A key with many distinct, evenly-hit values spreads documents — and the requests that hit them — across all the partitions, so the provisioned RU/s actually gets used. A key with only a few distinct values crowds most documents onto the same one or two partitions; those specific partitions throttle even though the container's total RU/s looks generous on paper.</p>
+      <table class="cmp-table">
+        <thead><tr><th></th><th>High-cardinality key</th><th>Low-cardinality key</th></tr></thead>
+        <tbody>
+          <tr><th>Distinct values</th><td>many (e.g. per customer)</td><td>few (e.g. a fixed "type")</td></tr>
+          <tr><th>Traffic spread</th><td>even, across partitions</td><td>crowded onto one or two</td></tr>
+          <tr><th>Result under load</th><td>uses the provisioned RU/s</td><td>throttled (429s) despite RU/s being available</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JSON</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>{
+  <span class="str">"id"</span>: <span class="str">"a1b2c3"</span>,
+  <span class="str">"customerId"</span>: <span class="str">"cust-4471"</span>,   <span class="cx-cmt">// ← partition key</span>
+  <span class="str">"total"</span>: <span class="num">82.50</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Every document with <code>customerId: "cust-4471"</code> lands on the same physical partition — that customer's order history is a fast, single-partition read.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>An e-commerce app partitions its orders container by <code>customerId</code></b>, so every order a given customer ever placed lands on the same physical partition. Looking up "this customer's order history" stays a fast, single-partition query no matter how large the whole container grows.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="5.html">← Azure SQL</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Azure Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="7.html">Key Vault — What Belongs In It →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Azure · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
