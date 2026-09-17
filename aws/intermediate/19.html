@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CloudFront & Content Delivery — AWS Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="aws/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ffedd5;--crumb-ink:#c2410c;">📦 AWS</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">CloudFront & Content Delivery</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 AWS · Intermediate · Must Know</div>
+    <h1>CloudFront caches at <span class="hl hl-blue">the edge</span> — from <span class="hl hl-inter">almost any origin</span> you point it at</h1>
+    <p class="interview-q">"What can act as a CloudFront origin, and how do signed URLs control access to cached content?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Comes up any time a system-design question touches latency for global users, or serving static/media content at scale.</li>
+        <li>Explains a real production trade-off: how aggressively to cache, and how to keep private content private while still using a CDN.</li>
+        <li>A natural follow-up after S3, ALB, or API Gateway questions — "how do you speed this up for users far from the origin?"</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">CloudFront = <b>"caches content at the edge, from almost any origin."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> a <b><code>signed URL</code></b> gates private content without ever making the origin itself public.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shCf" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arGray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+        <marker id="arGrayL" markerWidth="9" markerHeight="9" refX="2.5" refY="2.5" orient="auto">
+          <path d="M5.5,0 L0,2.5 L5.5,5 Z" fill="#64748b"/>
+        </marker>
+        <marker id="arAmber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">REQUEST FLOW — CACHE HIT VS. CACHE MISS</text>
+
+      <g filter="url(#shCf)"><rect x="20" y="90" width="110" height="100" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="75" y="130" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">👤 User</text>
+      <text x="75" y="150" text-anchor="middle" font-size="10.5" fill="#5b6472">sends request</text>
+
+      <g filter="url(#shCf)"><rect x="230" y="40" width="170" height="200" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="315" y="75" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">📍 CloudFront Edge</text>
+      <text x="315" y="95" text-anchor="middle" font-size="10.5" fill="#5b6472">checks cache key &amp; TTL</text>
+
+      <rect x="245" y="112" width="140" height="32" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+      <text x="315" y="132" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">✅ HIT → instant</text>
+
+      <g filter="url(#shCf)"><rect x="520" y="215" width="100" height="70" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="570" y="248" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🗄️ Origin</text>
+      <text x="570" y="266" text-anchor="middle" font-size="10" fill="#5b6472">S3 · ALB · custom</text>
+
+      <path d="M130,115 H230" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arGray)"/>
+      <rect x="145" y="70" width="70" height="20" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+      <text x="180" y="84" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">request</text>
+
+      <path d="M230,165 H130" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arGrayL)"/>
+      <rect x="140" y="176" width="80" height="20" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+      <text x="180" y="190" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">response</text>
+
+      <path d="M400,205 H460 V250 H520" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arAmber)">
+        <animate attributeName="stroke-dashoffset" values="0;-20" dur="1.8s" repeatCount="indefinite"/>
+      </path>
+      <rect x="410" y="176" width="100" height="20" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.2"/>
+      <text x="460" y="190" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">❌ cache MISS</text>
+    </svg>
+    <figcaption>On a hit, the edge answers instantly. On a miss, it forwards to the origin — S3, an ALB, or any custom HTTP origin — and caches the response for next time.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Invalidating the cache is instant and free."</b> Invalidation requests have a free tier but cost money beyond it and still take real time to propagate across edge locations — versioned URLs (a new path per release) are often the cheaper, faster alternative to repeated invalidations.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"CloudFront vs. Global Accelerator — when would you reach for each?"</b> CloudFront caches actual content at the edge (best for cacheable web content); Global Accelerator optimizes network routing to your origin without caching, for non-cacheable, latency-sensitive traffic like gaming or API calls that must always hit the real backend.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"CloudFront caches at the edge from any origin — S3, an ALB, or a custom HTTP origin — and signed URLs or signed cookies gate access to private content without exposing the origin itself. Invalidating the cache costs money and time at scale, so I'd rather bust the cache with versioned URLs than invalidate repeatedly."</p>
+    <ul>
+      <li><span class="hl hl-blue">Origins</span> → S3, an ALB, or any custom HTTP origin — CloudFront isn't tied to one AWS service.</li>
+      <li><span class="hl hl-inter">Cache key</span> → which request attributes (query strings, headers, cookies) get forwarded decides what counts as a "different" cached response.</li>
+      <li><span class="hl hl-hot">Invalidation</span> → costs money past the free tier and takes real time to propagate — versioned URLs are often cheaper and faster.</li>
+      <li><span class="hl hl-basic">Signed URLs / cookies</span> → restrict private content by user and time window, without making the origin public.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>CloudFront is AWS's <b>CDN</b> — it caches content at edge locations physically close to
+      users, so most requests never have to travel back to the origin at all. That cuts latency
+      for the user and cuts load on the origin. The origin itself can be an <b>S3 bucket</b>, an
+      <b>Application Load Balancer</b> in front of an app, or genuinely any <b>custom HTTP
+      origin</b> that can answer a request — CloudFront doesn't require the origin to be an AWS
+      service.</p>
+
+      <p>What gets cached, and for how long, is controlled by the <b>TTL</b> and the
+      <b>cache key</b> — the specific request attributes (query strings, headers, cookies) that
+      CloudFront is told to forward and factor into what counts as a "different" response worth
+      caching separately. Forwarding more attributes into the cache key gives more precise
+      responses per request but fragments the cache into more entries, each cached separately.</p>
+
+      <p>For private content, a <b>signed URL</b> or <b>signed cookie</b> lets CloudFront check
+      that a request carries a valid signature tied to a specific time window before serving it
+      — the origin behind it never has to be public, and access can be revoked simply by letting
+      the signature's expiry pass.</p>
+    </div>
+  </details>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— signed URLs gate private content</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shSg" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arSg" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+        <marker id="arSgGreen" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arSgRed" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shSg)"><rect x="20" y="75" width="150" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="95" y="102" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🔗 Request +</text>
+      <text x="95" y="120" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">signed URL</text>
+
+      <path d="M170,105 H255" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arSg)"/>
+
+      <g filter="url(#shSg)"><rect x="255" y="65" width="200" height="80" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="355" y="98" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🔒 Valid signature &amp;</text>
+      <text x="355" y="118" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">within time window?</text>
+
+      <path d="M455,85 H500 V45 H520" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arSgGreen)"/>
+      <rect x="405" y="34" width="80" height="20" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+      <text x="445" y="48" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">✅ yes</text>
+
+      <path d="M455,125 H500 V165 H520" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arSgRed)"/>
+      <rect x="405" y="154" width="80" height="20" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="1.2"/>
+      <text x="445" y="168" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">❌ no</text>
+
+      <g filter="url(#shSg)"><rect x="520" y="15" width="100" height="60" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="570" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ Served</text>
+      <text x="570" y="60" text-anchor="middle" font-size="9.5" fill="#5b6472">from cache/origin</text>
+
+      <g filter="url(#shSg)"><rect x="520" y="135" width="100" height="60" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="570" y="162" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🚫 403</text>
+      <text x="570" y="180" text-anchor="middle" font-size="9.5" fill="#5b6472">blocked</text>
+    </svg>
+    <figcaption>The origin behind private content never has to be public — CloudFront checks the signature and time window before serving anything.</figcaption>
+  </figure>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A media company serves paid video content through CloudFront using signed URLs with a
+      short expiry, so a leaked link stops working shortly after being shared. Free promotional
+      content is served from the exact same distribution with no signing at all — the same
+      CloudFront setup handles both, just with a gate in front of one and not the other.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="18.html">← Backup &amp; Disaster Recovery</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to AWS Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="../advanced/index.html">Continue to Advanced →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · AWS · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
