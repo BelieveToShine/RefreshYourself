@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EXISTS vs. IN vs. JOIN — SQL Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">EXISTS vs. IN vs. JOIN</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ SQL · Intermediate · Should Know</div>
+    <h1><code>EXISTS</code> vs. <code>IN</code> vs. <code>JOIN</code> — filtering looks the same, until a <span class="hl hl-hot">NULL</span> shows up</h1>
+    <p class="interview-q">"EXISTS vs. IN vs. a JOIN for filtering on a related table — how do they differ once NULL values are involved?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>All three look interchangeable for "find rows related to another table" — but they check different things and fail in different ways.</li>
+        <li>Comes up any time a query filters by "has a matching row" instead of returning that row's own columns.</li>
+        <li>A very common follow-up: why a seemingly correct <code>NOT IN</code> query returns nothing at all.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>IN</code> <span class="rarrow">→</span> compares the <b>value</b> to a list</p>
+      <p class="rrow"><code>EXISTS</code> <span class="rarrow">→</span> checks if <b>any row</b> comes back</p>
+      <p class="rrow"><code>JOIN</code> <span class="rarrow">→</span> returns <b>matched rows</b> (can duplicate)</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>NOT IN</code></b> + a <code>NULL</code> in the list → matches nothing, silently</span>
+      <span class="tc-line"><b><code>NOT EXISTS</code></b> → never has that problem</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="I11sh" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="I11ar" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">IN vs. EXISTS vs. JOIN — WHAT GETS CHECKED</text>
+
+      <path d="M217.5,26 V246" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+      <path d="M422.5,26 V246" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+
+      <text x="115" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.5">IN</text>
+      <text x="320" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.5">EXISTS</text>
+      <text x="525" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.5">JOIN</text>
+
+      <g filter="url(#I11sh)"><rect x="30" y="52" width="170" height="48" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="115" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🔍 Value in LIST?</text>
+      <text x="115" y="90" text-anchor="middle" font-size="10.5" fill="#5b6472">compares to a list</text>
+
+      <g filter="url(#I11sh)"><rect x="235" y="52" width="170" height="48" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🔍 Any row exist?</text>
+      <text x="320" y="90" text-anchor="middle" font-size="10.5" fill="#5b6472">no value comparison</text>
+
+      <g filter="url(#I11sh)"><rect x="440" y="52" width="170" height="48" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="525" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🔗 Match &amp; combine</text>
+      <text x="525" y="90" text-anchor="middle" font-size="10.5" fill="#5b6472">rows from both tables</text>
+
+      <path d="M115,100 V120" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#I11ar)"/>
+      <path d="M320,100 V120" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#I11ar)"/>
+      <path d="M525,100 V120" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#I11ar)"/>
+
+      <g filter="url(#I11sh)"><rect x="30" y="120" width="170" height="48" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="115" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">📋 Filters by list</text>
+      <text x="115" y="158" text-anchor="middle" font-size="10.5" fill="#5b6472">excludes list matches</text>
+
+      <g filter="url(#I11sh)"><rect x="235" y="120" width="170" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ Exists filter</text>
+      <text x="320" y="158" text-anchor="middle" font-size="10.5" fill="#5b6472">TRUE/FALSE only</text>
+
+      <g filter="url(#I11sh)"><rect x="440" y="120" width="170" height="48" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="525" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🗂️ Rows returned</text>
+      <text x="525" y="158" text-anchor="middle" font-size="10.5" fill="#5b6472">duplicates possible</text>
+
+      <text x="320" y="188" text-anchor="middle" font-size="10.5" fill="#5b6472">not affected by NULLs</text>
+      <text x="525" y="188" text-anchor="middle" font-size="10.5" fill="#5b6472">rows can multiply</text>
+
+      <path d="M115,168 V188" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#I11ar)"/>
+
+      <g filter="url(#I11sh)"><rect x="30" y="188" width="170" height="48" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="115" y="208" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">⚠️ NOT IN + NULL</text>
+      <text x="115" y="226" text-anchor="middle" font-size="10.5" fill="#5b6472">→ silently 0 rows</text>
+    </svg>
+    <figcaption><code>IN</code> compares values, <code>EXISTS</code> only checks existence, <code>JOIN</code> returns matched rows directly. Only <code>NOT IN</code> breaks when the list holds a <code>NULL</code>.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>NOT IN</code> behaves like <code>NOT EXISTS</code>.</b> It doesn't — <code>WHERE CustomerId NOT IN (SELECT CustomerId FROM Orders)</code> compares against every value the subquery returns, and comparing against a single <code>NULL</code> makes that whole condition <code>UNKNOWN</code> (not false) for every outer row, so the query can return zero rows even when it obviously shouldn't; <code>NOT EXISTS</code> never compares values, so it's immune.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why does <code>WHERE CustomerId NOT IN (SELECT CustomerId FROM Orders)</code> sometimes return zero rows even when it clearly shouldn't?"</b> Because at least one row in <code>Orders.CustomerId</code> is <code>NULL</code> — <code>NOT IN</code> checks the outer value against every item in that list, and a <code>NULL</code> in the list turns the comparison <code>UNKNOWN</code> for every row, so nothing passes. Rewriting it as <code>NOT EXISTS</code> (or filtering the <code>NULL</code>s out first) fixes it.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>IN</code> compares the outer value against a list or subquery result, <code>EXISTS</code> only checks whether a correlated subquery returns any row at all — it never compares values, so it's immune to NULLs — and a <code>JOIN</code> combines and returns matching rows directly, which means it can duplicate outer rows when there's more than one match. The gotcha is <code>NOT IN</code> against a subquery that can return NULLs: it can silently return zero rows, which <code>NOT EXISTS</code> never does."</p>
+    <ul>
+      <li><code>IN</code> <span class="hl hl-blue">→ compares the actual value</span> against a list or subquery result.</li>
+      <li><code>EXISTS</code> <span class="hl hl-teal">→ only checks that a row comes back</span> — no value comparison, so NULLs inside the subquery don't matter.</li>
+      <li><code>JOIN</code> <span class="hl hl-inter">→ can duplicate outer rows</span> when the related table has more than one match — <code>IN</code> and <code>EXISTS</code> never do.</li>
+      <li><code>NOT IN</code> with a <code>NULL</code> in the list <span class="hl hl-hot">→ silently returns zero rows</span>, because the comparison becomes UNKNOWN for every row.</li>
+      <li>Optimizer performance <span class="hl hl-basic">→ IN and EXISTS are usually similar today</span> — "IN is always slower" is outdated; the NULL gotcha is the real, still-current risk.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>IN</b> takes the outer column's value and checks it against a fixed list or a subquery's
+      result set — it's a value comparison, plain and simple. <b>EXISTS</b> doesn't compare values at
+      all: it runs a correlated subquery per outer row and asks only "did anything come back?" — a
+      pure yes/no, so what the subquery actually returns (including a <code>NULL</code>) never gets
+      compared against anything. A <b>JOIN</b> works differently again — it combines rows from both
+      tables directly wherever the join condition matches, so it returns actual data, not just a
+      filter decision.</p>
+
+      <p>That last difference matters beyond style: <code>IN</code> and <code>EXISTS</code> only ever
+      filter the outer rows, so the outer row count can shrink but never grow. A <code>JOIN</code> has
+      no such guarantee — if one customer has three matching orders, an inner join returns that
+      customer three times, once per order. On speed, modern query optimizers commonly rewrite
+      <code>IN</code> and <code>EXISTS</code> into the same semi-join plan, so treating one as
+      categorically slower than the other is outdated. The one thing optimizer improvements never
+      fixed is the <code>NOT IN</code> plus <code>NULL</code> behavior above — that's a logical
+      consequence of three-valued <code>NULL</code> comparison, not a performance detail, so no
+      smarter query plan makes it go away.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>IN</th><th>EXISTS</th><th>JOIN</th></tr></thead>
+        <tbody>
+          <tr><th>What it checks</th><td>value against a list/subquery result</td><td>does the correlated subquery return any row</td><td>matches rows on a join condition</td></tr>
+          <tr><th>Compares actual values?</th><td class="no">✅ yes</td><td class="no">❌ no</td><td>matches on a condition, not a value list</td></tr>
+          <tr><th>Can duplicate outer rows?</th><td>❌ no — filters only</td><td>❌ no — filters only</td><td class="no">✅ yes, with multiple matches</td></tr>
+          <tr><th><code>NOT</code> form broken by a <code>NULL</code> in the related data?</th><td>⚠️ yes — <code>NOT IN</code></td><td>❌ no — <code>NOT EXISTS</code> is immune</td><td>not applicable — a NULL just fails the ON condition</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- Customers who have placed at least one order</span>
+<span class="kw">SELECT</span> Name <span class="kw">FROM</span> Customers
+<span class="kw">WHERE</span> Id <span class="kw">IN</span> (<span class="kw">SELECT</span> CustomerId <span class="kw">FROM</span> Orders); <span class="cx-ok">-- ✅ compares Id against the list</span>
+
+<span class="kw">SELECT</span> Name <span class="kw">FROM</span> Customers c
+<span class="kw">WHERE</span> <span class="kw">EXISTS</span> (<span class="kw">SELECT</span> <span class="num">1</span> <span class="kw">FROM</span> Orders o <span class="kw">WHERE</span> o.CustomerId = c.Id); <span class="cx-ok">-- ✅ just checks a matching row exists</span></code></pre>
+      </div>
+      <p class="cx-note">Same result here — <code>IN</code> compares values, <code>EXISTS</code> only checks that a row exists.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- Orders.CustomerId has one NULL row (e.g. a guest checkout)</span>
+<span class="kw">SELECT</span> Name <span class="kw">FROM</span> Customers
+<span class="kw">WHERE</span> Id <span class="kw">NOT</span> <span class="kw">IN</span> (<span class="kw">SELECT</span> CustomerId <span class="kw">FROM</span> Orders); <span class="cx-err">-- ❌ returns ZERO rows — one NULL breaks the whole list</span>
+
+<span class="kw">SELECT</span> Name <span class="kw">FROM</span> Customers c
+<span class="kw">WHERE</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> (<span class="kw">SELECT</span> <span class="num">1</span> <span class="kw">FROM</span> Orders o <span class="kw">WHERE</span> o.CustomerId = c.Id); <span class="cx-ok">-- ✅ still works — never compares values</span></code></pre>
+      </div>
+      <p class="cx-note">One <code>NULL</code> in <code>Orders.CustomerId</code> makes <code>NOT IN</code> match nothing. <code>NOT EXISTS</code> is unaffected because it never compares values.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- A customer with 3 matching orders</span>
+<span class="kw">SELECT</span> c.Name <span class="kw">FROM</span> Customers c
+<span class="kw">JOIN</span> Orders o <span class="kw">ON</span> o.CustomerId = c.Id; <span class="cx-err">-- ⚠️ one row PER matching order — duplicates possible</span></code></pre>
+      </div>
+      <p class="cx-note">Unlike <code>IN</code>/<code>EXISTS</code>, a <code>JOIN</code> returns one row per match — add <code>DISTINCT</code>, or use <code>EXISTS</code> if you only need a yes/no filter.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your "customers with no orders" report suddenly comes back empty</b> — but the UI clearly
+      shows unmatched customers. A bad import left one guest-checkout row in <code>Orders</code> with
+      a <code>NULL</code> <code>CustomerId</code>, and the report's <code>WHERE CustomerId NOT IN
+      (SELECT CustomerId FROM Orders)</code> silently breaks the moment that single <code>NULL</code>
+      lands in the list. Swapping it for <code>NOT EXISTS</code> fixes the report without changing
+      what it's actually asking for.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="10.html">← SARGable Queries</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="12.html">Recursive CTEs →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

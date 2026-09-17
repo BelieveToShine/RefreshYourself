@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Table Partitioning — SQL Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Table Partitioning</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 SQL · Advanced · Deep Dive</div>
+    <h1>Table Partitioning — one <span class="hl hl-blue">giant table</span>, but most of it
+    <span class="hl hl-basic">never gets touched</span></h1>
+    <p class="interview-q">What is table partitioning, and what problem does it actually solve for a very large table that a good index alone doesn't?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>On a genuinely huge table, queries stay fast because the engine can skip whole
+        partitions outright, instead of navigating a correspondingly huge index structure.</li>
+        <li>Bulk maintenance gets dramatically cheaper — dropping a full month of old data is a
+        fast metadata operation instead of a slow row-by-row <code>DELETE</code>.</li>
+        <li>A real senior/architecture question — it separates "knows how to add an index" from
+        "knows what to reach for once indexing alone stops being enough."</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Table Partitioning = <b>"splitting one table across many physical chunks, so a query can skip the chunks it can't possibly match."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <code>WHERE OrderDate ≥ Mar</code> → the
+    Jan/Feb chunks are <b>never even opened</b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="dShadowA8" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA8" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">ONE LOGICAL TABLE — QUERY ELIMINATES PARTITIONS IT CAN'T MATCH</text>
+
+      <!-- query box -->
+      <g filter="url(#dShadowA8)"><rect x="220" y="32" width="200" height="48" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="52" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🔎 Query</text>
+      <text x="320" y="68" text-anchor="middle" font-size="9.5" fill="#5b6472">OrderDate ≥ '2024-03-01'</text>
+
+      <path d="M320,80 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+
+      <!-- one logical table -->
+      <g filter="url(#dShadowA8)"><rect x="170" y="100" width="300" height="48" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="120" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">🗄️ Orders — ONE logical table</text>
+      <text x="320" y="136" text-anchor="middle" font-size="9.5" fill="#5b6472">partitioned monthly by OrderDate</text>
+
+      <!-- branches to 3 partitions -->
+      <path d="M320,148 V158 H125 V178" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+      <path d="M320,148 V178" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+      <path d="M320,148 V158 H515 V178" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+
+      <circle r="4" fill="#16a34a"><animateMotion dur="2.2s" repeatCount="indefinite" path="M320,148 V158 H515 V178"/></circle>
+
+      <!-- Jan: eliminated -->
+      <g filter="url(#dShadowA8)"><rect x="40" y="178" width="170" height="64" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4"/></g>
+      <text x="125" y="202" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">📁 Jan</text>
+      <text x="125" y="220" text-anchor="middle" font-size="9.5" fill="#5b6472">🚫 can't match — skipped</text>
+
+      <!-- Feb: eliminated -->
+      <g filter="url(#dShadowA8)"><rect x="235" y="178" width="170" height="64" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4"/></g>
+      <text x="320" y="202" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">📁 Feb</text>
+      <text x="320" y="220" text-anchor="middle" font-size="9.5" fill="#5b6472">🚫 can't match — skipped</text>
+
+      <!-- Mar: searched -->
+      <g filter="url(#dShadowA8)"><rect x="430" y="178" width="170" height="64" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/></g>
+      <text x="515" y="202" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">📁 Mar</text>
+      <text x="515" y="220" text-anchor="middle" font-size="9.5" fill="#5b6472">✅ only one scanned</text>
+    </svg>
+    <figcaption>Same one table, three monthly partitions — the query's <code>WHERE</code> clause
+    lets the engine eliminate Jan and Feb outright and only actually search Mar.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Partitioning isn't a first-line fix for "the table is slow."</b> It's a
+    genuine architecture-level tool for a huge table with a real time-based access pattern —
+    reaching for it before basic indexing is done right just adds operational complexity, and a
+    partition key that doesn't match real query patterns gives no benefit at all.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What makes a column a good partition key candidate, and what makes one
+    a bad choice?"</b> Good — something most queries actually filter on, with a natural, evenly
+    distributed range, like a date column on a time-series table. Bad — a column queries rarely
+    filter on, or one with wildly uneven distribution across values, since that just creates
+    unevenly-sized partitions with no real elimination benefit.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Table partitioning splits one logical table across multiple physical
+    partitions, usually by a date range. The table is still queried as one table — partitioning
+    is invisible to most application code. Beyond a good index, it adds partition elimination:
+    the engine skips entire partitions the <code>WHERE</code> clause can't match, and it makes
+    bulk maintenance — like dropping a whole old partition — a fast metadata operation instead
+    of a row-by-row delete."</p>
+    <ul>
+      <li>Partition key → <span class="hl hl-blue">usually a date/time column</span> — one partition per month or year.</li>
+      <li>Partition elimination → <span class="hl hl-basic">skips whole partitions</span> the <code>WHERE</code> clause can't match, on top of any index.</li>
+      <li>Dropping an old partition → <span class="hl hl-basic">fast metadata operation</span>, not a row-by-row <code>DELETE</code>.</li>
+      <li>Good partition key → <span class="hl hl-blue">most queries filter on it, evenly distributed</span>.</li>
+      <li>Bad partition key → <span class="hl hl-hot">rarely filtered on, or wildly uneven</span> — no real elimination benefit.</li>
+      <li>Not a first-line fix → <span class="hl hl-adv">architecture-level tool</span> for genuinely huge, time-pattern tables — never a substitute for basic indexing done right.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Table partitioning</b> splits one logical table's data across multiple physical
+      storage units, based on a partition key — very commonly a date column, one partition per
+      month or year. Application code still queries and references it as a single table;
+      partitioning underneath is invisible to most of that code.</p>
+
+      <p>A good index already narrows a search inside one giant structure — partitioning goes
+      further. If a query's <code>WHERE</code> clause can be matched to the partition key, the
+      engine can skip entire partitions outright, rather than navigating a correspondingly huge
+      index just to rule out rows that were never going to match. That's <b>partition
+      elimination</b>, and it's the thing an index alone, on a genuinely huge table, can't give
+      you on its own.</p>
+
+      <p>It also changes the cost of maintenance. Dropping a whole old partition — deleting a
+      full month of stale data — is a fast, metadata-level operation instead of a slow row-by-row
+      <code>DELETE</code>, and index rebuilds can run per-partition instead of against the whole
+      table at once.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- syntax varies by engine; declarative range partitioning shown</span>
+<span class="kw">CREATE</span> <span class="kw">TABLE</span> Orders (
+    OrderId <span class="ty">INT</span>,
+    OrderDate <span class="ty">DATE</span>,
+    Amount <span class="ty">DECIMAL</span>(<span class="num">10</span>,<span class="num">2</span>)
+) <span class="kw">PARTITION</span> <span class="kw">BY</span> <span class="kw">RANGE</span> (OrderDate);
+
+<span class="kw">CREATE</span> <span class="kw">TABLE</span> Orders_2024_01 <span class="kw">PARTITION</span> <span class="kw">OF</span> Orders
+    <span class="kw">FOR</span> <span class="kw">VALUES</span> <span class="kw">FROM</span> (<span class="str">'2024-01-01'</span>) <span class="kw">TO</span> (<span class="str">'2024-02-01'</span>);
+<span class="kw">CREATE</span> <span class="kw">TABLE</span> Orders_2024_02 <span class="kw">PARTITION</span> <span class="kw">OF</span> Orders
+    <span class="kw">FOR</span> <span class="kw">VALUES</span> <span class="kw">FROM</span> (<span class="str">'2024-02-01'</span>) <span class="kw">TO</span> (<span class="str">'2024-03-01'</span>);
+<span class="cx-cmt">-- Orders_2024_03, _04, … continue the same pattern</span></code></pre>
+      </div>
+      <p class="cx-note">Still one table named <code>Orders</code> — every partition underneath is
+      just a physical slice of the same logical thing.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">SELECT</span> * <span class="kw">FROM</span> Orders
+<span class="kw">WHERE</span> OrderDate &gt;= <span class="str">'2024-03-01'</span>;
+<span class="cx-ok">-- ✅ Orders_2024_01 and Orders_2024_02 are eliminated entirely —</span>
+<span class="cx-ok">--    never opened, on top of whatever index exists inside Orders_2024_03</span></code></pre>
+      </div>
+      <p class="cx-note">Elimination happens <b>before</b> any index inside a partition even gets
+      considered — whole chunks are ruled out first.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">DROP</span> <span class="kw">TABLE</span> Orders_2024_01;
+<span class="cx-ok">-- ✅ removes a full month instantly — a metadata operation,</span>
+<span class="cx-err">-- ❌ not a slow, row-by-row DELETE across a giant table</span></code></pre>
+      </div>
+      <p class="cx-note">This is the maintenance win: retention cleanup becomes "drop a
+      partition," not "delete millions of rows one at a time."</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A filing cabinet with one drawer per year, instead of one towering pile.</b> Looking
+      for something from this year, you only open this year's drawer — you never have to page
+      through last year's paperwork at all. Clearing out a decade-old drawer means lifting it out
+      wholesale, not sorting through every sheet inside it one at a time.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="7.html">← Bulk Operations from the Database's Own Side</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Advanced</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

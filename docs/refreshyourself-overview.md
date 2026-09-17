@@ -92,12 +92,14 @@ phases; Azure is still at Phase 1 (question taxonomy), awaiting the user's revie
   layer — LINQ translation, tracking, loading, migrations — leaving raw SQL/database-engine
   internals to the `sql/` track. Every diagram passed the mandatory automated verification
   script. See [`specs/efcore/overview.md`](superpowers/specs/efcore/overview.md).
-- **SQL** — **all 7 phases complete, 27/27 pages written** (2026-09-17):
+- **SQL** — **all 7 phases complete, 39/39 pages written** (2026-09-17; 27 original + 12 added
+  from a post-Phase-7 active [gap-hunt](rules/gap-hunting.md)):
   [`question-taxonomy.md`](superpowers/specs/sql/question-taxonomy.md) →
-  [`roadmap.md`](superpowers/specs/sql/roadmap.md) → 27 tiered/prioritized pages, live on the
+  [`roadmap.md`](superpowers/specs/sql/roadmap.md) → 39 tiered/prioritized pages, live on the
   site and on [`sql/roadmap.html`](../sql/roadmap.html). Owns raw SQL/database-engine internals
   — indexing, execution plans, isolation levels/locking, query optimization — leaving the ORM
-  layer to `efcore/`. Every diagram passed the mandatory automated verification script. See
+  layer to `efcore/`. Every diagram passed the mandatory automated verification script,
+  including a full independent re-sweep of the 12 gap-hunt additions. See
   [`specs/sql/overview.md`](superpowers/specs/sql/overview.md).
 - **Azure** — [`question-taxonomy.md`](superpowers/specs/azure/question-taxonomy.md) written,
   deliberately simplified/scenario-first per the user's later plan. Old three-tier roadmap (0

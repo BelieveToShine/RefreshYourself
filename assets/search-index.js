@@ -203,5 +203,17 @@ window.SEARCH_INDEX = [
   { title: "Execution Plans", track: "SQL", tier: "Advanced", path: "sql/advanced/3.html", keywords: "execution plan query plan index seek table scan sql" },
   { title: "Performance Degraded Over Time", track: "SQL", tier: "Advanced", path: "sql/advanced/4.html", keywords: "performance regression slow query investigate execution plan statistics sql" },
   { title: "Locking", track: "SQL", tier: "Advanced", path: "sql/advanced/5.html", keywords: "locking shared lock exclusive lock blocking sql" },
-  { title: "How the Optimizer Picks an Index", track: "SQL", tier: "Advanced", path: "sql/advanced/6.html", keywords: "query optimizer index selectivity statistics cost based sql" }
+  { title: "How the Optimizer Picks an Index", track: "SQL", tier: "Advanced", path: "sql/advanced/6.html", keywords: "query optimizer index selectivity statistics cost based sql" },
+  { title: "UNION vs. UNION ALL", track: "SQL", tier: "Basic", path: "sql/basic/12.html", keywords: "union union all dedup duplicate rows concatenate sql" },
+  { title: "Logical Query Execution Order", track: "SQL", tier: "Basic", path: "sql/basic/13.html", keywords: "logical order from where group by having select order by execution sql" },
+  { title: "Foreign Key Referential Actions", track: "SQL", tier: "Basic", path: "sql/basic/14.html", keywords: "foreign key cascade set null restrict no action on delete on update sql" },
+  { title: "Transaction Control Mechanics", track: "SQL", tier: "Basic", path: "sql/basic/15.html", keywords: "begin transaction commit rollback savepoint autocommit sql" },
+  { title: "EXISTS vs. IN vs. JOIN", track: "SQL", tier: "Intermediate", path: "sql/intermediate/11.html", keywords: "exists in join null not in subquery filter sql" },
+  { title: "Recursive CTEs", track: "SQL", tier: "Intermediate", path: "sql/intermediate/12.html", keywords: "recursive cte anchor member hierarchy org chart union all sql" },
+  { title: "Temp Tables vs. Table Variables vs. CTEs", track: "SQL", tier: "Intermediate", path: "sql/intermediate/13.html", keywords: "temp table table variable cte scope statistics sql" },
+  { title: "Index Seek vs. Scan vs. Table Scan", track: "SQL", tier: "Intermediate", path: "sql/intermediate/14.html", keywords: "index seek scan table scan execution plan b-tree sql" },
+  { title: "Materialized/Indexed Views vs. Regular Views", track: "SQL", tier: "Intermediate", path: "sql/intermediate/15.html", keywords: "materialized view indexed view regular view staleness refresh sql" },
+  { title: "Triggers", track: "SQL", tier: "Intermediate", path: "sql/intermediate/16.html", keywords: "trigger insert update delete hidden side effect audit sql" },
+  { title: "Bulk Operations from the Database's Own Side", track: "SQL", tier: "Advanced", path: "sql/advanced/7.html", keywords: "bulk insert minimal logging batch size index maintenance load sql" },
+  { title: "Table Partitioning", track: "SQL", tier: "Advanced", path: "sql/advanced/8.html", keywords: "table partitioning partition elimination date range scalability sql" }
 ];

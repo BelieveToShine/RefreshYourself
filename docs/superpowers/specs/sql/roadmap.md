@@ -41,7 +41,24 @@ explanation brushes against it (Connection Management, Bulk Operations). This tr
 don't need to cross-link forward to EF Core — EF Core is already complete and any forward
 reference belongs on that side, not this one.
 
-## Phase 3 — Grouping into pages (27 pages)
+## Phase 2 addendum — gap-hunt, run after Phase 7 had already completed
+
+Per [`gap-hunting.md`](../../rules/gap-hunting.md): the original Phase 2 above was a re-read of
+the source list for internal consistency, not an active check against outside SQL knowledge —
+it never had a step that could catch a topic the source list simply never mentioned. A proper
+gap-hunt, run once this was written down as a rule, found **12 real, commonly-asked SQL
+questions** with no source-list mention at all. Full list, reasoning per item, and what was
+considered and explicitly excluded is in
+[`question-taxonomy.md`](question-taxonomy.md#gap-hunt-log-phase-2-run-after-this-track-was-already-fully-built) —
+not duplicated here.
+
+Because this track had already gone through Phases 3–7 and was live, these 12 additions get
+their **own new pages** rather than edits to the 27 already-verified ones (see
+`gap-hunting.md`'s own note on why: safer, and consistent with how additions are handled on
+every other track). Phases 3–6 below are extended for exactly these 12; the original 27 rows
+are unchanged.
+
+## Phase 3 — Grouping into pages (27 + 12 = 39 pages)
 
 One deliberate merge, from Phase 2 above:
 
@@ -52,15 +69,38 @@ One deliberate merge, from Phase 2 above:
 
 Everything else is one taxonomy bullet → one page, same default as every other completed track's
 Phase 3 (a bullet only bundles with another when it has no independent depth on its own — every
-remaining SQL bullet does).
+remaining SQL bullet does). **This holds for all 12 gap-hunt additions too** — each earns its
+own page rather than bundling with a neighbor; none of the 12 were thin enough to need it (see
+the taxonomy's gap-hunt log for why each was judged real enough to stand alone).
 
 ## Phase 4 — Tier (by question type, not difficulty)
 
 | Tier | Count | Pages |
 |---|---|---|
-| Basic | 11 | Primary Key vs. Foreign Key; WHERE vs. HAVING; INNER JOIN vs. LEFT JOIN; GROUP BY; NULL in Comparisons; Aggregate Functions; ACID; ORDER BY; DISTINCT; Stored Procedures; Views |
-| Intermediate | 10 | Subqueries vs. Joins; CTEs; Window Functions; Clustered vs. Non-Clustered Index; Normalization vs. Denormalization; ROW_NUMBER() vs. RANK() vs. DENSE_RANK(); Covering Index; Composite Index; Pagination & OFFSET; SARGable Queries |
-| Advanced | 6 | Isolation Levels; Deadlock vs. Blocking; Execution Plans; Performance Degraded Over Time; Locking; How the Optimizer Picks an Index |
+| Basic | 15 | Primary Key vs. Foreign Key; WHERE vs. HAVING; INNER JOIN vs. LEFT JOIN; GROUP BY; NULL in Comparisons; Aggregate Functions; ACID; ORDER BY; DISTINCT; Stored Procedures; Views; **UNION vs. UNION ALL; Logical Query Execution Order; Foreign Key Referential Actions; Transaction Control Mechanics** |
+| Intermediate | 16 | Subqueries vs. Joins; CTEs; Window Functions; Clustered vs. Non-Clustered Index; Normalization vs. Denormalization; ROW_NUMBER() vs. RANK() vs. DENSE_RANK(); Covering Index; Composite Index; Pagination & OFFSET; SARGable Queries; **EXISTS vs. IN vs. JOIN; Recursive CTEs; Temp Tables vs. Table Variables vs. CTEs; Index Seek vs. Scan vs. Table Scan; Materialized/Indexed Views vs. Regular Views; Triggers** |
+| Advanced | 8 | Isolation Levels; Deadlock vs. Blocking; Execution Plans; Performance Degraded Over Time; Locking; How the Optimizer Picks an Index; **Bulk Operations from the Database's Own Side; Table Partitioning** |
+
+Bold entries are the 12 gap-hunt additions. Tier reasoning for them:
+
+- **UNION vs. UNION ALL, Logical Query Execution Order** are Basic — pure "what does this
+  guarantee"/"how does this work" recall, same footing as WHERE vs. HAVING and GROUP BY already
+  on this tier.
+- **Foreign Key Referential Actions and Transaction Control Mechanics** are Basic, not
+  Intermediate — both are "what does this actually do" questions about mechanisms already named
+  at Basic (PK/FK, ACID), not a comparison or troubleshooting question in their own right.
+- **EXISTS vs. IN vs. JOIN, Recursive CTEs, Temp Tables vs. Table Variables vs. CTEs,
+  Materialized/Indexed Views, and Triggers** are Intermediate — each is a genuine
+  comparison/practical-usage question, one level past bare recall.
+- **Index Seek vs. Scan vs. Table Scan** is Intermediate, not Advanced — it's the concrete
+  vocabulary for reading a plan, the same depth as Clustered vs. Non-Clustered already on this
+  tier, not the internals-of-the-optimizer question that Execution Plans/optimizer-choice
+  (Advanced) actually ask.
+- **Bulk Operations from the Database's Own Side** is Advanced — a genuine performance-internals
+  question (minimal logging, index-maintenance cost during a load), matching Execution Plans'
+  depth on the same tier.
+- **Table Partitioning** is Advanced — architecture/scalability territory by the depth rule's
+  own definition, matching this site's stated architect-level audience.
 
 Reasoning for the less-obvious calls:
 
@@ -94,14 +134,19 @@ Reasoning for the less-obvious calls:
 
 | Priority | Pages |
 |---|---|
-| 🔥 Must Know | Primary Key vs. Foreign Key; WHERE vs. HAVING; INNER JOIN vs. LEFT JOIN; GROUP BY; NULL in Comparisons; Aggregate Functions; ACID; Subqueries vs. Joins; CTEs; Window Functions; Clustered vs. Non-Clustered Index; Normalization vs. Denormalization; Isolation Levels; Deadlock vs. Blocking; Execution Plans; Performance Degraded Over Time |
-| ⭐ Should Know | ORDER BY; DISTINCT; Stored Procedures; Views; ROW_NUMBER() vs. RANK() vs. DENSE_RANK(); Covering Index; Composite Index; Pagination & OFFSET; Locking |
-| 🧠 Deep Dive | SARGable Queries; How the Optimizer Picks an Index |
+| 🔥 Must Know | Primary Key vs. Foreign Key; WHERE vs. HAVING; INNER JOIN vs. LEFT JOIN; GROUP BY; NULL in Comparisons; Aggregate Functions; ACID; Subqueries vs. Joins; CTEs; Window Functions; Clustered vs. Non-Clustered Index; Normalization vs. Denormalization; Isolation Levels; Deadlock vs. Blocking; Execution Plans; Performance Degraded Over Time; **UNION vs. UNION ALL; Logical Query Execution Order; Index Seek vs. Scan vs. Table Scan** |
+| ⭐ Should Know | ORDER BY; DISTINCT; Stored Procedures; Views; ROW_NUMBER() vs. RANK() vs. DENSE_RANK(); Covering Index; Composite Index; Pagination & OFFSET; Locking; **Foreign Key Referential Actions; EXISTS vs. IN vs. JOIN; Recursive CTEs; Temp Tables vs. Table Variables vs. CTEs; Materialized/Indexed Views vs. Regular Views; Triggers; Transaction Control Mechanics; Bulk Operations from the Database's Own Side** |
+| 🧠 Deep Dive | SARGable Queries; How the Optimizer Picks an Index; **Table Partitioning** |
 
-SARGable Queries and How the Optimizer Picks an Index are this track's two 🧠 pages — both go
-genuinely deep (what specifically defeats index usage at the predicate level, how the optimizer's
-own cost-based decision-making works) but are rarely the literal opening question, matching the
-one-or-two-🧠-page pattern on every other completed track.
+SARGable Queries and How the Optimizer Picks an Index are this track's original two 🧠 pages —
+both go genuinely deep (what specifically defeats index usage at the predicate level, how the
+optimizer's own cost-based decision-making works) but are rarely the literal opening question,
+matching the one-or-two-🧠-page pattern on every other completed track. **Table Partitioning**
+joins them as a third — genuinely architecture-depth, not something most interviews open with.
+**Index Seek vs. Scan vs. Table Scan is 🔥, not 🧠**, despite reading like plan-internals —
+reading a plan and naming what you see is a routine, expected skill at this track's audience
+level, not a rare deep-cut; the actual internals-of-the-optimizer question stays its own,
+separate 🧠 page.
 
 ## Phase 6 — Final roadmap
 
@@ -139,6 +184,25 @@ category, not tier — the site-wide convention). Numbering below is the tier-fo
 | 7.1 | Normalization vs. Denormalization | Intermediate | 🔥 | intermediate/5.html |
 | 8.1 | Performance Degraded Over Time | Advanced | 🔥 | advanced/4.html |
 
+**Gap-hunt additions (12) — Phases 3–7 of their own, see the taxonomy's gap-hunt log:**
+
+| # | Concept | Tier | Priority | Page |
+|---|---|---|---|---|
+| 1.10 | UNION vs. UNION ALL | Basic | 🔥 | basic/12.html |
+| 1.11 | Logical Query Execution Order | Basic | 🔥 | basic/13.html |
+| 1.12 | Foreign Key Referential Actions | Basic | ⭐ | basic/14.html |
+| 1.13 | EXISTS vs. IN vs. JOIN | Intermediate | ⭐ | intermediate/11.html |
+| 2.4 | Recursive CTEs | Intermediate | ⭐ | intermediate/12.html |
+| 2.5 | Temp Tables vs. Table Variables vs. CTEs | Intermediate | ⭐ | intermediate/13.html |
+| 3.5 | Index Seek vs. Scan vs. Table Scan | Intermediate | 🔥 | intermediate/14.html |
+| 4.3 | Materialized/Indexed Views vs. Regular Views | Intermediate | ⭐ | intermediate/15.html |
+| 4.4 | Triggers | Intermediate | ⭐ | intermediate/16.html |
+| 5.5 | Transaction Control Mechanics | Basic | ⭐ | basic/15.html |
+| 6.4 | Bulk Operations from the Database's Own Side | Advanced | ⭐ | advanced/7.html |
+| 6.5 | Table Partitioning | Advanced | 🧠 | advanced/8.html |
+
+New totals: **Basic 15, Intermediate 16, Advanced 8 — 39 pages.**
+
 ## Track-specific decisions and boundaries
 
 - **This track owns raw SQL/database-engine internals** — indexing, execution plans, isolation
@@ -157,4 +221,5 @@ category, not tier — the site-wide convention). Numbering below is the tier-fo
 
 ## Known gaps
 
-None — Phase 7 (writing the 27 pages) is the next and only remaining phase for this track.
+None in the 27 original pages, already written and live. The 12 gap-hunt additions above are
+the next and only remaining Phase 7 work for this track.

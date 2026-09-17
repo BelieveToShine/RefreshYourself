@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 27 pages written
+## Status — Phases 1–7 complete, all 39 pages written
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): raw questions, grouped by concept
   across 8 subsections, kept tightly to the user's own original SQL section of the interview-prep
@@ -23,8 +23,15 @@ keeping it in sync with the live pages.
   [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
   with `issueCount: 0`, run independently by the orchestrating session against every single page
   before this track was considered done, per [build-process.md](../../rules/build-process.md).
+- **Gap-hunt addendum (post Phase 7)** — an active gap-hunt against outside domain knowledge, per
+  [gap-hunting.md](../../../rules/gap-hunting.md), surfaced 12 real gaps not present anywhere in
+  the original source list. All 12 were added, taken through Phases 3–7 as their own mini-pass
+  (grouped, tiered, prioritized, added to the roadmap, and written), and independently
+  re-verified with `issueCount: 0`, including the 3 pages no subagent could get a live browser
+  check on. See [`roadmap.md`](roadmap.md)'s "Phase 2 addendum" section and this file's
+  per-tier tables below for the full list.
 
-## Basic (11 topics) — 11 written
+## Basic (15 topics) — 15 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -39,8 +46,12 @@ keeping it in sync with the live pages.
 | 9 | DISTINCT | ⭐ | ✅ |
 | 10 | Stored Procedures | ⭐ | ✅ |
 | 11 | Views | ⭐ | ✅ |
+| 12 | UNION vs. UNION ALL **[gap-hunt]** | 🔥 | ✅ |
+| 13 | Logical Query Execution Order **[gap-hunt]** | 🔥 | ✅ |
+| 14 | Foreign Key Referential Actions **[gap-hunt]** | ⭐ | ✅ |
+| 15 | Transaction Control Mechanics **[gap-hunt]** | ⭐ | ✅ |
 
-## Intermediate (10 topics) — 10 written
+## Intermediate (16 topics) — 16 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -54,8 +65,14 @@ keeping it in sync with the live pages.
 | 8 | Composite Index | ⭐ | ✅ |
 | 9 | Pagination Strategies | ⭐ | ✅ |
 | 10 | SARGable Queries | 🧠 | ✅ |
+| 11 | EXISTS vs. IN vs. JOIN **[gap-hunt]** | ⭐ | ✅ |
+| 12 | Recursive CTEs **[gap-hunt]** | ⭐ | ✅ |
+| 13 | Temp Tables vs. Table Variables vs. CTEs **[gap-hunt]** | ⭐ | ✅ |
+| 14 | Index Seek vs. Scan vs. Table Scan **[gap-hunt]** | 🔥 | ✅ |
+| 15 | Materialized/Indexed Views vs. Regular Views **[gap-hunt]** | ⭐ | ✅ |
+| 16 | Triggers **[gap-hunt]** | ⭐ | ✅ |
 
-## Advanced (6 topics) — 6 written
+## Advanced (8 topics) — 8 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -65,6 +82,8 @@ keeping it in sync with the live pages.
 | 4 | Performance Degraded Over Time | 🔥 | ✅ |
 | 5 | Locking | ⭐ | ✅ |
 | 6 | How the Optimizer Picks an Index | 🧠 | ✅ |
+| 7 | Bulk Operations from the Database's Own Side **[gap-hunt]** | ⭐ | ✅ |
+| 8 | Table Partitioning **[gap-hunt]** | 🧠 | ✅ |
 
 ## Where the roadmap came from
 
@@ -94,6 +113,8 @@ questions that turned out to be the same investigation framed two ways (see
 
 ## Known gaps
 
-None — this track went through the full 7-phase pipeline in one sitting and every page passed
-the mandatory independent diagram-verification sweep. Expect a review/feedback pass once the
-user goes through it, same as every other completed track.
+None currently known. The original 27-page pass went through the full 7-phase pipeline in one
+sitting and every page passed the mandatory independent diagram-verification sweep; a
+subsequent active gap-hunt (see the addendum above and [`roadmap.md`](roadmap.md)) found and
+closed 12 more, also independently verified. Expect a review/feedback pass once the user goes
+through it, same as every other completed track.

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triggers — SQL Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Triggers</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ SQL · Intermediate · Should Know</div>
+    <h1>Triggers — code that runs <span class="hl hl-blue">automatically</span>, <span class="hl hl-hot">hidden from the call site</span></h1>
+    <p class="interview-q">What is a trigger, and why are they often discouraged even though they're a real, working tool?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Comes up any time auditing, denormalized data, or "why did this update do more than I expected" gets discussed.</li>
+        <li>Explains a real production surprise: a plain-looking <code>UPDATE</code> silently doing extra work somewhere else entirely.</li>
+        <li>A common opener before a follow-up on when a trigger is actually the right tool versus application code.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Trigger = <b>"code the database runs automatically on INSERT/UPDATE/DELETE — hidden from whoever wrote the statement."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> a plain <b><code>UPDATE</code></b> can silently insert an audit row, update another table, or fire another trigger — none of it visible in the statement itself.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI16" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI16Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arI16Rose" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">HIDDEN SIDE EFFECTS — NOT VISIBLE AT THE CALL SITE</text>
+
+      <g filter="url(#shI16)"><rect x="180" y="36" width="280" height="56" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🖊️ UPDATE Orders</text>
+      <text x="320" y="78" text-anchor="middle" font-size="10.5" font-family="Fira Code, Consolas, monospace" fill="#5b6472">SET Status = 'Shipped'</text>
+
+      <path d="M320,92 V146" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="6 5"/>
+      <path d="M117.5,146 H522.5" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="6 5"/>
+
+      <path d="M117.5,146 V200" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#arI16Amber)"/>
+      <path d="M320,146 V200" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#arI16Amber)"/>
+      <path d="M522.5,146 V200" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arI16Rose)">
+        <animate attributeName="stroke-dashoffset" values="11;0" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shI16)"><rect x="30" y="200" width="175" height="70" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="117.5" y="224" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">📝 Audit Insert</text>
+      <text x="117.5" y="244" text-anchor="middle" font-size="10.5" fill="#5b6472">logs the change quietly</text>
+
+      <g filter="url(#shI16)"><rect x="232.5" y="200" width="175" height="70" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="224" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🔁 Summary Update</text>
+      <text x="320" y="244" text-anchor="middle" font-size="10.5" fill="#5b6472">kept in sync elsewhere</text>
+
+      <g filter="url(#shI16)"><rect x="435" y="200" width="175" height="70" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="522.5" y="224" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">♻️ Another Trigger</text>
+      <text x="522.5" y="244" text-anchor="middle" font-size="10.5" fill="#5b6472">risk: cascades endlessly</text>
+    </svg>
+    <figcaption>One <code>UPDATE</code> the developer sees — three side effects nobody sees at the call site, including possibly another trigger firing.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Triggers should never be used."</b> The real guidance is narrower — don't hide business logic that would be clearer in application code; for something like an audit trail that must hold no matter what touches the table, a trigger is a legitimate, sometimes the only reliable, choice.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"When would a trigger genuinely be the right tool instead of putting the same logic in application code?"</b> When the behavior has to be enforced no matter what modifies the data — even a DBA's ad-hoc script or a completely different application touching the same table — a true audit trail that can't be bypassed is the classic case.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A trigger is code that runs automatically when a table gets an INSERT, UPDATE, or DELETE — used to enforce rules or side effects a plain constraint can't express. They're often discouraged because that logic is invisible at the call site: a simple <code>UPDATE</code> can silently do far more than it looks like. That doesn't mean never use them — for something like an audit trail that has to hold no matter what touches the table, a trigger is the right, sometimes only, tool."</p>
+    <ul>
+      <li><span class="hl hl-blue">Runs automatically</span> on INSERT/UPDATE/DELETE — nobody calls it directly.</li>
+      <li><span class="hl hl-hot">Invisible at the call site</span> → a plain UPDATE can hide an audit insert, another table's update, even another trigger.</li>
+      <li>Real risk → <span class="hl hl-hot">cascading triggers</span> can chain into each other, or even loop.</li>
+      <li>Right tool when <span class="hl hl-basic">the rule must hold no matter what touches the table</span> — a true audit trail is the classic case.</li>
+      <li>Wrong tool when it's just <span class="hl hl-inter">hiding logic</span> that would be clearer sitting in application code.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <span class="hl hl-blue">trigger</span> is code attached to a table that the database engine runs automatically whenever a matching <code>INSERT</code>, <code>UPDATE</code>, or <code>DELETE</code> happens — nobody calls it, it just fires. That makes it possible to enforce business rules or side effects a plain constraint can't express: auditing every change to a row, keeping a denormalized summary column in sync, or checking a rule that spans more than one table.</p>
+
+      <p>The reason triggers are often discouraged is that same automatic firing. A developer reading <code>UPDATE Orders SET Status = 'Shipped'</code> has no way to tell, from that line alone, that it might also insert an audit row, update a second table, or fire another trigger that fires yet another. That <span class="hl hl-hot">hidden control flow</span> makes a system harder to reason about and to performance-tune — a "simple" update can end up doing far more work than it looks like — and it's easy to accidentally wire two triggers into an infinite cascade between related tables.</p>
+
+      <p>None of that makes triggers universally wrong. For something like immutable audit logging, where the rule genuinely has to hold no matter what touches the table — a DBA's ad-hoc script included — a trigger is a legitimate, sometimes the only reliable, choice. The real guidance is narrower than "never use triggers": don't use one to hide logic that would be better off visible in application code.</p>
+
+      <div style="overflow-x:auto;">
+        <table class="cmp-table">
+          <thead><tr><th></th><th>Constraint</th><th>Trigger</th><th>Application code</th></tr></thead>
+          <tbody>
+            <tr><th>What it enforces</th><td>a simple rule (not null, range, unique)</td><td>complex cross-table logic, side effects</td><td>any business rule</td></tr>
+            <tr><th>Visible at the call site?</th><td class="yes">✅ yes — declared on the table</td><td class="no">❌ no — fires elsewhere, silently</td><td class="yes">✅ yes — visible in the code path</td></tr>
+            <tr><th>Enforced no matter what touches the table?</th><td class="yes">✅ yes</td><td class="yes">✅ yes</td><td class="no">❌ no — skipped by any other caller</td></tr>
+            <tr><th>Main risk</th><td>none extra</td><td>cascades, hidden work, hard to trace</td><td>duplicated across every caller</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">CREATE TRIGGER</span> trg_Orders_AuditStatus
+<span class="kw">ON</span> Orders
+<span class="kw">AFTER UPDATE</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">INSERT INTO</span> OrderAudit (OrderId, OldStatus, NewStatus, ChangedAt)
+    <span class="kw">SELECT</span> d.OrderId, d.Status, i.Status, GETDATE()
+    <span class="kw">FROM</span> inserted i
+    <span class="kw">JOIN</span> deleted d <span class="kw">ON</span> d.OrderId = i.OrderId;
+<span class="kw">END</span>;</code></pre>
+      </div>
+      <p class="cx-note">This never runs on its own — it fires automatically the moment any <code>UPDATE</code> touches <code>Orders</code>, reading the before/after values from the built-in <code>inserted</code>/<code>deleted</code> tables.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">UPDATE</span> Orders <span class="kw">SET</span> Status = <span class="str">'Shipped'</span> <span class="kw">WHERE</span> OrderId = <span class="num">42</span>;
+<span class="cx-ok">-- ✅ looks like one simple statement...</span>
+<span class="cx-err">-- 🐛 ...but trg_Orders_AuditStatus just fired too — invisible right here</span></code></pre>
+      </div>
+      <p class="cx-note">Nothing in this statement hints that an audit row was just written — that's the exact hidden control flow the trap is about.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Scenario:</b> a team spends an hour debugging why a plain <code>UPDATE Orders SET Status = 'Shipped'</code> is far slower than it should be — profiling shows writes hitting tables the query never even mentions. Check for triggers on <code>Orders</code> first: an <code>AFTER UPDATE</code> trigger doing an audit insert or a cascading update explains extra writes that never show up in the statement itself, and is a far likelier cause than app-level code once that's ruled out.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="15.html">← Materialized/Indexed Views vs. Regular Views</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Intermediate</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

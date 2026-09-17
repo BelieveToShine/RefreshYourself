@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bulk Operations from the Database's Own Side — SQL Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Bulk Operations from the Database's Own Side</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ SQL · Advanced · Should Know</div>
+    <h1>Bulk Loads — same rows, <span class="hl hl-hot">logged one at a time</span> or <span class="hl hl-basic">logged as one big allocation</span></h1>
+    <p class="interview-q">What makes a bulk insert or update fast at the database's own level, separate from anything an ORM does on top of it?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Bulk data jobs — nightly loads, migrations, archiving millions of rows — are routine
+        production work, and the naive way to write one is a classic performance and operational
+        trap: a blown-out transaction log, disk pressure, or hours of blocking.</li>
+        <li>Interviewers use this to check whether you understand what the storage engine itself
+        is doing during a large write, not just which method or keyword to call.</li>
+        <li>A very common senior/architect follow-up: "why would you drop indexes before a huge
+        bulk load instead of leaving them in place?" — see the Follow-up box below.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><b><code>Logging</code></b> <span class="rarrow">→</span> minimal beats full — <b>log the allocation</b>, not every row</p>
+      <p class="rrow"><b><code>Batch size</code></b> <span class="rarrow">→</span> <b>bounds</b> log growth and lock duration</p>
+      <p class="rrow"><b><code>Indexes</code></b> <span class="rarrow">→</span> <b>drop, load, rebuild once</b> — not row by row</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> three separate knobs — logging, batch size,
+    indexes — and all three trade a little care up front for a lot less total load time.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 400" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="A7Shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="A7Arrow" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="A7ArrowRed" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="A7ArrowGreen" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">THREE LEVERS THAT DETERMINE BULK LOAD TIME</text>
+
+      <g filter="url(#A7Shadow)"><rect x="170" y="24" width="300" height="38" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="47" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">🚀 Bulk Load: Millions of Rows</text>
+
+      <path d="M320,62 V70" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M130,70 H510" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M130,70 V98" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#A7Arrow)"/>
+      <path d="M320,70 V98" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#A7Arrow)"/>
+      <path d="M510,70 V98" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#A7Arrow)"/>
+
+      <g filter="url(#A7Shadow)"><rect x="40" y="98" width="180" height="34" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="130" y="120" text-anchor="middle" font-size="12.5" font-weight="700" letter-spacing="0.2" fill="#334155">🪵 LOGGING</text>
+
+      <g filter="url(#A7Shadow)"><rect x="230" y="98" width="180" height="34" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="120" text-anchor="middle" font-size="12.5" font-weight="700" letter-spacing="0.2" fill="#334155">📦 BATCH SIZE</text>
+
+      <g filter="url(#A7Shadow)"><rect x="420" y="98" width="180" height="34" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="510" y="120" text-anchor="middle" font-size="12.5" font-weight="700" letter-spacing="0.2" fill="#334155">🗂️ INDEXES</text>
+
+      <path d="M130,132 V156" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#A7ArrowRed)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+      <path d="M320,132 V156" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#A7ArrowRed)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+      <path d="M510,132 V156" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#A7ArrowRed)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#A7Shadow)"><rect x="40" y="156" width="180" height="54" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="130" y="177" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐌 Full logging</text>
+      <text x="130" y="197" text-anchor="middle" font-size="10.5" fill="#5b6472">every write logged</text>
+
+      <g filter="url(#A7Shadow)"><rect x="230" y="156" width="180" height="54" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="177" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐌 One giant batch</text>
+      <text x="320" y="197" text-anchor="middle" font-size="10.5" fill="#5b6472">long locks, log growth</text>
+
+      <g filter="url(#A7Shadow)"><rect x="420" y="156" width="180" height="54" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="510" y="177" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐌 Indexes stay live</text>
+      <text x="510" y="197" text-anchor="middle" font-size="10.5" fill="#5b6472">updated row by row</text>
+
+      <path d="M130,210 V234" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#A7ArrowGreen)"/>
+      <path d="M320,210 V234" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#A7ArrowGreen)"/>
+      <path d="M510,210 V234" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#A7ArrowGreen)"/>
+
+      <g filter="url(#A7Shadow)"><rect x="40" y="234" width="180" height="54" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="130" y="255" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">⚡ Minimal logging</text>
+      <text x="130" y="275" text-anchor="middle" font-size="10.5" fill="#5b6472">just extents allocated</text>
+
+      <g filter="url(#A7Shadow)"><rect x="230" y="234" width="180" height="54" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="255" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">⚡ Batched commits</text>
+      <text x="320" y="275" text-anchor="middle" font-size="10.5" fill="#5b6472">commit between batches</text>
+
+      <g filter="url(#A7Shadow)"><rect x="420" y="234" width="180" height="54" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="510" y="255" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">⚡ Drop → rebuild</text>
+      <text x="510" y="275" text-anchor="middle" font-size="10.5" fill="#5b6472">one sorted build at end</text>
+
+      <path d="M130,288 V336" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#A7Arrow)"/>
+      <path d="M320,288 V336" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#A7Arrow)"/>
+      <path d="M510,288 V336" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#A7Arrow)"/>
+
+      <g filter="url(#A7Shadow)"><rect x="40" y="336" width="560" height="40" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="360" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">⏱️ Total Load Time — shaped by all three levers together</text>
+    </svg>
+    <figcaption>Three independent levers — how much gets logged, how big each batch is, and when
+    indexes get rebuilt — each trades a little care for a lot less total load time. The red,
+    marching path is the cost you keep paying if you skip a lever; green is the fix.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Loading millions of rows straight into a heavily-indexed table, in one
+    giant batch, is not automatically "the fast way" just because it's one statement.</b> Every
+    index still has to be maintained row by row and the whole load logs and locks as one massive
+    transaction — often far slower, and far riskier for the log and disk, than dropping the
+    indexes and batching the load first.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why would you deliberately drop indexes before a huge bulk load instead
+    of leaving them in place?"</b> Leaving them means every single inserted row incrementally
+    updates every index's structure, one at a time; dropping them and rebuilding once after all
+    the data is loaded is a single efficient sorted build instead of millions of incremental
+    updates.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A bulk load is fast at the database's own level for three separate
+    reasons: minimal logging skips the row-by-row detail and only records that a bulk extent was
+    allocated, batching bounds how much log growth and lock time any one commit holds, and
+    dropping non-critical indexes before the load — then rebuilding them once at the end — turns
+    millions of incremental index updates into a single efficient sorted build."</p>
+    <ul>
+      <li>Minimal logging → <span class="hl hl-basic">logs the allocation, not every row</span> — much less log-write overhead, but only under the right recovery model and conditions.</li>
+      <li>Batch size → <span class="hl hl-inter">bounds log growth and lock duration</span> — commit every tens of thousands of rows instead of one giant transaction.</li>
+      <li>Indexes → <span class="hl hl-hot">drop before the load, rebuild once after</span> — one sorted build beats millions of row-by-row updates.</li>
+      <li>This is the engine's own side of the problem → <span class="hl hl-adv">different from an ORM skipping entity tracking</span> — the rows are already arriving as SQL.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Minimal logging</b> is the primary lever at the database's own level. A normal write
+      has to log enough detail to replay or undo every single row change — that's what
+      point-in-time recovery depends on. A bulk load under the right conditions (the right
+      recovery model, no existing data being overwritten, certain table and index states) can
+      instead log only enough to know that a bulk extent of pages was allocated, not the full
+      row-by-row detail. That's a dramatically smaller amount of log to write, and it's most of
+      why a well-configured bulk load beats the equivalent one-row-at-a-time inserts.</p>
+
+      <p><b>Batch size</b> is a separate, practical lever. Loading everything as one giant
+      statement or transaction can grow the transaction log far past what a single load should
+      need, and holds locks on the affected rows for as long as that one transaction runs.
+      Committing every tens of thousands of rows instead trades a small amount of overhead for
+      bounded log growth and much shorter lock duration. <b>Indexes</b> add a third cost: every
+      index on a table has to be updated as each new row lands. For a genuinely massive load,
+      it's often faster to drop non-critical indexes first, load the data, then rebuild each
+      index once at the end — one large, efficient sorted build instead of millions of small
+      incremental updates.</p>
+
+      <p>This is the database engine's own side of bulk performance — a different angle from EF
+      Core's <code>ExecuteUpdate()</code>/<code>ExecuteDelete()</code> (see
+      <a href="../../efcore/advanced/5.html">EF Core Advanced — Bulk Operations</a>), which speeds
+      things up by skipping the ORM's load-and-track cycle on the application side. Here, the
+      rows are already arriving as SQL — the question is how the engine itself logs, commits, and
+      indexes them once they do.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th>Lever</th><th>Naive default</th><th>Optimized approach</th></tr></thead>
+        <tbody>
+          <tr><th>Logging</th><td>every row change logged in full detail</td><td>only the bulk extent allocation recorded (right conditions)</td></tr>
+          <tr><th>Batch size</th><td>entire load as one transaction</td><td>tens of thousands of rows per commit</td></tr>
+          <tr><th>Indexes</th><td>every index updated row by row during the load</td><td>dropped before the load, rebuilt once after</td></tr>
+          <tr><th>Net effect</th><td>log bloat, long locks, slower load</td><td>bounded log growth, shorter locks, faster load</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- Under the right recovery model and conditions, a bulk load like this can be</span>
+<span class="cx-cmt">-- minimally logged: the engine only records that these pages were allocated,</span>
+<span class="cx-cmt">-- not the full detail of every single row inside them.</span>
+<span class="kw">SELECT</span> OrderId, OrderDate, Total
+<span class="kw">INTO</span> Orders_Archive
+<span class="kw">FROM</span> Orders
+<span class="kw">WHERE</span> OrderDate &lt; <span class="str">'2020-01-01'</span>; <span class="cx-ok">-- ✅ candidate for minimal logging (bulk extent allocation only)</span>
+
+<span class="cx-cmt">-- An ordinary row-by-row INSERT ... SELECT is logged in full detail regardless</span>
+<span class="cx-cmt">-- of recovery model — there's no bulk extent shortcut for it.</span>
+<span class="kw">INSERT</span> <span class="kw">INTO</span> Orders_Archive (OrderId, OrderDate, Total)
+<span class="kw">SELECT</span> OrderId, OrderDate, Total
+<span class="kw">FROM</span> Orders
+<span class="kw">WHERE</span> OrderDate &lt; <span class="str">'2020-01-01'</span>; <span class="cx-err">-- ❌ full logging: one detailed entry written per row</span></code></pre>
+      </div>
+      <p class="cx-note">Minimal logging doesn't skip logging — it logs enough to know a bulk
+      extent was allocated, not a full row-by-row trail. Exact eligibility (recovery model,
+      table/index state) varies by engine and version.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- 5 million rows in ONE transaction: log growth and lock duration scale with</span>
+<span class="cx-cmt">-- the entire load, and every other reader/writer waits behind it.</span>
+<span class="kw">BEGIN</span> <span class="kw">TRANSACTION</span>;
+    <span class="kw">INSERT</span> <span class="kw">INTO</span> Orders_Archive
+    <span class="kw">SELECT</span> * <span class="kw">FROM</span> Orders <span class="kw">WHERE</span> OrderDate &lt; <span class="str">'2020-01-01'</span>;
+<span class="kw">COMMIT</span>; <span class="cx-err">-- ❌ one giant commit holds locks and log space for all 5 million rows</span>
+
+<span class="cx-cmt">-- Same load, in batches of 50,000 — each INSERT auto-commits on its own,</span>
+<span class="cx-cmt">-- so no single transaction ever holds the whole load.</span>
+<span class="kw">DECLARE</span> @Rows <span class="ty">INT</span> = <span class="num">1</span>;
+<span class="kw">WHILE</span> @Rows &gt; <span class="num">0</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">INSERT</span> <span class="kw">INTO</span> Orders_Archive
+    <span class="kw">SELECT</span> <span class="kw">TOP</span> (<span class="num">50000</span>) * <span class="kw">FROM</span> Orders
+    <span class="kw">WHERE</span> OrderDate &lt; <span class="str">'2020-01-01'</span>
+      <span class="kw">AND</span> OrderId <span class="kw">NOT</span> <span class="kw">IN</span> (<span class="kw">SELECT</span> OrderId <span class="kw">FROM</span> Orders_Archive);
+    <span class="kw">SET</span> @Rows = @@ROWCOUNT; <span class="cx-ok">-- ✅ each batch is its own short, bounded commit</span>
+<span class="kw">END</span>;</code></pre>
+      </div>
+      <p class="cx-note">The one-giant-transaction version holds every lock and every byte of log
+      space for the whole load. The batched loop trades a bit of loop overhead for a bounded,
+      predictable footprint per commit.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- A table with several indexes: every inserted row updates every index too</span>
+<span class="cx-err">-- ❌ millions of incremental index-page updates during the load, one per row per index</span>
+
+<span class="kw">DROP</span> <span class="kw">INDEX</span> IX_Orders_CustomerId <span class="kw">ON</span> Orders;
+<span class="kw">DROP</span> <span class="kw">INDEX</span> IX_Orders_OrderDate <span class="kw">ON</span> Orders;
+
+<span class="cx-cmt">-- ... bulk load millions of rows here, with no index maintenance cost ...</span>
+
+<span class="kw">CREATE</span> <span class="kw">INDEX</span> IX_Orders_CustomerId <span class="kw">ON</span> Orders(CustomerId);
+<span class="kw">CREATE</span> <span class="kw">INDEX</span> IX_Orders_OrderDate <span class="kw">ON</span> Orders(OrderDate); <span class="cx-ok">-- ✅ one efficient sorted build, not millions of updates</span></code></pre>
+      </div>
+      <p class="cx-note">Dropping the index doesn't remove the work — it defers it to one sorted
+      build at the end, which is far cheaper than millions of incremental page updates during the
+      load.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Scenario: a nightly job needs to load 200 million historical rows into a reporting
+      table before the morning reports run, without blowing out the transaction log or blocking
+      other traffic.</b> The practical answer combines all three levers: run the load in a
+      statement shape and recovery model that's eligible for minimal logging, load in batches of
+      tens of thousands of rows so no single commit holds locks or log space for the whole 200
+      million, and drop the table's non-critical indexes before the load so they can be rebuilt
+      once, in one efficient sorted pass, instead of being maintained row by row for 200 million
+      inserts.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="6.html">← How the Optimizer Picks an Index</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="8.html">Table Partitioning →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

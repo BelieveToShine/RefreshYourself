@@ -15,7 +15,10 @@ track pipeline (C# → OOP → .NET/ASP.NET Core → Web API → EF Core → SQL
 unaffected). Every track now goes through 7 phases **before** any page gets built:
 
 1. **Question taxonomy** — what could an interviewer ask, grouped by concept, no tier/priority yet
-2. Review — dedupe, identify gaps
+2. Review — dedupe, **and actively hunt for gaps against outside domain knowledge, not just a
+   re-read of the source list** — see [`rules/gap-hunting.md`](../../rules/gap-hunting.md) for
+   the concrete method and why "identify gaps" silently degraded into "re-read what you were
+   given" on every track before this was written down
 3. Group questions into actual pages
 4. Assign Basic / Intermediate / Advanced — **by question type, not difficulty or seniority.**
    See [`rules/interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)
@@ -52,7 +55,7 @@ track ends up with once it reaches Phase 6 — just know that for any track stil
 | [dotnet/](dotnet/overview.md) | **All 7 phases complete — 23/23 pages written.** [question-taxonomy.md](dotnet/question-taxonomy.md) → [roadmap.md](dotnet/roadmap.md) → 23 tiered/prioritized pages, live on the site and on [`dotnet/roadmap.html`](../../../dotnet/roadmap.html). MVC lives as a grouped subsection, not a separate track — rescoped from the old, never-written ".NET Framework" slot. |
 | [webapi/](webapi/overview.md) | **All 7 phases complete — 25/25 pages written.** [question-taxonomy.md](webapi/question-taxonomy.md) → [roadmap.md](webapi/roadmap.md) → 25 tiered/prioritized pages, live on the site and on [`webapi/roadmap.html`](../../../webapi/roadmap.html). |
 | [efcore/](efcore/overview.md) | **All 7 phases complete — 21/21 pages written.** [question-taxonomy.md](efcore/question-taxonomy.md) → [roadmap.md](efcore/roadmap.md) → 21 tiered/prioritized pages, live on the site and on [`efcore/roadmap.html`](../../../efcore/roadmap.html). Scoped to EF Core as the ORM layer — raw SQL/database internals stay in `sql/`. |
-| [sql/](sql/overview.md) | **All 7 phases complete — 27/27 pages written.** [question-taxonomy.md](sql/question-taxonomy.md) → [roadmap.md](sql/roadmap.md) → 27 tiered/prioritized pages, live on the site and on [`sql/roadmap.html`](../../../sql/roadmap.html). Owns raw SQL/database-engine internals — the ORM layer stays in `efcore/`. |
+| [sql/](sql/overview.md) | **All 7 phases complete — 39/39 pages written** (27 original + 12 from a post-Phase-7 [gap-hunt](../../rules/gap-hunting.md)). [question-taxonomy.md](sql/question-taxonomy.md) → [roadmap.md](sql/roadmap.md) → 39 tiered/prioritized pages, live on the site and on [`sql/roadmap.html`](../../../sql/roadmap.html). Owns raw SQL/database-engine internals — the ORM layer stays in `efcore/`. |
 | [azure/](azure/overview.md) | Old three-tier roadmap (0 written, frozen) superseded by the simplified, scenario-first [question-taxonomy.md](azure/question-taxonomy.md) (Phase 1, awaiting review). |
 | [ai/](ai/overview.md) | The AI/GenAI track — Basic (16)/Intermediate (18)/Advanced (14), all roadmap-only (0 written), sourced from `AI-Interview-Topics.md`. **Not part of the interview-question-bank rebuild** — untouched, along with DSA. |
 | [react/](react/roadmap.md) | React — sourced from the user's own detailed, already tier-organized outline. **Phases 1–6 complete, Phase 7 not started** — [question-taxonomy.md](react/question-taxonomy.md) → [roadmap.md](react/roadmap.md) → 41 planned pages, awaiting the user's review before any page gets written. Unusually large (35 concept groups, 41 pages) reflecting the outline's own depth. |

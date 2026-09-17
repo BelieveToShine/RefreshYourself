@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foreign Key Referential Actions — SQL Basic — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/basic">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Foreign Key Referential Actions</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ SQL · Basic · Should Know</div>
+    <h1><span class="hl hl-blue">CASCADE</span> vs. <span class="hl hl-inter">SET NULL</span> vs. <span class="hl hl-hot">RESTRICT</span> — what really happens to the child rows?</h1>
+    <p class="interview-q">"A foreign key can specify ON DELETE and ON UPDATE behavior — what do CASCADE, SET NULL, and RESTRICT actually do?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>The natural next question right after Primary Key vs. Foreign Key — once a FK blocks a bad insert, the interviewer wants to know what it does on a delete.</li>
+        <li>Explains a real production incident pattern: an unreviewed <code>ON DELETE CASCADE</code> quietly wiping out related data across several tables at once.</li>
+        <li>Tests whether a candidate knows FK behavior on delete is configurable, not one fixed rule.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>CASCADE</code> <span class="rarrow">→</span> <b>deletes</b> child rows too</p>
+      <p class="rrow"><code>SET NULL</code> <span class="rarrow">→</span> <b>clears</b> the child's FK column</p>
+      <p class="rrow"><code>RESTRICT</code> <span class="rarrow">→</span> <b>blocks</b> the delete (the default)</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>CASCADE</code></b> → follows the parent down</span>
+      <span class="tc-line"><b><code>SET NULL</code></b> → cuts the link, keeps the row</span>
+      <span class="tc-line"><b><code>RESTRICT</code></b> → stops it cold, no clause needed to get this</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="B14shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="B14arrow" markerWidth="10" markerHeight="10" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">DELETE CUSTOMER #1 — WHAT HAPPENS TO ITS ORDERS?</text>
+
+      <g filter="url(#B14shadow)"><rect x="180" y="30" width="280" height="34" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="320" y="52" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">DELETE FROM Customers WHERE Id = 1</text>
+
+      <path d="M320,64 V80" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M110,80 H530" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M110,80 V100" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#B14arrow)"/>
+      <path d="M320,80 V100" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#B14arrow)"/>
+      <path d="M530,80 V100" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#B14arrow)"/>
+
+      <!-- CASCADE column -->
+      <g filter="url(#B14shadow)"><rect x="20" y="100" width="180" height="232" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.6"/></g>
+      <text x="110" y="126" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1d4ed8">CASCADE</text>
+      <text x="110" y="142" text-anchor="middle" font-size="10" fill="#5b6472">children go too</text>
+      <line x1="34" y1="152" x2="186" y2="152" stroke="#dbeafe" stroke-width="1"/>
+      <rect x="36" y="162" width="148" height="40" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="110" y="178" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">🧾 Orders</text>
+      <text x="110" y="193" text-anchor="middle" font-size="10" fill="#5b6472">CustomerId = 1</text>
+      <path d="M110,202 V224" fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#B14arrow)"/>
+      <rect x="36" y="224" width="148" height="92" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/>
+      <text x="110" y="254" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🗑️ Order 10, 11</text>
+      <text x="110" y="272" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">deleted too</text>
+      <text x="110" y="292" text-anchor="middle" font-size="10" fill="#5b6472">removed with it</text>
+
+      <!-- SET NULL column -->
+      <g filter="url(#B14shadow)"><rect x="230" y="100" width="180" height="232" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.6"/></g>
+      <text x="320" y="126" text-anchor="middle" font-size="13.5" font-weight="700" fill="#92400e">SET NULL</text>
+      <text x="320" y="142" text-anchor="middle" font-size="10" fill="#5b6472">children unlinked</text>
+      <line x1="244" y1="152" x2="396" y2="152" stroke="#fef3c7" stroke-width="1"/>
+      <rect x="246" y="162" width="148" height="40" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="320" y="178" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">🧾 Orders</text>
+      <text x="320" y="193" text-anchor="middle" font-size="10" fill="#5b6472">CustomerId = 1</text>
+      <path d="M320,202 V224" fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#B14arrow)"/>
+      <rect x="246" y="224" width="148" height="92" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/>
+      <text x="320" y="254" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Order 10, 11</text>
+      <text x="320" y="272" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">CustomerId → NULL</text>
+      <text x="320" y="292" text-anchor="middle" font-size="10" fill="#5b6472">rows kept, link cut</text>
+
+      <!-- RESTRICT column -->
+      <g filter="url(#B14shadow)"><rect x="440" y="100" width="180" height="232" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.6"/></g>
+      <text x="530" y="126" text-anchor="middle" font-size="13.5" font-weight="700" fill="#991b1b">RESTRICT</text>
+      <text x="530" y="142" text-anchor="middle" font-size="10" fill="#5b6472">blocked (the default)</text>
+      <line x1="454" y1="152" x2="606" y2="152" stroke="#fee2e2" stroke-width="1"/>
+      <rect x="456" y="162" width="148" height="40" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="530" y="178" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">🧾 Orders</text>
+      <text x="530" y="193" text-anchor="middle" font-size="10" fill="#5b6472">CustomerId = 1</text>
+      <path d="M530,202 V224" fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#B14arrow)"/>
+      <rect x="456" y="224" width="148" height="92" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/>
+      <text x="530" y="254" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">🐛 Delete blocked</text>
+      <text x="530" y="272" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">FK violation</text>
+      <text x="530" y="292" text-anchor="middle" font-size="10" fill="#5b6472">still referenced</text>
+    </svg>
+    <figcaption>Same starting point every time — one Customer row, two Orders pointing at it — but the ON DELETE clause decides what those Orders get.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>ON DELETE CASCADE is just a convenience that saves an extra DELETE statement.</b> It can silently delete every dependent row across several cascading levels of related tables — a real, easy-to-underestimate data-loss risk if it wasn't deliberately chosen for that specific relationship.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"You delete a Customer row with no ON DELETE clause specified at all, and it still has Orders referencing it — what happens?"</b> The default RESTRICT (or NO ACTION, depending on the system) blocks it — the delete fails with a foreign key constraint violation, the same failure mode as the bad INSERT on the <a href="1.html">Primary Key vs. Foreign Key</a> page.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"An ON DELETE or ON UPDATE clause on the foreign key decides what happens to the child rows when the parent row goes away. CASCADE deletes the matching children automatically. SET NULL clears their foreign key column instead, which only works if that column allows NULL. Leave it unspecified and most systems default to RESTRICT — the same constraint violation as a bad insert, just triggered by a delete instead."</p>
+    <ul>
+      <li><span class="hl hl-blue">CASCADE</span> → deletes matching child rows automatically — powerful, but can ripple through several related tables at once.</li>
+      <li><span class="hl hl-inter">SET NULL</span> → clears the child's foreign key column instead of deleting the row — the column must actually allow NULL.</li>
+      <li><span class="hl hl-hot">RESTRICT / NO ACTION</span> → the default when nothing is specified — blocks the delete outright while any child row still references it.</li>
+      <li><span class="hl hl-basic">Same error family</span> → a blocked delete raises the exact same constraint-violation error as a bad insert with an invalid foreign key.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Every foreign key can carry an <code>ON DELETE</code> and an <code>ON UPDATE</code> clause — they decide what the database does to the child rows when the parent row they point at disappears or its key changes. Without that decision, deleting a referenced row would either have to silently orphan the children or be refused outright; these clauses give the database an explicit, enforced answer instead of leaving it to chance.</p>
+      <p><span class="hl hl-blue">CASCADE</span> and <span class="hl hl-inter">SET NULL</span> both let the delete succeed — they only differ in what happens to the child row afterward: deleted along with the parent, or kept with its link cleared. <span class="hl hl-hot">RESTRICT</span>, and the closely related <code>NO ACTION</code> (the default in most systems when no clause is written at all), refuses the delete altogether the moment it finds a single row still referencing the parent.</p>
+      <table class="cmp-table">
+        <thead><tr><th></th><th>CASCADE</th><th>SET NULL</th><th>RESTRICT</th></tr></thead>
+        <tbody>
+          <tr><th>What happens to child rows</th><td>deleted along with the parent</td><td>kept, FK column set to NULL</td><td>nothing — the delete itself fails</td></tr>
+          <tr><th>Requirement</th><td>none beyond the relationship</td><td>FK column must allow NULL</td><td>none — this is the default behavior</td></tr>
+          <tr><th>When it's the right call</th><td>the child can't exist without the parent (e.g. OrderLines under an Order)</td><td>the relationship is optional once the parent is gone (e.g. an Employee's Manager)</td><td>a human should confirm before related data disappears</td></tr>
+          <tr><th>Risk if misused</th><td>silent, possibly multi-level data loss</td><td>orphaned-looking rows with a NULL link</td><td>a delete that should succeed keeps failing until children are handled</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">CREATE TABLE</span> <span class="ty">Orders</span> (
+    OrderId <span class="ty">INT</span> <span class="kw">PRIMARY KEY</span>,
+    CustomerId <span class="ty">INT</span> <span class="kw">NOT NULL</span>,
+    <span class="kw">CONSTRAINT</span> FK_Orders_Customers
+        <span class="kw">FOREIGN KEY</span> (CustomerId) <span class="kw">REFERENCES</span> Customers(Id)
+        <span class="kw">ON DELETE CASCADE</span>   <span class="cx-cmt">-- delete Customer -> its Orders go too</span>
+);</code></pre>
+      </div>
+      <p class="cx-note">Delete a Customer here and every Order pointing at it disappears in the same statement — no separate cleanup DELETE needed, and no warning either.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">CREATE TABLE</span> <span class="ty">Orders</span> (
+    OrderId <span class="ty">INT</span> <span class="kw">PRIMARY KEY</span>,
+    CustomerId <span class="ty">INT</span> <span class="kw">NULL</span>,              <span class="cx-cmt">-- must allow NULL for SET NULL to work</span>
+    <span class="kw">CONSTRAINT</span> FK_Orders_Customers
+        <span class="kw">FOREIGN KEY</span> (CustomerId) <span class="kw">REFERENCES</span> Customers(Id)
+        <span class="kw">ON DELETE SET NULL</span>
+);</code></pre>
+      </div>
+      <p class="cx-note"><code>CustomerId</code> can't be <code>NOT NULL</code> here — SET NULL needs somewhere to put the NULL once the parent is gone.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- No ON DELETE clause specified at all</span>
+<span class="kw">DELETE FROM</span> Customers <span class="kw">WHERE</span> Id = <span class="num">1</span>;
+<span class="cx-err">-- ❌ Error: The DELETE statement conflicted with the FOREIGN KEY constraint
+-- "FK_Orders_Customers". At least one Order still references Customer Id = 1.</span></code></pre>
+      </div>
+      <p class="cx-note">Same failure mode as the bad INSERT on the <a href="1.html">Primary Key vs. Foreign Key</a> page — RESTRICT/NO ACTION is the silent default when nothing else is written.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>CASCADE is like closing a company and deactivating every employee badge tied to it in the same moment.</b> SET NULL is like closing that one department but keeping the employees — they just lose their department field until reassigned. RESTRICT is HR refusing to close the company at all while active employee records still point at it — the closure has to wait until every employee is moved or removed first.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="13.html">← Logical Query Execution Order</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="15.html">Transaction Control Mechanics →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

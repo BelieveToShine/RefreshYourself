@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recursive CTEs — SQL Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Recursive CTEs</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ SQL · Intermediate · Should Know</div>
+    <h1>Recursive CTEs — one query that <span class="hl hl-blue">walks a hierarchy</span> it can't see the bottom of</h1>
+    <p class="interview-q">"What is a recursive CTE, and what does it let you do that a non-recursive query structurally can't?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>The natural follow-up right after a plain <a href="2.html">CTE</a> question — "can a CTE reference itself?" comes up often.</li>
+        <li>The standard tool for hierarchical data: an org chart, a category tree, a bill-of-materials — anything with an unknown number of levels.</li>
+        <li>A common way in to "find every report under a manager, however deep the chart goes."</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Recursive CTE = <b>"a query that keeps joining back to its own result until nothing new comes back."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> 👑 CEO → 🧑‍💼 direct reports → 👤 their reports → … repeats until a round returns nothing new.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 400" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="I12Shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="I12Arrow" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">ANCHOR + RECURSIVE MEMBER — ONE LEVEL PER ROUND</text>
+
+      <!-- Box 1: anchor -->
+      <g filter="url(#I12Shadow)"><rect x="180" y="40" width="280" height="54" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="61" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🎯 ANCHOR MEMBER</text>
+      <text x="320" y="79" text-anchor="middle" font-size="10.5" fill="#5b6472">the CEO — top of the org chart</text>
+
+      <path d="M320,94 V126" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#I12Arrow)"/>
+      <text x="336" y="114" font-size="9.5" font-family="Fira Code, monospace" fill="#5b6472">UNION ALL</text>
+
+      <!-- Box 2: recursive round 1 -->
+      <g filter="url(#I12Shadow)"><rect x="180" y="126" width="280" height="54" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="147" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🔁 RECURSIVE MEMBER</text>
+      <text x="320" y="165" text-anchor="middle" font-size="10.5" fill="#5b6472">adds direct reports (round 1)</text>
+
+      <path d="M320,180 V212" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#I12Arrow)"/>
+      <text x="336" y="200" font-size="9.5" fill="#5b6472">repeats, adds rows</text>
+
+      <!-- Box 3: recursive round 2 -->
+      <g filter="url(#I12Shadow)"><rect x="180" y="212" width="280" height="54" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="233" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🔁 RECURSIVE MEMBER</text>
+      <text x="320" y="251" text-anchor="middle" font-size="10.5" fill="#5b6472">adds their reports (round 2)</text>
+
+      <path d="M320,266 V298" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#I12Arrow)"/>
+      <text x="336" y="286" font-size="9.5" fill="#5b6472">0 new rows → stop</text>
+
+      <!-- Box 4: termination -->
+      <g filter="url(#I12Shadow)"><rect x="180" y="298" width="280" height="54" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="319" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🏁 RECURSION ENDS</text>
+      <text x="320" y="337" text-anchor="middle" font-size="10.5" fill="#5b6472">all rounds combined via UNION ALL</text>
+
+      <!-- animated token showing the recursive member re-running each round -->
+      <path id="I12Flow" d="M320,94 V298" fill="none" stroke="none"/>
+      <circle r="5" fill="#d97706">
+        <animateMotion dur="3s" repeatCount="indefinite" calcMode="linear">
+          <mpath href="#I12Flow"/>
+        </animateMotion>
+      </circle>
+    </svg>
+    <figcaption>The anchor runs once. The recursive member re-runs and joins back to the growing result — <code>UNION ALL</code> keeps every round — until a round adds zero new rows.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Recursive CTEs are inherently slow or exotic."</b> For genuinely hierarchical data they're the standard, correct tool — the real risk is a cyclical relationship in the data causing infinite recursion, not the technique itself.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How would you find all employees reporting up to a given manager, at any depth, without knowing how many levels deep the org chart goes?"</b> Exactly what a recursive CTE is for — anchor = the manager's row, the recursive member joins <code>ManagerId</code> back to the growing result set, repeating until no new reports are found.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A recursive CTE has two parts combined with <code>UNION ALL</code>: an anchor member that's a normal <code>SELECT</code> picking the starting rows, and a recursive member that joins back to the CTE's own name, re-running until it returns no new rows. It's the standard way to walk hierarchical data — an org chart, a category tree — without knowing how many levels deep it goes. The real risk isn't performance, it's forgetting to guard against a cycle in the data."</p>
+    <ul>
+      <li><code>Anchor member</code> <span class="hl hl-blue">→ the starting rows</span> — a plain <code>SELECT</code>, no self-reference.</li>
+      <li><code>Recursive member</code> <span class="hl hl-inter">→ joins back to the CTE</span> itself, combined with <code>UNION ALL</code>.</li>
+      <li>Reach for it <span class="hl hl-basic">→ for hierarchical data</span> — org chart, category tree, bill-of-materials.</li>
+      <li>Cycle risk <span class="hl hl-hot">→ guard the data</span>, not just the engine's <code>MAXRECURSION</code> cutoff.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Building on the plain <a href="2.html">CTE</a> — a recursive CTE adds one capability a non-recursive query structurally can't have: it can reference its own result set mid-query. It's built from two parts combined with <code>UNION ALL</code>: the <b>anchor member</b> is an ordinary <code>SELECT</code> that establishes the starting rows (no self-reference at all), and the <b>recursive member</b> is a <code>SELECT</code> that joins back to the CTE's own name, joined against the base table. The engine runs the recursive member again and again, each time against only the rows the previous round added, until a round returns zero new rows — that's the stopping condition, not a fixed number of levels.</p>
+      <p>Because recursion keeps executing until no new rows appear, a genuine cycle in the underlying data (A reports to B, B reports to A) would recurse forever. Most engines have a built-in safety cutoff — T-SQL's <code>MAXRECURSION</code>, default 100 — but that's a blunt backstop that just fails loudly once the limit is hit. It doesn't make the query correct. For real correctness, the query itself should guard against a cycle directly, for example by tracking a depth or a visited-path column and stopping once it exceeds a sane bound.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">WITH</span> OrgChart <span class="kw">AS</span> (
+    <span class="cx-cmt">-- anchor: the top of the hierarchy (no manager)</span>
+    <span class="kw">SELECT</span> Id, ManagerId, Name, <span class="num">0</span> <span class="kw">AS</span> Depth
+    <span class="kw">FROM</span> Employees
+    <span class="kw">WHERE</span> ManagerId <span class="kw">IS NULL</span>
+    <span class="kw">UNION ALL</span>
+    <span class="cx-cmt">-- recursive: joins back to OrgChart itself, one level deeper</span>
+    <span class="kw">SELECT</span> e.Id, e.ManagerId, e.Name, o.Depth + <span class="num">1</span>
+    <span class="kw">FROM</span> Employees e
+    <span class="kw">JOIN</span> OrgChart o <span class="kw">ON</span> e.ManagerId = o.Id
+)
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> OrgChart <span class="kw">ORDER BY</span> Depth;  <span class="cx-ok">-- ✅ every level, in one query</span></code></pre>
+      </div>
+      <p class="cx-note">The recursive member only ever looks one join deeper than the last round — <code>Depth</code> just labels which round produced each row.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">WITH</span> OrgChart <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> Id, ManagerId, Name, <span class="num">0</span> <span class="kw">AS</span> Depth
+    <span class="kw">FROM</span> Employees
+    <span class="kw">WHERE</span> ManagerId <span class="kw">IS NULL</span>
+    <span class="kw">UNION ALL</span>
+    <span class="kw">SELECT</span> e.Id, e.ManagerId, e.Name, o.Depth + <span class="num">1</span>
+    <span class="kw">FROM</span> Employees e
+    <span class="kw">JOIN</span> OrgChart o <span class="kw">ON</span> e.ManagerId = o.Id
+    <span class="kw">WHERE</span> o.Depth &lt; <span class="num">50</span>  <span class="cx-ok">-- ✅ guards against a real cycle in the data</span>
+)
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> OrgChart
+<span class="kw">OPTION</span> (MAXRECURSION <span class="num">100</span>);  <span class="cx-cmt">-- engine's own backstop, not a substitute</span></code></pre>
+      </div>
+      <p class="cx-note"><code>MAXRECURSION</code> is T-SQL's built-in safety cutoff — useful, but the <code>WHERE o.Depth &lt; 50</code> guard is what actually protects against a genuine cycle (A reports to B, B reports to A) instead of just failing loudly at round 100.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>It's like asking "who's their manager?" over and over, automatically, instead of asking it by hand at every level.</b> You ask it once, the answer feeds the next "who's their manager?", and it keeps going on its own until someone answers "nobody" — at which point it stops, because there's nothing new left to ask.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="11.html">← EXISTS vs. IN vs. JOIN</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="13.html">Temp Tables vs. Table Variables vs. CTEs →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

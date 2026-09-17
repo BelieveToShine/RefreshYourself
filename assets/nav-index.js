@@ -376,6 +376,16 @@ window.NAV_INDEX = {
         items: [
           { n: 11, file: "11.html", short: "Views", title: "Views", tail: "how it differs from just saving a query as text.", priority: "⭐" }
         ]
+      },
+      {
+        label: "Questions 12–15",
+        hot: 2,
+        items: [
+          { n: 12, file: "12.html", short: "UNION vs UNION ALL", title: "UNION vs. UNION ALL", tail: "and why one of them is slower.", priority: "🔥" },
+          { n: 13, file: "13.html", short: "Logical Query Order", title: "Logical Query Execution Order", tail: "the order clauses actually run in, not the order you type them.", priority: "🔥" },
+          { n: 14, file: "14.html", short: "FK Referential Actions", title: "Foreign Key Referential Actions", tail: "CASCADE, SET NULL, and RESTRICT.", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Transaction Control", title: "Transaction Control Mechanics", tail: "what BEGIN/COMMIT/ROLLBACK actually do.", priority: "⭐" }
+        ]
       }
     ]
   },
@@ -399,6 +409,18 @@ window.NAV_INDEX = {
           { n: 9, file: "9.html", short: "Pagination & OFFSET", title: "Pagination Strategies", tail: "and what breaks with a large OFFSET.", priority: "⭐" },
           { n: 10, file: "10.html", short: "SARGable Queries", title: "SARGable Queries", tail: "what makes a predicate able to use an index.", priority: "🧠" }
         ]
+      },
+      {
+        label: "Questions 11–16",
+        hot: 1,
+        items: [
+          { n: 11, file: "11.html", short: "EXISTS vs IN vs JOIN", title: "EXISTS vs. IN vs. JOIN", tail: "how NULLs and duplicates change which one is safe.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Recursive CTEs", title: "Recursive CTEs", tail: "walking a hierarchy without a loop in application code.", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Temp Tables vs Table Vars vs CTEs", title: "Temp Tables vs. Table Variables vs. CTEs", tail: "scope, statistics, and when each one is the right call.", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Index Seek vs Scan", title: "Index Seek vs. Scan vs. Table Scan", tail: "what the execution plan is actually telling you.", priority: "🔥" },
+          { n: 15, file: "15.html", short: "Materialized/Indexed Views", title: "Materialized/Indexed Views vs. Regular Views", tail: "and the staleness trade-off you're accepting.", priority: "⭐" },
+          { n: 16, file: "16.html", short: "Triggers", title: "Triggers", tail: "and why they're a common source of hidden side effects.", priority: "⭐" }
+        ]
       }
     ]
   },
@@ -417,6 +439,13 @@ window.NAV_INDEX = {
           { n: 4, file: "4.html", short: "Perf Regression", title: "Performance Degraded Over Time", tail: "how you'd investigate.", priority: "🔥" },
           { n: 5, file: "5.html", short: "Locking", title: "Locking", tail: "mechanically, and how it leads to blocking.", priority: "⭐" },
           { n: 6, file: "6.html", short: "Optimizer & Indexes", title: "How the Optimizer Picks an Index", tail: "or decides not to.", priority: "🧠" }
+        ]
+      },
+      {
+        label: "Questions 7–8",
+        items: [
+          { n: 7, file: "7.html", short: "Bulk Operations", title: "Bulk Operations from the Database's Own Side", tail: "minimal logging and why batch size matters.", priority: "⭐" },
+          { n: 8, file: "8.html", short: "Table Partitioning", title: "Table Partitioning", tail: "partition elimination and when it actually pays off.", priority: "🧠" }
         ]
       }
     ]
