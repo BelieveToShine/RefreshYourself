@@ -143,6 +143,10 @@ whether it's worth it" instruction):
 - **[new] Understanding** — How can changing a key be used *deliberately* to force a component
   to remount (reset all its internal state) instead of update? A real, sometimes-asked "trick
   question" that flips §7's usual "don't destabilize your keys" framing on its head.
+- **[new] Understanding** — Why can't a component read its own `key` via `props.key`? React
+  reserves `key` (and `ref`) as special, stripping them out of the props object a component
+  actually receives — a small but genuine gotcha for anyone who's tried to pass `key` through as
+  an ordinary value.
 
 ### 8. Basic Hooks
 - **Core concept** — What are Hooks?
@@ -249,6 +253,10 @@ whether it's worth it" instruction):
   still behaving like a normal child in the React tree)? A genuinely common, entirely absent
   topic — belongs here since it's fundamentally a composition/rendering-target tool, not deep
   internals.
+- **[new] Understanding** — `props.children` is just a prop, but a component that needs to
+  inspect, filter, or augment *arbitrary* children without knowing their shape (a library
+  author's problem, not an everyday one) reaches for `React.Children` utilities or
+  `cloneElement` — worth knowing these exist even if rarely reached for directly.
 
 ### 15. Forms
 - **Comparison** — Controlled vs. uncontrolled components?
@@ -332,6 +340,10 @@ whether it's worth it" instruction):
   role/label/text (the same way an assistive-technology user or a sighted user would find
   something) instead of by CSS class or test-id? A natural, genuinely asked bridge from testing
   philosophy straight into the new Accessibility section below.
+- **[new] Understanding** — What does the "not wrapped in `act(...)`" warning actually mean, and
+  why does it usually show up when a state update happens *after* a test already moved on (an
+  unresolved promise resolving late, a timer firing after assertions ran)? One of the single
+  most commonly hit real-world React testing gotchas — genuinely missing from the original list.
 
 ### 22. Accessibility **[new section]**
 Completely absent from the original outline despite being a real, increasingly standard part of
@@ -393,6 +405,10 @@ depth, so Intermediate, not Advanced.
   "render-as-you-fetch" pattern (start every fetch before rendering, let Suspense coordinate the
   waiting) is the real answer a senior interview is listening for here — a genuinely important
   gotcha this outline didn't have room for.
+- **[new] Understanding** — Suspense only handles the *pending* half of a data request — if the
+  underlying promise rejects, that's a thrown error during render like any other, and needs an
+  Error Boundary (§20) wrapped around the Suspense boundary to be caught gracefully. A real,
+  easy-to-forget pairing that connects two sections the original outline never linked.
 
 ### 26. Server Rendering
 - **Comparison** — CSR vs. SSR?
@@ -444,6 +460,10 @@ territory, not a beginner topic.
 - **[new] Core concept** — What is the `use()` API, and how is it different from every other
   Hook — it can be called conditionally, and it's the mechanism Suspense uses to read a promise
   or read Context inside a conditional/loop, which every other Hook explicitly forbids.
+- **[new] Core concept** — What is `useFormStatus` for — reading the pending/data/method state
+  of the *nearest ancestor* `<form>` from inside a child component, without prop-drilling the
+  submitting state down to it? Must be called from a component that's a descendant of the
+  `<form>`, never the same component that renders the `<form>` itself — a real, specific gotcha.
 
 ### 29. State Management Architecture
 - **Scenario** — When is local state enough?
@@ -617,6 +637,20 @@ pages — that bundling decision is Phase 3's job, not this one's.
 | Web Components interop | §30 React Architecture | Fold-in | Real but narrow; awareness-level |
 | React Native boundary | §30 React Architecture | Fold-in | Tests whether "React" knowledge is DOM-specific |
 | i18n structuring | §30 React Architecture | Fold-in | More a library-choice question than deep React |
+| Portal-adjacent `React.Children`/`cloneElement` | §14 Component Comm. | Fold-in | Real, part of the same "composition" topic |
+| `key` not readable via `props.key` | §7 Lists & Keys | Fold-in | Small, real, commonly-hit gotcha |
+| React Testing Library `act()` warning | §21 Testing | Fold-in | One of the single most common real-world testing gotchas |
+| Suspense needs an Error Boundary for rejections | §25 Suspense | Fold-in | Real pairing the outline never connected |
+| `useFormStatus` | §28 Modern Data Mutations | Fold-in | Companion hook to Actions/useActionState, was missing |
+
+**A second, adversarial pass** (completeness + accuracy re-check, plus a fresh gap hunt) added
+the last five rows above — found by re-reading the whole taxonomy specifically looking for
+common real-world gotchas rather than textbook concepts (the `act()` warning, the `key`/`props`
+gotcha, the Suspense/Error-Boundary pairing, `React.Children`/`cloneElement`) and one
+still-missing React 19 companion hook (`useFormStatus`, alongside
+`useActionState`/`useOptimistic`). **Mechanically recounted with a script, not estimated: 300
+questions in the original outline, 2 genuine duplicates merged out, 34 + 5 = 39 questions added,
+332 + 5 = 337 total across the 35 sections.**
 
 **Nothing from the "important additions" checklist was given a standalone page except
 Accessibility and the Actions/`use()` cluster** — every other item earned, at most, one or two
@@ -625,10 +659,13 @@ are real and worth *a* question, not a whole page's worth of independent visual 
 
 ### Deliberately not added, with reasons
 
-- **Bundler/build-tool internals**, **CSS-in-JS library internals**, and **any specific
-  state/data-fetching library's own API** — see "Scope boundary" above; these are adjacent
-  tooling/library territory, not React itself, and the conceptual question each would motivate
-  is already in scope somewhere else in this taxonomy.
+- **Bundler/build-tool internals**, **CSS-in-JS library internals**, **any specific
+  state/data-fetching library's own API**, and **any specific meta-framework's own conventions**
+  (Next.js App Router file conventions, Remix's own data APIs, etc. — Server Components and
+  Actions are covered as React's own primitives; a specific framework's opinions on top of them
+  are that framework's interview territory, not React's) — see "Scope boundary" above; these are
+  adjacent tooling/library territory, not React itself, and the conceptual question each would
+  motivate is already in scope somewhere else in this taxonomy.
 - **`useDebugValue`** — a real Hook, but purely a DevTools-label helper for custom-Hook authors
   building their own dev tooling; not a realistic interview differentiator at any level, and
   adding it would be padding for padding's sake.
