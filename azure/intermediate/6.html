@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Bus vs. Event Grid vs. Event Hubs — Azure Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="azure/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0f2fe;--crumb-ink:#0078D4;">☁️ Azure</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Service Bus vs. Event Grid vs. Event Hubs</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Azure · Intermediate · Must Know</div>
+    <h1>Service Bus vs. Event Grid vs. Event Hubs — <span class="hl hl-blue">reliability</span>, <span class="hl hl-inter">reaction</span>, or <span class="hl hl-teal">raw throughput</span>?</h1>
+    <p class="interview-q">"Which one when a message needs guaranteed delivery vs. a reactive event vs. a high-throughput event stream?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Checks whether you know the actual axis these three differ on — reliability vs. reactivity vs. throughput — not just three unrelated product names.</li>
+        <li>Comes up any time an integration or event-driven architecture question turns into "which service would you actually pick here."</li>
+        <li>A very common follow-up after any Azure messaging, eventing, or microservices question.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Service Bus</code> <span class="rarrow">→</span> <b>reliable</b> delivery</p>
+      <p class="rrow"><code>Event Grid</code> <span class="rarrow">→</span> <b>reactive</b> events</p>
+      <p class="rrow"><code>Event Hubs</code> <span class="rarrow">→</span> <b>high-throughput</b> stream</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Service Bus</code></b> won't lose it. <b><code>Event Grid</code></b> reacts fast. <b><code>Event Hubs</code></b> handles the firehose.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 272" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shSvc" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arSvc" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arSvcTeal" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#0d9488"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="24" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">WHAT DOES THE MESSAGE ACTUALLY NEED?</text>
+      <path d="M320,32 V50" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M115,50 H525" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M115,50 V74" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSvc)"/>
+      <path d="M320,50 V74" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSvc)"/>
+      <path d="M525,50 V74" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSvc)"/>
+
+      <g filter="url(#shSvc)"><rect x="20" y="74" width="190" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="115" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Service Bus</text>
+      <g filter="url(#shSvc)"><rect x="225" y="74" width="190" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Event Grid</text>
+      <g filter="url(#shSvc)"><rect x="430" y="74" width="190" height="38" rx="10" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.8"/></g>
+      <text x="525" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="#0f766e">Event Hubs</text>
+
+      <path d="M115,112 V136" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSvc)"/>
+      <path d="M320,112 V136" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSvc)"/>
+      <path d="M525,112 V136" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSvc)"/>
+
+      <g filter="url(#shSvc)"><rect x="20" y="136" width="190" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="115" y="160" text-anchor="middle" font-size="12" fill="#1d4ed8">🔒 reliability</text>
+      <g filter="url(#shSvc)"><rect x="225" y="136" width="190" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="160" text-anchor="middle" font-size="12" fill="#92400e">⚡ reactivity</text>
+      <g filter="url(#shSvc)"><rect x="430" y="136" width="190" height="38" rx="10" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.8"/></g>
+      <text x="525" y="160" text-anchor="middle" font-size="12" fill="#0f766e">🚀 throughput</text>
+
+      <path d="M115,174 V198" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSvc)"/>
+      <path d="M320,174 V198" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSvc)"/>
+      <path d="M525,174 V198" fill="none" stroke="#0d9488" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arSvcTeal)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.7s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shSvc)"><rect x="20" y="198" width="190" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="115" y="222" text-anchor="middle" font-size="11.5" fill="#5b6472">🏦 order queue</text>
+      <g filter="url(#shSvc)"><rect x="225" y="198" width="190" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="222" text-anchor="middle" font-size="11.5" fill="#5b6472">📦 blob → function</text>
+      <g filter="url(#shSvc)"><rect x="430" y="198" width="190" height="38" rx="10" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.8"/></g>
+      <text x="525" y="222" text-anchor="middle" font-size="11.5" fill="#5b6472">📡 IoT telemetry</text>
+
+      <text x="320" y="254" text-anchor="middle" font-size="11" fill="#5b6472">Same question, three different jobs — one column keeps flowing, the other two settle to a single outcome</text>
+    </svg>
+    <figcaption>One shared question, three different jobs: Service Bus guards reliability, Event Grid reacts fast, Event Hubs keeps the stream flowing.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Event Hubs can replace Service Bus for business messages."</b> Not quite — Event Hubs is built for high-volume throughput, not the ordering, transactional, and dead-lettering guarantees a handful of business messages actually need; reach for Service Bus when a message can't be lost and processing order matters more than raw volume.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Could you use all three in one architecture?"</b> Yes, commonly — Event Grid reacts to a blob upload and triggers a Function that pushes a reliable processing message onto Service Bus, while a separate high-volume telemetry stream from the same pipeline flows through Event Hubs.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Service Bus is for reliability, Event Grid is for reactive events, and Event Hubs is for high-throughput streams. A common architecture uses all three together: Event Grid reacts to a blob upload and triggers a Function that drops a reliable processing message on Service Bus, while a separate high-volume telemetry stream flows through Event Hubs."</p>
+    <ul>
+      <li><code>Service Bus</code> <span class="hl hl-blue">→ use when a message can't be lost</span> — ordering, transactions, dead-lettering.</li>
+      <li><code>Event Grid</code> <span class="hl hl-inter">→ use to react to a discrete event</span> — near-real-time, often triggers a Function.</li>
+      <li><code>Event Hubs</code> <span class="hl hl-teal">→ use for high-volume streaming ingestion</span> — millions of events/sec, consumers checkpoint their own place.</li>
+      <li>All three <span class="hl hl-basic">can combine in one architecture</span> — a common, real pattern, not an either/or choice.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Service Bus</b> is reliable business messaging — queues and topics/subscriptions with
+      ordering (via sessions), at-least-once delivery, transactions, and dead-lettering for
+      whatever can't be processed. <b>Event Grid</b> is lightweight, reactive event routing — a
+      near-real-time "this happened" notification (a blob was created, a resource changed) pushed
+      to a subscriber, most often triggering a serverless Function. <b>Event Hubs</b> is
+      high-throughput event streaming — a partitioned log built to ingest millions of events a
+      second, where each consumer reads at its own pace and tracks its own position with
+      checkpointing.</p>
+
+      <p>The real decision isn't "which is better" — it's which property the job actually needs.
+      A payment or order message needs to survive, arrive in order, and never silently disappear:
+      that's Service Bus. A "this resource just changed" notification needs to fire fast and
+      trigger something: that's Event Grid. A firehose of sensor readings or clickstream events
+      needs to be absorbed at volume, with consumers free to read at their own speed: that's Event
+      Hubs.</p>
+
+      <div style="overflow-x:auto">
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Service Bus</th><th>Event Grid</th><th>Event Hubs</th></tr></thead>
+        <tbody>
+          <tr><th>Core job</th><td>reliable business messaging</td><td>reactive event routing</td><td>high-throughput event streaming</td></tr>
+          <tr><th>Delivery model</th><td>queue/pub-sub, at-least-once, ordered (sessions)</td><td>push, near-real-time, at-least-once with retries</td><td>partitioned log, consumers read independently</td></tr>
+          <tr><th>Consumption</th><td>receive &amp; complete, or dead-letter</td><td>pushed straight to a subscriber endpoint</td><td>checkpointing — replay is possible</td></tr>
+          <tr><th>Typical scale</th><td>business volume, thousands/sec</td><td>discrete events, low volume per event</td><td>millions of events/sec</td></tr>
+          <tr><th>Reach for it when</th><td>a message can't be lost, order/transactions matter</td><td>you need to react to "X changed," often via a Function</td><td>ingesting telemetry, IoT, clickstream, analytics data</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">await</span> sbSender.SendMessageAsync(orderMsg); <span class="cx-cmt">// ✅ queued, ordered, retried until processed</span>
+<span class="kw">await</span> egClient.SendEventAsync(blobCreatedEvt); <span class="cx-cmt">// ✅ pushed once, near real-time, no replay queue</span></code></pre>
+      </div>
+      <p class="cx-note">"Send" is the same word in both SDKs — the guarantee sitting behind it isn't.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>An IoT platform ingests millions of sensor readings a second through <b>Event Hubs</b>,
+      while a "device offline" alert — a single, discrete event — fires through <b>Event
+      Grid</b> straight to a Function that pages the on-call engineer.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="5.html">← Queues vs. Topics/Subscriptions</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Azure Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="7.html">Troubleshooting With Application Insights →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Azure · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
