@@ -15,7 +15,8 @@ junior/mid-level interview. Two groups of tracks:
 
 - **Core backend interview path**, in this order: C# → OOP → .NET/ASP.NET Core (MVC lives inside
   this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure.
-- **Other tracks**, unaffected by this rebuild and not part of the ordered path: React, DSA, AI.
+- **Other tracks**, not part of the ordered path: React (Phase 1 started, see below), DSA and AI
+  still fully untouched.
 
 Every track goes through 7 phases before any page is built — see
 [`specs/README.md`](superpowers/specs/README.md) for the full pipeline, and
@@ -98,12 +99,19 @@ Phase 2 (dedupe/gaps) starts on either of them:**
   written) is **frozen**, superseded by this taxonomy. See
   [`specs/azure/overview.md`](superpowers/specs/azure/overview.md).
 
-**Untouched by this rebuild:**
+**Other tracks, outside the core backend path:**
 
+- **React** — [`question-taxonomy.md`](superpowers/specs/react/question-taxonomy.md) written
+  (2026-09-17), Phase 1, awaiting the user's review. Sourced from the user's own detailed,
+  already tier-organized outline rather than a short bullet list like every other track's
+  seed — unusually large (34 concept groups) as a direct result. See the taxonomy's own
+  Phase-2 coverage note for the full list of gaps identified and added, and what was
+  deliberately excluded (bundler internals, CSS-in-JS/state-library specifics, general JS
+  fundamentals).
 - **AI** — roadmap-only skeleton across all three tiers, sourced from `AI-Interview-Topics.md`.
   **Do not write AI content until told to.** See
   [`specs/ai/overview.md`](superpowers/specs/ai/overview.md).
-- **React, DSA** — not started, no roadmap planned yet.
+- **DSA** — not started, no roadmap planned yet.
 
 ## Adding a new track's spec
 
