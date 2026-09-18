@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Context Managers — Python Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="python/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#306998;">🐍 Python</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Context Managers</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Python · Intermediate · Must Know</div>
+    <h1><code>with</code> doesn't just save a line — it <span class="hl hl-blue">guarantees</span> <code>__exit__</code> runs even if the block <span class="hl hl-hot">raises</span></h1>
+    <p class="interview-q">"What does <code>with</code> actually guarantee, and how would you write your own context manager?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Tests whether you know <code>with</code> is a real guarantee — not just nicer syntax
+        for closing a file.</li>
+        <li>Comes up any time cleanup matters: files, database connections, locks, network
+        sockets.</li>
+        <li>Writing your own context manager (class-based or <code>@contextmanager</code>) is a
+        common practical follow-up, not just theory.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline"><code>with</code> = <b>"__exit__() ALWAYS runs — clean exit or exception."</b></p>
+    <p class="rthink">Think: <b><code>with</code></b> is a <code>try/finally</code> you can't
+    forget to write.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 500" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arrBlue" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arrGreen" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arrRose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arrAmber" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">WITH STATEMENT — WHAT ALWAYS RUNS</text>
+
+      <!-- Box A: __enter__ -->
+      <g filter="url(#cardShadow)"><rect x="200" y="42" width="240" height="50" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="62" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🚪 __enter__() runs</text>
+      <text x="320" y="80" text-anchor="middle" font-size="10.5" fill="#5b6472">return value bound to x</text>
+
+      <path d="M320,92 V118" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrBlue)"/>
+
+      <!-- Box B: body -->
+      <g filter="url(#cardShadow)"><rect x="190" y="118" width="260" height="50" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="140" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">▶️ block body runs</text>
+      <text x="320" y="158" text-anchor="middle" font-size="10.5" fill="#5b6472">may raise an exception</text>
+
+      <path d="M320,168 V194" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M140,194 H500" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M140,194 V220" fill="none" stroke="#16a34a" stroke-width="2" marker-end="url(#arrGreen)"/>
+      <path d="M500,194 V220" fill="none" stroke="#dc2626" stroke-width="2" marker-end="url(#arrRose)"/>
+
+      <!-- Fork pills -->
+      <g filter="url(#cardShadow)"><rect x="60" y="220" width="160" height="36" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="140" y="242" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ no exception</text>
+
+      <g filter="url(#cardShadow)"><rect x="420" y="220" width="160" height="36" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="500" y="242" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 exception raised</text>
+
+      <path d="M140,256 V282" fill="none" stroke="#16a34a" stroke-width="1.6"/>
+      <path d="M500,256 V282" fill="none" stroke="#dc2626" stroke-width="1.6"/>
+      <path d="M140,282 H500" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M320,282 V308" fill="none" stroke="#d97706" stroke-width="2" marker-end="url(#arrAmber)"/>
+
+      <!-- Box C: __exit__ always -->
+      <g filter="url(#cardShadow)"><rect x="190" y="308" width="260" height="58" rx="16" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="332" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🔒 __exit__() ALWAYS runs</text>
+      <text x="320" y="350" text-anchor="middle" font-size="10.5" fill="#5b6472">runs whether the block raised or not</text>
+
+      <path d="M320,366 V392" fill="none" stroke="#d97706" stroke-width="1.6"/>
+      <path d="M140,392 H500" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M140,392 V418" fill="none" stroke="#16a34a" stroke-width="2" marker-end="url(#arrGreen)"/>
+      <path d="M500,392 V418" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrRose)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1.8s" repeatCount="indefinite"/>
+      </path>
+
+      <!-- Final outcomes -->
+      <g filter="url(#cardShadow)"><rect x="30" y="418" width="220" height="54" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="140" y="440" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">▶️ continues normally</text>
+      <text x="140" y="458" text-anchor="middle" font-size="10" fill="#5b6472">clean exit, no error</text>
+
+      <g filter="url(#cardShadow)"><rect x="390" y="418" width="220" height="54" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="500" y="440" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">🐛 exception re-raised</text>
+      <text x="500" y="458" text-anchor="middle" font-size="9.5" fill="#5b6472">unless __exit__ returns truthy</text>
+    </svg>
+    <figcaption><code>__enter__()</code> runs, then the block runs. Whichever way the block ends,
+    <code>__exit__()</code> always runs — and the moving red arrow is the part people forget:
+    the exception is still alive after cleanup and keeps propagating unless <code>__exit__</code>
+    returns something truthy.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"My __exit__ ran, so I'm done."</b> __exit__ also receives the exception's
+    type, value, and traceback as arguments, and unless it returns a truthy value the exception
+    still propagates after it finishes — returning <code>True</code> by accident silently
+    swallows a real error.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"<code>contextlib.contextmanager</code> vs. a class-based context
+    manager — when would you pick each?"</b> <code>@contextmanager</code> is fastest for a
+    simple enter/exit pair — one generator function with a single <code>yield</code>; a class is
+    better when you need more state, several methods, or a reusable, documented type used across
+    many <code>with</code> sites.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>with</code> calls <code>__enter__()</code> at the start and
+    guarantees <code>__exit__()</code> runs when the block ends — whether it finished normally or
+    raised — that's the whole point, not just fewer lines than <code>try/finally</code>. I'd
+    write my own with a class defining <code>__enter__</code>/<code>__exit__</code>, or faster,
+    with <code>@contextlib.contextmanager</code> on a generator with one <code>yield</code>: code
+    before the <code>yield</code> is <code>__enter__</code>, code after is <code>__exit__</code>."</p>
+    <ul>
+      <li><code>with</code> <span class="hl hl-blue">→ guarantees __exit__ runs</span> — on
+      success or exception, no manual <code>try/finally</code> needed.</li>
+      <li><code>@contextlib.contextmanager</code> <span class="hl hl-basic">→ fastest for a
+      simple pair</span> — one generator, one <code>yield</code>, wrapped in
+      <code>try/finally</code>.</li>
+      <li>Class-based (<code>__enter__</code>/<code>__exit__</code>) <span class="hl hl-inter">→
+      pick it for more state or reuse</span> across many <code>with</code> sites.</li>
+      <li><code>__exit__</code> <span class="hl hl-hot">→ receives exception info</span> — return
+      truthy only when you intend to suppress it.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><code>with expr as x:</code> calls <code>expr.__enter__()</code> and binds its return
+      value to <code>x</code>, then runs the block. When the block ends — normally or through an
+      exception — Python calls <code>expr.__exit__()</code> before control leaves the
+      <code>with</code> statement. That's the entire value over a hand-written
+      <code>try/finally</code>: the same guarantee, just declarative and impossible to forget.</p>
+
+      <p>There are two ways to write your own: a <b>class</b> implementing <code>__enter__</code>
+      and <code>__exit__</code>, or the shortcut, <code>@contextlib.contextmanager</code> on a
+      generator function with exactly one <code>yield</code> — everything before the
+      <code>yield</code> runs as <code>__enter__</code>, everything after runs as
+      <code>__exit__</code>, wrapped in <code>try/finally</code> so cleanup still runs if the
+      block raises.</p>
+
+      <p>Common real examples all lean on the same guarantee: file handling closes the file
+      automatically, a database connection commits on success and rolls back on an exception, and
+      a lock releases even if the code inside the critical section raises.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>@contextmanager</code></th><th>Class-based</th></tr></thead>
+        <tbody>
+          <tr><th>Written as</th><td>one generator function, one <code>yield</code></td><td>a class with <code>__enter__</code>/<code>__exit__</code></td></tr>
+          <tr><th>Best for</th><td>a quick, simple enter/exit pair</td><td>more state, multiple methods</td></tr>
+          <tr><th>Reuse</th><td>fine for one use site</td><td>a named, documented type reused everywhere</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">class</span> Locking:
+    <span class="kw">def</span> __init__(self, lock):
+        self.lock = lock
+
+    <span class="kw">def</span> __enter__(self):
+        self.lock.acquire()
+        <span class="kw">return</span> self.lock          <span class="cx-cmt"># bound to `as lock`</span>
+
+    <span class="kw">def</span> __exit__(self, exc_type, exc_val, exc_tb):
+        self.lock.release()       <span class="cx-ok"># always runs</span>
+        <span class="kw">return</span> <span class="kw">False</span>              <span class="cx-cmt"># never suppress the exception</span></code></pre>
+      </div>
+      <p class="cx-note">__exit__ always releases the lock — even if the block raised — and
+      returning <code>False</code> lets a real exception keep propagating.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">from</span> contextlib <span class="kw">import</span> contextmanager
+
+<span class="kw">@contextmanager</span>
+<span class="kw">def</span> locking(lock):
+    lock.acquire()          <span class="cx-cmt"># __enter__ logic</span>
+    <span class="kw">try</span>:
+        <span class="kw">yield</span> lock          <span class="cx-cmt"># value bound to `as lock`</span>
+    <span class="kw">finally</span>:
+        lock.release()      <span class="cx-ok"># __exit__ logic, always runs</span></code></pre>
+      </div>
+      <p class="cx-note">Code before <code>yield</code> is <code>__enter__</code>; code after is
+      <code>__exit__</code> — the <code>try/finally</code> is what still runs it on an
+      exception.</p>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A database transaction wrapped in <code>with connection.transaction():</code> commits
+      automatically when the block finishes cleanly, and rolls back automatically if the block
+      raises — exactly the guarantee <code>with</code> provides: the rollback runs from inside
+      <code>__exit__</code> whether the code failed on line one or line ten, so a half-finished
+      update never gets committed by accident.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="5.html">← Decorators</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Python Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="index.html" style="color:var(--ink-soft);">Lambda / map / filter / reduce (coming soon) →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Python · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
