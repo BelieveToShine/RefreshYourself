@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browser Storage — JavaScript Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="javascript/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fef9c3;--crumb-ink:#854d0e;">🟨 JavaScript</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Browser Storage</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ JavaScript · Intermediate · Should Know</div>
+    <h1>Cookies vs. <code>localStorage</code> vs. <code>sessionStorage</code> vs. IndexedDB — <span class="hl hl-hot">where should that token actually live?</span></h1>
+    <p class="interview-q">"What's the difference between cookies, localStorage, sessionStorage, and IndexedDB — and where would you store an authentication token?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Almost everyone can name all four storage options, but far fewer can say which one an XSS bug can actually read — that gap is exactly what this question is testing.</li>
+        <li>Comes up any time the discussion turns to "how do we keep a user logged in" or "how do we cache data for offline use."</li>
+        <li>A common interview opener that's really a security question wearing a storage-APIs costume.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Cookies</code> <span class="rarrow">→</span> small, <b>auto-sent</b> with every matching request</p>
+      <p class="rrow"><code>localStorage</code> <span class="rarrow">→</span> sticks around, but <b>any JS can read it</b></p>
+      <p class="rrow"><code>sessionStorage</code> <span class="rarrow">→</span> same as <code>localStorage</code>, gone when the <b>tab closes</b></p>
+      <p class="rrow"><code>IndexedDB</code> <span class="rarrow">→</span> a real <b>database</b> in the browser, for bigger data</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> the easier a storage is for your own JS to read, the easier it is for an attacker's <b>injected</b> JS to read too — except one option can opt out of that entirely.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 310" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="bsShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.5">FOUR STORAGE OPTIONS — SAME JOB, DIFFERENT TRADE-OFFS</text>
+
+      <!-- header row -->
+      <g filter="url(#bsShadow)"><rect x="20" y="28" width="104" height="40" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/></g>
+
+      <g filter="url(#bsShadow)"><rect x="130" y="28" width="118" height="40" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="189" y="52" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🍪 Cookies</text>
+
+      <g filter="url(#bsShadow)"><rect x="254" y="28" width="118" height="40" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="313" y="52" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">localStorage</text>
+
+      <g filter="url(#bsShadow)"><rect x="378" y="28" width="118" height="40" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="437" y="52" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">sessionStorage</text>
+
+      <g filter="url(#bsShadow)"><rect x="502" y="28" width="118" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="561" y="52" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🗄️ IndexedDB</text>
+
+      <!-- row 1: persists across tabs -->
+      <rect x="20" y="74" width="104" height="46" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="72" y="92" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">Persists</text>
+      <text x="72" y="108" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">across tabs?</text>
+
+      <rect x="130" y="74" width="118" height="46" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="189" y="101" text-anchor="middle" font-size="11" font-weight="700" fill="#374151">✅ Yes</text>
+      <rect x="254" y="74" width="118" height="46" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="313" y="101" text-anchor="middle" font-size="11" font-weight="700" fill="#374151">✅ Yes</text>
+      <rect x="378" y="74" width="118" height="46" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="437" y="101" text-anchor="middle" font-size="11" font-weight="700" fill="#374151">❌ No</text>
+      <rect x="502" y="74" width="118" height="46" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="561" y="101" text-anchor="middle" font-size="11" font-weight="700" fill="#374151">✅ Yes</text>
+
+      <!-- row 2: sent with every request -->
+      <rect x="20" y="126" width="104" height="46" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="72" y="144" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">Sent w/ every</text>
+      <text x="72" y="160" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">request?</text>
+
+      <rect x="130" y="126" width="118" height="46" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+      <text x="189" y="153" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">✅ Yes</text>
+      <rect x="254" y="126" width="118" height="46" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="313" y="153" text-anchor="middle" font-size="11" font-weight="700" fill="#374151">❌ No</text>
+      <rect x="378" y="126" width="118" height="46" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="437" y="153" text-anchor="middle" font-size="11" font-weight="700" fill="#374151">❌ No</text>
+      <rect x="502" y="126" width="118" height="46" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="561" y="153" text-anchor="middle" font-size="11" font-weight="700" fill="#374151">❌ No</text>
+
+      <!-- row 3: readable by page JS -->
+      <rect x="20" y="178" width="104" height="46" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="72" y="196" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">Readable by</text>
+      <text x="72" y="212" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">page JS?</text>
+
+      <rect x="130" y="178" width="118" height="46" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+      <text x="189" y="196" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">Depends</text>
+      <text x="189" y="212" text-anchor="middle" font-size="9.5" fill="#5b6472">(No if httpOnly)</text>
+
+      <rect x="254" y="178" width="118" height="46" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="313" y="196" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">✅ Yes</text>
+      <text x="313" y="212" text-anchor="middle" font-size="9.5" fill="#5b6472">(any JS)</text>
+
+      <rect x="378" y="178" width="118" height="46" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="437" y="196" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">✅ Yes</text>
+      <text x="437" y="212" text-anchor="middle" font-size="9.5" fill="#5b6472">(any JS)</text>
+
+      <rect x="502" y="178" width="118" height="46" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="561" y="196" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">✅ Yes</text>
+      <text x="561" y="212" text-anchor="middle" font-size="9.5" fill="#5b6472">(via JS API)</text>
+
+      <!-- row 4: rough capacity -->
+      <rect x="20" y="230" width="104" height="46" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="72" y="248" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">Rough</text>
+      <text x="72" y="264" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">capacity</text>
+
+      <rect x="130" y="230" width="118" height="46" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="189" y="248" text-anchor="middle" font-size="11" font-weight="700" fill="#374151">~4KB</text>
+      <text x="189" y="264" text-anchor="middle" font-size="9.5" fill="#5b6472">(tiny)</text>
+
+      <rect x="254" y="230" width="118" height="46" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="313" y="248" text-anchor="middle" font-size="11" font-weight="700" fill="#374151">a few MB</text>
+      <text x="313" y="264" text-anchor="middle" font-size="9.5" fill="#5b6472">(&lt; IndexedDB)</text>
+
+      <rect x="378" y="230" width="118" height="46" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="437" y="248" text-anchor="middle" font-size="11" font-weight="700" fill="#374151">a few MB</text>
+      <text x="437" y="264" text-anchor="middle" font-size="9.5" fill="#5b6472">(&lt; IndexedDB)</text>
+
+      <rect x="502" y="230" width="118" height="46" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.3"/>
+      <text x="561" y="248" text-anchor="middle" font-size="11" font-weight="700" fill="#374151">much larger</text>
+      <text x="561" y="264" text-anchor="middle" font-size="9.5" fill="#5b6472">(disk-limited)</text>
+    </svg>
+    <figcaption>Rose = readable by <b>any</b> JavaScript on the page, including injected XSS. Cookies are the only option that can opt out of that with the <code>httpOnly</code> flag — which is exactly why sensitive tokens are still often kept there.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>An auth token in <code>localStorage</code> isn't automatically safe just because cookies feel old-fashioned.</b> Any JavaScript running on the page — including a script an XSS bug injected — can read <code>localStorage</code> in full; an <code>httpOnly</code> cookie can't be read by JavaScript at all, which is exactly why sensitive tokens are still often kept there instead.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"So why doesn't everyone just use an httpOnly cookie for tokens?"</b> Cookies are attached automatically to every matching request, so they need their own protection against forged requests (like a <code>SameSite</code> attribute or an anti-CSRF token) — the trade-off shifts from "can JavaScript read it" to "does it get sent somewhere I didn't intend."</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Cookies are sent automatically with every matching HTTP request and can be marked <code>httpOnly</code> so JavaScript can't read them at all. <code>localStorage</code> and <code>sessionStorage</code> are plain JavaScript-readable key-value storage — <code>localStorage</code> persists until it's cleared, <code>sessionStorage</code> disappears when the tab closes — and IndexedDB is a real, structured database in the browser for larger data. That's exactly why a sensitive auth token is often kept in an <code>httpOnly</code> cookie instead of <code>localStorage</code>: it's the one option JavaScript, including injected XSS, can't touch."</p>
+    <ul>
+      <li><code>Cookies</code> <span class="hl hl-inter">→ auto-sent with every request</span>, can be <code>httpOnly</code>.</li>
+      <li><code>localStorage</code> <span class="hl hl-blue">→ persists across tabs and reloads</span>, but any JS can read it.</li>
+      <li><code>sessionStorage</code> <span class="hl hl-teal">→ same API, gone when the tab closes</span>.</li>
+      <li><code>IndexedDB</code> <span class="hl hl-basic">→ the real database</span> — for larger or structured data the others aren't built for.</li>
+      <li>Storing a sensitive token? <span class="hl hl-hot">→ httpOnly cookie beats localStorage against XSS</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-inter">Cookies</span> were built for the server, not for JavaScript: the browser attaches
+      any cookie that matches the current domain/path to <b>every</b> request it sends there,
+      automatically. That's what makes them small by necessity — a few KB is plenty when the
+      content rides along on every single request — and it's what makes an <code>httpOnly</code>
+      cookie special: the browser still sends it to the server, but no JavaScript on the page can
+      read or write it at all, not even a script an attacker managed to inject.</p>
+
+      <p><span class="hl hl-blue">localStorage</span> and <span class="hl hl-teal">sessionStorage</span>
+      are the opposite trade-off: plain key-value storage that only JavaScript touches — nothing is
+      ever sent to the server on its own. <code>localStorage</code> survives closing the tab, closing
+      the browser, even restarting the machine, until something explicitly clears it.
+      <code>sessionStorage</code> uses the exact same API but is scoped to one tab — close that tab
+      and it's gone. Both share the same weakness: because reading them is just a normal JavaScript
+      call, any script running on the page can read them, which includes a script an XSS
+      vulnerability injected.</p>
+
+      <p><span class="hl hl-basic">IndexedDB</span> exists for the case where localStorage genuinely
+      isn't enough — a real, structured database running inside the browser, built for larger
+      amounts of data (or data that needs indexes and queries, not just flat string values) rather
+      than a handful of settings. Reach for it for things like offline caches, large local
+      datasets, or structured records — not as a place to memorize an API in depth for an
+      interview, just as the answer to "what do I use when localStorage's simple string storage
+      isn't shaped right for the data."</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Cookies</th><th>localStorage / sessionStorage</th><th>IndexedDB</th></tr></thead>
+        <tbody>
+          <tr><th>Sent to the server?</th><td>yes, automatically</td><td>no, never on its own</td><td>no, never on its own</td></tr>
+          <tr><th>Readable by JS?</th><td>only if not <code>httpOnly</code></td><td>yes, always</td><td>yes, via its API</td></tr>
+          <tr><th>Lifetime</th><td>set by expiry/<code>Max-Age</code></td><td>until cleared / tab close</td><td>until cleared</td></tr>
+          <tr><th>Rough size</th><td>a few KB</td><td>a few MB</td><td>much larger, disk-limited</td></tr>
+          <tr><th>Best for</th><td>server-read session/auth data</td><td>small client-only settings</td><td>large or structured client data</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// document.cookie can only see a cookie WITHOUT the httpOnly flag</span>
+document.cookie = <span class="str">"theme=dark; path=/; max-age=3600"</span>;
+console.log(document.cookie);              <span class="cx-ok">// ✅ "theme=dark" — this one is readable</span>
+
+<span class="cx-cmt">// a Set-Cookie response header with HttpOnly is set by the SERVER, not JS —</span>
+<span class="cx-cmt">// and document.cookie will never show it, on purpose</span>
+<span class="cx-cmt">// Set-Cookie: session=abc123; HttpOnly; Secure; SameSite=Strict</span></code></pre>
+      </div>
+      <p class="cx-note">Only the server can set an <code>httpOnly</code> cookie — once it's set that way, <b>no client-side JavaScript can ever read it back</b>, injected or not.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>localStorage.setItem(<span class="str">"draft"</span>, <span class="str">"hello"</span>);     <span class="cx-cmt">// survives closing the tab</span>
+sessionStorage.setItem(<span class="str">"draft"</span>, <span class="str">"hello"</span>);   <span class="cx-cmt">// gone once THIS tab closes</span>
+
+<span class="cx-cmt">// both are string-only, and both are readable by ANY script on the page:</span>
+console.log(localStorage.getItem(<span class="str">"draft"</span>));  <span class="cx-ok">// ✅ "hello" — no permission check</span></code></pre>
+      </div>
+      <p class="cx-note">Same read/write API for both — the only real difference is <b>how long the value survives</b>, not who's allowed to read it.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A single-page app needs to keep the user logged in after a refresh, and also remember
+      an in-progress form draft.</b> The session token goes in an <code>httpOnly</code> cookie the
+      server sets and reads — JavaScript never touches it, so an XSS bug can't steal it. The form
+      draft, which isn't sensitive, is a fine fit for <code>localStorage</code> — quick to read and
+      write, and there's nothing valuable for an attacker to gain even if a script could see it.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="13.html">← Iterators &amp; Generators</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to JavaScript Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="15.html">Testing Fundamentals →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · JavaScript · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
