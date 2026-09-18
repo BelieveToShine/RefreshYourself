@@ -827,4 +827,98 @@ window.NAV_INDEX = {
       }
     ]
   },
+  "python/basic": {
+    track: "Python",
+    trackIcon: "🐍",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1 – 10",
+        items: [
+          { n: 1, file: "1.html", short: "Python Fundamentals", title: "Python Fundamentals", tail: "interpreted vs. compiled, bytecode, CPython, walrus operator.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Variables & Object Model", title: "Variables & Object Model", tail: "a variable is a reference, not a box.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Python Data Types", title: "Python Data Types", tail: "hashability, mutable vs. immutable, Enum.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "List/Tuple/Set/Dict", title: "List vs. Tuple vs. Set vs. Dictionary", tail: "order, duplicates, hashing, defaultdict, Counter.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Strings", title: "Strings", tail: "why immutable, slicing, f-strings, str vs. bytes.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Functions", title: "Functions", tail: "first-class objects, *args/**kwargs, positional/keyword-only params.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Scope & Namespaces", title: "Scope & Namespaces", tail: "LEGB, closures, the classic loop-variable-capture trap.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Comprehensions", title: "Comprehensions", tail: "list/dict/set, when they get too dense to read.", priority: "⭐" },
+          { n: 9, file: "9.html", short: "Exceptions", title: "Exceptions", tail: "hierarchy, propagation, exception chaining.", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Modules & Packages", title: "Modules & Packages", tail: "imports, __name__ == \"__main__\", circular imports.", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11 – 11",
+        items: [
+          { n: 11, file: "11.html", short: "OOP Fundamentals", title: "OOP Fundamentals", tail: "class vs. object, self/cls, inheritance vs. composition.", priority: "🔥" }
+        ]
+      }
+    ]
+  },
+  "python/intermediate": {
+    track: "Python",
+    trackIcon: "🐍",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1 – 10",
+        items: [
+          { n: 1, file: "1.html", short: "Mutable vs. Immutable", title: "Mutable vs. Immutable", tail: "the mutable-default-argument trap, predict the output.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "== vs. is", title: "== vs. is", tail: "equality vs. identity, integer/string interning.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Shallow vs. Deep Copy", title: "Shallow Copy vs. Deep Copy", tail: "why nested objects create surprises.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Iterators & Generators", title: "Iterators & Generators", tail: "lazy evaluation, yield, itertools.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Decorators", title: "Decorators", tail: "how they work, stacking order, functools.wraps.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Context Managers", title: "Context Managers", tail: "with, __enter__/__exit__, writing your own.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Lambda/map/filter/reduce", title: "Lambda / map / filter / reduce", tail: "when a comprehension reads better.", priority: "⭐" },
+          { n: 8, file: "8.html", short: "Dataclasses", title: "Dataclasses", tail: "vs. namedtuple, vs. Pydantic.", priority: "⭐" },
+          { n: 9, file: "9.html", short: "Type Hints", title: "Type Hints", tail: "Optional, Union, Protocol, static vs. runtime checking.", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Abstract Classes & Protocols", title: "Abstract Classes & Protocols", tail: "duck typing vs. explicit abstraction.", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11 – 14",
+        items: [
+          { n: 11, file: "11.html", short: "Logging", title: "Logging", tail: "levels, Logger/Handler/Formatter, why not print().", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Testing", title: "Testing", tail: "pytest, fixtures, mocking, what NOT to mock.", priority: "🔥" },
+          { n: 13, file: "13.html", short: "Virtual Envs & Packaging", title: "Virtual Environments & Packaging", tail: "venv, pyproject.toml, build backends.", priority: "🔥" },
+          { n: 14, file: "14.html", short: "Pythonic Code", title: "Pythonic Code", tail: "EAFP vs. LBYL, pathlib vs. os.path.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "python/advanced": {
+    track: "Python",
+    trackIcon: "🐍",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1 – 10",
+        items: [
+          { n: 1, file: "1.html", short: "Python Object Model", title: "Python Object Model", tail: "everything is an object, __dict__, attribute lookup.", priority: "🧠" },
+          { n: 2, file: "2.html", short: "Dunder Methods", title: "Dunder Methods", tail: "__str__ vs. __repr__, __eq__/__hash__, __getitem__.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "MRO & Multiple Inheritance", title: "MRO & Multiple Inheritance", tail: "C3 linearization, the diamond problem.", priority: "🧠" },
+          { n: 4, file: "4.html", short: "Descriptors", title: "Descriptors", tail: "__get__/__set__, how property works internally.", priority: "🧠" },
+          { n: 5, file: "5.html", short: "Metaclasses", title: "Metaclasses", tail: "when useful, why usually avoided.", priority: "🧠" },
+          { n: 6, file: "6.html", short: "Memory Management", title: "Memory Management", tail: "reference counting, GC, __slots__.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "GIL", title: "GIL", tail: "why it exists, free-threaded CPython (PEP 703).", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Threading", title: "Threading", tail: "race conditions, locks, predict the output.", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Multiprocessing", title: "Multiprocessing", tail: "why it helps CPU-bound work, serialization overhead.", priority: "🔥" },
+          { n: 10, file: "10.html", short: "asyncio", title: "asyncio", tail: "event loop, coroutines, blocking code inside async.", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11 – 18",
+        items: [
+          { n: 11, file: "11.html", short: "Performance & Profiling", title: "Performance & Profiling", tail: "cProfile, timeit, finding the real bottleneck.", priority: "🔥" },
+          { n: 12, file: "12.html", short: "Caching", title: "Caching", tail: "lru_cache, invalidation, cache stampede.", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Serialization", title: "Serialization", tail: "JSON vs. pickle, why untrusted pickle is dangerous.", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Production Architecture", title: "Production Python Architecture", tail: "structuring a large app, config, secrets.", priority: "🔥" },
+          { n: 15, file: "15.html", short: "Production Troubleshooting", title: "Production Troubleshooting", tail: "11 real production-break scenarios.", priority: "🔥" },
+          { n: 16, file: "16.html", short: "Python Web / API", title: "Python Web / API", tail: "WSGI vs. ASGI, FastAPI vs. Django.", priority: "⭐" },
+          { n: 17, file: "17.html", short: "Python + Databases", title: "Python + Databases", tail: "ORM, N+1 queries, async DB access.", priority: "⭐" },
+          { n: 18, file: "18.html", short: "Architecture / Senior Scenarios", title: "Python Architecture / Senior Scenarios", tail: "designing a high-throughput API.", priority: "🧠" }
+        ]
+      }
+    ]
+  },
 };
