@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intervals &amp; Sweep Line — DSA Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dsa/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">🧠 DSA</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Intervals &amp; Sweep Line</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ DSA · Intermediate · Should Know</div>
+    <h1>Overlapping intervals — <span class="hl hl-blue">sort</span> once, <span class="hl hl-inter">sweep</span> once, never compare every pair.</h1>
+    <p class="interview-q">"How would you merge overlapping intervals, check if someone can attend every meeting, or find the minimum number of meeting rooms needed — without comparing every interval against every other one?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>"Merge intervals," "meeting rooms," and "insert interval" are three of the most frequently asked interview questions in this entire category — genuinely common, not a rare corner case.</li>
+        <li>The naive fix — checking every pair of intervals for overlap — is O(n²), and it's the exact thing interviewers are listening for you to avoid.</li>
+        <li>One idea (sort, then one linear sweep) answers all three question shapes: merging, yes/no overlap checks, and counting simultaneous overlaps.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><b>Merge</b> <span class="rarrow">→</span> sort by <b>start</b>, extend the end</p>
+      <p class="rrow"><b>Can attend all?</b> <span class="rarrow">→</span> sort by start, check for <b>any</b> overlap</p>
+      <p class="rrow"><b>Min rooms needed?</b> <span class="rarrow">→</span> <b>+1/-1</b> events, sweep, track the peak</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> Every version starts the same way — <b><code>sort</code></b> first, then one <b><code>sweep</code></b> left to right. Never pair-by-pair.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI10" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.5">SWEEP LEFT → RIGHT, TRACK HOW MANY ARE ACTIVE</text>
+
+      <!-- Zone 1: interval bars on a timeline -->
+      <text x="30" y="48" font-size="13" font-weight="700" fill="#1d4ed8">A</text>
+      <g filter="url(#shI10)"><rect x="68" y="34" width="188" height="20" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="162" y="48" text-anchor="middle" font-size="11" font-weight="600" fill="#1d4ed8">1 – 4</text>
+
+      <text x="30" y="76" font-size="13" font-weight="700" fill="#1d4ed8">B</text>
+      <g filter="url(#shI10)"><rect x="131" y="62" width="250" height="20" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="256" y="76" text-anchor="middle" font-size="11" font-weight="600" fill="#1d4ed8">2 – 6</text>
+
+      <text x="30" y="104" font-size="13" font-weight="700" fill="#1d4ed8">C</text>
+      <g filter="url(#shI10)"><rect x="193" y="90" width="125" height="20" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="256" y="104" text-anchor="middle" font-size="11" font-weight="600" fill="#1d4ed8">3 – 5</text>
+
+      <text x="30" y="132" font-size="13" font-weight="700" fill="#1d4ed8">D</text>
+      <g filter="url(#shI10)"><rect x="443" y="118" width="125" height="20" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="506" y="132" text-anchor="middle" font-size="11" font-weight="600" fill="#1d4ed8">7 – 9</text>
+
+      <!-- time axis -->
+      <line x1="58" y1="150" x2="592" y2="150" stroke="#cbd5e1" stroke-width="1.5"/>
+      <line x1="68" y1="147" x2="68" y2="153" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="68" y="165" text-anchor="middle" font-size="10" fill="#94a3b8">1</text>
+      <line x1="131" y1="147" x2="131" y2="153" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="131" y="165" text-anchor="middle" font-size="10" fill="#94a3b8">2</text>
+      <line x1="193" y1="147" x2="193" y2="153" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="193" y="165" text-anchor="middle" font-size="10" fill="#94a3b8">3</text>
+      <line x1="256" y1="147" x2="256" y2="153" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="256" y="165" text-anchor="middle" font-size="10" fill="#94a3b8">4</text>
+      <line x1="318" y1="147" x2="318" y2="153" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="318" y="165" text-anchor="middle" font-size="10" fill="#94a3b8">5</text>
+      <line x1="381" y1="147" x2="381" y2="153" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="381" y="165" text-anchor="middle" font-size="10" fill="#94a3b8">6</text>
+      <line x1="443" y1="147" x2="443" y2="153" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="443" y="165" text-anchor="middle" font-size="10" fill="#94a3b8">7</text>
+      <line x1="568" y1="147" x2="568" y2="153" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="568" y="165" text-anchor="middle" font-size="10" fill="#94a3b8">9</text>
+
+      <!-- Zone 2: +1 / -1 events -->
+      <text x="320" y="192" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">EACH INTERVAL BECOMES TWO EVENTS: +1 START, -1 END</text>
+
+      <rect x="51" y="207" width="34" height="22" rx="11" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+      <text x="68" y="222" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">+1</text>
+      <rect x="114" y="207" width="34" height="22" rx="11" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+      <text x="131" y="222" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">+1</text>
+      <rect x="176" y="207" width="34" height="22" rx="11" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+      <text x="193" y="222" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">+1</text>
+      <rect x="426" y="207" width="34" height="22" rx="11" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+      <text x="443" y="222" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">+1</text>
+
+      <rect x="239" y="207" width="34" height="22" rx="11" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="256" y="222" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">-1</text>
+      <rect x="301" y="207" width="34" height="22" rx="11" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="318" y="222" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">-1</text>
+      <rect x="364" y="207" width="34" height="22" rx="11" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="381" y="222" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">-1</text>
+      <rect x="551" y="207" width="34" height="22" rx="11" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="568" y="222" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">-1</text>
+
+      <!-- Zone 3: running counter step chart -->
+      <text x="320" y="242" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">HOW MANY ARE ACTIVE RIGHT NOW? WATCH THE PEAK</text>
+
+      <g filter="url(#shI10)"><rect x="124" y="262" width="200" height="42" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="224" y="278" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🔺 peak = 3</text>
+      <text x="224" y="296" text-anchor="middle" font-size="10" fill="#5b6472">3 meeting rooms needed</text>
+      <line x1="224" y1="304" x2="224" y2="316" stroke="#d97706" stroke-width="1.5" stroke-dasharray="3 3"/>
+
+      <text x="40" y="320" text-anchor="end" font-size="10" fill="#94a3b8">3</text>
+      <text x="40" y="348" text-anchor="end" font-size="10" fill="#94a3b8">2</text>
+      <text x="40" y="376" text-anchor="end" font-size="10" fill="#94a3b8">1</text>
+      <text x="40" y="404" text-anchor="end" font-size="10" fill="#94a3b8">0</text>
+
+      <path d="M58,400 H68 V372 H131 V344 H193 V316 H256 V344 H318 V372 H381 V400 H443 V372 H568 V400 H592" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linejoin="round"/>
+
+      <circle cx="224" cy="316" r="5" fill="#d97706">
+        <animate attributeName="r" values="4;7;4" dur="1.6s" repeatCount="indefinite"/>
+      </circle>
+
+      <!-- animated sweep cursor -->
+      <line x1="58" x2="58" y1="26" y2="410" stroke="#7c3aed" stroke-width="2" stroke-dasharray="6 4" opacity="0.75">
+        <animate attributeName="x1" from="58" to="592" dur="4s" repeatCount="indefinite"/>
+        <animate attributeName="x2" from="58" to="592" dur="4s" repeatCount="indefinite"/>
+      </line>
+      <g opacity="0.9">
+        <polygon points="-6,10 6,10 0,19" fill="#7c3aed"/>
+        <animateMotion path="M58,8 H592" dur="4s" repeatCount="indefinite"/>
+      </g>
+    </svg>
+    <figcaption>4 intervals, split into +1/-1 events, swept left to right — the running count of active intervals peaks at 3, right when A, B, and C are all open at once.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Checking every pair of intervals for overlap is not the efficient way to do this.</b> That's an O(n²) scan — sort the intervals once (by start time for most versions of this problem) and then sweep through them in a single O(n log n) pass instead.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How would you find the maximum number of overlapping intervals at any single point in time?"</b> Split every interval into a +1 event at its start and a -1 event at its end, sort all the events by time, sweep through incrementing/decrementing a running counter, and track its peak value — that peak is the answer, and it's exactly the "minimum meeting rooms needed" answer too.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Almost every interval problem starts the same way: sort first, usually by start time — that turns an O(n²) pairwise comparison into a single O(n log n) sort-and-sweep. For merge intervals, I extend the current interval's end whenever the next one starts before it ends. For 'can I attend all meetings,' I just check whether any interval starts before the previous one ends. For 'minimum rooms needed,' I split every interval into a +1 start event and a -1 end event, sort all the events by time, and track the running counter's peak value."</p>
+    <ul>
+      <li><code>Merge intervals</code> → <span class="hl hl-blue">sort by start</span>, extend the end when the next one overlaps.</li>
+      <li><code>Can attend all meetings?</code> → sort by start, <span class="hl hl-basic">any</span> overlap at all means no.</li>
+      <li><code>Minimum rooms needed?</code> → <span class="hl hl-inter">+1/-1 events</span>, sweep, track the peak count.</li>
+      <li>Sweep line turns <span class="hl hl-hot">O(n²) pairwise checks</span> into one sort plus a single linear pass.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Almost every interval problem has the same first move: <span class="hl hl-blue">sort</span> the intervals —
+      usually by start time, sometimes by end time depending on the exact question. Once they're sorted, you can
+      walk through them once, left to right, instead of comparing every interval against every other one.</p>
+
+      <p><b>Merge intervals</b> walks the sorted list and keeps a "current" merged interval: if the next interval's
+      start is at or before the current one's end, they overlap, so the end gets extended to whichever end is
+      later; otherwise the current interval is finished and a new one starts. <b>Meeting rooms</b> splits into two
+      genuinely different questions: "can one person attend every meeting" just needs any single overlap to say
+      no, but "what's the minimum number of rooms" needs to know how many meetings are active <i>at the same
+      time</i> — which is where the <span class="hl hl-inter">sweep line</span> technique earns its keep. Splitting
+      every interval into a <code>+1</code> event at its start and a <code>-1</code> event at its end, sorting all
+      of those events together by time, and sweeping through with a running counter turns "how many overlap at
+      once" into a single linear pass — the counter's highest value during that sweep is both the answer to
+      "maximum simultaneous overlap" and "minimum rooms needed."</p>
+
+      <p>Interval scheduling — picking the largest possible set of non-overlapping intervals — is a related but
+      separate question, already covered from the greedy angle on the Greedy Algorithms page (sort by
+      <b>end</b> time, always take the earliest-ending interval that doesn't conflict). This page's own
+      contribution is the sweep line: the technique for counting overlaps over time, not just picking a
+      non-overlapping set.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Merge Intervals</th><th>Can Attend All?</th><th>Min Rooms Needed</th><th>Interval Scheduling</th></tr></thead>
+        <tbody>
+          <tr><th>Sort by</th><td>start time</td><td>start time</td><td>event time (starts &amp; ends)</td><td>end time</td></tr>
+          <tr><th>Technique</th><td>one linear merge pass</td><td>check for any overlap</td><td>sweep +1/-1, track the peak</td><td>greedy pick, earliest end first</td></tr>
+          <tr><th>Answers</th><td>the merged interval list</td><td>yes / no</td><td>peak concurrent count</td><td>max count that fit with no overlap</td></tr>
+        </tbody>
+      </table>
+
+      <p>One genuine edge case worth knowing: when a start event and an end event land on the exact same time
+      value, whether you process the end first or the start first can change the answer — it depends on whether
+      the problem counts a meeting ending at 2:00 and another starting at 2:00 as overlapping. There's no
+      universal tie-breaking rule; it follows from that specific problem's own definition of "overlapping."</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>intervals.Sort((a, b) => a.Start.CompareTo(b.Start));   <span class="cx-cmt">// sort by start, once</span>
+
+<span class="kw">var</span> merged = <span class="kw">new</span> List&lt;(<span class="kw">int</span> Start, <span class="kw">int</span> End)&gt; { intervals[<span class="num">0</span>] };
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">1</span>; i &lt; intervals.Count; i++)
+{
+    <span class="kw">var</span> last = merged[^<span class="num">1</span>];
+    <span class="kw">if</span> (intervals[i].Start &lt;= last.End)                    <span class="cx-ok">// ✅ overlaps — extend</span>
+        merged[^<span class="num">1</span>] = (last.Start, Math.Max(last.End, intervals[i].End));
+    <span class="kw">else</span>
+        merged.Add(intervals[i]);                          <span class="cx-err">// ❌ no overlap — new interval</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Sort once, then <b>one linear pass</b> — extend the current interval, or start a new one.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> events = <span class="kw">new</span> List&lt;(<span class="kw">int</span> Time, <span class="kw">int</span> Delta)&gt;();
+<span class="kw">foreach</span> (<span class="kw">var</span> m <span class="kw">in</span> meetings)
+{
+    events.Add((m.Start, <span class="num">+1</span>));                        <span class="cx-cmt">// start → +1</span>
+    events.Add((m.End, <span class="num">-1</span>));                          <span class="cx-cmt">// end → -1</span>
+}
+events.Sort((a, b) => a.Time.CompareTo(b.Time));       <span class="cx-cmt">// starts &amp; ends, mixed, by time</span>
+
+<span class="kw">int</span> active = <span class="num">0</span>, peak = <span class="num">0</span>;
+<span class="kw">foreach</span> (<span class="kw">var</span> e <span class="kw">in</span> events)
+{
+    active += e.Delta;
+    peak = Math.Max(peak, active);                     <span class="cx-ok">// 🔺 track the peak</span>
+}
+<span class="cx-cmt">// peak == minimum meeting rooms needed</span></code></pre>
+      </div>
+      <p class="cx-note">The counter's <b>peak value</b> across the whole sweep is the minimum rooms needed.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your team's calendar app needs to show "3 meetings are happening right now," or book the fewest
+      possible conference rooms for a packed day's schedule.</b> Both are the same sweep-line problem: convert
+      every meeting into a start/end event, sort the events by time, sweep through once, and the running
+      counter's peak value is the answer — no meeting ever needs to be compared directly against every other
+      meeting.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="index.html" style="color:var(--ink-soft); font-weight:600;">← Prefix Sum &amp; Difference Array <span style="font-weight:400; font-size:11px;">(coming soon)</span></a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to DSA Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="index.html" style="color:var(--ink-soft); font-weight:600;">Balanced Trees <span style="font-weight:400; font-size:11px;">(coming soon)</span> →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · DSA · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
