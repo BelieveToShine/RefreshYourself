@@ -148,16 +148,19 @@ through all 7 phases:**
   track was the first to follow correctly. Every diagram passed the mandatory automated
   verification script, run independently against every single page. See
   [`specs/angular/overview.md`](superpowers/specs/angular/overview.md).
-- **Python** — **Phases 1–6 complete, Phase 7 not started** (2026-09-18):
+- **Python** — **all 7 phases complete, 43/43 pages written** (2026-09-18):
   [`question-taxonomy.md`](superpowers/specs/python/question-taxonomy.md) (43 concept groups,
   incl. a Phase 2 gap-hunt that added 8 items — `enum`, `collections`, walrus/`match`-`case`,
   positional-only/keyword-only params, exception chaining, `itertools`, `pathlib` vs. `os.path`,
   `__slots__`, free-threaded CPython) → [`roadmap.md`](superpowers/specs/python/roadmap.md) → 43
-  tiered/prioritized pages **planned but not yet written**. Unique to this track: "predict the
-  output" is a sixth question-variant type (a short code snippet + "what does this print, and
-  why?") used wherever behavior matters more than definition. `python/roadmap.html` and the root
-  tile's badge are wired per the Phase-1 mandate; the tile stays "Coming soon" until Phase 7
-  completes. Not part of the ordered core-backend path — grouped with React/Angular/DSA/AI. See
+  tiered/prioritized pages, live on the site and on
+  [`python/roadmap.html`](../python/roadmap.html), grouped by 11 cross-tier concept clusters
+  rather than by tier. Unique to this track: "predict the output" is a sixth question-variant
+  type (a short code snippet + "what does this print, and why?") used wherever behavior matters
+  more than definition — confirmed rendered as real code blocks on every `[predict]`-tagged page,
+  not reworded into plain definitional questions. Every diagram passed the mandatory automated
+  verification script, run independently against every single page (43 pages, 45 diagrams).
+  Not part of the ordered core-backend path — grouped with React/Angular/DSA/AI. See
   [`specs/python/overview.md`](superpowers/specs/python/overview.md).
 - **AI** — roadmap-only skeleton across all three tiers, sourced from `AI-Interview-Topics.md`.
   **Do not write AI content until told to.** See
