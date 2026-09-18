@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Management — Python Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="python/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#306998;">🐍 Python</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Memory Management</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Python · Advanced · Must Know</div>
+    <h1>Reference counting frees an object the instant its count hits zero —
+    <span class="hl hl-hot">cyclic references</span> are the one case that needs a separate
+    garbage collector</h1>
+    <p class="interview-q">How does Python manage memory? Can a Python application actually leak
+    memory, and how would you investigate growing memory usage?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Tests whether you know Python's <b>primary</b> memory mechanism is deterministic
+        reference counting, not a background sweep like some other garbage-collected languages —
+        and that a separate cyclic collector only exists for the one case refcounting can't
+        solve on its own.</li>
+        <li>Explains why a "garbage-collected" language can still leak memory in production — a
+        very common misconception this exact question is designed to probe.</li>
+        <li>A frequent opener before asking how you'd actually investigate rising memory in a
+        live service — the answer needs real tools, not just "call <code>gc.collect()</code>."</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Reference counting = <b>"frees an object the instant its refcount hits
+    zero."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> a cycle (<code>A ↔ B</code>) can never hit
+    zero alone — that's exactly what the <code>gc</code> module's cyclic collector exists to
+    clean up.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 340" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="dShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arRed" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arGreen" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.3">REFCOUNT ALONE NEVER FREES A CYCLE</text>
+
+      <!-- no outside reference pill -->
+      <rect x="180" y="26" width="280" height="20" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="320" y="40" text-anchor="middle" font-size="9.5" font-weight="700" fill="#b91c1c">🚫 NOTHING OUTSIDE REFERS TO A OR B</text>
+
+      <!-- top connector A -> B -->
+      <text x="320" y="64" text-anchor="middle" font-size="9" font-weight="700" fill="#b91c1c">refers to →</text>
+      <path d="M120,100 V76 H520 V100" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arRed)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+
+      <!-- Object A -->
+      <g filter="url(#dShadow)"><rect x="40" y="100" width="160" height="72" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="120" y="122" text-anchor="middle" font-size="15">🔗</text>
+      <text x="120" y="142" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c" letter-spacing="0.2">OBJECT A</text>
+      <text x="120" y="160" text-anchor="middle" font-size="8.5" fill="#7f1d1d">refs: 1 (only from B)</text>
+
+      <!-- Object B -->
+      <g filter="url(#dShadow)"><rect x="440" y="100" width="160" height="72" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="520" y="122" text-anchor="middle" font-size="15">🔗</text>
+      <text x="520" y="142" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c" letter-spacing="0.2">OBJECT B</text>
+      <text x="520" y="160" text-anchor="middle" font-size="8.5" fill="#7f1d1d">refs: 1 (only from A)</text>
+
+      <!-- bottom connector B -> A -->
+      <path d="M520,172 V200 H120 V172" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arRed)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+      <text x="320" y="214" text-anchor="middle" font-size="9" font-weight="700" fill="#b91c1c">← refers to</text>
+
+      <!-- cyclic GC sweep -->
+      <path d="M260,230 L120,172" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arGreen)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+      <path d="M380,230 L520,172" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arGreen)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#dShadow)"><rect x="220" y="230" width="200" height="60" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="252" text-anchor="middle" font-size="14">🧹</text>
+      <text x="320" y="272" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing="0.2">CYCLIC GC (gc module)</text>
+      <text x="320" y="286" text-anchor="middle" font-size="8.5" fill="#166534">periodic sweep — collects cycles</text>
+
+      <text x="320" y="316" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">✅ both freed — memory reclaimed</text>
+    </svg>
+    <figcaption>Object A and Object B reference each other — each sits at refcount 1 forever,
+    even though nothing outside the cycle points to either one. CPython's cyclic garbage
+    collector (the <code>gc</code> module) periodically sweeps for exactly this pattern and frees
+    both once nothing external references them.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Python has garbage collection, so it can't leak memory" is not
+    true.</b> Reference cycles are only one source — a forgotten global cache, an event-handler
+    registry that never unregisters, or an unclosed resource all cause very real, very common
+    memory growth in production.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What does <code>__slots__</code> actually save, and what do you give
+    up?"</b> It saves the per-instance <code>__dict__</code> overhead — meaningful at scale with
+    many instances of a simple data-holding class — but gives up dynamic attribute assignment and
+    complicates certain inheritance/pickling patterns.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Reference counting frees objects immediately at refcount zero — the
+    cyclic GC exists specifically for reference cycles that refcounting alone can never
+    resolve."</p>
+    <ul>
+      <li><code>gc</code> module → <span class="hl hl-hot">collects reference cycles</span>
+      refcounting alone can never resolve, via periodic sweeps.</li>
+      <li>Real leaks happen via <span class="hl hl-inter">forgotten caches or registries</span>
+      and unclosed resources, not just reference cycles.</li>
+      <li><code>__slots__</code> <span class="hl hl-basic">trades dynamic attributes</span> for
+      real per-instance memory savings at scale.</li>
+      <li><code>tracemalloc</code> / <code>objgraph</code> →
+      <span class="hl hl-blue">the tools to actually investigate</span> growing memory in a live
+      service.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>CPython's primary memory-management mechanism is <b>reference counting</b> — every
+      object tracks how many references point to it, and the moment that count hits zero, the
+      object is freed <b>immediately</b>. That's deterministic, not "eventually" the way some
+      other garbage-collected languages behave. The problem is a <b>reference cycle</b> — object
+      A refers to B, and B refers back to A — which can never naturally reach a refcount of zero
+      through refcounting alone, even when nothing outside the cycle refers to either one.</p>
+
+      <p>CPython's separate <b>cyclic garbage collector</b> (the <code>gc</code> module)
+      periodically detects and cleans up exactly this pattern. Objects involved in a cycle that
+      also define <code>__del__</code> were historically harder for the cyclic collector to
+      handle safely — modern CPython handles most of these cases correctly too, but it's still
+      the sharper edge case to know about.</p>
+
+      <p>Genuine leaks come from three places: real reference cycles, something holding an
+      object alive that you forgot about (a growing cache, an event-handler registry that never
+      unregisters, a closure capturing more than intended), or C-extension memory that Python's
+      own allocator never tracked in the first place.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Reference Counting</th><th>Cyclic GC (<code>gc</code> module)</th></tr></thead>
+        <tbody>
+          <tr><th>Runs</th><td>constantly — every time a reference is made or dropped</td><td>periodically, in passes</td></tr>
+          <tr><th>Frees</th><td>the instant a count hits zero</td><td>a cyclic group once nothing outside references it</td></tr>
+          <tr><th>Handles cycles?</th><td>no — a cycle never reaches zero alone</td><td>yes — this is its entire purpose</td></tr>
+          <tr><th>Cost</th><td>essentially free, fully deterministic</td><td>a real but occasional pause, tunable via the <code>gc</code> module</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">class</span> <span class="ty">Point</span>:
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, x, y):
+        <span class="kw">self</span>.x = x
+        <span class="kw">self</span>.y = y
+
+p = Point(<span class="num">1</span>, <span class="num">2</span>)
+p.z = <span class="num">5</span>   <span class="cx-ok"># ✅ works — instance has a normal __dict__</span></code></pre>
+      </div>
+      <p class="cx-note">A plain object stores its attributes in a per-instance
+      <code>__dict__</code> — any new attribute name is allowed at any time.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">class</span> <span class="ty">Point</span>:
+    __slots__ = (<span class="str">'x'</span>, <span class="str">'y'</span>)
+
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, x, y):
+        <span class="kw">self</span>.x = x
+        <span class="kw">self</span>.y = y
+
+p = Point(<span class="num">1</span>, <span class="num">2</span>)
+p.z = <span class="num">5</span>   <span class="cx-err"># ❌ AttributeError: 'Point' object has no attribute 'z'</span></code></pre>
+      </div>
+      <p class="cx-note"><code>__slots__</code> skips the per-instance <code>__dict__</code>
+      entirely — real memory savings at scale, but no attribute outside the declared set.</p>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A long-running service's memory grew unbounded</b> — a request-scoped object was
+      being appended to a module-level list used as an ad-hoc cache that never evicted anything.
+      <code>tracemalloc</code> pinpointed the exact allocation site: the list kept growing on
+      every request, with nothing ever removed. The fix was bounding (or removing) the cache —
+      not chasing a phantom "garbage collector problem."</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="index.html" style="color:var(--ink-soft);">← Metaclasses (coming soon)</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Python Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="index.html" style="color:var(--ink-soft);">GIL (coming soon) →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Python · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
