@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>async / await — JavaScript Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="javascript/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fef9c3;--crumb-ink:#854d0e;">🟨 JavaScript</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">async / await</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 JavaScript · Intermediate · Must Know</div>
+    <h1><code>async</code> / <code>await</code> — <span class="hl hl-hot">does <code>await</code> actually block the whole engine?</span></h1>
+    <p class="interview-q">"What does an async function actually return, and does <code>await</code> block the JavaScript engine while it's waiting?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>The natural next question after Promises — the honest answer is that <code>async</code>/<code>await</code> isn't a new concurrency model, it's syntax written on top of the same Promise.</li>
+        <li>Believing <code>await</code> freezes the whole page leads to a real bug: writing two independent calls as two back-to-back awaits and quietly doubling the wait time.</li>
+        <li>A near-guaranteed follow-up to any Promises question, and often the question that separates "knows the keyword" from "understands the event loop."</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>async function</code> <span class="rarrow">→</span> always returns a <b>Promise</b>, even for a plain value</p>
+      <p class="rrow"><code>await</code> <span class="rarrow">→</span> pauses <b>this function only</b>, hands control back to the event loop</p>
+      <p class="rrow"><code>try/catch</code> <span class="rarrow">→</span> catches a rejected <code>await</code> like a thrown exception</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> async/await is Promises with better handwriting — same states, same event loop, just read top-to-bottom instead of chained.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA6" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA6" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">AWAIT PAUSES THE FUNCTION — NOT THE ENGINE</text>
+      <text x="320" y="36" text-anchor="middle" font-size="10.5" fill="#5b6472">one call stack keeps running other code while the Promise settles</text>
+
+      <text x="40" y="54" font-size="11" font-weight="700" fill="#475569">CALL STACK — asyncFn()</text>
+
+      <g filter="url(#shA6)"><rect x="40" y="64" width="125" height="56" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="102" y="86" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Starts running</text>
+      <text x="102" y="102" text-anchor="middle" font-size="10.5" fill="#5b6472">sync code first</text>
+
+      <g filter="url(#shA6)"><rect x="185" y="64" width="125" height="56" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="247" y="86" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">Hits await</text>
+      <text x="247" y="102" text-anchor="middle" font-size="10.5" fill="#5b6472">pauses + yields</text>
+
+      <g filter="url(#shA6)"><rect x="330" y="64" width="125" height="56" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="6 4"/></g>
+      <text x="392" y="86" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">⏸ Paused</text>
+      <text x="392" y="102" text-anchor="middle" font-size="10.5" fill="#5b6472">off the stack</text>
+
+      <g filter="url(#shA6)"><rect x="475" y="64" width="125" height="56" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="537" y="86" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">▶ Resumes</text>
+      <text x="537" y="102" text-anchor="middle" font-size="10.5" fill="#5b6472">value comes back</text>
+
+      <text x="40" y="163" font-size="11" font-weight="700" fill="#475569">EVENT LOOP — other code keeps going</text>
+      <g filter="url(#shA6)"><rect x="245" y="175" width="255" height="56" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="372" y="197" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">🔁 Other code runs</text>
+      <text x="372" y="213" text-anchor="middle" font-size="10.5" fill="#5b6472">clicks, timers, other functions</text>
+
+      <path d="M250,120 V175" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA6)"/>
+      <text x="220" y="150" text-anchor="end" font-size="10.5" font-weight="700" fill="#92400e">yields ⏭</text>
+
+      <path d="M495,175 V120" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA6)"/>
+      <text x="515" y="150" text-anchor="start" font-size="10.5" font-weight="700" fill="#166534">Promise settles ✅</text>
+    </svg>
+    <figcaption>Hitting <code>await</code> doesn't freeze JavaScript — it pops <code>asyncFn()</code>'s own work off the call stack and lets the event loop run other code, then puts <code>asyncFn()</code> back on the stack once the awaited Promise settles.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 290" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA6b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arR6" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+        <marker id="arL6" markerWidth="8" markerHeight="8" refX="2.5" refY="2.5" orient="auto">
+          <path d="M5.5,0 L0,2.5 L5.5,5 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">SEQUENTIAL AWAITS vs. Promise.all — TOTAL TIME</text>
+      <text x="320" y="36" text-anchor="middle" font-size="10.5" fill="#5b6472">same two calls, different total wait</text>
+
+      <text x="60" y="58" font-size="11" font-weight="700" fill="#475569">SEQUENTIAL — one after another</text>
+      <g filter="url(#shA6b)"><rect x="60" y="66" width="110" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="115" y="94" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">getA()</text>
+      <g filter="url(#shA6b)"><rect x="170" y="66" width="210" height="46" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="275" y="94" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">getB()</text>
+      <text x="220" y="126" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Total = A + B (they add up)</text>
+
+      <text x="60" y="150" font-size="11" font-weight="700" fill="#475569">Promise.all — both start together</text>
+      <g filter="url(#shA6b)"><rect x="60" y="160" width="110" height="22" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="115" y="175" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">getA()</text>
+      <g filter="url(#shA6b)"><rect x="60" y="186" width="210" height="22" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="165" y="201" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">getB()</text>
+      <text x="165" y="222" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Total = max(A, B) — the slower one only</text>
+
+      <path d="M270,240 H380" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-start="url(#arL6)" marker-end="url(#arR6)"/>
+      <path d="M270,232 V248" fill="none" stroke="#94a3b8" stroke-width="1.4"/>
+      <path d="M380,232 V248" fill="none" stroke="#94a3b8" stroke-width="1.4"/>
+      <text x="325" y="262" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">time saved ⏱</text>
+    </svg>
+    <figcaption>Two independent awaits back-to-back make their wait times add up; starting both at once with <code>Promise.all</code> makes the total only as long as the slower one — but only when neither call needs the other's result first.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>await</code> does not pause the whole JavaScript engine.</b> It only pauses the async function it's inside — every other queued piece of work (event handlers, timers, other async functions) keeps running on that same single thread while that one function waits.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If <code>getB()</code> doesn't depend on <code>getA()</code>, why write them as two sequential awaits at all?"</b> Usually just habit from reading top-to-bottom — reach for <code>Promise.all</code> the moment two awaited calls have no dependency on each other; sequential still works, it's just slower.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"An async function always returns a Promise — even a plain returned value gets wrapped in one. <code>await</code> doesn't block the JavaScript engine; it pauses only that function and lets the event loop run other code until the awaited Promise settles, then resumes. A rejected await throws inside the function, so an ordinary try/catch handles it. And two independent awaits in a row make their latencies add up — <code>Promise.all</code> starts them together so the total is only as long as the slower call."</p>
+    <ul>
+      <li><code>async function</code> <span class="hl hl-blue">always returns a Promise</span> — plain values get auto-wrapped.</li>
+      <li><code>await</code> <span class="hl hl-hot">pauses the function, not the engine</span> — other code keeps running.</li>
+      <li>A rejected <code>await</code> <span class="hl hl-inter">throws inside the function</span> — catchable with a normal try/catch.</li>
+      <li>Steps that depend on each other → <span class="hl hl-basic">keep them sequential</span>, no way around it.</li>
+      <li>Independent steps → <span class="hl hl-teal">start together with Promise.all</span> — total ≈ the slower one, not the sum.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><code>async</code>/<code>await</code> is not a different way of doing async work — it's syntax written directly on top of <b>Promises</b> (the previous page). Marking a function <code>async</code> guarantees it always returns a Promise: if the function <code>return</code>s a plain value, JavaScript wraps that value in an already-resolved Promise for you; if it returns a Promise, that Promise is passed through as-is. <code>await</code> is the reverse operation — it unwraps a Promise's resolved value, or throws its rejection, right at that line.</p>
+
+      <p><span class="hl hl-hot">await does not block the JavaScript engine.</span> Hitting an <code>await</code> pauses only the <i>async function it's inside</i> — its own execution is suspended and control is handed back to the event loop immediately, so any other code already queued (other event handlers, timers, other async functions) keeps running on the same single thread. Once the awaited Promise settles, the paused function's remaining code is scheduled to resume — it doesn't just sit there frozen, and it doesn't freeze anything else either.</p>
+
+      <p>Because a rejected <code>await</code> throws at that exact line, an ordinary <code>try/catch</code> around it catches it exactly like a synchronous exception — no separate <code>.catch()</code> chain needed. That's the real ergonomic win over raw Promises: error handling reads like normal control flow instead of a parallel chain of callbacks.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Sequential awaits</th><th>Promise.all</th></tr></thead>
+        <tbody>
+          <tr><th>Starts the second call</th><td>only after the first settles</td><td>immediately, alongside the first</td></tr>
+          <tr><th>Total wait</th><td>A + B — latencies add up</td><td>max(A, B) — bounded by the slower one</td></tr>
+          <tr><th>Requires</th><td>nothing — always safe</td><td>the second call must not depend on the first's result</td></tr>
+          <tr><th>Use it when</th><td>each step needs the previous result</td><td>the steps are independent</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">async</span> <span class="kw">function</span> loadUser(id) {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> res = <span class="kw">await</span> fetch(<span class="str">`/api/users/${id}`</span>);   <span class="cx-cmt">// may reject (network down)</span>
+    <span class="kw">if</span> (!res.ok) <span class="kw">throw</span> <span class="kw">new</span> Error(<span class="str">"Bad response"</span>); <span class="cx-cmt">// a rejected await throws HERE</span>
+    <span class="kw">return</span> <span class="kw">await</span> res.json();
+  } <span class="kw">catch</span> (err) {
+    console.error(<span class="str">"Failed to load user:"</span>, err); <span class="cx-ok">// ✅ caught — a normal try/catch</span>
+    <span class="kw">return</span> <span class="kw">null</span>;
+  }
+}</code></pre>
+      </div>
+      <p class="cx-note">A rejected <code>await</code> throws right at that line — the surrounding <code>try/catch</code> catches it exactly like a synchronous exception.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">async</span> <span class="kw">function</span> loadUserUnsafe(id) {
+  <span class="kw">const</span> res = <span class="kw">await</span> fetch(<span class="str">`/api/users/${id}`</span>); <span class="cx-cmt">// ❌ no try/catch anywhere</span>
+  <span class="kw">return</span> <span class="kw">await</span> res.json();                  <span class="cx-cmt">// a rejection here has nowhere to go</span>
+}
+loadUserUnsafe(<span class="num">42</span>);   <span class="cx-err">// 🐛 unhandled promise rejection — caller never even finds out</span></code></pre>
+      </div>
+      <p class="cx-note">With no <code>try/catch</code> (and no <code>.catch()</code> on the call), a rejected <code>await</code> just makes the function's own returned Promise reject — silently, unless something is watching for it.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Sequential — getB() doesn't start until getA() has fully settled</span>
+<span class="kw">const</span> a = <span class="kw">await</span> getA();    <span class="cx-cmt">// wait ~120ms</span>
+<span class="kw">const</span> b = <span class="kw">await</span> getB();    <span class="cx-cmt">// THEN wait ~200ms — total ≈ 320ms</span>
+
+<span class="cx-cmt">// Concurrent — both start at the same instant</span>
+<span class="kw">const</span> [a2, b2] = <span class="kw">await</span> <span class="ty">Promise</span>.all([getA(), getB()]); <span class="cx-ok">// total ≈ 200ms — the slower one</span></code></pre>
+      </div>
+      <p class="cx-note">Only correct when <code>getB()</code> doesn't need <code>a</code>'s result — if it does, sequential is the only option, no matter how tempting <code>Promise.all</code> looks.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A profile page loads a user's details and their notifications in two awaited calls, one after another, and it feels slower than it should.</b> Check whether the two calls actually depend on each other — here they don't, so switching to <code>Promise.all</code> fires both requests immediately and the page loads in roughly the time of the slower one, not both added together.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <span style="color:var(--ink-soft); font-weight:700;">Promises <span style="font-weight:400; font-style:italic;">(coming soon)</span></span>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to JavaScript Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <span style="color:var(--ink-soft); font-weight:700;">Event Loop <span style="font-weight:400; font-style:italic;">(coming soon)</span></span>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · JavaScript · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
