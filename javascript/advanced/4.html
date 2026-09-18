@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Debounce vs. Throttle — JavaScript Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="javascript/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fef9c3;--crumb-ink:#854d0e;">🟨 JavaScript</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Debounce vs. Throttle</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 JavaScript · Advanced · Must Know</div>
+    <h1>Same goal, opposite clocks — <span class="hl hl-blue">debounce</span> waits for silence, <span class="hl hl-inter">throttle</span> never stops ticking</h1>
+    <p class="interview-q">"Can you implement debounce and throttle from scratch, and explain when you'd reach for each one?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>One of the most common live-coding exercises in a front-end interview — you're
+        expected to write working code on the spot, not just describe the idea.</li>
+        <li>Both show up constantly in production: a search-as-you-type box, a resize handler, an
+        infinite-scroll listener, a "save" button someone can double-click by accident.</li>
+        <li>Mixing them up is a real bug, not just a vocabulary slip — using throttle where you
+        needed debounce fires a search request on every keystroke instead of waiting for the user
+        to stop typing.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline"><b>Debounce = "wait for quiet." Throttle = "at most once per tick."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>debounce</code></b> keeps pushing a
+    deadline back until you stop calling it; <b><code>throttle</code></b> never moves its clock —
+    it just ignores calls that land between ticks.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <!-- Divider -->
+      <path d="M320,18 V272" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="6 6"/>
+
+      <!-- Panel titles -->
+      <text x="160" y="26" text-anchor="middle" font-size="15" font-weight="700" fill="#1d4ed8">⏳ DEBOUNCE</text>
+      <text x="480" y="26" text-anchor="middle" font-size="15" font-weight="700" fill="#92400e">⚡ THROTTLE</text>
+      <text x="160" y="45" text-anchor="middle" font-size="10.5" fill="#5b6472">fires once, after calls STOP</text>
+      <text x="480" y="45" text-anchor="middle" font-size="10.5" fill="#5b6472">fires every interval — no matter what</text>
+
+      <!-- ===================== DEBOUNCE PANEL ===================== -->
+      <!-- Call ticks: rapid calls, each one resets the timer -->
+      <g fill="#fee2e2" stroke="#dc2626" stroke-width="1.5">
+        <circle cx="40" cy="193" r="4.5"/>
+        <circle cx="55" cy="193" r="4.5"/>
+        <circle cx="70" cy="193" r="4.5"/>
+        <circle cx="85" cy="193" r="4.5"/>
+        <circle cx="100" cy="193" r="4.5"/>
+        <circle cx="115" cy="193" r="4.5"/>
+      </g>
+      <g stroke="#dc2626" stroke-width="1" stroke-opacity="0.4">
+        <path d="M40,198 V225"/>
+        <path d="M55,198 V225"/>
+        <path d="M70,198 V225"/>
+        <path d="M85,198 V225"/>
+        <path d="M100,198 V225"/>
+        <path d="M115,198 V225"/>
+      </g>
+      <text x="77" y="170" text-anchor="middle" font-size="9.5" font-weight="600" fill="#5b6472">each call resets the timer</text>
+
+      <!-- Waiting gap, marching ants along the axis showing the pause -->
+      <path d="M119,225 H241" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="6 6">
+        <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.4s" repeatCount="indefinite"/>
+      </path>
+
+      <!-- Execute mark: fires once the pause is reached -->
+      <circle cx="245" cy="193" r="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2">
+        <animate attributeName="r" values="8;10;8" dur="1.4s" repeatCount="indefinite"/>
+      </circle>
+      <text x="245" y="196.5" text-anchor="middle" font-size="9" fill="#166534">✓</text>
+      <path d="M245,201 V225" fill="none" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="245" y="170" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">🔥 fires here</text>
+
+      <!-- Debounce axis -->
+      <path d="M20,225 H300" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+      <path d="M300,225 L291,220 L291,230 Z" fill="#94a3b8"/>
+      <text x="172" y="245" text-anchor="middle" font-size="9" font-style="italic" fill="#94a3b8">no calls — silence</text>
+      <text x="300" y="245" text-anchor="end" font-size="9.5" fill="#94a3b8">time →</text>
+
+      <!-- ===================== THROTTLE PANEL ===================== -->
+      <!-- Call ticks: calls keep arriving the whole time -->
+      <g fill="#fee2e2" stroke="#dc2626" stroke-width="1.3">
+        <circle cx="350" cy="193" r="4"/>
+        <circle cx="368" cy="193" r="4"/>
+        <circle cx="386" cy="193" r="4"/>
+        <circle cx="404" cy="193" r="4"/>
+        <circle cx="422" cy="193" r="4"/>
+        <circle cx="440" cy="193" r="4"/>
+        <circle cx="458" cy="193" r="4"/>
+        <circle cx="476" cy="193" r="4"/>
+        <circle cx="494" cy="193" r="4"/>
+        <circle cx="512" cy="193" r="4"/>
+        <circle cx="530" cy="193" r="4"/>
+        <circle cx="548" cy="193" r="4"/>
+        <circle cx="566" cy="193" r="4"/>
+        <circle cx="584" cy="193" r="4"/>
+        <circle cx="602" cy="193" r="4"/>
+      </g>
+      <g stroke="#dc2626" stroke-width="1" stroke-opacity="0.35">
+        <path d="M350,198 V225"/>
+        <path d="M368,198 V225"/>
+        <path d="M386,198 V225"/>
+        <path d="M404,198 V225"/>
+        <path d="M422,198 V225"/>
+        <path d="M440,198 V225"/>
+        <path d="M458,198 V225"/>
+        <path d="M476,198 V225"/>
+        <path d="M494,198 V225"/>
+        <path d="M512,198 V225"/>
+        <path d="M530,198 V225"/>
+        <path d="M548,198 V225"/>
+        <path d="M566,198 V225"/>
+        <path d="M584,198 V225"/>
+        <path d="M602,198 V225"/>
+      </g>
+      <text x="480" y="213" text-anchor="middle" font-size="9.5" font-weight="600" fill="#5b6472">calls keep arriving the whole time</text>
+
+      <!-- Execute marks: fixed clock, regardless of call volume -->
+      <g>
+        <circle cx="368" cy="157" r="7" fill="#dcfce7" stroke="#16a34a" stroke-width="2">
+          <animate attributeName="r" values="7;9;7" dur="1.4s" repeatCount="indefinite"/>
+        </circle>
+        <text x="368" y="160" text-anchor="middle" font-size="8" fill="#166534">✓</text>
+        <path d="M368,164 V225" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-opacity="0.6"/>
+      </g>
+      <g>
+        <circle cx="440" cy="157" r="7" fill="#dcfce7" stroke="#16a34a" stroke-width="2">
+          <animate attributeName="r" values="7;9;7" dur="1.4s" begin="0.35s" repeatCount="indefinite"/>
+        </circle>
+        <text x="440" y="160" text-anchor="middle" font-size="8" fill="#166534">✓</text>
+        <path d="M440,164 V225" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-opacity="0.6"/>
+      </g>
+      <g>
+        <circle cx="512" cy="157" r="7" fill="#dcfce7" stroke="#16a34a" stroke-width="2">
+          <animate attributeName="r" values="7;9;7" dur="1.4s" begin="0.7s" repeatCount="indefinite"/>
+        </circle>
+        <text x="512" y="160" text-anchor="middle" font-size="8" fill="#166534">✓</text>
+        <path d="M512,164 V225" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-opacity="0.6"/>
+      </g>
+      <g>
+        <circle cx="584" cy="157" r="7" fill="#dcfce7" stroke="#16a34a" stroke-width="2">
+          <animate attributeName="r" values="7;9;7" dur="1.4s" begin="1.05s" repeatCount="indefinite"/>
+        </circle>
+        <text x="584" y="160" text-anchor="middle" font-size="8" fill="#166534">✓</text>
+        <path d="M584,164 V225" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-opacity="0.6"/>
+      </g>
+      <text x="480" y="136" text-anchor="middle" font-size="9.5" font-weight="600" fill="#166534">🕐 fires every fixed interval</text>
+
+      <!-- Throttle axis -->
+      <path d="M340,225 H620" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+      <path d="M620,225 L611,220 L611,230 Z" fill="#94a3b8"/>
+      <text x="620" y="245" text-anchor="end" font-size="9.5" fill="#94a3b8">time →</text>
+
+      <!-- Legend -->
+      <circle cx="190" cy="278" r="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+      <text x="202" y="281" font-size="10" fill="#5b6472">call happens</text>
+      <circle cx="375" cy="278" r="5" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+      <text x="387" y="281" font-size="10" fill="#5b6472">call executes</text>
+    </svg>
+    <figcaption>Same burst of calls, two different clocks — debounce waits for the burst to end; throttle keeps its own steady beat through it.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Throttle is not "debounce but faster."</b> Throttle still fires
+    repeatedly, at a fixed pace, WHILE calls keep coming — it never waits for silence the way
+    debounce does.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's the difference between leading and trailing execution?"</b>
+    Leading fires immediately on the first call, then ignores the rest until the window ends;
+    trailing waits and fires at the end of the window instead. Most simple implementations are
+    trailing-only — supporting both in one function takes extra bookkeeping.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Debounce delays execution until the calls stop — every new call
+    cancels the pending timer and starts a fresh one. Throttle executes at a fixed rate no matter
+    how many calls come in, ignoring extra calls until the interval passes."</p>
+    <ul>
+      <li><span class="hl hl-blue">Debounce</span> → search-as-you-type, resize-end, save-on-idle — wait for the user to stop.</li>
+      <li><span class="hl hl-inter">Throttle</span> → scroll tracking, drag/mousemove, rate-limiting a button — stay responsive but capped.</li>
+      <li>Debounce implementation: <code>clearTimeout</code> the pending call, then <code>setTimeout</code> a new one.</li>
+      <li>Throttle implementation: track a <span class="hl hl-teal">"can run now"</span> flag or last-run timestamp, ignore calls until the interval passes.</li>
+      <li><span class="hl hl-hot">Trailing is the naive default</span> — leading fires on the first call instead of the last.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Debounce</b> is a delay that keeps getting pushed back. Every time the debounced
+      function is called, it cancels whatever timer is still pending and starts a brand new one.
+      The wrapped function only actually runs once the calls stop coming in for the full delay —
+      one call, one execution, always at the end of the burst.</p>
+
+      <p><b>Throttle</b> is a fixed-rate limiter instead of a delay. It runs the function
+      immediately (or on the next tick), then locks itself for a set interval — any call that
+      lands inside that locked window is simply dropped. It doesn't care whether calls are still
+      coming in; it just refuses to run again until its own clock says the interval is up.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Debounce</th><th>Throttle</th></tr></thead>
+        <tbody>
+          <tr><th>Waits for</th><td>silence — no new calls</td><td>nothing — its own fixed clock</td></tr>
+          <tr><th>Runs</th><td>once, at the end of a burst</td><td>repeatedly, at a steady rate</td></tr>
+          <tr><th>Typical use</th><td>search box, resize-end, autosave</td><td>scroll position, drag, rate-limit a click</td></tr>
+          <tr><th>Risk if swapped</th><td>UI feels laggy — nothing runs until silence</td><td>too many calls — fires on every keystroke</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// trailing debounce — waits for calls to STOP for `delay` ms</span>
+<span class="kw">function</span> debounce(fn, delay) {
+  <span class="kw">let</span> timerId = <span class="kw">null</span>;
+  <span class="kw">return function</span>(...args) {
+    clearTimeout(timerId);           <span class="cx-cmt">// cancel the pending run — resets the wait</span>
+    timerId = setTimeout(() =&gt; {
+      fn.apply(<span class="kw">this</span>, args);   <span class="cx-cmt">// only the LAST call in the burst survives</span>
+    }, delay);
+  };
+}
+
+<span class="kw">const</span> onType = debounce(searchApi, <span class="num">300</span>);
+input.addEventListener(<span class="str">"input"</span>, onType);  <span class="cx-cmt">// fires 300ms after typing stops</span></code></pre>
+      </div>
+      <p class="cx-note">Every call clears the previous timer before starting a new one — only a
+      call followed by <code>delay</code> ms of silence ever actually runs <code>fn</code>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// leading throttle — runs immediately, then ignores calls for `limit` ms</span>
+<span class="kw">function</span> throttle(fn, limit) {
+  <span class="kw">let</span> canRun = <span class="kw">true</span>;
+  <span class="kw">return function</span>(...args) {
+    <span class="kw">if</span> (!canRun) <span class="kw">return</span>;    <span class="cx-cmt">// still inside the locked window — drop this call</span>
+    canRun = <span class="kw">false</span>;
+    fn.apply(<span class="kw">this</span>, args);
+    setTimeout(() =&gt; { canRun = <span class="kw">true</span>; }, limit);  <span class="cx-cmt">// unlock after the interval</span>
+  };
+}
+
+<span class="kw">const</span> onScroll = throttle(updatePosition, <span class="num">200</span>);
+window.addEventListener(<span class="str">"scroll"</span>, onScroll);  <span class="cx-cmt">// runs at most every 200ms</span></code></pre>
+      </div>
+      <p class="cx-note">The <code>canRun</code> flag is the whole trick — calls that arrive while
+      it's <code>false</code> are simply dropped, not queued or delayed.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Debounce is an elevator door: every time someone new walks up, it resets the "closing"
+      timer — it only actually closes once no one's arrived for a few seconds. Throttle is a
+      security camera taking a photo every 5 seconds: people can walk past constantly, but it
+      only ever captures on its own fixed schedule, not one per person.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <span style="color:var(--ink-soft); font-weight:700;">Promise Combinators <span style="font-weight:400; font-style:italic;">(coming soon)</span></span>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to JavaScript Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="5.html">Memory &amp; Garbage Collection →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · JavaScript · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
