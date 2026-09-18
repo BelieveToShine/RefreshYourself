@@ -1095,7 +1095,7 @@ window.NAV_INDEX = {
   },
   "javascript/basic": {
     track: "JavaScript",
-    trackIcon: "🟨",
+    trackIcon: "⚡",
     tier: "Basic",
     groups: [
       {
@@ -1123,7 +1123,7 @@ window.NAV_INDEX = {
   },
   "javascript/intermediate": {
     track: "JavaScript",
-    trackIcon: "🟨",
+    trackIcon: "⚡",
     tier: "Intermediate",
     groups: [
       {
@@ -1155,7 +1155,7 @@ window.NAV_INDEX = {
   },
   "javascript/advanced": {
     track: "JavaScript",
-    trackIcon: "🟨",
+    trackIcon: "⚡",
     tier: "Advanced",
     groups: [
       {

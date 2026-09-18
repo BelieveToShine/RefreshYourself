@@ -166,7 +166,7 @@ roughly the source material's own thematic order, then ⭐, then 🧠 last.
 
 - **Code examples are JavaScript** (not C#) — the one track on this site where that's true by
   definition; every other rule (diagram style, page template, verification) still applies as-is.
-- Icon 🟨, track color amber/yellow (`#eab308`) — set when the homepage tile was first added
+- Icon ⚡, track color amber/yellow (`#eab308`) — set when the homepage tile was first added
   (2026-09-18), distinct from DSA's `#f59e0b` amber and Python's blue.
 - **Not part of the ordered core-backend path** — sits in the new "🎨 Frontend" homepage section
   alongside HTML & CSS, React, and Angular, per the user's own restructuring request.

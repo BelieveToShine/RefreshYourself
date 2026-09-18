@@ -81,7 +81,7 @@ keeping it in sync with the live pages.
   linked rows with accurate written-counts (11/11, 15/15, 12/12); `javascript/roadmap.html`
   flipped the same way; the root `index.html` JavaScript tile flipped from `class="tile soon"`
   with a "Coming soon" ribbon to the active-tile pattern every other completed track uses, with
-  all three tier pills linked — icon 🟨 and color `#eab308` (both set when the tile was first
+  all three tier pills linked — icon ⚡ and color `#eab308` (both set when the tile was first
   added to the new "🎨 Frontend" homepage section) preserved.
 
 ## Basic (11 topics) — 11 written
@@ -150,7 +150,7 @@ provenance and [accuracy.md](../../rules/accuracy.md).
 
 ## Track-specific decisions and boundaries
 
-- Icon 🟨, track color amber/yellow (`#eab308`) — set when the homepage tile was first added
+- Icon ⚡, track color amber/yellow (`#eab308`) — set when the homepage tile was first added
   (2026-09-18), as part of the new "🎨 Frontend" homepage section alongside HTML & CSS, React,
   and Angular.
 - **Deliberately organized around mental models and behavior, not a syntax reference** — the
