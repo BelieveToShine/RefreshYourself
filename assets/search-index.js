@@ -306,6 +306,8 @@ window.SEARCH_INDEX = [
   { title: "Scenario: Architecture Decisions", track: "React", tier: "Advanced", path: "react/advanced/18.html", keywords: "architecture decisions csr ssr server components trade-off scenario react" },
   { title: "AI — track home", track: "AI", tier: "", path: "ai/index.html", keywords: "ai genai llm generative overview" },
   { title: "AI Basic — topic list", track: "AI", tier: "Basic", path: "ai/basic/index.html", keywords: "ai basic list roadmap tokens embeddings prompt" },
+  { title: "Tokens, Context Window & Temperature", track: "AI", tier: "Basic", path: "ai/basic/1.html", keywords: "token context window temperature top-p top-k nucleus sampling max tokens stop sequence deterministic greedy ai llm" },
+  { title: "Embeddings", track: "AI", tier: "Basic", path: "ai/basic/2.html", keywords: "embedding vector cosine similarity normalize normalization semantic search rag retrieval clustering deduplication nearest neighbor dimension" },
   { title: "AI Intermediate — topic list", track: "AI", tier: "Intermediate", path: "ai/intermediate/index.html", keywords: "ai intermediate list roadmap rag agents tools fine-tuning" },
   { title: "AI Advanced — topic list", track: "AI", tier: "Advanced", path: "ai/advanced/index.html", keywords: "ai advanced list roadmap guardrails eval llmops cost" },
   { title: "AI — full roadmap", track: "AI", tier: "", path: "ai/roadmap.html", keywords: "ai roadmap all topics plan overview genai llm" },

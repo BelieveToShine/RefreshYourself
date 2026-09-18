@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tokens, Context Window &amp; Temperature — AI Basic — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fae8ff;--crumb-ink:#c026d3;">🤖 AI</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Tokens, Context Window &amp; Temperature</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 AI · Basic · Must Know</div>
+    <h1>Same prompt, different answer every time — until you touch <span class="hl hl-blue">one knob</span></h1>
+    <p class="interview-q">"Explain temperature vs. top-p. When would you set temperature to 0?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Every single API call to an LLM carries these settings — this is baseline literacy before RAG, agents, or anything else in the track makes sense.</li>
+        <li>Directly explains why the same prompt can come back with a different answer twice, which is usually the first thing a skeptical stakeholder asks about.</li>
+        <li>A near-universal opening question in AI/GenAI interviews, right after "what is a token" and before anything about architecture comes up.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Token <span class="rarrow">→</span> the actual billed <b>unit</b>, often a piece of a word</p>
+      <p class="rrow">Context window <span class="rarrow">→</span> max tokens the model can <b>see</b> in one call</p>
+      <p class="rrow">Temperature ≈ 0 <span class="rarrow">→</span> <b>greedy</b> — same pick almost every time</p>
+      <p class="rrow">Higher temperature <span class="rarrow">→</span> <b>flatter</b> odds, more varied picks</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> temperature never changes <b>which</b> token is most likely — only <b>how flat</b> the curve looks right before one gets picked.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="aiShadow1" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">NEXT-TOKEN PROBABILITY FOR: "THE SKY IS ___"</text>
+
+      <!-- left zone: temperature ~ 0 -->
+      <rect x="10" y="40" width="300" height="240" rx="14" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <text x="160" y="58" text-anchor="middle" font-size="12" font-weight="800" fill="#1d4ed8">🧊 TEMPERATURE ≈ 0 — GREEDY</text>
+      <text x="160" y="90" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🎯 nearly always picked</text>
+
+      <!-- right zone: high temperature -->
+      <rect x="330" y="40" width="300" height="240" rx="14" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <text x="480" y="58" text-anchor="middle" font-size="12" font-weight="800" fill="#92400e">🔥 HIGH TEMPERATURE — VARIED</text>
+      <text x="480" y="90" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🎲 several are real contenders</text>
+
+      <!-- left bars: one dominant, four almost-zero -->
+      <g filter="url(#aiShadow1)"><rect x="45" y="106" width="30" height="140" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow1)"><rect x="95" y="232" width="30" height="14" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow1)"><rect x="145" y="236" width="30" height="10" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow1)"><rect x="195" y="238" width="30" height="8" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow1)"><rect x="245" y="240" width="30" height="6" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+
+      <text x="60" y="262" text-anchor="middle" font-size="11" fill="#5b6472">blue</text>
+      <text x="110" y="262" text-anchor="middle" font-size="11" fill="#5b6472">clear</text>
+      <text x="160" y="262" text-anchor="middle" font-size="11" fill="#5b6472">grey</text>
+      <text x="210" y="262" text-anchor="middle" font-size="11" fill="#5b6472">huge</text>
+      <text x="260" y="262" text-anchor="middle" font-size="11" fill="#5b6472">vast</text>
+
+      <!-- right bars: flatter, closer heights -->
+      <g filter="url(#aiShadow1)"><rect x="365" y="151" width="30" height="95" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow1)"><rect x="415" y="158" width="30" height="88" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow1)"><rect x="465" y="166" width="30" height="80" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow1)"><rect x="515" y="171" width="30" height="75" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow1)"><rect x="565" y="176" width="30" height="70" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+
+      <text x="380" y="262" text-anchor="middle" font-size="11" fill="#5b6472">blue</text>
+      <text x="430" y="262" text-anchor="middle" font-size="11" fill="#5b6472">clear</text>
+      <text x="480" y="262" text-anchor="middle" font-size="11" fill="#5b6472">grey</text>
+      <text x="530" y="262" text-anchor="middle" font-size="11" fill="#5b6472">huge</text>
+      <text x="580" y="262" text-anchor="middle" font-size="11" fill="#5b6472">vast</text>
+    </svg>
+    <figcaption>Temperature doesn't change which token is most likely — it changes how flat that curve looks before one gets picked. Top-p and top-k decide which tokens are even in the running before temperature is ever applied.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Temperature 0 guarantees word-for-word identical output every time."</b> It makes the model greedily pick the single most likely token almost every call — but most providers still don't promise bit-for-bit identical results across every call. Treat it as "near-deterministic," not an absolute guarantee.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What happens if my prompt plus the expected completion goes over the context window?"</b> The call gets truncated or rejected with an error — the model can't attend to tokens beyond that window, so a long conversation needs older turns trimmed or summarized before the next call.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Temperature reshapes how flat the next-token probability curve is — near 0 greedily picks the single most likely token every time, higher values spread real odds across more candidates. Top-p instead trims which tokens are even in the running by cumulative probability, so for classification, extraction, or code generation I'd set temperature to 0, not touch top-p."</p>
+    <ul>
+      <li><code>Temperature</code> → <span class="hl hl-blue">controls how flat the probability curve is</span>, not "creativity" itself.</li>
+      <li>Set it to <code>0</code> → for <span class="hl hl-basic">classification, extraction, code generation</span> — same input, same output.</li>
+      <li>Raise it → for <span class="hl hl-inter">brainstorming and creative writing</span>, where variety is the actual goal.</li>
+      <li><code>Top-p</code> → <span class="hl hl-teal">keeps tokens until their combined probability crosses p</span> — an adaptive cutoff.</li>
+      <li><code>Top-k</code> → <span class="hl hl-hot">keeps only the k most likely tokens</span> — a fixed-size cutoff either way.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <b>token</b> is the actual unit of text a model reads and is billed on — often a piece of a word rather than a whole word, and exactly how a word splits depends on the tokenizer that particular model uses. The <b>context window</b> is the maximum number of tokens the model can attend to in one call, prompt and completion combined — go over it and the call gets truncated or rejected outright, not silently handled.</p>
+      <p><b>Temperature</b> controls next-token sampling by reshaping how flat that probability curve is. Near 0 makes the model pick the single most likely token almost every time — a greedy pick. Pushing it up spreads real odds across more candidates, so the same prompt can land on a different, still-plausible token on each call. <b>Top-p</b> and <b>top-k</b> act one step earlier: they decide which tokens are even allowed into that sampling step before temperature reshapes their odds. Top-p keeps the smallest set of candidates whose combined probability crosses a threshold; top-k keeps a fixed number of the highest-probability candidates, regardless of how likely or unlikely the cut-off tail actually is.</p>
+      <p><b>Max tokens</b> caps how long the completion is allowed to run before it gets cut off. <b>Stop sequences</b> end generation the moment a chosen string appears, which is useful for stopping right after a delimiter instead of waiting for the model to decide it's done on its own. None of these knobs make a model "smarter" — they only control how much text comes back and how much variety is allowed while picking it.</p>
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Temperature</th><th>Top-p (nucleus)</th><th>Top-k</th></tr></thead>
+        <tbody>
+          <tr><th>What it changes</th><td>how flat the whole probability curve is</td><td>which tokens are even in the pool</td><td>which tokens are even in the pool</td></tr>
+          <tr><th>Cutoff type</th><td>no hard cutoff — every token stays possible, just re-weighted</td><td>adaptive — pool size changes token by token</td><td>fixed — always exactly k candidates</td></tr>
+          <tr><th>Typical use</th><td>the main "randomness" dial, usually set first</td><td>fine-tune variety without one fixed skew on every token</td><td>a simple, blunt way to cut off the unlikely tail</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>response = client.chat.completions.create(
+    model=<span class="str">"your-chat-model"</span>,        <span class="cx-cmt"># whichever model you're calling</span>
+    messages=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Classify: refund request"</span>}],
+    temperature=<span class="num">0</span>                    <span class="cx-ok"># ✅ same input → same output</span>
+)</code></pre>
+      </div>
+      <p class="cx-note">Good for classification and extraction — you want the same label picked every time, not a different one on retry.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>response = client.chat.completions.create(
+    model=<span class="str">"your-chat-model"</span>,
+    messages=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Give me a tagline for a coffee shop"</span>}],
+    temperature=<span class="num">0.9</span>                  <span class="cx-ok"># 🎲 varied wording on every call</span>
+)</code></pre>
+      </div>
+      <p class="cx-note">Good for brainstorming — you want a different, creative option each call, not the same tagline twice.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Temperature 0 is like asking the same barista to make your usual order exactly the same way, every single time — reliable, no surprises. Higher temperature is like telling them "surprise me" — you'll still get something in the same general category, but the specific recipe changes each round.</p>
+      <p><b>Scenario:</b> a classification service returns a different label for the exact same input on two separate calls. First thing to check: the temperature setting — anything above 0 means the greedy, near-deterministic pick isn't guaranteed, and setting it to 0 (or very low) is the fix for any task that needs the same input to reliably produce the same output.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev"></div>
+    <a class="to-index" href="index.html">↑ Back to AI Basic</a>
+    <div class="side next" style="opacity:.62">
+      <span class="label">Next</span>
+      <a href="index.html">Embeddings → <span style="font-weight:400; color:var(--ink-soft);">(coming soon)</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · AI · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
