@@ -1093,4 +1093,93 @@ window.NAV_INDEX = {
       }
     ]
   },
+  "javascript/basic": {
+    track: "JavaScript",
+    trackIcon: "🟨",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1 – 10",
+        items: [
+          { n: 1, file: "1.html", short: "JavaScript Fundamentals", title: "JavaScript Fundamentals", tail: "what JS actually is, execution context, call stack.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "var vs. let vs. const", title: "var vs. let vs. const", tail: "scope, hoisting, the Temporal Dead Zone.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Data Types & Coercion", title: "Data Types & Type Coercion", tail: "primitives, typeof, truthy/falsy, implicit coercion.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "== vs. ===", title: "== vs. ===", tail: "loose vs. strict equality, Object.is().", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Functions", title: "Functions", tail: "declarations, expressions, arrow functions, callbacks.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Scope & Hoisting", title: "Scope & Hoisting", tail: "lexical scope, the scope chain, hoisting.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Arrays & Objects", title: "Arrays & Objects", tail: "reference behavior, mutation, optional chaining.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Destructuring/Spread/Rest", title: "Destructuring / Spread / Rest", tail: "array & object destructuring, spread vs. rest.", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Array Methods", title: "Array Methods", tail: "map/filter/reduce/find, and when each fits.", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Modern JavaScript / ES6+", title: "Modern JavaScript / ES6+", tail: "template literals, Map/Set, and the rest of ES6+.", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11",
+        items: [
+          { n: 11, file: "11.html", short: "Error Handling", title: "Error Handling", tail: "try/catch/finally, custom errors, async errors.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "javascript/intermediate": {
+    track: "JavaScript",
+    trackIcon: "🟨",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1 – 10",
+        items: [
+          { n: 1, file: "1.html", short: "Closures", title: "Closures", tail: "why the inner function still remembers its outer variables.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "this / call / apply / bind", title: "this / call / apply / bind", tail: "call-site rules, and how arrow functions differ.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Prototypes & Chain", title: "Prototypes & Prototype Chain", tail: "[[Prototype]], Object.create(), instanceof.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Modules", title: "Modules", tail: "import/export, CommonJS vs. ES modules.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Promises", title: "Promises", tail: "states, chaining, error propagation.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "async / await", title: "async / await", tail: "what await actually does, sequential vs. concurrent.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Event Loop", title: "Event Loop", tail: "call stack, task queue, microtask queue, ordering.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "DOM & Browser Events", title: "DOM & Browser Events", tail: "the event object, capturing vs. bubbling.", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Event Delegation", title: "Event Delegation", tail: "one listener instead of a thousand.", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Fetch / AbortController", title: "Fetch / HTTP / AbortController", tail: "requests, cancellation, retries.", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11 – 15",
+        items: [
+          { n: 11, file: "11.html", short: "Classes & Inheritance", title: "Classes & Inheritance", tail: "class syntax over the prototype system.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Higher-Order & Functional", title: "Higher-Order & Functional JavaScript", tail: "composition, currying, memoization.", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Iterators & Generators", title: "Iterators & Generators", tail: "Symbol.iterator, yield, lazy evaluation.", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Browser Storage", title: "Browser Storage", tail: "cookies, localStorage, sessionStorage.", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Testing Fundamentals", title: "Testing Fundamentals", tail: "Jest/Vitest basics, mocking, testing async code.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "javascript/advanced": {
+    track: "JavaScript",
+    trackIcon: "🟨",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1 – 10",
+        items: [
+          { n: 1, file: "1.html", short: "Runtime & Execution Model", title: "JavaScript Runtime & Execution Model", tail: "source → execution context → call stack → heap.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Advanced Async Concurrency", title: "Advanced Async Concurrency", tail: "Promise.all/allSettled/race/any, concurrency limits.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Promise Combinators", title: "Promise Combinators", tail: "resolves-when / rejects-when, at a glance.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Debounce vs. Throttle", title: "Debounce vs. Throttle", tail: "implementing both, leading vs. trailing.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Memory & Garbage Collection", title: "Memory & Garbage Collection", tail: "reachability, leaks, detached DOM nodes.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Performance & Rendering", title: "Performance & Rendering", tail: "layout, paint, composite, long tasks.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Security", title: "Security", tail: "XSS, CSRF, CSP, prototype pollution.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Production JS Scenarios", title: "Production JavaScript Scenarios", tail: "race conditions, cancellation, 10,000 list items.", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Web Workers", title: "Web Workers", tail: "offloading CPU-heavy work from the main thread.", priority: "⭐" },
+          { n: 10, file: "10.html", short: "Service Workers", title: "Service Workers", tail: "lifecycle, cache, offline support.", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11 – 12",
+        items: [
+          { n: 11, file: "11.html", short: "Polyfills & Transpilation", title: "Polyfills & Transpilation", tail: "feature detection, Babel, bundle size.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Proxy & Reflect", title: "Proxy & Reflect", tail: "intercepting property access, reactive systems — Deep Dive.", priority: "🧠" }
+        ]
+      }
+    ]
+  },
 };
