@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced Async Concurrency — JavaScript Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="javascript/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fef9c3;--crumb-ink:#854d0e;">🟨 JavaScript</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Advanced Async Concurrency</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 JavaScript · Advanced · Must Know</div>
+    <h1>Firing 100 requests at once is easy — staying <span class="hl hl-blue">in control</span> of them is the real skill.</h1>
+    <p class="interview-q">"You need to fetch 100 URLs, but only 5 requests are allowed to run at the same time — how would you implement that, and what do you do when one of them fails?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Real APIs and databases have connection and rate limits — firing every request at
+        once floods them, and often makes the whole batch slower, not faster.</li>
+        <li>This is one of the most common "write real code" asks for anyone with a few years of
+        JavaScript experience — not trivia, an actual implementation on a whiteboard or shared doc.</li>
+        <li>It's the practical layer built on top of <code>Promise.all</code>/<code>allSettled</code>/
+        <code>race</code>/<code>any</code> — knowing what each one does isn't enough without knowing
+        when to limit concurrency, retry, or cancel.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Concurrency control = <b>"run many things at once, but only let K run at the same time."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Promise.all</code></b> waits for
+    every one. <b><code>Promise.race</code></b> takes whichever finishes first. A
+    <b><code>pool</code></b> caps how many are ever running together.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arFeed" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">K = 3 SLOTS RUN AT ONCE — THE QUEUE FEEDS THE NEXT FREE ONE</text>
+
+      <!-- Queue -->
+      <g filter="url(#cardShadow)"><rect x="30" y="55" width="150" height="215" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="46" y="80" font-size="13" font-weight="700" fill="#475569">⏳ QUEUE</text>
+      <text x="46" y="98" font-size="10.5" fill="#5b6472">waiting tasks</text>
+      <rect x="46" y="112" width="118" height="22" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="105" y="127" text-anchor="middle" font-size="10.5" fill="#475569">T5</text>
+      <rect x="46" y="140" width="118" height="22" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="105" y="155" text-anchor="middle" font-size="10.5" fill="#475569">T6</text>
+      <rect x="46" y="168" width="118" height="22" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="105" y="183" text-anchor="middle" font-size="10.5" fill="#475569">T7</text>
+      <rect x="46" y="196" width="118" height="22" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="105" y="211" text-anchor="middle" font-size="10.5" fill="#475569">T8</text>
+      <text x="46" y="240" font-size="10" fill="#5b6472">… 92 more waiting</text>
+
+      <!-- Slot 1 -->
+      <g filter="url(#cardShadow)"><rect x="260" y="55" width="160" height="60" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="276" y="80" font-size="13" font-weight="700" fill="#92400e">SLOT 1</text>
+      <text x="276" y="100" font-size="10.5" fill="#5b6472">running T1</text>
+
+      <!-- Slot 2 (the one that just freed up) -->
+      <g filter="url(#cardShadow)"><rect x="260" y="133" width="160" height="60" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="276" y="158" font-size="13" font-weight="700" fill="#92400e">SLOT 2</text>
+      <text x="276" y="178" font-size="10.5" fill="#5b6472">T2 done → T4 next</text>
+
+      <!-- Slot 3 -->
+      <g filter="url(#cardShadow)"><rect x="260" y="211" width="160" height="60" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="276" y="236" font-size="13" font-weight="700" fill="#92400e">SLOT 3</text>
+      <text x="276" y="256" font-size="10.5" fill="#5b6472">running T3</text>
+
+      <!-- Queue feeds the freed slot the instant it's free -->
+      <path d="M180,163 H260" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="10 8" marker-end="url(#arFeed)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+    </svg>
+    <figcaption>Only K tasks ever run together — the moment one finishes, the queue hands the freed slot the next task, instantly.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>Promise.all</code> does not limit concurrency.</b> It only waits
+    for promises that are already running — if you map 100 URLs straight into 100 fetches and
+    pass that array to <code>Promise.all</code>, all 100 already fired before <code>Promise.all</code>
+    was ever involved.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"So what happens when one of those 100 requests fails — do you retry it
+    right away?"</b> Not immediately — retrying instantly usually hits the same failure again, or
+    makes it worse if the server is already struggling. Retry with a capped number of attempts and
+    a delay that grows each time (exponential backoff), so a failing call backs off instead of
+    hammering the server.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd cap concurrency with a small pool — keep exactly K promises
+    running, and the instant one settles, pull the next task off a queue and start it in its
+    place. I'd wrap each task in a retry with exponential backoff and a max-attempt cap, and use
+    an <code>AbortController</code> if any individual call needs to be cancelled."</p>
+    <ul>
+      <li><code>Promise.all</code> → <span class="hl hl-basic">all succeed, or the whole thing
+      rejects</span> on the first failure.</li>
+      <li><code>Promise.allSettled</code> → <span class="hl hl-basic">always resolves</span>,
+      giving back every result and every error individually.</li>
+      <li><code>Promise.race</code> / <code>Promise.any</code> → <span class="hl hl-teal">first
+      to settle wins</span> — <code>race</code> takes the first result or error, <code>any</code>
+      takes the first success only.</li>
+      <li>A <span class="hl hl-blue">concurrency pool</span> keeps exactly K tasks running — never
+      fire everything at once just because the syntax lets you.</li>
+      <li><span class="hl hl-hot">Retry with backoff, not immediately</span> — cap the attempts
+      and grow the delay after each failure.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Running things one after another versus <b>all at once</b> is the first decision —
+      <a href="../intermediate/6.html">async/await</a> already covers the mechanics of that
+      choice. This page is about the layer above it: once several things are running at once, how
+      many is too many, what happens when one of them fails, and what do you actually do about it?</p>
+
+      <p>The four combinator functions — <code>Promise.all</code>, <code>Promise.allSettled</code>,
+      <code>Promise.race</code>, and <code>Promise.any</code> — each answer that "what happens on
+      failure" question with a different rule: <code>all</code> gives up the instant one fails,
+      <code>allSettled</code> never gives up early and hands back every result, <code>race</code>
+      and <code>any</code> only care about whoever finishes first. The full side-by-side comparison
+      lives on the next topic, Promise Combinators — this page is about the technique of running
+      them well, not memorizing the differences between them.</p>
+
+      <p>Real systems don't run promises alone, though — they run a <b>pool</b> of them with a
+      hard cap, so a database or third-party API never sees more concurrent requests than it can
+      handle. Pair that pool with a <b>retry</b> that backs off (waits longer each time it fails)
+      and a <b>cancellation</b> path via <a href="../intermediate/10.html">AbortController</a> for
+      anything that's taking too long — together, those three are what actually ships to
+      production, not just whichever combinator someone happens to pick.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">async function</span> runWithLimit(urls, limit, task) {
+  <span class="kw">const</span> results = <span class="kw">new</span> Array(urls.length);
+  <span class="kw">let</span> next = <span class="num">0</span>;              <span class="cx-cmt">// index of the next URL to start</span>
+
+  <span class="kw">async function</span> worker() {
+    <span class="kw">while</span> (next &lt; urls.length) {
+      <span class="kw">const</span> i = next++;    <span class="cx-cmt">// claim the next task, then move on</span>
+      results[i] = <span class="kw">await</span> task(urls[i]);
+    }
+  }
+
+  <span class="cx-cmt">// start exactly `limit` workers — each pulls tasks until the queue is empty</span>
+  <span class="kw">const</span> workers = Array.from({ length: limit }, worker);
+  <span class="kw">await</span> Promise.all(workers);
+  <span class="kw">return</span> results;
+}
+
+<span class="kw">const</span> responses = <span class="kw">await</span> runWithLimit(urls, <span class="num">5</span>, (url) =&gt; fetch(url));</code></pre>
+      </div>
+      <p class="cx-note">Only 5 worker loops ever exist — each one grabs the next unclaimed URL
+      the instant it's free, so exactly 5 requests are in flight at any moment, never more.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">async function</span> retryWithBackoff(task, maxAttempts = <span class="num">4</span>) {
+  <span class="kw">for</span> (<span class="kw">let</span> attempt = <span class="num">1</span>; attempt &lt;= maxAttempts; attempt++) {
+    <span class="kw">try</span> {
+      <span class="kw">return</span> <span class="kw">await</span> task();
+    } <span class="kw">catch</span> (err) {
+      <span class="kw">if</span> (attempt === maxAttempts) <span class="kw">throw</span> err;  <span class="cx-cmt">// out of attempts — give up</span>
+      <span class="kw">const</span> delay = <span class="num">300</span> * <span class="num">2</span> ** (attempt - <span class="num">1</span>); <span class="cx-cmt">// 300ms, 600ms, 1200ms…</span>
+      <span class="kw">await new</span> Promise((resolve) =&gt; setTimeout(resolve, delay));
+    }
+  }
+}</code></pre>
+      </div>
+      <p class="cx-note">Each failed attempt waits twice as long as the last one before retrying —
+      that's the "exponential" part. The attempt cap is what stops it retrying forever.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>It's a car wash with 5 bays and a line of cars waiting. Cars don't all wash at once, but
+      the moment a bay opens up, the next car in line pulls in immediately — no bay ever sits idle
+      while cars wait, and no more than 5 ever wash at the same time. A concurrency pool does the
+      same thing with async tasks instead of cars.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="1.html">← JavaScript Runtime &amp; Execution Model</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to JavaScript Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <span style="color:var(--ink-soft); font-weight:700;">Promise Combinators <span style="font-weight:400; font-style:italic;">(coming soon)</span></span>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · JavaScript · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
