@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Segment Tree vs. Fenwick Tree — DSA Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dsa/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">🧠 DSA</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Segment Tree &amp; Fenwick Tree</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 DSA · Advanced · Deep Dive</div>
+    <h1>Segment Tree vs. Fenwick Tree — same <span class="hl hl-blue">O(log n)</span>, different <span class="hl hl-inter">trade-off</span></h1>
+    <p class="interview-q">"When would you reach for a Segment Tree or a Fenwick Tree instead of a plain prefix sum array?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>This is a judgment question, not a build-it-live one — interviewers use it to see if
+        you recognize "queries <b>and</b> updates are interleaved" as the real signal, not to
+        watch you implement bit tricks on a whiteboard.</li>
+        <li>It's the direct sequel to Prefix Sum &amp; Difference Array's own follow-up: "what if
+        the array itself changes between queries?"</li>
+        <li>A favorite trap is reaching for either structure when the data never actually changes
+        — spotting "no updates happening" as the cue to fall back to a plain prefix sum is itself
+        the tested judgment.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Segment Tree</code> <span class="rarrow">→</span> <b>general</b> aggregate, supports range updates too</p>
+      <p class="rrow"><code>Fenwick Tree</code> (BIT) <span class="rarrow">→</span> <b>compact</b>, sum-specialized, point updates</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line">Both trade a full <b>O(n) rebuild</b> for <b>O(log n)</b> per query and per update.</span>
+      <span class="tc-line"><b><code>Fenwick</code></b> is the lean specialist for sums. <b><code>Segment Tree</code></b> is the generalist that costs more to build.</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 650 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shD7" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arD7Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arD7Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="325" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">SEGMENT TREE — SUM AGGREGATE, ONE NODE PER RANGE</text>
+
+      <!-- static connectors (gray, no update involved) -->
+      <path d="M325,84 V108 H165 V132" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arD7Gray)"/>
+      <path d="M165,178 V201 H95 V224" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arD7Gray)"/>
+      <path d="M165,178 V201 H235 V224" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arD7Gray)"/>
+      <path d="M485,178 V201 H555 V224" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arD7Gray)"/>
+
+      <!-- point-update path (amber, bottom-up, animated) -->
+      <path d="M415,224 V201 H485 V178" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arD7Amber)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+      <path d="M485,132 V108 H325 V84" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arD7Amber)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+
+      <!-- root [0,3] — on update path -->
+      <g filter="url(#shD7)"><rect x="240" y="34" width="170" height="50" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="325" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">[0,3]  sum = 10</text>
+      <text x="325" y="74" text-anchor="middle" font-size="10.5" fill="#5b6472">root recomputes</text>
+
+      <!-- left parent [0,1] — untouched -->
+      <g filter="url(#shD7)"><rect x="90" y="132" width="150" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="165" y="159" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">[0,1]  sum = 3</text>
+
+      <!-- right parent [2,3] — on update path -->
+      <g filter="url(#shD7)"><rect x="410" y="132" width="150" height="46" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="485" y="153" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">[2,3]  sum = 7</text>
+      <text x="485" y="169" text-anchor="middle" font-size="10.5" fill="#5b6472">ancestor recomputes</text>
+
+      <!-- leaves -->
+      <g filter="url(#shD7)"><rect x="40" y="224" width="110" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="95" y="251" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">[0,0] = 2</text>
+
+      <g filter="url(#shD7)"><rect x="180" y="224" width="110" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="235" y="251" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">[1,1] = 1</text>
+
+      <!-- leaf [2,2] — the leaf that changes -->
+      <g filter="url(#shD7)"><rect x="360" y="224" width="110" height="46" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="415" y="246" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">[2,2] = 3</text>
+      <text x="415" y="262" text-anchor="middle" font-size="10.5" fill="#5b6472">value changes</text>
+
+      <g filter="url(#shD7)"><rect x="500" y="224" width="110" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="555" y="251" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">[3,3] = 4</text>
+    </svg>
+    <figcaption>A point update walks one path — leaf → its ancestor → the root — recomputing only
+    those O(log n) amber nodes; every other node in the tree stays untouched.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A Segment Tree isn't the default answer just because "updates" got
+    mentioned.</b> If the underlying array is actually static between queries, a plain prefix sum
+    array is simpler and already O(1) per query — save the extra complexity for when point/range
+    updates are genuinely interleaved with the queries.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Your data is static here — do you actually need a Segment Tree?"</b> No
+    — recognizing "no updates are happening" as the signal to fall back to the simpler
+    prefix-sum technique, instead of reflexively reaching for the more powerful structure, is
+    exactly the judgment this question is testing.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A plain prefix sum answers range-sum queries in O(1) but needs a full
+    O(n) rebuild after every update. A Segment Tree or a Fenwick Tree (Binary Indexed Tree) both
+    support range queries and point updates in O(log n) each — the Segment Tree is the more
+    general, more expensive structure; the Fenwick Tree is the lean, sum-specialized one."</p>
+    <ul>
+      <li><code>Prefix Sum</code> → use when the array is <span class="hl hl-basic">static between queries</span> — simplest, O(1) per query, no tree needed.</li>
+      <li><code>Fenwick Tree</code> → use when the aggregate is a <span class="hl hl-blue">sum</span> and you want the smaller, simpler structure.</li>
+      <li><code>Segment Tree</code> → use when you need a <span class="hl hl-inter">general aggregate</span> (min/max/GCD) or <span class="hl hl-inter">range updates</span>, not just point updates.</li>
+      <li>Both cost <span class="hl hl-teal">O(log n) per query and per point update</span> — the real trade-off is flexibility vs. simplicity, not speed.</li>
+      <li>Range updates on a Segment Tree → needs <span class="hl hl-hot">lazy propagation</span>, a real technique worth naming, not one to implement from memory here.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A plain prefix sum array answers a range-sum query in O(1) — but that only holds while
+      the underlying array never changes. The moment one element needs to be updated, the whole
+      prefix sum array is stale and needs an O(n) rebuild before the next query can trust it.
+      When updates and queries are genuinely interleaved, that rebuild cost defeats the entire
+      point of precomputing. A <span class="hl hl-blue">Segment Tree</span> and a
+      <span class="hl hl-inter">Fenwick Tree</span> both exist to close exactly that gap — a real
+      middle ground between "O(1) query, O(n) rebuild" (plain prefix sum) and "O(n) query, O(1)
+      update" (no precomputation at all).</p>
+
+      <p>A <b>Segment Tree</b> is a binary tree where every node holds the aggregate — sum, min,
+      max, whatever the problem needs — of a range of the underlying array. The root covers the
+      whole array, each level below splits its range in half, down to leaves that each cover a
+      single element. A range query walks down and combines the aggregates from the O(log n)
+      nodes whose ranges together exactly cover the query. A point update walks down to the one
+      affected leaf and recomputes every ancestor on the way back up — also O(log n). It's more
+      flexible than a Fenwick Tree — it supports a wider range of aggregates, and with an extra
+      technique called <b>lazy propagation</b> it can support range updates too, not just point
+      updates — at the cost of being more complex to build and using somewhat more memory.</p>
+
+      <p>A <b>Fenwick Tree</b> (Binary Indexed Tree) is a more compact answer to the same problem,
+      purpose-built for prefix-sum-style aggregates. It's implemented as a single array, using the
+      binary representation of an index to decide which positions to touch — still O(log n) per
+      query and per point update, but with a smaller memory footprint and a simpler
+      implementation than a full Segment Tree. The trade is flexibility: it's naturally suited to
+      sums (or similar), and adapting it to min/max-style aggregates is possible but far less
+      natural than reaching for a Segment Tree instead.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Segment Tree</th><th>Fenwick Tree (BIT)</th></tr></thead>
+        <tbody>
+          <tr><th>Best aggregate fit</th><td>any — sum, min, max, GCD, …</td><td>sum (or similar prefix-style aggregates)</td></tr>
+          <tr><th>Point update</th><td>O(log n)</td><td>O(log n)</td></tr>
+          <tr><th>Range query</th><td>O(log n)</td><td>O(log n)</td></tr>
+          <tr><th>Range updates</th><td>possible, with lazy propagation</td><td>awkward — not its natural shape</td></tr>
+          <tr><th>Implementation</th><td>a real tree, more code</td><td>one array, bit-trick indexing, less code</td></tr>
+          <tr><th>Reach for it when</th><td>need a general aggregate or range updates</td><td>need a sum and want the leaner structure</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>You're told a large array needs to answer "sum of this range" queries while
+      individual elements also get updated, many times, in the same run.</b> That interleaving is
+      the actual signal: if the aggregate is a sum, a Fenwick Tree is the leaner choice; if it
+      needs to be min/max instead, or the range updates themselves (not just single elements) need
+      to change, a Segment Tree is the more natural fit. And if it turns out nothing ever gets
+      updated after all, the right move is to drop back to a plain prefix sum array — the simplest
+      structure that already solves it.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="index.html" style="color:var(--ink-soft); font-weight:400;">← Scale &amp; Performance Scenarios <em>(coming soon)</em></a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to DSA Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="index.html" style="color:var(--ink-soft); font-weight:400;">String Algorithms → <em>(coming soon)</em></a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · DSA · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
