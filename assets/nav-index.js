@@ -921,4 +921,103 @@ window.NAV_INDEX = {
       }
     ]
   },
+  "ai/basic": {
+    track: "AI",
+    trackIcon: "🤖",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1 – 10",
+        items: [
+          { n: 1, file: "1.html", short: "Tokens, Context & Temperature", title: "Tokens, Context Window & Temperature", tail: "the billed unit, max tokens seen, temperature vs. top-p.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Embeddings", title: "Embeddings", tail: "what a vector actually is, cosine similarity as meaning.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Pretraining vs. RLHF/DPO", title: "Pretraining vs. Instruction-Tuning vs. RLHF/DPO", tail: "the three training stages and what each one changes.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Model Families", title: "Model Families", tail: "closed API vs. open-weight, licensing, self-hosting.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Cost & Streaming", title: "Prompt vs. Completion Cost & Streaming", tail: "input/output tokens priced differently, why streaming matters.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "System/User/Assistant Roles", title: "System vs. User vs. Assistant Roles", tail: "why the same instruction behaves differently by role.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Zero-shot/Few-shot/CoT", title: "Zero-shot, Few-shot & Chain-of-Thought", tail: "when examples help, when reasoning steps help.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Structured Output", title: "Structured Output", tail: "forcing valid JSON, schema-constrained generation.", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Non-Determinism", title: "Why LLMs Aren't Deterministic", tail: "sampling and temperature, not just hardware noise.", priority: "⭐" },
+          { n: 10, file: "10.html", short: "Delimiting Untrusted Content", title: "Delimiting Untrusted Content in a Prompt", tail: "why raw string concatenation is an injection risk.", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11 – 16",
+        items: [
+          { n: 11, file: "11.html", short: "Versioned, Idempotent Prompts", title: "Versioned, Idempotent Prompts", tail: "treating prompts like code — version, test, roll back.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Transformer Basics", title: "Transformer Basics — Self-Attention & KV Cache", tail: "self-attention and KV cache, at interview depth.", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Tokenizers", title: "Tokenizers — Why Token Count ≠ Word Count", tail: "BPE basics and why token count isn't word count.", priority: "⭐" },
+          { n: 14, file: "14.html", short: "MoE & Quantization", title: "Mixture-of-Experts & Quantization", tail: "sparse activation and lower-precision weights cut cost.", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Context-Window Tricks", title: "Context-Window Tricks", tail: "sliding window, summarization, fitting more in.", priority: "⭐" },
+          { n: 16, file: "16.html", short: "Classic ML vs. LLM", title: "Classic ML vs. LLM", tail: "when a small trained model still beats an LLM call.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "ai/intermediate": {
+    track: "AI",
+    trackIcon: "🤖",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1 – 10",
+        items: [
+          { n: 1, file: "1.html", short: "RAG Pipeline End to End", title: "The RAG Pipeline End to End", tail: "ingest, chunk, embed, retrieve, generate — the full loop.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Chunking Strategies", title: "Chunking Strategies", tail: "fixed-size vs. semantic vs. recursive, the size tradeoff.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Hybrid Search", title: "Hybrid Search — Keyword + Vector", tail: "combining keyword and vector search for better recall.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Reranking", title: "Reranking", tail: "a second, more expensive pass to reorder top candidates.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Vector DB & ANN Search", title: "Vector DB Options & ANN Search", tail: "approximate nearest neighbor search, index tradeoffs.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Function / Tool Calling", title: "Function / Tool Calling", tail: "how the model decides to call a function, and then what.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "The Agent Loop", title: "The Agent Loop — ReAct Pattern", tail: "the reason-act-observe cycle behind agents.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "RAG vs. Fine-Tune vs. Prompt", title: "RAG vs. Fine-Tuning vs. Prompt Engineering", tail: "picking the right lever for a given problem.", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Grounding & Citations", title: "Grounding & Citations", tail: "tying generated answers back to a verifiable source.", priority: "⭐" },
+          { n: 10, file: "10.html", short: "Multi-Tenant Retrieval Isolation", title: "Multi-Tenant Retrieval Isolation", tail: "keeping one tenant's data out of another's answers.", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11 – 18",
+        items: [
+          { n: 11, file: "11.html", short: "LoRA / QLoRA", title: "LoRA / QLoRA", tail: "low-rank, low-cost fine-tuning without touching every weight.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "MCP", title: "MCP — Model Context Protocol", tail: "a standard way to connect an agent to tools and data, once.", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Multimodal Extraction", title: "Multimodal — Vision Models for Extraction", tail: "using vision models to pull structured data from images/PDFs.", priority: "⭐" },
+          { n: 14, file: "14.html", short: "AI Gateways", title: "AI Gateways", tail: "one layer in front of every model call: cache, fallback, limits.", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Semantic Kernel & MEAI", title: "Semantic Kernel & Microsoft.Extensions.AI", tail: "the .NET-native way to build AI features.", priority: "⭐" },
+          { n: 16, file: "16.html", short: "Azure OpenAI & AI Search", title: "Azure OpenAI & Azure AI Search for RAG", tail: "hosting the model and the retrieval index on Azure.", priority: "⭐" },
+          { n: 17, file: "17.html", short: "Query Transformation", title: "Query Transformation", tail: "rewriting the user's question before you ever search.", priority: "⭐" },
+          { n: 18, file: "18.html", short: "Multi-Agent Patterns", title: "Multi-Agent Patterns", tail: "planner/worker and supervisor patterns, and their real cost.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "ai/advanced": {
+    track: "AI",
+    trackIcon: "🤖",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1 – 10",
+        items: [
+          { n: 1, file: "1.html", short: "Prompt Injection & Jailbreaks", title: "Prompt Injection & Jailbreaks", tail: "the #1 LLM security risk, and how to defend against it.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "LLM-as-Judge", title: "LLM-as-Judge", tail: "using one model to grade another model's output at scale.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Building an Eval Set", title: "Building an Eval Set", tail: "the fixed test set that makes 'looks good' a real gate.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Cost Control", title: "Cost Control", tail: "caching, model tiering, and routing to keep spend in check.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Tracing Every LLM Call", title: "Tracing Every LLM Call", tail: "per-request spans so you can debug and cost-attribute later.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "OWASP Top 10 for LLM Apps", title: "OWASP Top 10 for LLM Applications", tail: "the checklist of well-known LLM application risk categories.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Model Routing & Failover", title: "Model Routing & Multi-Provider Failover", tail: "what happens when your one provider goes down.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Prompt Layering", title: "Prompt Layering", tail: "base prompt + per-tenant overrides, versioned and auto-tuned.", priority: "⭐" },
+          { n: 9, file: "9.html", short: "PII Detection & Moderation", title: "PII Detection & Output Moderation", tail: "catching sensitive data and unsafe output before it ships.", priority: "⭐" },
+          { n: 10, file: "10.html", short: "Regression Testing Prompts", title: "Regression Testing Prompts", tail: "running every prompt change through the eval set first.", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11 – 14",
+        items: [
+          { n: 11, file: "11.html", short: "Advanced RAG", title: "Advanced RAG — GraphRAG & Agentic RAG", tail: "GraphRAG and agentic RAG, for when basic RAG isn't enough.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Async/Queue-Based Inference", title: "Async/Queue-Based Inference", tail: "bounded worker pools and idempotent retries for bulk jobs.", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Self-Hosted vs. Managed", title: "Self-Hosted vs. Managed Models", tail: "who owns the GPU, the inference server, and the uptime.", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Responsible AI", title: "Responsible AI", tail: "bias, transparency, red-teaming, EU AI Act awareness.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
 };
