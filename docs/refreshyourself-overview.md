@@ -16,17 +16,21 @@ junior/mid-level interview. Two groups of tracks:
 - **Core backend interview path**, in this order: C# → OOP → .NET/ASP.NET Core (MVC lives inside
   this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure → AWS.
 - **Frontend group** (homepage section added 2026-09-18, per the user's own restructuring
-  request): HTML & CSS → JavaScript → React → Angular. **HTML & CSS and JavaScript are brand new
-  root tiles, "Coming soon," Phase 0 — no taxonomy, roadmap, or folder yet.** Kept as their own
-  two tracks rather than one "Frontend" track or folded into React, per the user's own rule:
-  *"Keep a technology as a separate top-level track when it has enough independent interview
-  depth and its own distinct mental model. Combine technologies when interviewers naturally
-  evaluate them together and separating them would create small, fragmented roadmaps."*
-  JavaScript earns its own track (closures, the event loop, prototypes, async — genuine
-  Basic→Advanced depth on its own). HTML and CSS are combined into one "HTML & CSS" track rather
-  than split, since a real frontend interview asks about layout/rendering/accessibility as one
-  connected topic, not two small, fragmented roadmaps. React and Angular already existed as
-  separate tracks and simply moved into this new section on the homepage — no content changed.
+  request): HTML & CSS → JavaScript → React → Angular. Kept as separate tracks rather than one
+  "Frontend" track or folded into React, per the user's own rule: *"Keep a technology as a
+  separate top-level track when it has enough independent interview depth and its own distinct
+  mental model. Combine technologies when interviewers naturally evaluate them together and
+  separating them would create small, fragmented roadmaps."*
+  **JavaScript — all 7 phases complete, 38/38 pages written** (2026-09-18): earns its own track
+  (closures, the event loop, prototypes, async — genuine Basic→Advanced depth on its own); the
+  user personally checked current interview-prep material before sharing a 37-group structure
+  directly, plus this track's own Phase 2 gap-hunt (1 addition, Testing Fundamentals). See
+  [`specs/javascript/overview.md`](superpowers/specs/javascript/overview.md). **HTML & CSS is
+  still a brand-new root tile, "Coming soon," Phase 0 — no taxonomy, roadmap, or folder yet** —
+  will be combined into one "HTML & CSS" track rather than split, since a real frontend interview
+  asks about layout/rendering/accessibility as one connected topic, not two small, fragmented
+  roadmaps. React and Angular already existed as separate tracks and simply moved into this new
+  section on the homepage — no content changed.
 - **Other tracks**, not part of the ordered path: Python, DSA, and AI (all 7 phases complete, see
   below).
 
@@ -199,6 +203,22 @@ through all 7 phases:**
   verification script, run independently against every single page. Not part of the ordered
   core-backend path — grouped with React/Angular/Python/AI. See
   [`specs/dsa/overview.md`](superpowers/specs/dsa/overview.md).
+- **JavaScript** — **all 7 phases complete, 38/38 pages written** (2026-09-18):
+  [`question-taxonomy.md`](superpowers/specs/javascript/question-taxonomy.md) (37 groups the
+  user personally checked against current interview-prep material and shared directly, plus a
+  Phase 2 gap-hunt that added 1 page — Testing Fundamentals, since the user's own priority list
+  named "Testing" but no group actually covered it) →
+  [`roadmap.md`](superpowers/specs/javascript/roadmap.md) → 38 tiered/prioritized pages, live on
+  the site and on [`javascript/roadmap.html`](../javascript/roadmap.html). Organized around
+  mental models and behavior rather than a syntax reference, per the user's own governing rule
+  for this track. Six pages (Closures, `this`/`call`/`apply`/`bind`, Prototypes, Promises,
+  `async`/`await`, Event Loop) carry this track's deepest per-page treatment instead of being
+  split into two pages, per this site's own "one topic, one page" rule. Built while a second
+  concurrent session was independently building the same track on the shared machine — every
+  resulting duplicate/overlap was reconciled and re-verified. Every diagram passed the mandatory
+  automated verification script, run independently against every single page. Sits in the "🎨
+  Frontend" homepage section, not the ordered core-backend path. See
+  [`specs/javascript/overview.md`](superpowers/specs/javascript/overview.md).
 
 ## Adding a new track's spec
 
