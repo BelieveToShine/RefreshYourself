@@ -243,11 +243,18 @@
       <p><span class="hl hl-inter">Shortest path at real scale</span> — a road network with
       millions of nodes and edges — is where plain
       <a href="../intermediate/7.html">Dijkstra's algorithm</a> stays correct but its cost starts
-      to matter: O((V+E) log V) is fine on a moderate graph, and genuinely slow once V and E are
-      both in the millions. Real-world routing systems layer extra techniques on top of Dijkstra —
-      precomputed hierarchies, bidirectional search, and other domain-specific speedups — to keep
-      queries fast at that size. Naming that such techniques exist is the honest answer here;
-      teaching any one of them in depth is beyond this track's fundamentals.</p>
+      to matter. Do the same estimate-first move as above: log V only grows to roughly 20-25
+      even once V is in the millions, but multiplying that by V+E (also in the millions) still
+      lands O((V+E) log V) somewhere in the tens to hundreds of millions of basic operations —
+      for a <b>single</b> route query. That's a lot of repeated work to redo from scratch on every
+      request from every user, which is the real constraint an interactive routing product is up
+      against (the same "how often does it run" question as the O(n) scenario below, just applied
+      to a heavier operation). That's why real-world routing systems don't run plain Dijkstra
+      fresh each time — they layer extra techniques on top of it: precomputed hierarchies that do
+      most of the heavy work once offline, bidirectional search that shrinks the live search space
+      per query, and other domain-specific speedups. Naming that such techniques exist, and <i>why</i>
+      plain Dijkstra alone stops being enough, is the honest answer here; teaching any one of them
+      in depth is beyond this track's fundamentals.</p>
 
       <p><span class="hl hl-basic">O(n) is often treated as "the good, fast answer,"</span> but
       that only holds up if you check how often it runs. Scanning a dataset once, occasionally, is
@@ -262,7 +269,7 @@
         <thead><tr><th>Scenario</th><th>Real number to check</th><th>Routes to</th></tr></thead>
         <tbody>
           <tr><th>100M records, ~1KB each</th><td>total size vs. available RAM</td><td>external sort / Bloom filter / bounded heap / streaming pass</td></tr>
-          <tr><th>Shortest path, millions of nodes</th><td>V, E vs. Dijkstra's O((V+E) log V)</td><td>Dijkstra + hierarchies / bidirectional search (named, not built here)</td></tr>
+          <tr><th>Shortest path, millions of nodes</th><td>O((V+E) log V) op count vs. per-query latency budget</td><td>Dijkstra + hierarchies / bidirectional search (named, not built here)</td></tr>
           <tr><th>O(n) pass, per request</th><td>how often it runs × latency budget</td><td>precompute once (prefix sum / hash map)</td></tr>
         </tbody>
       </table>
