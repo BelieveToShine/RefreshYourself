@@ -286,3 +286,96 @@
 
   document.body.classList.add("has-tier-nav");
 })();
+
+/* One-level "Back" button in the crumb bar. See docs/rules/back-navigation.md for the full
+   spec. Short version: clicking any real internal link (never a search result, never Back
+   itself) tags the outgoing href with where to come back to; the destination page reads that
+   tag once, shows a Back button for it, then strips it from the URL — so Back never chains
+   past one hop, and a page reached BY Back never shows its own Back button. If the link that
+   was clicked lived inside a roadmap concept-cluster or a tier's question group, Back also
+   re-opens and scrolls to that exact group instead of landing on a fully collapsed page. */
+(function () {
+  var BFROM = "bfrom", BLABEL = "bt", BOPEN = "bopen";
+  var GROUP_SELECTOR = ".roadmap-tier, .qgroup";
+
+  function cleanUrl(url) {
+    var hashSplit = url.split("#");
+    var hash = hashSplit[1] ? "#" + hashSplit[1] : "";
+    var pathSplit = hashSplit[0].split("?");
+    var params = new URLSearchParams(pathSplit[1] || "");
+    params.delete(BFROM);
+    params.delete(BLABEL);
+    params.delete(BOPEN);
+    var qs = params.toString();
+    return pathSplit[0] + (qs ? "?" + qs : "") + hash;
+  }
+
+  function shortLabel() {
+    var first = (document.title || "").split(" — ")[0].trim();
+    return first || "";
+  }
+
+  // ---- render a Back button here if we arrived via a tagged link ----
+  var crumbs = document.querySelector("nav.crumbs");
+  var incoming = new URLSearchParams(location.search);
+  var backHref = incoming.get(BFROM);
+  var backLabel = incoming.get(BLABEL);
+
+  if (crumbs && backHref) {
+    var btn = document.createElement("a");
+    btn.className = "crumb-back";
+    btn.href = backHref;
+    var title = backLabel ? "Back to " + backLabel : "Back";
+    btn.setAttribute("aria-label", title);
+    btn.title = title;
+    btn.innerHTML = '<span class="cb-arrow">←</span><span class="cb-text">Back</span>';
+    crumbs.appendChild(btn);
+  }
+
+  // ---- re-open + scroll to the group this page's own topic row was clicked from ----
+  var openIdx = incoming.get(BOPEN);
+  if (openIdx !== null) {
+    var groups = document.querySelectorAll(GROUP_SELECTOR);
+    var target = groups[parseInt(openIdx, 10)];
+    if (target) {
+      target.open = true;
+      setTimeout(function () {
+        target.scrollIntoView({ block: "center", behavior: "smooth" });
+      }, 50);
+    }
+  }
+
+  // Strip our own tracking params so a reload never re-shows Back, and so this page's own
+  // outgoing links (below) start tagging from a clean URL rather than compounding them.
+  if (backHref !== null || openIdx !== null) {
+    history.replaceState(null, "", cleanUrl(location.pathname + location.search + location.hash));
+  }
+
+  // ---- tag outgoing internal links with where to come back to ----
+  document.addEventListener(
+    "click",
+    function (e) {
+      var a = e.target.closest && e.target.closest("a[href]");
+      if (!a || a.classList.contains("crumb-back") || a.closest(".gsearch-results")) return;
+      var href = a.getAttribute("href");
+      if (!href || href.charAt(0) === "#" || /^[a-z][a-z0-9+.-]*:/i.test(href) || a.target === "_blank") return;
+
+      var returnPath = cleanUrl(location.pathname + location.search + location.hash);
+      var group = a.closest(GROUP_SELECTOR);
+      if (group) {
+        var groups = Array.prototype.slice.call(document.querySelectorAll(GROUP_SELECTOR));
+        var idx = groups.indexOf(group);
+        if (idx > -1) {
+          returnPath += (returnPath.indexOf("?") > -1 ? "&" : "?") + BOPEN + "=" + idx;
+        }
+      }
+
+      var sep = href.indexOf("?") > -1 ? "&" : "?";
+      a.setAttribute(
+        "href",
+        href + sep + BFROM + "=" + encodeURIComponent(returnPath) + "&" + BLABEL + "=" + encodeURIComponent(shortLabel())
+      );
+    },
+    true
+  );
+})();

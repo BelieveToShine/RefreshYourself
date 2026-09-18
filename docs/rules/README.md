@@ -20,6 +20,7 @@ override default behavior — read the relevant one before doing the thing, not 
 | Write or edit the "⚠️ Common Trap" box | [common-trap.md](common-trap.md) |
 | Add a new page, or touch `assets/site.js` / the search index | [search.md](search.md) |
 | Wire up the left "tier navigation" sidebar for a tier, or touch `assets/nav-index.js` | [tier-navigation.md](tier-navigation.md) |
+| Touch the crumb bar's "← Back" button, or the click-tagging/URL-param logic behind it in `assets/site.js` | [back-navigation.md](back-navigation.md) |
 | Assign a tier (Basic/Intermediate/Advanced) or priority (🔥/⭐/🧠) to any question, on any track | [interview-depth-and-priority.md](interview-depth-and-priority.md) |
 | Run Phase 2 (review) on any track — dedupe AND identify gaps, the second half is easy to skip | [gap-hunting.md](gap-hunting.md) |
 | Run Phase 7 (writing pages) on a track — subagent dispatch, safety, verification, site wiring | [build-process.md](build-process.md) |
