@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python + Databases — Python Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="python/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#306998;">🐍 Python</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Python + Databases</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Python · Advanced · Should Know</div>
+    <h1>The <span class="hl hl-hot">N+1</span> query problem is what happens when "just loop over
+    the results and access a relationship" quietly becomes <span class="hl hl-inter">one query
+    per row</span></h1>
+    <p class="interview-q">What is the N+1 query problem, and how would you troubleshoot slow
+    database queries from Python?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>N+1 is one of the most common real production slowdowns in anything built on an
+        ORM — an endpoint that "just" loops over results and touches a relationship, nothing
+        more exotic than that.</li>
+        <li>It's a troubleshooting question, not trivia — "why did this endpoint get slower as
+        the data grew" is a real interview scenario, and N+1 is the first thing a strong
+        candidate checks for.</li>
+        <li>A common follow-up chain in Python interviews using SQLAlchemy or Django: what's the
+        DB-API, what does an ORM trade off for convenience, then straight into N+1.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>order.customer</code> <span class="rarrow">→</span> fetched lazily, on
+      the <b>first</b> access</p>
+      <p class="rrow">Loop + lazy access <span class="rarrow">→</span> <b>N+1</b> queries, not 1</p>
+      <p class="rrow">Fix <span class="rarrow">→</span> eager-load <b>before</b> the loop starts</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>N+1</code></b> code looks completely
+    ordinary — the query count is invisible until you actually count round-trips.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— the same loop, two very different query counts</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="pyShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="pyArrowGray" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+        </marker>
+        <marker id="pyArrowRose" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="pyArrowGreen" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <!-- divider -->
+      <line x1="320" y1="34" x2="320" y2="278" stroke="#e2e8f0" stroke-width="1.5"/>
+
+      <!-- ===== LEFT PANEL: lazy loop, N+1 ===== -->
+      <text x="160" y="20" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b" letter-spacing="0.3">LAZY LOOP — N+1 RISK</text>
+
+      <g filter="url(#pyShadow)"><rect x="50" y="40" width="220" height="50" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="160" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🔁 LOOP OVER 100 ORDERS</text>
+      <text x="160" y="76" text-anchor="middle" font-size="9.5" fill="#5b6472">order.customer ← lazy</text>
+
+      <path d="M160,90 V112" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#pyArrowGray)"/>
+
+      <g filter="url(#pyShadow)"><rect x="50" y="112" width="220" height="54" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="133" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">💥 ONE QUERY PER ROW</text>
+      <text x="160" y="150" text-anchor="middle" font-size="9.5" fill="#5b6472">100 separate SELECTs fired</text>
+
+      <path d="M160,166 V188" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-dasharray="4 3" marker-end="url(#pyArrowRose)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-14" dur="1.4s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#pyShadow)"><rect x="50" y="188" width="220" height="54" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="209" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🗄️ DB HIT 100 TIMES</text>
+      <text x="160" y="226" text-anchor="middle" font-size="9.5" fill="#5b6472">1 query became N+1</text>
+
+      <text x="160" y="266" text-anchor="middle" font-size="10" font-weight="600" fill="#475569">100 orders in → 100 round-trips out</text>
+
+      <!-- ===== RIGHT PANEL: eager load, 1 query ===== -->
+      <text x="480" y="20" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534" letter-spacing="0.3">EAGER LOAD — 1 QUERY</text>
+
+      <g filter="url(#pyShadow)"><rect x="370" y="40" width="220" height="50" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">⚡ EAGER-LOAD FIRST</text>
+      <text x="480" y="76" text-anchor="middle" font-size="9.5" fill="#5b6472">joinedload / select_related</text>
+
+      <path d="M480,90 V112" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#pyArrowGreen)"/>
+
+      <g filter="url(#pyShadow)"><rect x="370" y="112" width="220" height="54" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="133" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🗄️ DB HIT ONCE</text>
+      <text x="480" y="150" text-anchor="middle" font-size="9.5" fill="#5b6472">fetches all customers at once</text>
+
+      <path d="M480,166 V188" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#pyArrowGreen)"/>
+
+      <g filter="url(#pyShadow)"><rect x="370" y="188" width="220" height="54" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="209" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🔁 LOOP OVER 100 ORDERS</text>
+      <text x="480" y="226" text-anchor="middle" font-size="9.5" fill="#5b6472">order.customer already loaded</text>
+
+      <text x="480" y="266" text-anchor="middle" font-size="10" font-weight="600" fill="#475569">1 query up front → 0 extra queries</text>
+    </svg>
+    <figcaption>Left: the loop looks ordinary, but each lazy <code>.customer</code> access fires
+    its own query — 1 intended query becomes 100+1. Right: the exact same loop, but the
+    relationship was eager-loaded before the loop started, so there's nothing left to fetch
+    lazily inside it.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"It's just a for loop with a property access — nothing expensive is
+    happening there."</b> Each access to a lazily-loaded relationship inside that loop is its own
+    database round-trip, so looping over 100 rows and reading <code>.customer</code> on each one
+    turns 1 intended query into 101 real ones — and the code reads as completely ordinary Python,
+    which is exactly why this bug is so easy to write by accident.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How do you actually fix an N+1 once you've found one?"</b> Eager-load
+    the relationship up front — <code>joinedload</code>/<code>selectinload</code> in SQLAlchemy,
+    <code>select_related</code> (to-one) or <code>prefetch_related</code> (to-many) in Django —
+    so the related rows come back in one query, or one small constant number of queries, instead
+    of one per row.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"N+1 looks like perfectly ordinary code — it's a lazy-loaded
+    relationship accessed inside a loop, turning 1 intended query into N+1 actual ones. The fix is
+    eager loading — <code>joinedload</code>/<code>selectinload</code> in SQLAlchemy,
+    <code>select_related</code>/<code>prefetch_related</code> in Django — so the related data
+    comes back in one query instead of one per row."</p>
+    <ul>
+      <li>DB-API → <span class="hl hl-blue">the standard low-level interface</span> every Python
+      database driver implements (connect, cursor, execute, fetch).</li>
+      <li>ORM lazy loading → <span class="hl hl-inter">fetches a relationship only on first
+      access</span>, not together with the parent row.</li>
+      <li>N+1 → <span class="hl hl-hot">1 intended query becomes N+1 actual ones</span> when a
+      loop accesses a lazy relationship per row.</li>
+      <li>Fix → <span class="hl hl-basic">eager-load before the loop</span> (joinedload/
+      selectinload, select_related/prefetch_related).</li>
+      <li>Async database access → <span class="hl hl-teal">needs an async-native driver</span>,
+      not a sync driver wrapped in <code>async def</code>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Python's <b>DB-API</b> is the standardized low-level interface — connect, cursor,
+      execute, fetch — that different database drivers implement consistently, so code written
+      against one driver reads the same way against another. On top of that, <b>connection
+      pooling</b> reuses a fixed set of already-open connections across requests instead of
+      opening and closing one per request, and transactions group related writes so they succeed
+      or fail together — both matter more as traffic grows, not less.</p>
+
+      <p>An <b>ORM</b> (SQLAlchemy, Django ORM) maps rows to Python objects and lets you write
+      queries in Python instead of raw SQL strings — trading some control and transparency for
+      productivity, plus parameterized queries by default, which reduces SQL-injection risk. Part
+      of that convenience is <b>lazy loading</b>: a relationship like <code>order.customer</code>
+      is only actually fetched the first time it's accessed, not eagerly with the parent row.
+      That's the direct cause of N+1 — looping over 100 orders and accessing <code>.customer</code>
+      on each one fires 100 separate queries instead of one query that fetches everything needed
+      up front.</p>
+
+      <p>Troubleshooting a slow endpoint follows in that order: check for an <b>N+1</b> pattern
+      first (a loop plus a relationship access is the tell), then check for a missing
+      <b>index</b>, then look at actual query plans and timing — usually via the ORM's own
+      query-logging, or the database's slow-query log. <b>Async</b> database access needs an
+      async-native driver to actually avoid blocking the event loop during that I/O — just
+      wrapping a sync driver's calls in <code>async def</code> doesn't make them non-blocking.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>orders = session.query(Order).all()  <span class="cx-cmt"># 1 query</span>
+
+<span class="kw">for</span> order <span class="kw">in</span> orders:
+    print(order.customer.name)  <span class="cx-err"># ❌ lazy load — 1 query PER row</span></code></pre>
+      </div>
+      <p class="cx-note">100 orders → 101 queries total: 1 for the list, plus 1 more for every
+      <code>.customer</code> access inside the loop.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">from</span> sqlalchemy.orm <span class="kw">import</span> joinedload
+
+orders = (
+    session.query(Order)
+    .options(joinedload(Order.customer))  <span class="cx-ok"># ✅ eager-load up front</span>
+    .all()
+)  <span class="cx-cmt"># still 1 query</span>
+
+<span class="kw">for</span> order <span class="kw">in</span> orders:
+    print(order.customer.name)  <span class="cx-ok"># already loaded, no extra query</span></code></pre>
+      </div>
+      <p class="cx-note">Same loop, same output — <code>joinedload</code> fetches every customer
+      in that same query (or one extra, constant-size query), not one query per row.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>An API endpoint kept getting slower as its result set grew — not crashing, just
+      steadily heavier under load.</b> The root cause was an N+1 query hidden inside a serializer:
+      it accessed a lazy-loaded relationship once per item being serialized. The fix was a single
+      eager-loading change to the query — no other code touched — and the endpoint's response
+      time stopped scaling with row count.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="index.html" style="opacity:.62; color:var(--ink-soft);">Python Web / API (coming soon)</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Python Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="index.html" style="opacity:.62; color:var(--ink-soft);">Python Architecture / Senior Scenarios (coming soon) →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Python · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
