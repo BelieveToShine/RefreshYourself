@@ -499,5 +499,10 @@ window.SEARCH_INDEX = [
   { title: "Materialized/Indexed Views vs. Regular Views", track: "SQL", tier: "Intermediate", path: "sql/intermediate/15.html", keywords: "materialized view indexed view regular view staleness refresh sql" },
   { title: "Triggers", track: "SQL", tier: "Intermediate", path: "sql/intermediate/16.html", keywords: "trigger insert update delete hidden side effect audit sql" },
   { title: "Bulk Operations from the Database's Own Side", track: "SQL", tier: "Advanced", path: "sql/advanced/7.html", keywords: "bulk insert minimal logging batch size index maintenance load sql" },
-  { title: "Table Partitioning", track: "SQL", tier: "Advanced", path: "sql/advanced/8.html", keywords: "table partitioning partition elimination date range scalability sql" }
+  { title: "Table Partitioning", track: "SQL", tier: "Advanced", path: "sql/advanced/8.html", keywords: "table partitioning partition elimination date range scalability sql" },
+  { title: "DSA — track home", track: "DSA", tier: "", path: "dsa/index.html", keywords: "dsa data structures algorithms overview patterns" },
+  { title: "DSA Basic — topic list", track: "DSA", tier: "Basic", path: "dsa/basic/index.html", keywords: "dsa basic list roadmap arrays linked list stack queue hash map tree heap graph sorting" },
+  { title: "DSA Intermediate — topic list", track: "DSA", tier: "Intermediate", path: "dsa/intermediate/index.html", keywords: "dsa intermediate list roadmap two pointers binary search dynamic programming greedy graph patterns" },
+  { title: "DSA Advanced — topic list", track: "DSA", tier: "Advanced", path: "dsa/advanced/index.html", keywords: "dsa advanced list roadmap pattern recognition trade-offs scale" },
+  { title: "DSA — full roadmap", track: "DSA", tier: "", path: "dsa/roadmap.html", keywords: "dsa roadmap all topics plan overview data structures algorithms" }
 ];

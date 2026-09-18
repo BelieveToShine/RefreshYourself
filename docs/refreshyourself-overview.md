@@ -16,7 +16,7 @@ junior/mid-level interview. Two groups of tracks:
 - **Core backend interview path**, in this order: C# → OOP → .NET/ASP.NET Core (MVC lives inside
   this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure → AWS.
 - **Other tracks**, not part of the ordered path: React, Angular, Python, and AI (all 7 phases
-  complete, see below), DSA still fully untouched.
+  complete, see below); DSA has a Phase 1–6 roadmap, awaiting Phase 7.
 
 Every track goes through 7 phases before any page is built — see
 [`specs/README.md`](superpowers/specs/README.md) for the full pipeline, and
@@ -173,7 +173,18 @@ through all 7 phases:**
   own differentiator. Every diagram passed the mandatory automated verification script, run
   independently against every single page. Not part of the ordered core-backend path — grouped
   with React/Angular/DSA/Python. See [`specs/ai/overview.md`](superpowers/specs/ai/overview.md).
-- **DSA** — not started, no roadmap planned yet.
+- **DSA** — **Phases 1–6 complete, roadmap-only (0/30 written)** (2026-09-18):
+  [`question-taxonomy.md`](superpowers/specs/dsa/question-taxonomy.md) (30 concept groups: this
+  session's own 19-group draft, expanded to 30 after the user independently cross-checked it
+  against another vendor's DSA curriculum, plus a Phase 2 gap-hunt that added 2 items folded into
+  an existing page — reservoir sampling and Bloom filters) →
+  [`roadmap.md`](superpowers/specs/dsa/roadmap.md) → 30 tiered/prioritized pages, roadmap-listed
+  on the site and on [`dsa/roadmap.html`](../dsa/roadmap.html). Organized around reusable
+  interview patterns and trade-off judgment (its own "Pattern Recognition" and "Data Structure
+  Trade-offs" pages) rather than an algorithm encyclopedia — explicitly excludes suffix trees,
+  max flow, computational geometry, and similar research-depth topics. Not part of the ordered
+  core-backend path — grouped with React/Angular/Python/AI. See
+  [`specs/dsa/overview.md`](superpowers/specs/dsa/overview.md).
 
 ## Adding a new track's spec
 
