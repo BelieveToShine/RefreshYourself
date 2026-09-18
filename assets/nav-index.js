@@ -1020,4 +1020,75 @@ window.NAV_INDEX = {
       }
     ]
   },
+  "dsa/basic": {
+    track: "DSA",
+    trackIcon: "🧠",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1 – 10",
+        items: [
+          { n: 1, file: "1.html", short: "Complexity Analysis", title: "Complexity Analysis", tail: "Big-O/Θ/Ω, time vs. space, amortized analysis.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Arrays & Strings", title: "Arrays & Strings", tail: "in-place ops, prefix/suffix, matrix basics.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Linked Lists", title: "Linked Lists", tail: "singly/doubly/circular, cycle detection, reversal.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Stacks & Queues", title: "Stacks & Queues", tail: "monotonic stack/queue, deque.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Hash Tables / Hash Maps", title: "Hash Tables / Hash Maps", tail: "hashing, collision, load factor, frequency counting.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Binary Trees & BSTs", title: "Binary Trees & BSTs", tail: "traversals, the BST invariant.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Heaps / Priority Queues", title: "Heaps / Priority Queues", tail: "binary heap, k-way merge.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Graph Fundamentals", title: "Graph Fundamentals", tail: "representations, BFS/DFS, connected components.", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Sorting", title: "Sorting", tail: "comparison vs. non-comparison sorts, stability.", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Bit Manipulation", title: "Bit Manipulation", tail: "common bitwise interview idioms.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "dsa/intermediate": {
+    track: "DSA",
+    trackIcon: "🧠",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1 – 10",
+        items: [
+          { n: 1, file: "1.html", short: "Two Pointers & Sliding Window", title: "Two Pointers & Sliding Window", tail: "fixed window, variable window, fast/slow pointers.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Binary Search & Search on Answer", title: "Binary Search & Search on Answer", tail: "rotated arrays, search on a monotonic answer.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Recursion & Backtracking", title: "Recursion & Backtracking", tail: "call-stack cost, pruning, classic shapes.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Greedy Algorithms", title: "Greedy Algorithms", tail: "when greedy is provably correct vs. when it fails.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Dynamic Programming", title: "Dynamic Programming", tail: "1D/2D, knapsack family, LCS/LIS, state-machine DP.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Graph Problem Patterns", title: "Graph Problem Patterns", tail: "grid-as-graph, multi-source BFS, bipartite check.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Shortest Path & MST", title: "Shortest Path & MST", tail: "Dijkstra, Bellman-Ford, Floyd-Warshall, Kruskal/Prim.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Topological Sort & Union-Find", title: "Topological Sort & Union-Find", tail: "dependency ordering, disjoint sets, cycle detection.", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Prefix Sum & Difference Array", title: "Prefix Sum & Difference Array", tail: "range-sum queries, subarray sums, difference-array updates.", priority: "⭐" },
+          { n: 10, file: "10.html", short: "Intervals & Sweep Line", title: "Intervals & Sweep Line", tail: "merge intervals, meeting rooms, sweep-line technique.", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11 – 12",
+        items: [
+          { n: 11, file: "11.html", short: "Balanced Trees", title: "Balanced Trees", tail: "why balance matters, AVL/Red-Black at a glance.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Tries", title: "Tries", tail: "prefix search, autocomplete-style use cases.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "dsa/advanced": {
+    track: "DSA",
+    trackIcon: "🧠",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1 – 8",
+        items: [
+          { n: 1, file: "1.html", short: "Pattern Recognition", title: "Pattern Recognition", tail: "the \"how do I recognize the solution\" layer.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Data Structure Trade-offs", title: "Data Structure Trade-offs", tail: "why HashMap over TreeMap, heap vs. sorting.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Time vs. Memory Trade-offs", title: "Time vs. Memory Trade-offs", tail: "when a faster algorithm is actually slower.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Streaming / Large-Dataset Problems", title: "Streaming / Large-Dataset Problems", tail: "top-K and duplicates without storing everything.", priority: "⭐" },
+          { n: 5, file: "5.html", short: "External / Distributed Processing", title: "External / Distributed Processing", tail: "external sort, when data doesn't fit in RAM.", priority: "⭐" },
+          { n: 6, file: "6.html", short: "Scale & Performance Scenarios", title: "Scale & Performance Scenarios", tail: "100M records, when O(n) becomes unacceptable.", priority: "⭐" },
+          { n: 7, file: "7.html", short: "Segment Tree & Fenwick Tree", title: "Segment Tree & Fenwick Tree", tail: "range-query/range-update — Deep Dive.", priority: "🧠" },
+          { n: 8, file: "8.html", short: "String Algorithms", title: "String Algorithms", tail: "KMP, Rabin-Karp — Deep Dive.", priority: "🧠" }
+        ]
+      }
+    ]
+  },
 };
