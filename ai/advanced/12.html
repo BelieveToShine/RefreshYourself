@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Async/Queue-Based Inference — AI Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fae8ff;--crumb-ink:#c026d3;">🤖 AI</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Async/Queue-Based Inference</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ AI · Advanced · Should Know</div>
+    <h1>A million records overnight isn't one <span class="hl hl-blue">chat request</span>, repeated — it's a <span class="hl hl-hot">bounded, queued pipeline</span></h1>
+    <p class="interview-q">How would you design a pipeline that enriches millions of records with an LLM overnight, and keep it inside a fixed cost and rate budget?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Separates candidates who default to "just call the API in a loop" from those who
+        actually think about throughput, cost, and failure recovery at scale — a common senior/
+        staff system-design probe.</li>
+        <li>Comes up any time a real product needs an LLM to enrich an existing dataset —
+        tagging, summarizing, classifying millions of rows — rather than answering one live
+        user request.</li>
+        <li>Checks whether someone knows how to keep a large job inside a rate-limit and cost
+        budget, and how to make it safely resumable, not just "add more parallel calls."</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Bulk job = <b>queue + a bounded worker pool</b> — never one call at a time, never unbounded either.</p>
+    <p class="rthink"><b class="tc-label">Think:</b> a <b>toll booth</b> with 3 open lanes — cars
+    queue up, only 3 pass through at once no matter how long the line gets.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="qiShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="qiArrBlue" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="qiArrGreen" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="qiArrRose" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.3">NIGHTLY BULK JOB — QUEUE FEEDS A BOUNDED WORKER POOL</text>
+
+      <!-- Queue -->
+      <g filter="url(#qiShadow)"><rect x="20" y="100" width="100" height="150" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="70" y="122" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">📥 Queue</text>
+      <text x="70" y="138" text-anchor="middle" font-size="10" fill="#5b6472">records waiting</text>
+      <text x="70" y="165" text-anchor="middle" font-size="9.5" fill="#5b6472">rec #10432</text>
+      <text x="70" y="183" text-anchor="middle" font-size="9.5" fill="#5b6472">rec #10433</text>
+      <text x="70" y="201" text-anchor="middle" font-size="9.5" fill="#5b6472">⋯ millions more</text>
+
+      <!-- Worker pool -->
+      <g filter="url(#qiShadow)"><rect x="230" y="60" width="190" height="230" rx="16" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="325" y="80" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">👷 WORKER POOL</text>
+      <text x="325" y="96" text-anchor="middle" font-size="10" fill="#5b6472">max 3 concurrent</text>
+
+      <g filter="url(#qiShadow)"><rect x="245" y="108" width="160" height="48" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="325" y="128" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">Worker 1</text>
+      <text x="325" y="144" text-anchor="middle" font-size="10" fill="#5b6472">🧠 LLM call</text>
+
+      <g filter="url(#qiShadow)"><rect x="245" y="166" width="160" height="48" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="325" y="186" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">Worker 2</text>
+      <text x="325" y="202" text-anchor="middle" font-size="10" fill="#5b6472">🧠 LLM call</text>
+
+      <g filter="url(#qiShadow)"><rect x="245" y="224" width="160" height="48" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="325" y="244" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">Worker 3</text>
+      <text x="325" y="260" text-anchor="middle" font-size="10" fill="#5b6472">🧠 LLM call</text>
+
+      <!-- Idempotent write -->
+      <g filter="url(#qiShadow)"><rect x="500" y="100" width="120" height="150" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="560" y="122" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">💾 Idempotent</text>
+      <text x="560" y="139" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">Write</text>
+      <text x="560" y="157" text-anchor="middle" font-size="9.3" fill="#5b6472">unique constraint</text>
+      <text x="560" y="174" text-anchor="middle" font-size="9.3" fill="#5b6472">→ no duplicate rows</text>
+      <text x="560" y="192" text-anchor="middle" font-size="9.3" fill="#5b6472">safe to re-run job</text>
+
+      <!-- queue -> pool -->
+      <path d="M120,175 H230" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#qiArrBlue)"/>
+      <rect x="129" y="136" width="92" height="19" rx="9.5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+      <text x="175" y="149.5" text-anchor="middle" font-size="9.2" font-weight="700" fill="#1d4ed8">pulls when free</text>
+
+      <!-- pool -> write, with a small travelling token -->
+      <path id="qiWritePath" d="M420,175 H500" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#qiArrGreen)"/>
+      <rect x="430" y="188" width="60" height="18" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.2"/>
+      <text x="460" y="201" text-anchor="middle" font-size="8.6" font-weight="700" fill="#166534">→ DB upsert</text>
+      <circle r="4" fill="#16a34a">
+        <animateMotion dur="2.2s" repeatCount="indefinite" path="M420,175 H500"/>
+      </circle>
+
+      <!-- the 4th record, bounded out, still trying to get in -->
+      <rect x="140" y="195" width="70" height="40" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3"/>
+      <text x="175" y="210" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">⏳ 4th record</text>
+      <text x="175" y="224" text-anchor="middle" font-size="8.3" fill="#5b6472">waits its turn</text>
+      <path d="M210,215 H230" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#qiArrRose)">
+        <animate attributeName="stroke-dashoffset" values="0;-14" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+    </svg>
+    <figcaption>Records sit in a queue; a pool bounded to 3 concurrent workers pulls from it and
+    calls the LLM. A 4th record can't start until a slot frees — that bound is what keeps the
+    job inside its rate-limit and cost budget. Every result is written with an upsert, so
+    re-running the job after a crash never creates a duplicate row.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Assuming more concurrency is always better.</b> Firing hundreds of
+    parallel LLM calls at once blows through the provider's rate limit and makes the job's cost
+    unpredictable — the fix is a bounded worker pool (a semaphore or a fixed-size pool), not
+    "as parallel as possible."</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What happens if the job dies halfway through and you rerun it?"</b>
+    Nothing bad — every write is idempotent (behind a unique constraint, or an upsert), so
+    replaying already-completed records just overwrites the same result instead of creating a
+    duplicate.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd treat it as an async, queued pipeline, not a live request: push
+    records onto a queue, pull them with a bounded pool of concurrent workers so I respect the
+    provider's rate limit and keep cost predictable, use a batch API if the provider offers one
+    and the results don't need to be ready immediately, and make every write idempotent — behind
+    a unique constraint or an upsert — so a retried or resumed run can never create duplicates."</p>
+    <ul>
+      <li>Queue + worker pool → <span class="hl hl-blue">decouples processing from a live
+      request/response call</span>, so many records get handled concurrently instead of one at a
+      time.</li>
+      <li>Batch API → <span class="hl hl-teal">lower cost, results come back later</span> —
+      a natural fit for overnight, non-time-sensitive work if the provider offers one.</li>
+      <li>Bound the concurrency → a semaphore or fixed-size pool
+      <span class="hl hl-hot">caps rate-limit and cost exposure</span>, instead of firing an
+      unbounded flood of parallel calls.</li>
+      <li>Idempotent writes → an upsert or unique constraint means
+      <span class="hl hl-basic">a retried run can't create duplicate records</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A nightly job that enriches millions of records doesn't need a real-time answer the way
+      a live chat request does — nobody is staring at a screen waiting on record #40,000. Treating
+      it like a live request anyway, one call at a time, wastes the chance to process it far more
+      efficiently. The better shape is <b>queue-based processing</b>: records go onto a queue, and
+      a pool of workers pulls from that queue and calls the LLM for each one, handling many records
+      concurrently instead of sequentially. This is an <b>async, decoupled</b> pattern — nothing is
+      waiting on a synchronous request/response the whole time.</p>
+      <p>Some providers also offer a <b>batch API</b> built specifically for large volumes of
+      non-time-sensitive requests, often at a meaningfully lower cost than real-time calls, in
+      exchange for the results coming back later rather than immediately. That trade — cheaper,
+      but not instant — is exactly the shape of a nightly enrichment job, which makes it worth
+      checking for before building a fully custom queue-and-workers setup.</p>
+      <p>Whichever approach is used, the number of records being processed at once has to stay
+      <b>bounded</b> — a semaphore or a fixed-size worker pool — both to respect the provider's
+      rate limits and to keep the job's total cost and throughput predictable, rather than firing
+      unbounded parallel requests. And because a bulk job can partially fail and need to be retried
+      or resumed, every write should be <b>idempotent</b> — behind a unique constraint, or an
+      upsert — so replaying a run that already got partway through doesn't create duplicate
+      records.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>semaphore = asyncio.Semaphore(<span class="num">3</span>)  <span class="cx-cmt"># only 3 calls in flight at once</span>
+
+<span class="kw">async</span> <span class="kw">def</span> process(record):
+    <span class="kw">async</span> <span class="kw">with</span> semaphore:                  <span class="cx-cmt"># blocks here until a slot frees</span>
+        result = <span class="kw">await</span> llm.enrich(record)
+        <span class="kw">await</span> db.upsert(record.id, result)  <span class="cx-cmt"># idempotent write</span>
+
+<span class="kw">await</span> asyncio.gather(*(process(r) <span class="kw">for</span> r <span class="kw">in</span> queue))</code></pre>
+      </div>
+      <p class="cx-note">The semaphore is the bound — a 4th record's <code>process()</code> call
+      simply waits at <code>async with semaphore</code> until a slot frees; it never fires a 4th
+      concurrent LLM call.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL (Postgres)</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">INSERT INTO</span> enriched_records (record_id, summary)
+<span class="kw">VALUES</span> (@id, @summary)
+<span class="kw">ON CONFLICT</span> (record_id) <span class="kw">DO UPDATE</span>
+<span class="kw">SET</span> summary = EXCLUDED.summary;  <span class="cx-cmt">-- upsert: safe to run twice</span></code></pre>
+      </div>
+      <p class="cx-note">Re-running the whole job after a crash just re-applies the same rows —
+      the unique constraint on <code>record_id</code> means no duplicate row is ever created.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A team needs an LLM to summarize five million support tickets every night before an
+      analytics dashboard refreshes at 6am, without blowing the month's API budget. The answer:
+      push every ticket ID onto a queue, run a small worker pool sized to the account's rate limit
+      pulling from it, use the provider's batch API if the summaries don't need to exist before
+      the very next business day, and upsert each ticket's summary by ticket ID — so if the job
+      crashes at 2am and gets restarted, it just picks up from where it left off without
+      reprocessing, or duplicating, the tickets it already finished.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="index.html" style="opacity:.62; color:var(--ink-soft);">← Advanced RAG — GraphRAG &amp; Agentic RAG (coming soon)</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to AI Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="index.html" style="color:var(--ink-soft); opacity:.7;">Self-Hosted vs. Managed Models (coming soon) →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · a personal brush-up site · content added track by track, tier by tier.
+  <a href="../../index.html">← Back to all tracks</a>
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
