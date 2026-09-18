@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>asyncio — Python Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="python/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#306998;">🐍 Python</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">asyncio</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Python · Advanced · Must Know</div>
+    <h1>Blocking code inside <code>async def</code> doesn't just slow down its own task — it <span class="hl hl-hot">freezes every other task</span> on the event loop too</h1>
+    <p class="interview-q">Blocking (synchronous, CPU-bound or blocking-I/O) code is called directly inside an <code>async def</code> function with no <code>await</code> around it — what happens to every other task on the event loop while it runs?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>A single blocking call inside one handler silently stalls every other concurrent
+        request on that same worker — a real, recurring production incident category, not a rare
+        edge case.</li>
+        <li>Checks whether you understand <code>asyncio</code> is single-threaded cooperative
+        concurrency, not automatic parallelism — a common gap for anyone who assumes
+        <code>async def</code> alone makes the code inside it non-blocking.</li>
+        <li>A near-guaranteed follow-up right after any basic <code>asyncio</code> question — it
+        separates someone who's used <code>async</code>/<code>await</code> syntax from someone who
+        actually understands what it's protecting.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Async = <b>"one thread, many waiting tasks, cooperative switching only at <code>await</code>."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><code>await</code> → hands control back to the loop</span>
+      <span class="tc-line">no <code>await</code> + a real blocking call → the WHOLE loop freezes, not just that task</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="dShadow1" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arBlue1" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#3b82f6"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.3">NORMAL — EACH TASK PAUSES AT await, THE LOOP MOVES ON</text>
+
+      <g filter="url(#dShadow1)"><rect x="40" y="34" width="560" height="34" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🔁 EVENT LOOP</text>
+
+      <path d="M120,68 V104" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arBlue1)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+      <path d="M320,68 V104" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arBlue1)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+      <path d="M520,68 V104" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arBlue1)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+
+      <!-- Task A -->
+      <g filter="url(#dShadow1)"><rect x="40" y="104" width="160" height="90" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="120" y="128" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🧵 Task A</text>
+      <text x="120" y="146" text-anchor="middle" font-size="8.7" fill="#5b6472">pauses at each await</text>
+      <text x="120" y="164" text-anchor="middle" font-size="10.5" fill="#5b6472">●●●○○</text>
+
+      <!-- Task B -->
+      <g filter="url(#dShadow1)"><rect x="240" y="104" width="160" height="90" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="128" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🧵 Task B</text>
+      <text x="320" y="146" text-anchor="middle" font-size="8.7" fill="#5b6472">pauses at each await</text>
+      <text x="320" y="164" text-anchor="middle" font-size="10.5" fill="#5b6472">●●○○○</text>
+
+      <!-- Task C -->
+      <g filter="url(#dShadow1)"><rect x="440" y="104" width="160" height="90" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="520" y="128" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🧵 Task C</text>
+      <text x="520" y="146" text-anchor="middle" font-size="8.7" fill="#5b6472">pauses at each await</text>
+      <text x="520" y="164" text-anchor="middle" font-size="10.5" fill="#5b6472">●○○○○</text>
+
+      <text x="320" y="222" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing="0.2" fill="#475569">LOOP TAKES TURNS — NONE OF THE THREE EVER BLOCKS THE OTHERS</text>
+    </svg>
+    <figcaption>All three tasks keep making progress — the loop only takes turns between them at
+    each <code>await</code>, it never runs two at the exact same instant.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="dShadow2" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arRed2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arGray2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.3">BROKEN — A BLOCKS WITH NO await, THE LOOP CAN'T MOVE ON</text>
+
+      <g filter="url(#dShadow2)"><rect x="40" y="34" width="560" height="34" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🥶 EVENT LOOP — STUCK</text>
+
+      <path d="M120,68 V104" fill="none" stroke="#dc2626" stroke-width="2.4" marker-end="url(#arRed2)"/>
+      <path d="M320,68 V104" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arGray2)"/>
+      <path d="M520,68 V104" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arGray2)"/>
+
+      <!-- Task A: blocking -->
+      <g filter="url(#dShadow2)"><rect x="40" y="104" width="160" height="90" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="120" y="128" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">🐛 Task A</text>
+      <text x="120" y="146" text-anchor="middle" font-size="8.7" fill="#5b6472">no await — real block</text>
+      <text x="120" y="164" text-anchor="middle" font-size="8.7" fill="#5b6472">holds the loop hostage</text>
+
+      <!-- Task B: frozen -->
+      <g filter="url(#dShadow2)"><rect x="240" y="104" width="160" height="90" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="128" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">❄️ Task B</text>
+      <text x="320" y="146" text-anchor="middle" font-size="8.7" fill="#5b6472">can't even start</text>
+      <text x="320" y="164" text-anchor="middle" font-size="8.7" fill="#5b6472">⏸ waiting on A</text>
+
+      <!-- Task C: frozen -->
+      <g filter="url(#dShadow2)"><rect x="440" y="104" width="160" height="90" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="520" y="128" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">❄️ Task C</text>
+      <text x="520" y="146" text-anchor="middle" font-size="8.7" fill="#5b6472">can't even start</text>
+      <text x="520" y="164" text-anchor="middle" font-size="8.7" fill="#5b6472">⏸ waiting on A</text>
+
+      <text x="320" y="222" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing="0.2" fill="#475569">B AND C CAN'T RUN UNTIL A'S BLOCKING CALL FINALLY RETURNS</text>
+    </svg>
+    <figcaption>Same three tasks, same loop — but A never yields, so the loop can't switch to B or
+    C at all. Both sit frozen for the whole 3 seconds, not just A.</figcaption>
+  </figure>
+
+  <div class="predict-box" style="background:linear-gradient(155deg, #dbeafe 0%, #ffffff 130%); border:1px solid rgba(59,130,246,.3); border-radius:16px; padding:16px 20px; margin:0 0 26px;">
+    <div style="font-family:'Poppins'; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:#1d4ed8; display:flex; align-items:center; gap:7px; margin-bottom:10px;">🔮 Predict the Output</div>
+
+    <div class="code-card" style="margin-bottom:12px;">
+      <div class="cc-head">
+        <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+        <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+      </div>
+      <pre><code><span class="kw">import</span> asyncio, time
+
+<span class="kw">async</span> <span class="kw">def</span> handler(name):
+    print(<span class="str">f"{name} starting"</span>)
+    time.sleep(<span class="num">3</span>)          <span class="cx-err"># ❌ blocking call, no await!</span>
+    print(<span class="str">f"{name} done"</span>)
+
+<span class="kw">async</span> <span class="kw">def</span> main():
+    <span class="kw">await</span> asyncio.gather(handler(<span class="str">"A"</span>), handler(<span class="str">"B"</span>), handler(<span class="str">"C"</span>))
+
+asyncio.run(main())</code></pre>
+    </div>
+
+    <p style="margin:0 0 10px; font-size:15px; color:var(--ink); border-left:3px solid #3b82f6; padding-left:12px;"><b>What happens to every other task on the event loop while <code>handler("A")</code> runs its <code>time.sleep(3)</code>?</b></p>
+    <p style="margin:0; font-size:14.5px; color:var(--ink-soft); border-left:3px solid #3b82f6; padding-left:12px;"><b style="color:#1d4ed8;">Answer:</b> Calling a genuinely blocking function — <code>time.sleep(3)</code>, or a synchronous blocking network/DB call — directly inside an <code>async def</code> handler, with no <code>await</code>, <b>freezes the entire event loop</b> for that duration. Every other task that was supposed to be running concurrently on that same loop is completely stalled too, because nothing yields control back to it. It isn't "this one handler gets slow" — it's "every concurrent handler on this loop gets slow." B and C won't even print <code>"starting"</code> until A's blocking sleep finishes.</p>
+  </div>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>async def</code> alone does not make the code inside it non-blocking.</b> It only means the function CAN be paused at an <code>await</code> — calling real blocking code with none inside it blocks the whole event loop just as badly as it would in synchronous code, arguably worse, since it now stalls every other task that was relying on that same loop staying responsive.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How do you call synchronous code from async code without blocking the loop?"</b> Run it in a separate thread — <code>await asyncio.to_thread(...)</code> in modern Python, or <code>loop.run_in_executor(...)</code> — so the blocking call happens off the event-loop thread, and await the result instead of calling it directly inline.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>async def</code> doesn't make code inside it non-blocking — blocking code with no <code>await</code> inside it freezes the ENTIRE event loop, not just that one task."</p>
+    <ul>
+      <li><span class="hl hl-hot">Blocking with no await</span> → stalls every other task on that
+      loop, not just the caller.</li>
+      <li><code>asyncio.to_thread()</code> / <code>run_in_executor()</code>
+      <span class="hl hl-basic">→ the fix</span> — runs genuinely blocking code off the
+      event-loop thread.</li>
+      <li>
+        <span class="kp-line"><span class="hl hl-blue">Task</span> → actually schedules a coroutine to run concurrently</span>
+        <span class="kp-line"><span class="hl hl-inter">Future</span> → just a placeholder for a result not yet available</span>
+      </li>
+      <li><code>asyncio</code> is <span class="hl hl-teal">best for many I/O-bound waits</span>, not
+      CPU-bound work — that's <code>multiprocessing</code>'s job.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Asynchronous code</b> can pause at defined points — an <code>await</code> — to let
+      other work run while it's waiting, instead of blocking the whole program until that one
+      thing finishes. The <b>event loop</b> is the single-threaded scheduler that makes this
+      possible: it runs many <b>coroutines</b> cooperatively, switching between them only at their
+      <code>await</code> points, never in the middle of a line of code. A function defined with
+      <code>async def</code> is a coroutine function — calling it doesn't run its body
+      immediately, it returns a coroutine object that still has to be awaited or scheduled before
+      anything inside it actually executes.</p>
+
+      <p>A <b>Future</b> is a low-level placeholder for a result that doesn't exist yet. A
+      <b>Task</b> wraps a coroutine and actually schedules it to run on the event loop, tracking
+      its eventual result — <code>asyncio.create_task(...)</code> is what you reach for to run a
+      coroutine concurrently alongside others, instead of one at a time.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>asyncio</code></th><th><code>threading</code></th><th><code>multiprocessing</code></th></tr></thead>
+        <tbody>
+          <tr><th>Concurrency model</th><td>cooperative, single thread</td><td>preemptive, multiple threads, one process</td><td>multiple separate processes</td></tr>
+          <tr><th>Best for</th><td>many I/O-bound waits</td><td>some I/O overlap with blocking libraries</td><td>CPU-bound, parallel computation</td></tr>
+          <tr><th>If blocking code sneaks in</th><td>freezes the ENTIRE event loop</td><td>blocks only that one thread</td><td>doesn't affect other processes</td></tr>
+          <tr><th>Overhead</th><td>lowest — no threads/processes</td><td>moderate — thread overhead</td><td>highest — process + serialization</td></tr>
+        </tbody>
+      </table>
+
+      <p>None of these three make CPU-bound work faster just by switching to them, and none
+      protect against code that's secretly blocking — <code>asyncio</code> gives cheap concurrency
+      for I/O-bound waits specifically, and it only works as advertised if every coroutine on the
+      loop actually yields at its <code>await</code> points.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">import</span> asyncio, time
+
+<span class="kw">async</span> <span class="kw">def</span> handler(name):
+    print(<span class="str">f"{name} starting"</span>)      <span class="cx-cmt"># all three should print this immediately</span>
+    time.sleep(<span class="num">3</span>)                    <span class="cx-err"># ❌ blocks the whole loop, not just this task</span>
+    print(<span class="str">f"{name} done"</span>)
+
+<span class="kw">async</span> <span class="kw">def</span> main():
+    <span class="kw">await</span> asyncio.gather(handler(<span class="str">"A"</span>), handler(<span class="str">"B"</span>), handler(<span class="str">"C"</span>))</code></pre>
+      </div>
+      <p class="cx-note">B and C never even print <code>"starting"</code> until A's
+      <code>time.sleep(3)</code> returns — nothing here ever hands control back to the loop.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">async</span> <span class="kw">def</span> handler(name):
+    print(<span class="str">f"{name} starting"</span>)
+    <span class="kw">await</span> asyncio.sleep(<span class="num">3</span>)              <span class="cx-ok"># ✅ hands control back to the loop</span>
+    print(<span class="str">f"{name} done"</span>)</code></pre>
+      </div>
+      <p class="cx-note">Now A, B, and C all start immediately and finish around the same ~3
+      seconds — <code>await asyncio.sleep()</code> yields control instead of holding it.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">def</span> blocking_call():
+    time.sleep(<span class="num">3</span>)                      <span class="cx-cmt"># a real synchronous, blocking function</span>
+
+<span class="kw">async</span> <span class="kw">def</span> handler(name):
+    print(<span class="str">f"{name} starting"</span>)
+    <span class="kw">await</span> asyncio.to_thread(blocking_call)  <span class="cx-ok"># ✅ runs off the event-loop thread</span>
+    print(<span class="str">f"{name} done"</span>)</code></pre>
+      </div>
+      <p class="cx-note"><code>asyncio.to_thread()</code> (or <code>loop.run_in_executor()</code>)
+      is the fix when the blocking call itself can't be rewritten as async — it moves the block
+      off the event-loop thread so <code>await</code> can return control while it runs.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A production incident: one async endpoint accidentally called a synchronous, blocking
+      database driver call with no <code>await</code> around it. Every other concurrent request
+      being served by that same worker's event loop stalled for the exact duration of each of
+      those calls — not just the one request that triggered it — because nothing on that path
+      ever yielded control back to the loop. The fix was swapping the blocking driver call for an
+      async-native one, and wrapping any call that genuinely couldn't be replaced in
+      <code>asyncio.to_thread(...)</code> instead.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="index.html" style="color:var(--ink-soft);">← Multiprocessing (coming soon)</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Python Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="index.html" style="color:var(--ink-soft);">Performance &amp; Profiling (coming soon) →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Python · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
