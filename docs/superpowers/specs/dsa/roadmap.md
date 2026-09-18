@@ -132,6 +132,18 @@ tree is already organized by structure-family within each tier.
   a 2×2 classification alone is not sufficient — at least one diagram per such page must show how
   the winning option actually behaves at runtime, not just classify the options.
 
+## Post-launch: `dsa/roadmap.html` regrouped by concept cluster (2026-09-18)
+
+The live roadmap page originally grouped its 30 rows by tier (Basic/Intermediate/Advanced),
+copying this file's own Phase 4 table. The user asked for the same cross-tier concept-cluster
+presentation already used on SQL/AWS/.NET's roadmap pages, so `dsa/roadmap.html` was rebuilt into
+8 clusters (Core Linear Structures; Trees, Heaps & Tries; Graphs; Sorting & Searching; Two
+Pointers/Prefix Sums/Intervals; Recursion/Backtracking/Greedy/DP; Pattern Recognition &
+Trade-offs; Scale/Streaming/Strings) — a presentational grouping invented at this step, not part
+of the original Phase 1 taxonomy (unlike SQL/AWS/.NET, whose Phase 1 taxonomies already had
+top-level concept sections to reuse here). Tier tables above are unchanged; only the live
+roadmap page's grouping changed.
+
 ## Known gaps
 
 None — Phase 2's gap-hunt (reservoir sampling, Bloom filters) is folded into the initial taxonomy

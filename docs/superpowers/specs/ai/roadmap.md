@@ -126,6 +126,16 @@ for that page's grouping, only link-wiring once pages exist.
 - **DSA remains untouched** — this build only covers the AI track; specs/README.md's row for DSA
   is unaffected.
 
+## Post-launch: `ai/roadmap.html` regrouped by concept cluster (2026-09-18)
+
+The live roadmap page originally grouped its 48 rows by tier. Per the user's request to match
+SQL/AWS/.NET's cross-tier concept-cluster presentation, `ai/roadmap.html` was rebuilt into 9
+clusters (LLM Fundamentals; Prompting & Output Control; RAG & Retrieval; Fine-Tuning & Model
+Adaptation; Agents & Tool Use; Enterprise: .NET & Azure AI; Evaluation & Observability; Security
+& Responsible AI; Production Operations & Scale) — a presentational grouping invented at this
+step, not part of the original Phase 1 taxonomy. Tier tables above are unchanged; only the live
+roadmap page's grouping changed.
+
 ## Known gaps
 
 None — Phase 2's gap-hunt is folded into the initial taxonomy pass (see

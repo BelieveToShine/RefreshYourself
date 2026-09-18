@@ -174,6 +174,16 @@ roughly the source material's own thematic order, then ⭐, then 🧠 last.
   Functional Patterns"/"Event Loop Internals" page — see Phase 2 above for the reasoning per
   item.
 
+## Post-launch: `javascript/roadmap.html` regrouped by concept cluster (2026-09-18)
+
+The live roadmap page originally grouped its 38 rows by tier. Per the user's request to match
+SQL/AWS/.NET's cross-tier concept-cluster presentation, `javascript/roadmap.html` was rebuilt
+into 10 clusters (Core Language Fundamentals; Arrays/Objects & Modern Syntax; Error Handling &
+Testing; Closures/this/Prototypes; Modules & Functional Patterns; Async & the Event Loop;
+Browser/DOM & Storage; Performance & Production; Security & Platform APIs; Deep Dive) — a
+presentational grouping invented at this step, not part of the original Phase 1 taxonomy. Tier
+tables above are unchanged; only the live roadmap page's grouping changed.
+
 ## Known gaps
 
 None — every one of the user's 37 groups is represented, plus the one gap-hunt addition
