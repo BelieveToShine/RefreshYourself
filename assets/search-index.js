@@ -319,6 +319,7 @@ window.SEARCH_INDEX = [
   { title: "The RAG Pipeline End to End", track: "AI", tier: "Intermediate", path: "ai/intermediate/1.html", keywords: "rag retrieval augmented generation pipeline ingest chunk embed index retrieve rerank assemble context generate cite vector store hallucination stale index" },
   { title: "Hybrid Search", track: "AI", tier: "Intermediate", path: "ai/intermediate/3.html", keywords: "hybrid search keyword search bm25 vector search semantic search fusion rank fusion rag retrieval sku error code exact match" },
   { title: "AI Advanced — topic list", track: "AI", tier: "Advanced", path: "ai/advanced/index.html", keywords: "ai advanced list roadmap guardrails eval llmops cost" },
+  { title: "OWASP Top 10 for LLM Applications", track: "AI", tier: "Advanced", path: "ai/advanced/6.html", keywords: "owasp top 10 llm security prompt injection insecure output handling training data poisoning excessive agency supply chain vulnerabilities model theft model denial of service overreliance sensitive information disclosure insecure plugin tool design checklist guardrails" },
   { title: "AI — full roadmap", track: "AI", tier: "", path: "ai/roadmap.html", keywords: "ai roadmap all topics plan overview genai llm" },
   { title: "OOP — track home", track: "OOP", tier: "", path: "oops/index.html", keywords: "oop object oriented programming design solid overview" },
   { title: "OOP Basic — topic list", track: "OOP", tier: "Basic", path: "oops/basic/index.html", keywords: "oop basic list interview questions roadmap four pillars" },
