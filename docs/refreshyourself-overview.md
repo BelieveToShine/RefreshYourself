@@ -15,8 +15,20 @@ junior/mid-level interview. Two groups of tracks:
 
 - **Core backend interview path**, in this order: C# → OOP → .NET/ASP.NET Core (MVC lives inside
   this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure → AWS.
-- **Other tracks**, not part of the ordered path: React, Angular, Python, AI, and DSA (all 7
-  phases complete, see below).
+- **Frontend group** (homepage section added 2026-09-18, per the user's own restructuring
+  request): HTML & CSS → JavaScript → React → Angular. **HTML & CSS and JavaScript are brand new
+  root tiles, "Coming soon," Phase 0 — no taxonomy, roadmap, or folder yet.** Kept as their own
+  two tracks rather than one "Frontend" track or folded into React, per the user's own rule:
+  *"Keep a technology as a separate top-level track when it has enough independent interview
+  depth and its own distinct mental model. Combine technologies when interviewers naturally
+  evaluate them together and separating them would create small, fragmented roadmaps."*
+  JavaScript earns its own track (closures, the event loop, prototypes, async — genuine
+  Basic→Advanced depth on its own). HTML and CSS are combined into one "HTML & CSS" track rather
+  than split, since a real frontend interview asks about layout/rendering/accessibility as one
+  connected topic, not two small, fragmented roadmaps. React and Angular already existed as
+  separate tracks and simply moved into this new section on the homepage — no content changed.
+- **Other tracks**, not part of the ordered path: Python, DSA, and AI (all 7 phases complete, see
+  below).
 
 Every track goes through 7 phases before any page is built — see
 [`specs/README.md`](superpowers/specs/README.md) for the full pipeline, and
