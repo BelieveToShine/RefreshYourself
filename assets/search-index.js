@@ -536,5 +536,10 @@ window.SEARCH_INDEX = [
   { title: "External / Distributed Processing", track: "DSA", tier: "Advanced", path: "dsa/advanced/5.html", keywords: "external sort chunked processing k-way merge disk mapreduce distributed processing ram dsa" },
   { title: "Scale & Performance Scenarios", track: "DSA", tier: "Advanced", path: "dsa/advanced/6.html", keywords: "scale performance scenario 100 million records shortest path at scale big o unacceptable dsa" },
   { title: "Segment Tree & Fenwick Tree", track: "DSA", tier: "Advanced", path: "dsa/advanced/7.html", keywords: "segment tree fenwick tree binary indexed tree range query range update point update dsa" },
-  { title: "String Algorithms", track: "DSA", tier: "Advanced", path: "dsa/advanced/8.html", keywords: "kmp knuth morris pratt rabin karp rolling hash pattern matching string search dsa" }
+  { title: "String Algorithms", track: "DSA", tier: "Advanced", path: "dsa/advanced/8.html", keywords: "kmp knuth morris pratt rabin karp rolling hash pattern matching string search dsa" },
+  { title: "JavaScript — track home", track: "JavaScript", tier: "", path: "javascript/index.html", keywords: "javascript js overview closures prototypes event loop async" },
+  { title: "JavaScript Basic — topic list", track: "JavaScript", tier: "Basic", path: "javascript/basic/index.html", keywords: "javascript basic list roadmap var let const types coercion functions scope hoisting arrays objects" },
+  { title: "JavaScript Intermediate — topic list", track: "JavaScript", tier: "Intermediate", path: "javascript/intermediate/index.html", keywords: "javascript intermediate list roadmap closures this prototypes promises async await event loop dom" },
+  { title: "JavaScript Advanced — topic list", track: "JavaScript", tier: "Advanced", path: "javascript/advanced/index.html", keywords: "javascript advanced list roadmap runtime concurrency memory performance security production" },
+  { title: "JavaScript — full roadmap", track: "JavaScript", tier: "", path: "javascript/roadmap.html", keywords: "javascript roadmap all topics plan overview" }
 ];
