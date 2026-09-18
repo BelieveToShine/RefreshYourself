@@ -197,8 +197,40 @@ groups, without ever inventing a new folder-depth rule.
 
 ---
 
+## 9. Testing **[new — added post-launch, 2026-09-18, user-reported gap]**
+
+The user reported that unit testing had no coverage anywhere in this track after all 23 original
+pages were live — confirmed by checking the taxonomy above (no "Testing" group existed) and by
+grepping every written page: the only mentions anywhere on the site were passing side-references
+inside DI-related pages ("constructor injection makes testing easier"), never a page that actually
+teaches unit testing itself. A genuine, confirmed gap, not a stretch — added as its own 9th
+concept group rather than folded into DI, since testing is a distinct interview topic with its
+own frameworks, patterns, and traps.
+
+### Unit Testing Fundamentals
+- **Core concept** — What makes a test a *unit* test rather than an integration test?
+- **Understanding** — What does the AAA (Arrange-Act-Assert) pattern mean, and is it the same
+  shape across xUnit, NUnit, and MSTest?
+- **Comparison** — xUnit vs. NUnit vs. MSTest — same underlying idea, different attribute names
+  and assertion syntax.
+- **Pitfall** — Calling a test "unit" just because it lives in the unit test project, when it
+  actually talks to a real database or API.
+
+### Mocking & Testing ASP.NET Core Components
+- **Core concept** — How do you mock a dependency (e.g. with Moq) and test a controller or
+  service in isolation?
+- **Understanding** — How does constructor injection make a class testable without a real DI
+  container?
+- **Comparison** — Mocking a single class vs. `WebApplicationFactory<TEntryPoint>` — what's
+  actually running in each case, and what does each catch that the other doesn't?
+- **Scenario** — A code review flags a test that still hits a real (if lighter) database as "not
+  a real unit test" — is that a fair criticism?
+
+---
+
 ## Coverage note for Phase 2
 
 All eight subsections from the user's original breakdown are represented, with MVC given the
 same treatment as the rest — grouped, not foldered. Kept close to the source list; no invented
-topics beyond it.
+topics beyond it. Section 9 (Testing) was added afterward per the user's own follow-up report,
+not invented independently — see above.

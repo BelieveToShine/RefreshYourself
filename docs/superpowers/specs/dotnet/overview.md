@@ -4,7 +4,19 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 23 pages written
+## Status — Phases 1–7 complete, all 25 pages written
+
+**Post-launch addition (2026-09-18):** the user reported that unit testing had no coverage
+anywhere in this track. Confirmed as a genuine gap — no "Testing" group existed in the original
+8-section taxonomy, and the only mentions anywhere on the site were passing side-references
+inside DI pages, never a page that taught unit testing itself. Added as a 9th concept group, 2
+pages: **Unit Testing Fundamentals** (`basic/6.html`, 🔥) — AAA, xUnit/NUnit/MSTest attribute
+naming, what makes a test genuinely a "unit" test; and **Mocking & Testing ASP.NET Core
+Components** (`intermediate/17.html`, 🔥) — Moq, testing a controller in isolation via
+constructor injection, and `WebApplicationFactory` for real-pipeline integration tests. Both
+diagrams verified `issueCount: 0` against the live rendered page. Full rationale in
+[`roadmap.md`](roadmap.md)'s "Post-launch addition — Testing" section and
+[`question-taxonomy.md`](question-taxonomy.md)'s Section 9.
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): raw questions, grouped by
   concept across 8 subsections (including MVC as a grouped subsection, not a separate track).
@@ -22,7 +34,7 @@ keeping it in sync with the live pages.
   [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
   before this track was considered done.
 
-## Basic (5 topics) — 5 written
+## Basic (6 topics) — 6 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -31,8 +43,9 @@ keeping it in sync with the live pages.
 | 3 | SDK vs. Runtime, .csproj & NuGet | ⭐ | ✅ |
 | 4 | What Is MVC | 🔥 | ✅ |
 | 5 | Filters, CORS, HTTPS & Logging | ⭐ | ✅ |
+| 6 | Unit Testing Fundamentals | 🔥 | ✅ |
 
-## Intermediate (16 topics) — 16 written
+## Intermediate (17 topics) — 17 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -52,6 +65,7 @@ keeping it in sync with the live pages.
 | 14 | Authorization Policies & Claims | ⭐ | ✅ |
 | 15 | Global Exception Handling | 🔥 | ✅ |
 | 16 | The Generic Host & Application Lifetime | ⭐ | ✅ |
+| 17 | Mocking & Testing ASP.NET Core Components | 🔥 | ✅ |
 
 ## Advanced (2 topics) — 2 written
 

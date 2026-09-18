@@ -68,9 +68,10 @@ through all 7 phases:**
   user's instruction (design/scenario questions, not "what is polymorphism" from zero). Every
   diagram passed the mandatory automated verification script before this track was marked done —
   see [`specs/oops/overview.md`](superpowers/specs/oops/overview.md).
-- **.NET / ASP.NET Core** — **all 7 phases complete, 23/23 pages written** (2026-09-16):
+- **.NET / ASP.NET Core** — **all 7 phases complete, 25/25 pages written** (2026-09-16; +2 more
+  on 2026-09-18 after the user reported Unit Testing had no coverage):
   [`question-taxonomy.md`](superpowers/specs/dotnet/question-taxonomy.md) →
-  [`roadmap.md`](superpowers/specs/dotnet/roadmap.md) → 23 tiered/prioritized pages, live on the
+  [`roadmap.md`](superpowers/specs/dotnet/roadmap.md) → 25 tiered/prioritized pages, live on the
   site and on [`dotnet/roadmap.html`](../dotnet/roadmap.html). MVC included as a grouped
   subsection (not a separate track/folder), per the locked decision. Rescopes the old,
   never-written ".NET Framework" slot — different technology, same folder slug (`dotnet/`). Every

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mocking &amp; Testing ASP.NET Core Components — .NET Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dotnet/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#7c3aed;">🧱 .NET / ASP.NET Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Mocking &amp; Testing ASP.NET Core Components</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 .NET · Intermediate · Must Know</div>
+    <h1><code>Moq</code> fakes the dependency — <span class="hl hl-hot"><code>WebApplicationFactory</code> fakes nothing</span></h1>
+    <p class="interview-q">"How would you unit test a controller that depends on a repository, and how is that different from integration-testing the whole API?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Builds directly on <a href="../basic/6.html">Unit Testing Fundamentals</a> — this is where "fake every dependency" actually turns into working test code.</li>
+        <li>"How do you test a controller without a real database" is one of the most common practical follow-ups after any DI or testing question.</li>
+        <li><code>WebApplicationFactory</code> comes up whenever a team argues about how much of the real pipeline a test should exercise.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Moq <span class="rarrow">→</span> <b>fakes an interface</b> — controls what it returns, can verify it was called</p>
+      <p class="rrow">Test a controller <span class="rarrow">→</span> <b><code>new</code> it up directly</b>, pass mocks through the constructor</p>
+      <p class="rrow"><code>WebApplicationFactory</code> <span class="rarrow">→</span> <b>boots the real app</b> in memory — only infrastructure gets swapped</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> mocking replaces one dependency; <code>WebApplicationFactory</code> runs everything else for real.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 340" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="csI17a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI17a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">THE CONTROLLER ONLY EVER SEES THE INTERFACE</text>
+
+      <g filter="url(#csI17a)"><rect x="220" y="40" width="200" height="64" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="66" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🎮 OrdersController</text>
+      <text x="320" y="86" text-anchor="middle" font-size="10" fill="#5b6472">the class under test</text>
+
+      <path d="M320,104 V140" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI17a)"/>
+
+      <g filter="url(#csI17a)"><rect x="190" y="140" width="260" height="64" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="166" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🧩 IOrderRepository</text>
+      <text x="320" y="186" text-anchor="middle" font-size="10" fill="#5b6472">the interface the controller depends on</text>
+
+      <path d="M320,204 V216 H160 V240" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI17a)"/>
+      <path d="M320,204 V216 H480 V240" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI17a)"/>
+
+      <g filter="url(#csI17a)"><rect x="50" y="240" width="220" height="76" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="270" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🎭 Mock&lt;IOrderRepository&gt;</text>
+      <text x="160" y="290" text-anchor="middle" font-size="10" fill="#5b6472">test substitutes this</text>
+      <text x="160" y="305" text-anchor="middle" font-size="10" fill="#5b6472">control returns, verify calls</text>
+
+      <g filter="url(#csI17a)"><rect x="370" y="240" width="220" height="76" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="480" y="270" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🗄️ SqlOrderRepository</text>
+      <text x="480" y="290" text-anchor="middle" font-size="10" fill="#5b6472">real production code</text>
+      <text x="480" y="305" text-anchor="middle" font-size="10" fill="#5b6472">not used in this test</text>
+    </svg>
+    <figcaption>The controller only ever knows the interface — swapping the mock in for the real implementation is exactly what makes it testable without a database.</figcaption>
+  </figure>
+
+  <p>Once the controller itself is isolated, a different question shows up: how much of the
+  <em>real</em> ASP.NET Core pipeline should a test actually exercise?</p>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="csI17b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI17b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI17bAmber" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">WEBAPPLICATIONFACTORY — REAL APP, ONE FAKE PIECE</text>
+
+      <g filter="url(#csI17b)"><rect x="10" y="40" width="140" height="90" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="80" y="68" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🏗️ Boots the App</text>
+      <text x="80" y="86" text-anchor="middle" font-size="9.5" fill="#5b6472">in-memory test</text>
+      <text x="80" y="99" text-anchor="middle" font-size="9.5" fill="#5b6472">server</text>
+
+      <path d="M150,85 H170" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI17b)"/>
+
+      <g filter="url(#csI17b)"><rect x="170" y="40" width="140" height="90" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="240" y="68" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🌐 Pipeline Runs</text>
+      <text x="240" y="86" text-anchor="middle" font-size="9.5" fill="#5b6472">real middleware,</text>
+      <text x="240" y="99" text-anchor="middle" font-size="9.5" fill="#5b6472">real routing</text>
+
+      <path d="M310,85 H330" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI17b)"/>
+
+      <g filter="url(#csI17b)"><rect x="330" y="40" width="140" height="90" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="400" y="68" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">📨 Sends a Request</text>
+      <text x="400" y="86" text-anchor="middle" font-size="9.5" fill="#5b6472">just like a real</text>
+      <text x="400" y="99" text-anchor="middle" font-size="9.5" fill="#5b6472">client would</text>
+
+      <path d="M470,85 H490" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI17b)"/>
+
+      <g filter="url(#csI17b)"><rect x="490" y="40" width="140" height="90" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="560" y="68" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ Response Checked</text>
+      <text x="560" y="86" text-anchor="middle" font-size="9.5" fill="#5b6472">status, body,</text>
+      <text x="560" y="99" text-anchor="middle" font-size="9.5" fill="#5b6472">headers — the real thing</text>
+
+      <path d="M240,130 V155" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arI17bAmber)"><animate attributeName="stroke-dashoffset" values="7;0" dur="2s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#csI17b)"><rect x="140" y="155" width="200" height="60" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="240" y="178" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">⚙️ Only the DB registration</text>
+      <text x="240" y="195" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">is swapped for a fake</text>
+    </svg>
+    <figcaption>Everything except the one swapped registration runs for real — that's what makes this an integration test, not a unit test.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Mocking a repository inside a <code>WebApplicationFactory</code> test doesn't make it a unit test.</b> The real middleware, routing, and filters are all still running — it's an integration test with one faked piece, and that's exactly the point of using it.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What does <code>Verify()</code> actually check that <code>Assert</code> can't?"</b> <code>Assert</code> checks the return value; <code>mock.Verify()</code> checks that a specific method was actually called, with specific arguments — useful when the method under test returns <code>void</code> or the point is confirming a side effect happened.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd mock the repository interface with Moq, construct the controller directly with the mock passed in, and assert on the returned action result — that's a fast, isolated unit test. If I need to confirm the whole pipeline behaves correctly — routing, middleware, filters — I'd use WebApplicationFactory to boot the real app in memory and only swap the database registration for a fake."</p>
+    <ul>
+      <li>Moq → <span class="hl hl-teal">fakes one interface</span> — set up return values, verify calls happened.</li>
+      <li>Testing a controller → <span class="hl hl-blue"><code>new</code> it directly</span> — no container needed, just constructor injection.</li>
+      <li><code>WebApplicationFactory</code> → <span class="hl hl-inter">boots the real pipeline</span> — an integration test, not a unit test.</li>
+      <li>Swap only the boundary → <span class="hl hl-hot">real middleware, fake infrastructure</span> — that's the whole point of using it.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-teal">Moq</span> creates a fake implementation of an interface at
+      runtime. <code>mock.Setup(...)</code> tells it what to return when a specific method is
+      called; <code>mock.Object</code> is the fake instance itself, passed to the class under
+      test exactly like the real dependency would be. This only works because the controller
+      depends on the <em>interface</em>, never the concrete class — the same constructor
+      injection idea from <a href="2.html">The Built-in DI Container</a>.</p>
+
+      <p>Testing the controller itself needs no DI container at all: <code>new
+      OrdersController(mock.Object)</code> constructs it directly, call the action method, and
+      assert on the returned <code>IActionResult</code>. Fast, deterministic, no ASP.NET Core
+      pipeline involved.</p>
+
+      <p><span class="hl hl-inter">WebApplicationFactory&lt;TEntryPoint&gt;</span> answers a
+      different question — does the request actually work end to end through the real pipeline?
+      It boots the real app in memory, including real middleware, routing, and filters; the test
+      only overrides service registrations it genuinely can't run for real (a database, an
+      external API), then sends requests through a real <code>HttpClient</code>.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Mocking a controller</th><th><code>WebApplicationFactory</code></th></tr></thead>
+        <tbody>
+          <tr><th>What runs</th><td>just the controller class</td><td>the real app, real pipeline</td></tr>
+          <tr><th>What's faked</th><td>every dependency</td><td>only the boundary (DB/API)</td></tr>
+          <tr><th>Speed</th><td>milliseconds</td><td>slower — a real host spins up</td></tr>
+          <tr><th>Catches</th><td>logic bugs in one class</td><td>routing/middleware/wiring bugs too</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>[<span class="ty">Fact</span>]
+<span class="kw">public</span> <span class="kw">void</span> Get_ReturnsNotFound_WhenOrderMissing()
+{
+    <span class="kw">var</span> mockRepo = <span class="kw">new</span> <span class="ty">Mock</span>&lt;<span class="ty">IOrderRepository</span>&gt;();
+    mockRepo.Setup(r =&gt; r.Find(<span class="num">42</span>)).Returns(<span class="kw">null</span>);   <span class="cx-cmt">// no real DB involved</span>
+
+    <span class="kw">var</span> controller = <span class="kw">new</span> <span class="ty">OrdersController</span>(mockRepo.Object);   <span class="cx-ok">// ✅ constructed directly, no container</span>
+
+    <span class="kw">var</span> result = controller.Get(<span class="num">42</span>);
+
+    <span class="ty">Assert</span>.IsType&lt;<span class="ty">NotFoundResult</span>&gt;(result);
+    mockRepo.Verify(r =&gt; r.Find(<span class="num">42</span>), <span class="ty">Times</span>.Once);   <span class="cx-cmt">// confirms it was actually called</span>
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>Verify</code> checks the call happened — <code>Assert</code> alone can't see that.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">OrdersApiTests</span> : <span class="ty">IClassFixture</span>&lt;<span class="ty">WebApplicationFactory</span>&lt;<span class="ty">Program</span>&gt;&gt;
+{
+    <span class="kw">private</span> <span class="kw">readonly</span> <span class="ty">HttpClient</span> _client;
+
+    <span class="kw">public</span> OrdersApiTests(<span class="ty">WebApplicationFactory</span>&lt;<span class="ty">Program</span>&gt; factory)
+    {
+        <span class="cx-cmt">// real pipeline boots — only swap the DB registration</span>
+        _client = factory.WithWebHostBuilder(b =&gt; b.ConfigureServices(services =&gt;
+            services.AddScoped&lt;<span class="ty">IOrderRepository</span>, <span class="ty">FakeOrderRepository</span>&gt;()))
+            .CreateClient();
+    }
+
+    [<span class="ty">Fact</span>]
+    <span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span> Get_Returns200()
+    {
+        <span class="kw">var</span> response = <span class="kw">await</span> _client.GetAsync(<span class="str">"/api/orders/42"</span>);   <span class="cx-ok">// ✅ real routing, real middleware</span>
+        response.EnsureSuccessStatusCode();
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">Routing, middleware, and filters all run for real — only <code>IOrderRepository</code> was swapped.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A code review flags "this test still hits SQLite, so it's not a real unit test."</b>
+      That's correct — swapping a real database for a lighter one still runs real database code,
+      so it's an integration test wearing a unit test's clothes. Either mock the repository
+      interface for a genuine unit test, or keep it as-is and just call it what it is.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="16.html">← The Generic Host &amp; Application Lifetime</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to .NET Intermediate</a>
+    <div class="side next"></div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · .NET / ASP.NET Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -124,6 +124,30 @@ Numbering below is the tier-folder page number (`dotnet/<tier>/<n>.html`):
   kept only because it already existed, not because it still means the old Framework.
 - Icon is 🧱, track color purple (`#7c3aed`) — matches the existing home-page tile.
 
+## Post-launch addition — Testing (2026-09-18)
+
+The user reported that unit testing was missing from this track after all 23 original pages were
+written. Confirmed as a genuine gap (see `question-taxonomy.md`'s new Section 9) and added as 2
+more pages, following the same tier/priority logic as the rest of the track:
+
+| # | Concept | Tier | Priority | Page |
+|---|---|---|---|---|
+| 24 | Unit Testing Fundamentals | Basic | 🔥 Must Know | basic/6.html |
+| 25 | Mocking & Testing ASP.NET Core Components | Intermediate | 🔥 Must Know | intermediate/17.html |
+
+- **Unit Testing Fundamentals is Basic** — definitional/recall (AAA, framework attribute names,
+  what makes a test a "unit" test), matching how other "what is X" openers are tiered Basic on
+  this track (e.g. "What Is MVC").
+- **Mocking & Testing ASP.NET Core Components is Intermediate** — applied technique and a
+  comparison (mocking a class vs. `WebApplicationFactory`), not a bare definition; it also
+  depends on DI (Section 2) already being understood, which only exists once Intermediate's DI
+  pages are in place.
+- Both are 🔥 Must Know — testing is asked in nearly every .NET interview at some depth, and
+  mocking a dependency is one of the most common practical follow-ups after any DI question.
+- `dotnet/roadmap.html` gets a 9th concept-category section ("9. Testing") alongside the
+  existing 8 — concept category, not tier, matching this file's own Phase 6 convention.
+
 ## Known gaps
 
-None — Phase 7 (writing the 23 pages) is the next and only remaining phase for this track.
+None — every subsection from the user's original breakdown, plus the Testing gap the user
+reported afterward, now has a written page.

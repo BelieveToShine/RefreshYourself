@@ -169,13 +169,14 @@ window.NAV_INDEX = {
     tier: "Basic",
     groups: [
       {
-        label: "Questions 1–5",
+        label: "Questions 1–6",
         items: [
           { n: 1, file: "1.html", short: ".NET vs. .NET Framework", title: ".NET vs. .NET Framework", tail: "the actual relationship between the two.", priority: "🔥" },
           { n: 2, file: "2.html", short: "CLR, BCL & Managed Code", title: "CLR, BCL & Managed Code", tail: "what \"managed\" actually means.", priority: "🔥" },
           { n: 3, file: "3.html", short: "SDK vs. Runtime & NuGet", title: "SDK vs. Runtime, .csproj & NuGet", tail: "what each piece of tooling actually does.", priority: "⭐" },
           { n: 4, file: "4.html", short: "What Is MVC",             title: "What Is MVC",             tail: "Model, View, Controller — and why you usually need a ViewModel too.", priority: "🔥" },
-          { n: 5, file: "5.html", short: "Filters, CORS & Logging", title: "Filters, CORS, HTTPS & Logging", tail: "four pipeline concerns worth knowing by name.", priority: "⭐" }
+          { n: 5, file: "5.html", short: "Filters, CORS & Logging", title: "Filters, CORS, HTTPS & Logging", tail: "four pipeline concerns worth knowing by name.", priority: "⭐" },
+          { n: 6, file: "6.html", short: "Unit Testing Fundamentals", title: "Unit Testing Fundamentals", tail: "AAA, xUnit/NUnit/MSTest, and what actually makes it a \"unit\" test.", priority: "🔥" }
         ]
       }
     ]
@@ -201,14 +202,15 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–16",
+        label: "Questions 11–17",
         items: [
           { n: 11, file: "11.html", short: "Views, Layouts & Areas",    title: "Views, Layouts & Organization", tail: "partials, and when a project needs Areas.", priority: "⭐" },
           { n: 12, file: "12.html", short: "Configuration Sources",     title: "Configuration Sources", tail: "appsettings, env vars, and the override order.", priority: "🔥" },
           { n: 13, file: "13.html", short: "Authentication Schemes",    title: "Authentication Schemes", tail: "cookie-based vs. token-based, at a high level.", priority: "🔥" },
           { n: 14, file: "14.html", short: "AuthZ Policies & Claims",   title: "Authorization Policies & Claims", tail: "role-based vs. policy-based.", priority: "⭐" },
           { n: 15, file: "15.html", short: "Global Exception Handling", title: "Global Exception Handling", tail: "the standard pattern, and why dev vs. prod must differ.", priority: "🔥" },
-          { n: 16, file: "16.html", short: "Generic Host & Lifetime",   title: "The Generic Host & Application Lifetime", tail: "the lifecycle events, and when to hook into each.", priority: "⭐" }
+          { n: 16, file: "16.html", short: "Generic Host & Lifetime",   title: "The Generic Host & Application Lifetime", tail: "the lifecycle events, and when to hook into each.", priority: "⭐" },
+          { n: 17, file: "17.html", short: "Mocking & Testing ASP.NET Core", title: "Mocking & Testing ASP.NET Core Components", tail: "Moq, testing a controller, and WebApplicationFactory.", priority: "🔥" }
         ]
       }
     ]
