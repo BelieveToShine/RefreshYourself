@@ -131,6 +131,76 @@
     <figcaption>Same operation, two ways. <code>filter(lambda x: x%2==0, xs)</code> and the comprehension produce the identical result — the comprehension just says it in one direct line instead of wrapping a lambda inside a function call.</figcaption>
   </figure>
 
+  <div class="viz-label">🔍 What each one actually does <span class="viz-sub">— when the values actually get computed</span></div>
+  <p style="margin:-4px 0 18px; font-size:14.5px; color:var(--ink-soft); max-width:640px;">The diagram above shows they produce the same result. These two show WHEN each one actually does the work — which is the real difference underneath.</p>
+
+  <div class="diagram-set-label">⚡ Lazy vs. 🏗️ Eager — when values actually get computed</div>
+  <div class="diagram-row">
+    <figure class="diagram-card">
+      <svg viewBox="0 0 460 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+        <defs>
+          <filter id="shLazy" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+          </filter>
+          <marker id="arLazy" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+          </marker>
+        </defs>
+
+        <text x="230" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.3">🐢 map() / filter() — LAZY</text>
+
+        <g filter="url(#shLazy)"><rect x="80" y="34" width="300" height="52" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="230" y="56" text-anchor="middle" font-size="11" font-family="Consolas, 'Fira Code', monospace" fill="#1d4ed8">filter(is_even, xs)</text>
+        <text x="230" y="74" text-anchor="middle" font-size="10" fill="#5b6472">this line returns immediately</text>
+
+        <path d="M230,86 V110" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arLazy)"/>
+
+        <g filter="url(#shLazy)"><rect x="80" y="110" width="300" height="66" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+        <text x="230" y="136" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">⏳ lazy iterator object</text>
+        <text x="230" y="156" text-anchor="middle" font-size="10" fill="#5b6472">zero items computed so far</text>
+
+        <path d="M230,176 V200" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arLazy)"/>
+
+        <g filter="url(#shLazy)"><rect x="80" y="200" width="300" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="230" y="226" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">▶ next(it) → ONE value</text>
+        <text x="230" y="246" text-anchor="middle" font-size="10" fill="#5b6472">computed only when asked</text>
+      </svg>
+      <figcaption><code>map</code>/<code>filter</code> return a lazy iterator right away — nothing is computed until you iterate it, e.g. with <code>list(...)</code> or a loop.</figcaption>
+    </figure>
+
+    <figure class="diagram-card">
+      <svg viewBox="0 0 460 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+        <defs>
+          <filter id="shEager" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+          </filter>
+          <marker id="arEager" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+          </marker>
+        </defs>
+
+        <text x="230" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.3">🏗️ LIST COMPREHENSION — EAGER</text>
+
+        <g filter="url(#shEager)"><rect x="80" y="34" width="300" height="52" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="230" y="56" text-anchor="middle" font-size="11" font-family="Consolas, 'Fira Code', monospace" fill="#1d4ed8">[x for x in xs if f(x)]</text>
+        <text x="230" y="74" text-anchor="middle" font-size="10" fill="#5b6472">runs immediately, this line</text>
+
+        <path d="M230,86 V110" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arEager)"/>
+
+        <g filter="url(#shEager)"><rect x="80" y="110" width="300" height="66" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+        <text x="230" y="136" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">⚡ builds the WHOLE list</text>
+        <text x="230" y="156" text-anchor="middle" font-size="10" fill="#5b6472">every value computed now</text>
+
+        <path d="M230,176 V200" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arEager)"/>
+
+        <g filter="url(#shEager)"><rect x="80" y="200" width="300" height="60" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+        <text x="230" y="226" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ full list ready</text>
+        <text x="230" y="246" text-anchor="middle" font-size="10" fill="#5b6472">before the next line runs</text>
+      </svg>
+      <figcaption>A list comprehension eagerly builds the entire list in memory the instant that line executes — every value computed before the next line runs.</figcaption>
+    </figure>
+  </div>
+
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b>"Using lambda/reduce everywhere looks more senior."</b> It's the opposite — over-using them when a plain comprehension or a named function would read more clearly is a real interview red flag, not a strength.</p>

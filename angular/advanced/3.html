@@ -119,6 +119,76 @@
     <figcaption>Zone.js catches everything indiscriminately; zoneless only reacts to what explicitly tells it something changed.</figcaption>
   </figure>
 
+  <div class="viz-label">🔍 What each one actually does <span class="viz-sub">— trace one single async event through each mechanism</span></div>
+  <p style="margin:-4px 0 18px; font-size:14.5px; color:var(--ink-soft); max-width:640px;">The picture above tells you the general cost trade-off. These two small diagrams trace exactly what happens for ONE async event under each mechanism — what gets notified, and how much of the app gets checked as a result.</p>
+
+  <div class="diagram-set-label">🔔 Zone.js-based &amp; 🎯 Zoneless (Signals-based)</div>
+  <div class="diagram-row">
+    <figure class="diagram-card">
+      <svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+        <defs>
+          <filter id="shZoneA" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+          </filter>
+          <marker id="arrZoneA" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+          </marker>
+        </defs>
+
+        <text x="230" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155" letter-spacing="0.3">🔔 ZONE.JS — ONE setTimeout FIRES</text>
+
+        <g filter="url(#shZoneA)"><rect x="50" y="30" width="360" height="54" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+        <text x="230" y="52" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">⏰ any patched async API fires</text>
+        <text x="230" y="70" text-anchor="middle" font-size="10" fill="#5b6472">setTimeout, addEventListener, Promise…</text>
+
+        <path d="M230,84 V114" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrZoneA)"/>
+
+        <g filter="url(#shZoneA)"><rect x="50" y="114" width="360" height="54" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+        <text x="230" y="136" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🔔 NgZone notified → tick()</text>
+        <text x="230" y="154" text-anchor="middle" font-size="10" fill="#5b6472">Zone.js's monkey-patch intercepts it</text>
+
+        <path d="M230,168 V198" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrZoneA)"/>
+
+        <g filter="url(#shZoneA)"><rect x="40" y="198" width="380" height="58" rx="14" fill="#fde68a" stroke="#d97706" stroke-width="1.8"/></g>
+        <text x="230" y="222" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🔍 EVERY component gets checked</text>
+        <text x="230" y="242" text-anchor="middle" font-size="10" fill="#5b6472">even ones unrelated to this event</text>
+      </svg>
+      <figcaption>Zone.js's patch fires on ANY async API, anywhere — every single time, Angular walks the whole component tree looking for changes.</figcaption>
+    </figure>
+
+    <figure class="diagram-card">
+      <svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+        <defs>
+          <filter id="shZoneB" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+          </filter>
+          <marker id="arrZoneB" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+          </marker>
+        </defs>
+
+        <text x="230" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155" letter-spacing="0.3">🎯 ZONELESS — ONE signal.set() FIRES</text>
+
+        <g filter="url(#shZoneB)"><rect x="50" y="30" width="360" height="54" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="230" y="52" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">📶 signal.set(newValue)</text>
+        <text x="230" y="70" text-anchor="middle" font-size="10" fill="#5b6472">direct call — no patching involved</text>
+
+        <path d="M230,84 V114" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrZoneB)"/>
+
+        <g filter="url(#shZoneB)"><rect x="50" y="114" width="360" height="54" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="230" y="136" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🧭 Angular already knows the readers</text>
+        <text x="230" y="154" text-anchor="middle" font-size="10" fill="#5b6472">tracked per component, at read time</text>
+
+        <path d="M230,168 V198" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrZoneB)"/>
+
+        <g filter="url(#shZoneB)"><rect x="40" y="198" width="380" height="58" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+        <text x="230" y="222" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ ONLY dependent components checked</text>
+        <text x="230" y="242" text-anchor="middle" font-size="10" fill="#5b6472">no global tree walk at all</text>
+      </svg>
+      <figcaption>A signal read is tracked directly — calling <code>.set()</code> schedules a check only for the components that actually depend on that exact signal.</figcaption>
+    </figure>
+  </div>
+
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b>Zoneless is not "flip one provider and get free performance."</b> Any state
