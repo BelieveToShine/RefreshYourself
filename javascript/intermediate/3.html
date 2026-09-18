@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prototypes &amp; Prototype Chain — JavaScript Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="javascript/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fef9c3;--crumb-ink:#854d0e;">🟨 JavaScript</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Prototypes &amp; Prototype Chain</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 JavaScript · Intermediate · Must Know</div>
+    <h1><code>[[Prototype]]</code> vs. <code>.prototype</code> — <span class="hl hl-hot">two different things wearing the same name</span></h1>
+    <p class="interview-q">"What's the difference between an object's <code>[[Prototype]]</code> and a function's <code>prototype</code> property, and how does JavaScript resolve a property that isn't on the object itself?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Mixing up <code>.prototype</code> and <code>[[Prototype]]</code> out loud is one of the most common slips candidates make on this exact question — and one of the easiest to catch.</li>
+        <li>This is the real mechanism behind <code>class</code>, <code>extends</code>, and every "how does inheritance work in JS" question — no engine magic beyond this.</li>
+        <li>Comes up any time <code>instanceof</code>, method lookup, or "why does this object have a method I never wrote on it" gets asked.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>[[Prototype]]</code> <span class="rarrow">→</span> the <b>real internal link</b> every object has</p>
+      <p class="rrow"><code>.prototype</code> <span class="rarrow">→</span> a property that exists <b>only on functions</b></p>
+      <p class="rrow">lookup <span class="rarrow">→</span> walks up the chain until it hits <b>null</b></p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>.prototype</code></b> is the blueprint a function hands off; <b><code>[[Prototype]]</code></b> is the link the resulting object actually ends up carrying.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 230" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shP1" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arP1" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">PROPERTY LOOKUP CHAIN — WALK UP UNTIL FOUND OR null</text>
+
+      <!-- moving token: the lookup walking the chain -->
+      <circle r="5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.2">
+        <animateMotion dur="4s" repeatCount="indefinite" keyPoints="0;1;0" keyTimes="0;0.5;1" calcMode="linear" path="M68,45 H572"/>
+      </circle>
+
+      <!-- Box 1: myDog -->
+      <g filter="url(#shP1)"><rect x="14" y="58" width="108" height="70" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="68" y="85" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">myDog</text>
+      <text x="68" y="104" text-anchor="middle" font-size="9" fill="#5b6472">own: name, breed</text>
+
+      <path d="M122,93 H140" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP1)"/>
+
+      <!-- Box 2: Dog.prototype -->
+      <g filter="url(#shP1)"><rect x="140" y="58" width="108" height="70" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="194" y="85" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">Dog.prototype</text>
+      <text x="194" y="104" text-anchor="middle" font-size="9" fill="#5b6472">bark()</text>
+
+      <path d="M248,93 H266" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP1)"/>
+
+      <!-- Box 3: Animal.prototype (found here) -->
+      <g filter="url(#shP1)"><rect x="266" y="58" width="108" height="70" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="85" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">Animal.prototype</text>
+      <text x="320" y="104" text-anchor="middle" font-size="9" fill="#5b6472">eat()</text>
+
+      <path d="M374,93 H392" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP1)"/>
+
+      <!-- Box 4: Object.prototype -->
+      <g filter="url(#shP1)"><rect x="392" y="58" width="108" height="70" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="446" y="85" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">Object.prototype</text>
+      <text x="446" y="104" text-anchor="middle" font-size="9" fill="#5b6472">toString(), etc.</text>
+
+      <path d="M500,93 H518" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP1)"/>
+
+      <!-- Box 5: null -->
+      <g filter="url(#shP1)"><rect x="518" y="58" width="108" height="70" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="572" y="85" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">null</text>
+      <text x="572" y="104" text-anchor="middle" font-size="9" fill="#5b6472">chain ends here</text>
+
+      <text x="320" y="155" text-anchor="middle" font-size="10" fill="#5b6472">↳ every arrow is that object's [[Prototype]] link — walked one step at a time</text>
+    </svg>
+    <figcaption>Reading <code>myDog.eat()</code> finds nothing on <code>myDog</code> or <code>Dog.prototype</code> — JavaScript walks up the <code>[[Prototype]]</code> chain and finds <code>eat()</code> on <code>Animal.prototype</code> (green), and stops right there. If nothing matched anywhere, even up through <code>Object.prototype</code>, the lookup would end at <code>null</code>.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 310" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shP2" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arP2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">TWO DOORS, ONE MECHANISM — SAME PROTOTYPE LINK</text>
+
+      <!-- divider between the two doors -->
+      <path d="M320,52 V204" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <!-- Left door: Object.create() -->
+      <g filter="url(#shP2)"><rect x="40" y="60" width="190" height="54" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="135" y="92" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">Object.create(animalProto)</text>
+
+      <path d="M135,114 V150" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP2)"/>
+
+      <g filter="url(#shP2)"><rect x="40" y="150" width="190" height="54" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="135" y="178" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">rex</text>
+      <text x="135" y="196" text-anchor="middle" font-size="9" fill="#5b6472">[[Prototype]] → animalProto</text>
+
+      <!-- Right door: constructor + new -->
+      <g filter="url(#shP2)"><rect x="410" y="60" width="190" height="54" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="505" y="86" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">new Dog()</text>
+      <text x="505" y="104" text-anchor="middle" font-size="9" fill="#5b6472">Dog.prototype = animalProto</text>
+
+      <path d="M505,114 V150" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP2)"/>
+
+      <g filter="url(#shP2)"><rect x="410" y="150" width="190" height="54" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="505" y="178" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">rex2</text>
+      <text x="505" y="196" text-anchor="middle" font-size="9" fill="#5b6472">[[Prototype]] → Dog.prototype</text>
+
+      <!-- convergence into the shared parent -->
+      <path d="M135,204 V212 H320 V230" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP2)"/>
+      <path d="M505,204 V212 H320 V230" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP2)"/>
+
+      <g filter="url(#shP2)"><rect x="220" y="230" width="200" height="60" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="258" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">animalProto</text>
+      <text x="320" y="278" text-anchor="middle" font-size="9" fill="#5b6472">🔗 the SAME object both point to</text>
+    </svg>
+    <figcaption><code>Object.create(animalProto)</code> sets a new object's <code>[[Prototype]]</code> directly. <code>new Dog()</code> does it indirectly — the constructor's <code>.prototype</code> property becomes the new object's <code>[[Prototype]]</code>. Point <code>Dog.prototype</code> at the same <code>animalProto</code>, and both doors land on the exact same parent.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>.prototype</code> and <code>[[Prototype]]</code> are not the same thing.</b> <code>.prototype</code> is a property that exists only on functions — the blueprint <code>new</code> hands to objects it builds; <code>[[Prototype]]</code> is the actual internal link every object carries to its own parent.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"So is <code>class</code> doing something totally different under the hood?"</b> No — <code>class</code> is syntax sitting on top of this exact same prototype system; a class's methods still live on its <code>.prototype</code>, and <code>extends</code> just wires up the <code>[[Prototype]]</code> chain automatically. (Full depth on that lives on its own Classes &amp; Inheritance page, later in this track.)</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Every object has an internal <code>[[Prototype]]</code> link; functions additionally have a <code>.prototype</code> property that becomes the <code>[[Prototype]]</code> of objects built with <code>new</code>. Reading a property walks up that chain — the object itself, then its prototype, then that prototype's prototype — until it's found or the chain hits <code>null</code>."</p>
+    <ul>
+      <li><code>[[Prototype]]</code> <span class="hl hl-blue">the real internal link</span> — every object has one, all the way up to <code>Object.prototype</code>.</li>
+      <li><code>.prototype</code> <span class="hl hl-inter">only exists on functions</span> — the blueprint <code>new</code> hands to whatever it builds.</li>
+      <li>Lookup <span class="hl hl-hot">walks up, never down</span> — checks the object itself, then each prototype in turn, until <code>null</code>.</li>
+      <li><code>Object.create(proto)</code> <span class="hl hl-basic">sets [[Prototype]] directly</span> — no function or <code>new</code> required.</li>
+      <li><code>instanceof</code> <span class="hl hl-teal">walks that same chain</span> — asking "does <code>X.prototype</code> show up anywhere above this object?"</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">[[Prototype]]</span> is an internal slot every object carries — a hidden link to another object it can borrow properties and methods from. <span class="hl hl-inter">.prototype</span> is a completely ordinary, visible property, but it only exists on functions: it's the object a function hands off as the <code>[[Prototype]]</code> of whatever gets built by calling that function with <code>new</code>. They're related — one configures the other — but they are not the same slot, and confusing them is exactly the trap above.</p>
+
+      <p>Reading a property on an object never checks a copy of anything — it walks live links. JavaScript first looks at the object's own properties; if it's not there, it moves to <code>Object.getPrototypeOf(obj)</code> (the object's <code>[[Prototype]]</code>), then that object's own <code>[[Prototype]]</code>, and so on, until either something matches or the chain reaches <code>null</code> — the fixed end point every chain eventually hits. <code>instanceof</code> uses this exact same chain: <code>x instanceof Y</code> asks "does <code>Y.prototype</code> appear anywhere while walking up <code>x</code>'s <code>[[Prototype]]</code> chain?" — not "was <code>x</code> literally built by <code>Y</code>."</p>
+
+      <p><code>Object.create(proto)</code> and a constructor function called with <code>new</code> are two doors into that same mechanism: <code>Object.create</code> sets <code>[[Prototype]]</code> directly, no function involved; <code>new Dog()</code> gets there indirectly, by copying whatever object currently sits in <code>Dog.prototype</code> into the new object's <code>[[Prototype]]</code>. Because <code>[[Prototype]]</code> is a shared link, not a copy, mutating a prototype that many objects share changes what every one of them sees. Reach far enough up almost any chain and you hit <code>Object.prototype</code> — the ancestor nearly every plain object shares — so writing to it directly (<code>Object.prototype.isAdmin = true</code>) makes <code>isAdmin</code> quietly show up on every plain object in the program, including ones that never asked for it. That's <b>prototype pollution</b>: not a syntax error, just a shared mutation with a much bigger blast radius than it looks like. (The security angle — how this actually gets exploited — gets its own deeper page later in this track.)</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>[[Prototype]]</th><th>.prototype</th></tr></thead>
+        <tbody>
+          <tr><th>What it is</th><td>an internal link every object has</td><td>an ordinary property that lives on functions</td></tr>
+          <tr><th>Who has one</th><td>every object, including functions themselves</td><td>only functions meant to be used with <code>new</code></td></tr>
+          <tr><th>Set by</th><td><code>Object.create()</code>, <code>new</code>, <code>Object.setPrototypeOf()</code></td><td>assigned directly, or auto-created by the engine</td></tr>
+          <tr><th>Read via</th><td><code>Object.getPrototypeOf(obj)</code></td><td><code>SomeFunction.prototype</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">function</span> Animal(name) { <span class="kw">this</span>.name = name; }
+Animal.prototype.eat = <span class="kw">function</span> () { <span class="kw">return</span> <span class="str">`${this.name} eats`</span>; };
+
+<span class="kw">const</span> rex = <span class="kw">new</span> Animal(<span class="str">'Rex'</span>);
+console.log(rex.eat());                    <span class="cx-ok">// "Rex eats" — found on Animal.prototype, not on rex</span>
+console.log(rex.hasOwnProperty(<span class="str">'eat'</span>)); <span class="cx-cmt">// false — it's inherited, not own</span>
+console.log(rex instanceof Animal);        <span class="cx-cmt">// true — Animal.prototype IS in rex's chain</span></code></pre>
+      </div>
+      <p class="cx-note"><code>eat</code> isn't on <code>rex</code> at all — the lookup walks up to <code>Animal.prototype</code> and finds it there; <code>hasOwnProperty</code> proves it's inherited.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">const</span> animalProto = { eat() { <span class="kw">return</span> <span class="str">'eating'</span>; } };
+<span class="kw">const</span> rex = Object.create(animalProto); <span class="cx-cmt">// rex.[[Prototype]] === animalProto, directly</span>
+rex.name = <span class="str">'Rex'</span>;
+
+console.log(rex.eat());                          <span class="cx-ok">// "eating" — inherited, no function or new involved</span>
+console.log(Object.getPrototypeOf(rex) === animalProto); <span class="cx-ok">// true</span></code></pre>
+      </div>
+      <p class="cx-note">No constructor, no <code>new</code> — <code>Object.create()</code> wires up <code>[[Prototype]]</code> in one line.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">const</span> config = {};
+console.log(config.isAdmin);      <span class="cx-cmt">// undefined — normal, unrelated object</span>
+
+Object.prototype.isAdmin = <span class="kw">true</span>;  <span class="cx-err">// ❌ mutating the shared prototype</span>
+console.log(config.isAdmin);      <span class="cx-err">// true — every plain object now "has" it</span></code></pre>
+      </div>
+      <p class="cx-note"><code>config</code> never touched <code>isAdmin</code> — but because <code>Object.prototype</code> is shared by every plain object, one bad line changes what all of them return. Here's exactly why you never mutate a shared prototype.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Think of a company's reporting line.</b> If you don't know the answer to something, you ask your manager; if they don't know either, they ask theirs, all the way up to the CEO — nobody photocopies every company rule down to each employee ahead of time, they just know who to ask next. <code>[[Prototype]]</code> is that "who do I ask next" link, and the lookup chain is exactly this escalation, one level at a time.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <span style="color:var(--ink-soft); font-weight:700;"><code>this</code> / <code>call</code> / <code>apply</code> / <code>bind</code> <span style="font-weight:400; font-style:italic;">(coming soon)</span></span>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to JavaScript Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <span style="color:var(--ink-soft); font-weight:700;">Modules <span style="font-weight:400; font-style:italic;">(coming soon)</span></span>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · JavaScript · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
