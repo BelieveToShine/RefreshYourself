@@ -315,6 +315,7 @@ window.SEARCH_INDEX = [
   { title: "AI Intermediate — topic list", track: "AI", tier: "Intermediate", path: "ai/intermediate/index.html", keywords: "ai intermediate list roadmap rag agents tools fine-tuning" },
   { title: "Classic ML vs. LLM", track: "AI", tier: "Basic", path: "ai/basic/16.html", keywords: "classic ml vs llm traditional machine learning logistic regression gradient boosted trees tabular classification cost latency labeled data over-engineering" },
   { title: "The RAG Pipeline End to End", track: "AI", tier: "Intermediate", path: "ai/intermediate/1.html", keywords: "rag retrieval augmented generation pipeline ingest chunk embed index retrieve rerank assemble context generate cite vector store hallucination stale index" },
+  { title: "Hybrid Search", track: "AI", tier: "Intermediate", path: "ai/intermediate/3.html", keywords: "hybrid search keyword search bm25 vector search semantic search fusion rank fusion rag retrieval sku error code exact match" },
   { title: "AI Advanced — topic list", track: "AI", tier: "Advanced", path: "ai/advanced/index.html", keywords: "ai advanced list roadmap guardrails eval llmops cost" },
   { title: "AI — full roadmap", track: "AI", tier: "", path: "ai/roadmap.html", keywords: "ai roadmap all topics plan overview genai llm" },
   { title: "OOP — track home", track: "OOP", tier: "", path: "oops/index.html", keywords: "oop object oriented programming design solid overview" },
