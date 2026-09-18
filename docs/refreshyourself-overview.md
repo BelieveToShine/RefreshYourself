@@ -25,12 +25,17 @@ junior/mid-level interview. Two groups of tracks:
   (closures, the event loop, prototypes, async — genuine Basic→Advanced depth on its own); the
   user personally checked current interview-prep material before sharing a 37-group structure
   directly, plus this track's own Phase 2 gap-hunt (1 addition, Testing Fundamentals). See
-  [`specs/javascript/overview.md`](superpowers/specs/javascript/overview.md). **HTML & CSS is
-  still a brand-new root tile, "Coming soon," Phase 0 — no taxonomy, roadmap, or folder yet** —
-  will be combined into one "HTML & CSS" track rather than split, since a real frontend interview
-  asks about layout/rendering/accessibility as one connected topic, not two small, fragmented
-  roadmaps. React and Angular already existed as separate tracks and simply moved into this new
-  section on the homepage — no content changed.
+  [`specs/javascript/overview.md`](superpowers/specs/javascript/overview.md). **HTML & CSS — all
+  7 phases complete, 34/34 pages written** (2026-09-18): kept as one combined track rather than
+  split, since a real frontend interview asks about layout/rendering/accessibility as one
+  connected topic, not two small, fragmented roadmaps; the user shared a 32-group structure
+  directly, plus this track's own Phase 2 gap-hunt (2 additions, Colors/Backgrounds/Gradients and
+  Accessibility in Practice). Governing content rule: every page connects back to "what does the
+  browser actually do" (HTML→DOM, CSS→CSSOM, →Render Tree→Layout→Paint→Composite) instead of
+  reading as a tag/property list. See
+  [`specs/htmlcss/overview.md`](superpowers/specs/htmlcss/overview.md). React and Angular already
+  existed as separate tracks and simply moved into this new section on the homepage — no content
+  changed.
 - **Other tracks**, not part of the ordered path: Python, DSA, and AI (all 7 phases complete, see
   below).
 
@@ -219,6 +224,24 @@ through all 7 phases:**
   automated verification script, run independently against every single page. Sits in the "🎨
   Frontend" homepage section, not the ordered core-backend path. See
   [`specs/javascript/overview.md`](superpowers/specs/javascript/overview.md).
+- **HTML & CSS** — **all 7 phases complete, 34/34 pages written** (2026-09-18):
+  [`question-taxonomy.md`](superpowers/specs/htmlcss/question-taxonomy.md) (32 groups the user
+  shared directly across HTML/CSS Fundamentals/Layout/Styling & UI/Advanced-Production sub-areas,
+  plus a Phase 2 gap-hunt that added 2 pages — Colors/Backgrounds/Gradients and Accessibility in
+  Practice, both named in the user's own overview tree but never given sub-bullets in the
+  detailed breakdown) → [`roadmap.md`](superpowers/specs/htmlcss/roadmap.md) → 34 tiered/
+  prioritized pages, live on the site and on [`htmlcss/roadmap.html`](../htmlcss/roadmap.html),
+  grouped by 5 cross-tier concept clusters (the user's own subject buckets, reused directly since
+  they were already well-formed) rather than by tier. Tier axis derived independently from
+  question type, not copied from those same subject buckets — Specificity, Positioning, and
+  Overflow & Stacking all moved to Intermediate despite reading as "CSS Fundamentals" in the
+  user's own tree. Governing content rule: every page connects back to "what does the browser
+  actually do" (HTML→DOM, CSS→CSSOM, DOM+CSSOM→Render Tree→Layout→Paint→Composite) instead of
+  reading as a list of tags and properties — `advanced/1.html` (Browser Rendering) owns the full
+  pipeline, other pages cross-reference it. Every diagram passed the mandatory automated
+  verification script, run independently against every single page. Sits in the "🎨 Frontend"
+  homepage section, not the ordered core-backend path. See
+  [`specs/htmlcss/overview.md`](superpowers/specs/htmlcss/overview.md).
 
 ## Adding a new track's spec
 
