@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mixture-of-Experts &amp; Quantization — AI Basic — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fae8ff;--crumb-ink:#c026d3;">🤖 AI</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Mixture-of-Experts &amp; Quantization</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ AI · Basic · Should Know</div>
+    <h1>Big on paper, cheap to run — how do <span class="hl hl-blue">Mixture-of-Experts</span> and <span class="hl hl-inter">quantization</span> pull that off?</h1>
+    <p class="interview-q">"Why can a model with a huge number of parameters still be cheap to run per request, and why can a model like a 7B-parameter one run on a laptop?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Explains why "parameter count" alone doesn't tell you how expensive a model actually is to run — a common trap when comparing models casually.</li>
+        <li>Comes up whenever someone asks how an open-weight model can run on consumer hardware instead of a data-center GPU cluster.</li>
+        <li>A very likely follow-up the moment a candidate mentions "the model has X billion parameters" in any other answer.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Mixture-of-Experts <span class="rarrow">→</span> many experts, only a <b>few</b> run per token</p>
+      <p class="rrow">Quantization <span class="rarrow">→</span> same weights, stored in <b>fewer bits</b></p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> MoE cuts <b>how much compute</b> runs per token; quantization cuts <b>how much memory</b> each weight takes — two different knobs, same goal: cheaper to run.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="moeShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="moeArrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">ONE TOKEN → ROUTED TO ONLY 2 OF 6 EXPERTS</text>
+
+      <!-- token -->
+      <g filter="url(#moeShadow)"><rect x="260" y="34" width="120" height="50" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🔤 Token</text>
+      <text x="320" y="72" text-anchor="middle" font-size="10.5" fill="#5b6472">this pass</text>
+
+      <!-- router -->
+      <g filter="url(#moeShadow)"><rect x="245" y="108" width="150" height="50" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="130" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🚦 Router</text>
+      <text x="320" y="146" text-anchor="middle" font-size="10.5" fill="#5b6472">picks 2 of 6</text>
+
+      <path d="M320,84 V108" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#moeArrow)"/>
+
+      <!-- bus + drops to the 2 active experts -->
+      <path d="M320,158 V178" fill="none" stroke="#64748b" stroke-width="1.8"/>
+      <path d="M164,178 H476" fill="none" stroke="#64748b" stroke-width="1.8"/>
+      <path d="M164,178 V200" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#moeArrow)"/>
+      <path d="M476,178 V200" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#moeArrow)"/>
+
+      <!-- 6 experts: idle (slate) vs activated (green) -->
+      <g filter="url(#moeShadow)"><rect x="20" y="200" width="80" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="60" y="228" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🧩 E1</text>
+      <text x="60" y="248" text-anchor="middle" font-size="10.5" fill="#5b6472">idle</text>
+
+      <g filter="url(#moeShadow)"><rect x="124" y="200" width="80" height="64" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="164" y="228" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🧩 E2</text>
+      <text x="164" y="248" text-anchor="middle" font-size="10.5" fill="#5b6472">active</text>
+
+      <g filter="url(#moeShadow)"><rect x="228" y="200" width="80" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="268" y="228" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🧩 E3</text>
+      <text x="268" y="248" text-anchor="middle" font-size="10.5" fill="#5b6472">idle</text>
+
+      <g filter="url(#moeShadow)"><rect x="332" y="200" width="80" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="372" y="228" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🧩 E4</text>
+      <text x="372" y="248" text-anchor="middle" font-size="10.5" fill="#5b6472">idle</text>
+
+      <g filter="url(#moeShadow)"><rect x="436" y="200" width="80" height="64" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="476" y="228" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🧩 E5</text>
+      <text x="476" y="248" text-anchor="middle" font-size="10.5" fill="#5b6472">active</text>
+
+      <g filter="url(#moeShadow)"><rect x="540" y="200" width="80" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="580" y="228" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🧩 E6</text>
+      <text x="580" y="248" text-anchor="middle" font-size="10.5" fill="#5b6472">idle</text>
+    </svg>
+    <figcaption>Only 2 of the 6 experts actually run for this token — the other 4 sit idle. A different token, even later in the same sentence, could route to a completely different pair.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="qShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="qArrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">SAME WEIGHT, FEWER BITS TO STORE IT</text>
+
+      <g filter="url(#qShadow)"><rect x="50" y="54" width="200" height="130" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="150" y="82" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">📦 Before</text>
+      <text x="150" y="104" text-anchor="middle" font-size="10.5" fill="#5b6472">16-bit float (FP16)</text>
+      <text x="150" y="124" text-anchor="middle" font-size="10.5" fill="#5b6472">value ≈ 0.734563</text>
+      <text x="150" y="144" text-anchor="middle" font-size="10.5" fill="#5b6472">16 bits / weight</text>
+
+      <g filter="url(#qShadow)"><rect x="390" y="54" width="200" height="130" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="490" y="82" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">📦 After</text>
+      <text x="490" y="104" text-anchor="middle" font-size="10.5" fill="#5b6472">4-bit integer (INT4)</text>
+      <text x="490" y="124" text-anchor="middle" font-size="10.5" fill="#5b6472">value ≈ 0.75 (rounded)</text>
+      <text x="490" y="144" text-anchor="middle" font-size="10.5" fill="#5b6472">4 bits / weight</text>
+
+      <path d="M250,119 H390" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#qArrow)"/>
+
+      <rect x="275" y="80" width="90" height="22" rx="11" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="320" y="95" text-anchor="middle" font-size="10.5" fill="#64748b">quantize</text>
+
+      <rect x="265" y="134" width="110" height="24" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+      <text x="320" y="150" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🔥 ≈4× smaller</text>
+    </svg>
+    <figcaption>Same weight, stored with far fewer bits — in this 16-bit → 4-bit example, that's about 4× less memory for that one weight, with a small rounding cost to precision.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"More total parameters always means more compute per request."</b> Not for a Mixture-of-Experts model — its total parameter count and its per-token compute cost are different numbers, because only the routed experts actually run; a large MoE model can cost about the same per token as a much smaller dense model.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Doesn't quantization make the model worse?"</b> Usually a little, not a lot — it's a real trade of some output quality for a much smaller memory footprint and often faster inference, not a free lunch and not a disaster either.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Mixture-of-Experts keeps the total parameter count high but only runs a handful of experts per token, so compute per request stays cheap. Quantization stores those weights in fewer bits, so the model takes far less memory to hold and run — they solve two different costs and are often combined."</p>
+    <ul>
+      <li>Mixture-of-Experts → <span class="hl hl-blue">only a few experts run per token</span>, even though the model holds many.</li>
+      <li>Quantization → <span class="hl hl-inter">fewer bits per weight</span>, smaller memory footprint, usually a modest accuracy cost.</li>
+      <li>Different knobs → MoE cuts <span class="hl hl-hot">compute per token</span>; quantization cuts <span class="hl hl-basic">memory per weight</span>.</li>
+      <li>Distillation (related, not the same) → a smaller <span class="hl hl-teal">student model trained to mimic a bigger teacher</span> — changes the model itself, not just how its weights are stored.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <b>Mixture-of-Experts</b> model is built from many expert sub-networks, but for any given token, a small router picks just a handful of them to actually run — the rest sit idle for that token. So the model's <b>total</b> parameter count can be huge, while the compute spent on any single token stays close to what a much smaller dense model would spend. That's how a model can feel very capable overall while still being relatively cheap to run per request.</p>
+      <p><b>Quantization</b> is a completely different lever: it lowers the numeric precision used to store and compute a model's weights — for example, from 16-bit floating point down to 8-bit or 4-bit. Fewer bits per weight means a much smaller memory footprint and often faster inference, at some — usually modest — cost to output quality.</p>
+      <p>A related but separate idea worth knowing by name: <b>distillation</b> trains a smaller "student" model to mimic a larger "teacher" model's outputs, producing a cheaper model that keeps much of the teacher's capability. Distillation changes the model itself; quantization only changes how an existing model's weights are stored and computed — and the two, along with MoE, can all be combined in the same deployed model.</p>
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Mixture-of-Experts</th><th>Quantization</th></tr></thead>
+        <tbody>
+          <tr><th>What changes</th><td>which experts run per token</td><td>how many bits each weight uses</td></tr>
+          <tr><th>What it saves</th><td>compute per token</td><td>memory footprint</td></tr>
+          <tr><th>Typical cost</th><td>routing/serving complexity</td><td>a modest accuracy hit</td></tr>
+          <tr><th>Combinable?</th><td colspan="2">yes — a quantized MoE model is common</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Pseudocode</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt"># simplified top-2 routing for one token</span>
+scores = router(token)              <span class="cx-cmt"># one score per expert</span>
+chosen = top_k(scores, k=<span class="num">2</span>)         <span class="cx-ok"># ✅ e.g. Expert 2 and Expert 5</span>
+output = sum(weight_i * expert_i(token) <span class="kw">for</span> i <span class="kw">in</span> chosen)</code></pre>
+      </div>
+      <p class="cx-note">Every other expert is simply never called for this token — that's the whole saving, not a background optimization.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Pseudocode</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt"># 16-bit weight -> 4-bit weight (illustrative)</span>
+weight_fp16 = <span class="num">0.734563</span>            <span class="cx-cmt"># original value</span>
+weight_int4 = quantize(weight_fp16, bits=<span class="num">4</span>)  <span class="cx-ok"># ✅ rounded, far fewer bits stored</span></code></pre>
+      </div>
+      <p class="cx-note">The stored number shifts slightly (rounding) — that small shift is the "modest cost to accuracy" quantization trades for the memory savings.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A large hospital keeps many specialists on staff, but any one patient visit only routes to the two or three doctors actually relevant to it, not every specialist in the building — that's Mixture-of-Experts. Quantization is like sending a compressed photo instead of the raw file: far less space, nearly identical to look at, with a little fine detail traded away.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="index.html" style="opacity:.62; color:var(--ink-soft);">← Tokenizers (coming soon)</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to AI Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="15.html">Context-Window Tricks →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · a personal brush-up site · content added track by track, tier by tier.
+  <a href="../../index.html">← Back to all tracks</a>
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
