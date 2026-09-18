@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fetch / HTTP / AbortController — JavaScript Intermediate — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="javascript/intermediate">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fef9c3;--crumb-ink:#854d0e;">🟨 JavaScript</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Fetch / HTTP / AbortController</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 JavaScript · Intermediate · Must Know</div>
+    <h1><code>fetch()</code> — <span class="hl hl-hot">a 404 doesn't make the Promise reject</span></h1>
+    <p class="interview-q">"If <code>fetch()</code> gets back a 404 or 500 from the server, does the returned Promise reject or resolve?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Nearly every real app talks to a server through <code>fetch</code>, and getting this exact behavior wrong is why apps silently show broken or empty UI on a 404 instead of an error message.</li>
+        <li>Comes up whenever an interviewer wants to check you actually understand what "reject" means for a Promise, not just that you can write <code>await fetch(...)</code>.</li>
+        <li><code>AbortController</code> and timeout handling are near-guaranteed follow-ups once basic <code>fetch</code> usage is confirmed.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>fetch()</code> <span class="rarrow">→</span> returns a <b>Promise</b>, same as any other async call</p>
+      <p class="rrow">HTTP error (404/500) <span class="rarrow">→</span> Promise still <b>resolves</b> — check <code>response.ok</code></p>
+      <p class="rrow">Network failure (DNS/offline) <span class="rarrow">→</span> Promise <b>rejects</b> — the only real reject case</p>
+      <p class="rrow"><code>response.json()</code> <span class="rarrow">→</span> its own Promise — needs a <b>second <code>await</code></b></p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><code>fetch()</code> builds on the Promise you already know — nothing new about the mechanism</span>
+      <span class="tc-line">"Did the request fail" and "did the server say no" are two different questions</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="fetchShadow10" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="fetchArrow10" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="fetchArrowAmber10" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">FETCH() LIFECYCLE — WHEN DOES THE PROMISE ACTUALLY REJECT?</text>
+
+      <!-- Row 1: the call -->
+      <g filter="url(#fetchShadow10)"><rect x="235" y="34" width="180" height="54" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/></g>
+      <text x="325" y="57" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1d4ed8"><tspan font-family="Fira Code, monospace">fetch(url)</tspan></text>
+      <text x="325" y="74" text-anchor="middle" font-size="10.5" fill="#5b6472">→ returns a Promise</text>
+
+      <!-- stub + hub + drops: row 1 to row 2 -->
+      <path d="M325,88 V108" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M110,108 H432" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M110,108 V140" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#fetchArrow10)"/>
+      <path d="M432,108 V140" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#fetchArrow10)"/>
+
+      <!-- Row 2: network failure vs response arrives -->
+      <g filter="url(#fetchShadow10)"><rect x="15" y="140" width="190" height="62" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/></g>
+      <text x="110" y="166" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🔌 Network failure</text>
+      <text x="110" y="183" text-anchor="middle" font-size="10.5" fill="#5b6472">DNS / offline / CORS</text>
+
+      <g filter="url(#fetchShadow10)"><rect x="322" y="140" width="220" height="62" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/></g>
+      <text x="432" y="166" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">📨 Response arrives</text>
+      <text x="432" y="183" text-anchor="middle" font-size="10.5" fill="#5b6472">any status code, 2xx–5xx</text>
+
+      <!-- Row 2 to Row 3, left side: direct drop -->
+      <path d="M110,202 V246" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#fetchArrow10)"/>
+
+      <!-- Row 2 to Row 3, right side: stub + hub + drops -->
+      <path d="M432,202 V218" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M325,218 H540" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M325,218 V246" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#fetchArrow10)"/>
+      <path d="M540,218 V246" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#fetchArrowAmber10)">
+        <animate attributeName="stroke-dashoffset" values="11;0" dur="1.4s" repeatCount="indefinite"/>
+      </path>
+
+      <!-- Row 3: three outcomes -->
+      <g filter="url(#fetchShadow10)"><rect x="25" y="246" width="170" height="56" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/></g>
+      <text x="110" y="270" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">❌ Promise REJECTS</text>
+      <text x="110" y="286" text-anchor="middle" font-size="10.5" fill="#5b6472">catch() runs / throw</text>
+
+      <g filter="url(#fetchShadow10)"><rect x="240" y="246" width="170" height="56" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/></g>
+      <text x="325" y="270" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ response.ok === true</text>
+      <text x="325" y="286" text-anchor="middle" font-size="10.5" fill="#5b6472">await response.json()</text>
+
+      <g filter="url(#fetchShadow10)"><rect x="455" y="246" width="170" height="56" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="2"/></g>
+      <text x="540" y="270" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🐛 response.ok false</text>
+      <text x="540" y="286" text-anchor="middle" font-size="10.5" fill="#5b6472">Promise still RESOLVED!</text>
+    </svg>
+    <figcaption><code>fetch()</code> only rejects on a real network-level failure (DNS, offline, CORS) — a 404 or 500 still resolves the Promise with <code>response.ok === false</code>. The amber path (marching ants) is the one people get wrong: it looks like it should be caught, but it never is unless you check <code>response.ok</code> yourself.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>fetch()</code> does not reject on a 404 or 500.</b> It only rejects on a true network-level failure (DNS, offline, CORS) — an HTTP error still resolves normally with <code>response.ok === false</code>, so checking <code>response.ok</code> yourself is required, not optional.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"<code>fetch()</code> has no timeout option — how would you cancel a request that's taking too long?"</b> Create an <code>AbortController</code>, pass <code>controller.signal</code> into <code>fetch</code>'s options, and call <code>controller.abort()</code> from a <code>setTimeout</code> — the in-flight fetch then rejects with an <code>AbortError</code>.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>fetch()</code> returns a Promise like any other async call, but it only rejects on a genuine network failure — a 404 or 500 still resolves normally, so I always check <code>response.ok</code> myself before trusting the response. Parsing the body is a second async step, since <code>response.json()</code> returns its own Promise. Since <code>fetch</code> has no built-in timeout, I pair it with <code>AbortController</code> and <code>setTimeout</code> to cancel a request that's taking too long."</p>
+    <ul>
+      <li><code>fetch()</code> → <span class="hl hl-hot">only rejects on network failure</span>, never on an HTTP error status.</li>
+      <li><code>response.ok === false</code> on 4xx/5xx → <span class="hl hl-blue">still a resolved Promise</span> — check it yourself.</li>
+      <li><code>response.json()</code> → <span class="hl hl-inter">returns its own Promise</span> — needs a second <code>await</code>.</li>
+      <li>No built-in timeout → <span class="hl hl-teal"><code>AbortController</code> + <code>setTimeout</code></span> is the standard pattern.</li>
+      <li><code>controller.abort()</code> → <span class="hl hl-basic">rejects the in-flight fetch with an AbortError</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><code>fetch(url)</code> returns a <b>Promise</b> — the exact same kind covered on the Promises and <code>async</code>/<code>await</code> pages, nothing new about the mechanism itself. What's different is <i>when</i> that Promise settles: it resolves as soon as the server sends back a response, whatever the status code is. A 200, a 404, and a 500 all resolve that same Promise; only a genuine network-level failure — a DNS lookup fails, the connection drops, a CORS block — makes it reject.</p>
+
+      <p>The response carries the status in <code>response.status</code> and a convenience boolean, <code>response.ok</code> (true for 200–299). The body isn't parsed yet at that point — calling <code>response.json()</code> (or <code>.text()</code>, <code>.blob()</code>) starts its own asynchronous read and returns its own Promise, so it needs a second <code>await</code>. <span class="hl hl-blue">Headers</span> work the same way on both sides: pass a plain object under the <code>headers</code> option to send them, and read them back off <code>response.headers</code>, which is its own iterable object with <code>get()</code>/<code>has()</code> — not a plain <code>{}</code> you index into.</p>
+
+      <p><code>fetch()</code> has no built-in timeout or cancel button on its own. <span class="hl hl-teal"><code>AbortController</code></span> fills both gaps: create one, pass its <code>.signal</code> into <code>fetch</code>'s options, and call <code>.abort()</code> whenever you want to stop the request — the in-flight fetch then rejects with an <code>AbortError</code>. Pairing that with <code>setTimeout</code> is the standard way to build a timeout, since <code>fetch</code> alone never gives up on its own. Building retry logic on top of this, or handling a fast typist firing overlapping search requests, is a step further — see <b>Production Scenarios</b> for that.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Network failure</th><th>HTTP error (404/500)</th></tr></thead>
+        <tbody>
+          <tr><th>Promise outcome</th><td class="no">❌ rejects</td><td>✅ resolves normally</td></tr>
+          <tr><th><code>response</code> object?</th><td class="no">never created</td><td>✅ yes — full response, just <code>ok: false</code></td></tr>
+          <tr><th>Typical cause</th><td>DNS failure, offline, CORS block</td><td>server reached, but returned an error status</td></tr>
+          <tr><th>How you catch it</th><td><code>try/catch</code> or <code>.catch()</code></td><td>you must check <code>response.ok</code> yourself</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">const</span> res = <span class="kw">await</span> fetch(<span class="str">'/api/user/9999'</span>); <span class="cx-cmt">// 404 — Promise still resolves!</span>
+
+console.log(res.ok);      <span class="cx-cmt">// false</span>
+console.log(res.status);  <span class="cx-cmt">// 404</span>
+
+<span class="kw">if</span> (!res.ok) {
+  <span class="kw">throw new</span> Error(<span class="str">`Request failed: ${res.status}`</span>); <span class="cx-err">// ❌ you throw it — fetch never did</span>
+}
+
+<span class="kw">const</span> data = <span class="kw">await</span> res.json(); <span class="cx-cmt">// second await — json() is its own Promise</span></code></pre>
+      </div>
+      <p class="cx-note"><code>fetch()</code> resolved completely normally here — nothing ever reached a <code>.catch()</code> or a <code>try/catch</code> on its own, because a 404 isn't a network failure.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">const</span> controller = <span class="kw">new</span> AbortController();
+<span class="kw">const</span> timer = setTimeout(() =&gt; controller.abort(), <span class="num">5000</span>); <span class="cx-cmt">// 5s timeout</span>
+
+<span class="kw">try</span> {
+  <span class="kw">const</span> res = <span class="kw">await</span> fetch(url, { signal: controller.signal });
+  clearTimeout(timer);           <span class="cx-ok">// ✅ finished in time — cancel the timer</span>
+} <span class="kw">catch</span> (err) {
+  <span class="kw">if</span> (err.name === <span class="str">'AbortError'</span>) {
+    console.log(<span class="str">'Request timed out or was cancelled'</span>);
+  }
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>fetch</code> has no built-in timeout — pairing <code>AbortController</code> with <code>setTimeout</code> is the standard way to build one.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">const</span> res = <span class="kw">await</span> fetch(url, {
+  headers: { <span class="str">'Authorization'</span>: <span class="str">`Bearer ${token}`</span>, <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> }
+});
+
+console.log(res.headers.get(<span class="str">'content-type'</span>)); <span class="cx-cmt">// read one header</span>
+
+<span class="kw">for</span> (<span class="kw">const</span> [key, value] <span class="kw">of</span> res.headers) { <span class="cx-cmt">// iterate every response header</span>
+  console.log(key, value);
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>Headers</code> is its own object with <code>get()</code>/<code>has()</code>/<code>entries()</code> — not a plain <code>{}</code> you can index into directly.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A dashboard loading a chart calls a REST endpoint with <code>fetch()</code>, checks <code>response.ok</code> before touching the body, and wraps the call in the <code>AbortController</code> + <code>setTimeout</code> pattern</b> so a slow backend can't hang the UI forever. Building retry logic on top of that, or handling a fast typist firing overlapping search requests, is a step further — that's covered under Production Scenarios, not repeated here.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="9.html">← Event Delegation</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to JavaScript Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <span style="color:var(--ink-soft); font-weight:700;">Classes &amp; Inheritance <span style="font-weight:400; font-style:italic;">(coming soon)</span></span>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · JavaScript · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
