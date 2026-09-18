@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSS Performance — HTML &amp; CSS Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="htmlcss/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fce7f3;--crumb-ink:#be185d;">🎨 HTML &amp; CSS</a>
+    <span class="sep">›</span>
+    <span class="crumb current" style="--crumb-bg:#ede9fe; color:#6d28d9;">Advanced</span>
+    <span class="sep">›</span>
+    <span class="crumb current">CSS Performance</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 HTML &amp; CSS · Advanced · Must Know</div>
+    <h1>Layout, Paint, and Composite never crash — so where does all the <span class="hl hl-hot">slowness</span> actually come from?</h1>
+    <p class="interview-q">"What actually makes CSS slow to render, and how would you go about finding the real cause on a live page?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Knowing the rendering pipeline exists (<a href="../advanced/1.html">Browser Rendering</a>)
+        isn't the same skill as knowing what makes it slow on a real page — interviewers push on
+        this exact gap at senior/architect level.</li>
+        <li>"The API is fast but the page still feels janky" is a genuinely common real-world and
+        interview scenario — it separates candidates who reach for devtools from ones who guess.</li>
+        <li>Ties expensive selectors, stylesheet size, and animation cost back to the same
+        Layout/Paint/Composite pipeline — nothing here is a new mechanism, just where that
+        pipeline gets expensive.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Selectors &amp; size</code> <span class="rarrow">→</span> more <b>matching work</b> per element</p>
+      <p class="rrow"><code>Unused CSS</code> <span class="rarrow">→</span> download/parse cost, <b>zero payoff</b></p>
+      <p class="rrow"><code>Layout thrashing</code> <span class="rarrow">→</span> forces Layout <b>again and again</b></p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>size</code></b> / <b><code>selectors</code></b> → cost bytes and matching time before Paint even starts</span>
+      <span class="tc-line"><b><code>thrashing</code></b> / expensive animation → cost frames once it's already running</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— a real profiling trace, before and after</span></div>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">DEVTOOLS PERFORMANCE PANEL — DURING SCROLL</text>
+
+      <path d="M320,34 V290" fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="5 5"/>
+
+      <!-- Left panel: janky -->
+      <g filter="url(#cardShadow)"><rect x="95" y="38" width="150" height="28" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="170" y="57" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">🐢 Janky scroll</text>
+
+      <rect x="100" y="78" width="140" height="22" rx="11" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/>
+      <text x="170" y="93" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">🐛 box-shadow repaints</text>
+
+      <!-- Left bars: Paint (top) + Layout (bottom), tall = long frame -->
+      <rect x="115" y="130" width="26" height="65" rx="3" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/>
+      <rect x="115" y="195" width="26" height="65" rx="3" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/>
+      <rect x="157" y="130" width="26" height="65" rx="3" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/>
+      <rect x="157" y="195" width="26" height="65" rx="3" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/>
+      <rect x="199" y="130" width="26" height="65" rx="3" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/>
+      <rect x="199" y="195" width="26" height="65" rx="3" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/>
+
+      <path d="M95,260 H245" fill="none" stroke="#94a3b8" stroke-width="1.2"/>
+
+      <text x="170" y="278" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">Layout + Paint repeat</text>
+      <text x="170" y="294" text-anchor="middle" font-size="9.5" fill="#5b6472">~25ms → below 60fps</text>
+
+      <!-- Right panel: fixed -->
+      <g filter="url(#cardShadow)"><rect x="395" y="38" width="150" height="28" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="470" y="57" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">⚡ After the fix</text>
+
+      <rect x="400" y="78" width="140" height="22" rx="11" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+      <text x="470" y="93" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">✅ composite only now</text>
+
+      <!-- Right bars: Composite only, short = short frame -->
+      <rect x="415" y="230" width="26" height="30" rx="3" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+      <rect x="457" y="230" width="26" height="30" rx="3" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+      <rect x="499" y="230" width="26" height="30" rx="3" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+
+      <path d="M395,260 H545" fill="none" stroke="#94a3b8" stroke-width="1.2"/>
+
+      <text x="470" y="278" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">Composite only</text>
+      <text x="470" y="294" text-anchor="middle" font-size="9.5" fill="#5b6472">~6ms → smooth 60fps</text>
+    </svg>
+    <figcaption>Same scroll, two traces. Left: every frame redoes Layout and Paint because a
+    scrolling element's <code>box-shadow</code> keeps forcing a repaint — long bars, dropped
+    frames. Right: after the fix, most frames only reach Composite — short bars, smooth
+    scrolling. This is what "measure, don't guess" actually looks like in devtools.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Layout thrashing isn't a CSS bug you fix by editing a stylesheet.</b> It's
+    JavaScript reading a layout value (like <code>offsetHeight</code>) right after writing a style
+    change, inside a loop — each read forces the browser to run Layout synchronously, over and
+    over, instead of once.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"So how would you actually fix that loop?"</b> Batch it — read all the
+    geometry values first, then make all the style writes afterward. Separating reads from writes
+    means the browser recalculates Layout once for the whole batch instead of once per
+    iteration.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"If scrolling is janky but the API is fast, I stop looking at the network
+    and open the Performance panel to watch what actually happens during the scroll. Long Layout
+    and Paint bars point at expensive or over-specific selectors, a stylesheet doing more matching
+    work than it needs, or JavaScript reading layout geometry right after writing a style change
+    and forcing layout thrashing. If elements are repainting every frame because of something like
+    <code>box-shadow</code> or a gradient, that's a Paint cost, not a network cost, and no amount
+    of API tuning fixes it."</p>
+    <ul>
+      <li><code>Expensive selectors / big stylesheets</code> → <span class="hl hl-hot">more matching work</span> the browser redoes on every style recalculation.</li>
+      <li><code>Unused CSS</code> → <span class="hl hl-inter">download and parse cost</span> only — shipped but never actually rendering anything.</li>
+      <li><code>Layout thrashing</code> → <span class="hl hl-hot">interleaved reads/writes</span> force Layout again and again inside a loop.</li>
+      <li><code>Critical CSS</code> → <span class="hl hl-basic">inline just what the first view needs</span> so the page can paint before the rest of the stylesheet arrives.</li>
+      <li><code>Performance panel</code> → <span class="hl hl-blue">measure which stage is actually slow</span> — Layout, Paint, or Composite — instead of guessing.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Every rule in a stylesheet has to be checked against the DOM to work out what it applies
+      to. A bigger stylesheet, or one full of deeply nested, overly specific selectors, means more
+      matching work on every style recalculation — not just on first load. CSS is also
+      <b>render-blocking</b>: the browser holds off painting anything until it has the full CSSOM,
+      specifically to avoid a flash of unstyled content. That's why stylesheet size and loading
+      strategy matter for perceived speed — a large stylesheet delays first paint, and
+      <b>unused CSS</b> (rules that never match anything on the page) ships extra bytes and parse
+      time that never pays anything back.</p>
+
+      <p><b>Layout thrashing</b> happens when code reads a layout value — <code>offsetHeight</code>,
+      <code>getBoundingClientRect()</code> — right after writing a style change, inside a loop.
+      Each read forces the browser to run Layout synchronously, right then, instead of batching it
+      with everything else. Ten elements read-then-written in a loop can mean ten forced Layouts
+      instead of one, and it's a common cause of visible scroll/animation jank that has nothing to
+      do with the network. See <a href="../intermediate/12.html">Transitions &amp; Animations</a>
+      for which CSS properties are cheap to animate in the first place — this page is about
+      diagnosing the cost once it's already showing up.</p>
+
+      <p>The fix for all of it starts the same way: measure before guessing. Open devtools'
+      Performance panel, record the janky interaction, and look at which stage of the
+      <a href="../advanced/1.html">Browser Rendering</a> pipeline is actually taking the time —
+      long Layout/Paint bars point at selectors, thrashing, or an expensive paint property; a
+      Composite-only frame means CSS isn't the bottleneck at all. <b>Critical CSS</b> — inlining
+      just the rules the initially visible viewport needs — is the standard answer to the
+      render-blocking cost specifically, so the page can paint something meaningful before the
+      rest of the stylesheet finishes downloading.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> CSS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err">/* ❌ deep, over-specific — checked against every element */</span>
+body div.container ul.list > li.item > a.link {
+  color: darkred;
+}
+
+<span class="cx-ok">/* ✅ one class, direct match — same result, less matching work */</span>
+.item-link {
+  color: darkred;
+}</code></pre>
+      </div>
+      <p class="cx-note">Both rules produce the same red link — the second one is cheaper for the
+      browser to match against a large page, especially on every style recalculation.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err">// ❌ forces Layout on every iteration</span>
+boxes.forEach(box => {
+  box.style.width = box.offsetWidth + <span class="num">10</span> + <span class="str">'px'</span>; <span class="cx-cmt">// read right after a write</span>
+});
+
+<span class="cx-ok">// ✅ batch: read everything first, then write everything</span>
+<span class="kw">const</span> widths = boxes.map(box => box.offsetWidth); <span class="cx-cmt">// one Layout, up front</span>
+boxes.forEach((box, i) => {
+  box.style.width = widths[i] + <span class="num">10</span> + <span class="str">'px'</span>; <span class="cx-cmt">// pure write, no forced Layout</span>
+});</code></pre>
+      </div>
+      <p class="cx-note">Same end result for every box — the batched version forces Layout once
+      instead of once per box in the loop.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world scenario <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Render-blocking CSS is a restaurant that won't seat anyone until the whole menu is
+      printed</b> — even if the drinks page alone would let people start ordering, everyone waits
+      for the full booklet. Critical CSS is printing just the drinks page first.</p>
+      <p><b>Scenario: the API responds in under 50ms, but scrolling still feels janky — how do you
+      investigate?</b> Start away from the network entirely — a fast API response doesn't rule out
+      a slow render. Open devtools' Performance panel, record the actual scroll, and look for long
+      Layout or Paint frames. If a lot of elements are being restyled at once, check for expensive
+      or over-specific selectors. If scroll-triggered JavaScript is running, check whether it's
+      reading layout geometry right after writing a style, forcing layout thrashing. And check what
+      the scrolled elements are actually doing — something like <code>box-shadow</code> or a
+      gradient on many of them can force a full repaint every frame, when a cheaper,
+      Composite-only change would look identical.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="1.html">← Browser Rendering</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to HTML &amp; CSS Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="3.html">Production UI Scenarios →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · HTML &amp; CSS · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
