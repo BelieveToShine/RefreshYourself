@@ -1182,4 +1182,89 @@ window.NAV_INDEX = {
       }
     ]
   },
+  "htmlcss/basic": {
+    track: "HTML & CSS",
+    trackIcon: "🎨",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1 – 9",
+        items: [
+          { n: 1, file: "1.html", short: "HTML Fundamentals", title: "HTML Fundamentals", tail: "what HTML actually is, elements, attributes, the DOM tree.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Semantic HTML", title: "Semantic HTML", tail: "why nav/button beat a bare div.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Forms & Validation", title: "Forms & Validation", tail: "input types, native validation, client vs. server.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Accessibility", title: "Accessibility", tail: "ARIA, labels, keyboard navigation, when ARIA vs. native.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "CSS Fundamentals & Cascade", title: "CSS Fundamentals & Cascade", tail: "rules, the cascade, how CSS actually resolves a style.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Selectors", title: "Selectors", tail: "combinators, attribute selectors, pseudo-selector basics.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Box Model", title: "Box Model", tail: "content/padding/border/margin, box-sizing.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Units & Sizing", title: "Units & Sizing", tail: "px vs. %, em vs. rem, viewport units.", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Display & Visibility", title: "Display & Visibility", tail: "display:none vs. visibility:hidden vs. opacity:0.", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 10 – 14",
+        items: [
+          { n: 10, file: "10.html", short: "Document Structure & Metadata", title: "Document Structure & Metadata", tail: "doctype, head/meta, viewport, favicons.", priority: "⭐" },
+          { n: 11, file: "11.html", short: "Tables & Lists", title: "Tables & Lists", tail: "table semantics, ordered/unordered/description lists.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "HTML5 Elements & Browser APIs", title: "HTML5 Elements & Browser APIs", tail: "canvas/video/audio, data attributes, template.", priority: "⭐" },
+          { n: 13, file: "13.html", short: "SEO & Web Semantics", title: "SEO & Web Semantics", tail: "meta tags, structured data, how semantics help SEO.", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Inheritance", title: "Inheritance", tail: "which CSS properties inherit, and which don’t.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "htmlcss/intermediate": {
+    track: "HTML & CSS",
+    trackIcon: "🎨",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1 – 9",
+        items: [
+          { n: 1, file: "1.html", short: "Specificity", title: "Specificity", tail: "which rule wins, and why.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Positioning", title: "Positioning", tail: "static/relative/absolute/fixed/sticky, containing blocks.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Overflow & Stacking", title: "Overflow & Stacking", tail: "overflow behavior, z-index, stacking contexts.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Flexbox", title: "Flexbox", tail: "main/cross axis, common centering patterns.", priority: "🔥" },
+          { n: 5, file: "5.html", short: "CSS Grid", title: "CSS Grid", tail: "template rows/columns/areas, Grid vs. Flexbox.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Responsive Design", title: "Responsive Design", tail: "media queries, mobile-first, fluid layout.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Typography", title: "Typography", tail: "font properties, web fonts, layout shift while fonts load.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Pseudo-classes & Pseudo-elements", title: "Pseudo-classes & Pseudo-elements", tail: ":hover/:nth-child/::before/::after, and their limits.", priority: "🔥" },
+          { n: 9, file: "9.html", short: "CSS Variables", title: "CSS Variables", tail: "custom properties, runtime theming, fallback values.", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 10 – 13",
+        items: [
+          { n: 10, file: "10.html", short: "Container Queries", title: "Container Queries", tail: "sizing by container instead of viewport.", priority: "⭐" },
+          { n: 11, file: "11.html", short: "Modern CSS Layout", title: "Modern CSS Layout", tail: ":has(), subgrid, and newer layout primitives.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Transitions & Animations", title: "Transitions & Animations", tail: "transition vs. animation, which properties are cheap to animate.", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Colors, Backgrounds & Gradients", title: "Colors, Backgrounds & Gradients", tail: "color formats, background shorthand, gradients.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "htmlcss/advanced": {
+    track: "HTML & CSS",
+    trackIcon: "🎨",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1 – 4",
+        items: [
+          { n: 1, file: "1.html", short: "Browser Rendering", title: "Browser Rendering", tail: "DOM + CSSOM → Render Tree → Layout → Paint → Composite.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "CSS Performance", title: "CSS Performance", tail: "layout thrashing, expensive properties, containment.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Production UI Scenarios", title: "Production UI Scenarios", tail: "real layout bugs, cross-cutting debugging scenarios.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Accessibility in Practice", title: "Accessibility in Practice", tail: "auditing an existing app, retrofitting, testing tools.", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 5 – 7",
+        items: [
+          { n: 5, file: "5.html", short: "CSS Cascade Layers", title: "CSS Cascade Layers", tail: "@layer, taming specificity wars at scale.", priority: "⭐" },
+          { n: 6, file: "6.html", short: "CSS Architecture", title: "CSS Architecture", tail: "BEM, utility-first, component-scoped styles at scale.", priority: "⭐" },
+          { n: 7, file: "7.html", short: "Cross-Browser Compatibility", title: "Cross-Browser Compatibility", tail: "vendor prefixes, feature detection, graceful degradation.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
 };
