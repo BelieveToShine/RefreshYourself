@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Workers — JavaScript Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="javascript/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fef9c3;--crumb-ink:#854d0e;">🟨 JavaScript</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Service Workers</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ JavaScript · Advanced · Should Know</div>
+    <h1>Service Worker — <span class="hl hl-blue">who actually answers</span> when your page asks for data?</h1>
+    <p class="interview-q">"What is a Service Worker, and how does it make offline support
+    possible in a web app?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>It's the actual mechanism behind "works offline" and "installable web app" — not a
+        framework feature, something the browser gives you directly.</li>
+        <li>Useful to know whenever an interview touches offline-first apps, caching strategy, or
+        push notifications.</li>
+        <li>A common opener in front-end interviews that touch PWAs: "how would you make this web
+        app work with no connection?"</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Service Worker <span class="rarrow">→</span> sits <b>between</b> your page and the network</p>
+      <p class="rrow">Lifecycle <span class="rarrow">→</span> install <span class="rarrow">→</span> activate <span class="rarrow">→</span> running</p>
+      <p class="rrow">Keeps running <span class="rarrow">→</span> even with <b>no tab open</b></p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> it's a <b>gatekeeper</b> for every request the
+    page makes — once it's active, the page never reaches the network directly.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 310" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shSvc10" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arSvc10Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arSvc10Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arSvc10Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.4">PAGE REQUEST → SERVICE WORKER → CACHE OR NETWORK</text>
+
+      <g filter="url(#shSvc10)"><rect x="200" y="36" width="240" height="54" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">📄 Your Page</text>
+      <text x="320" y="74" text-anchor="middle" font-size="10.5" fill="#5b6472">sends a fetch request</text>
+
+      <path d="M320,90 V118" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSvc10Gray)"/>
+
+      <g filter="url(#shSvc10)"><rect x="170" y="118" width="300" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="142" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">⚙️ Service Worker</text>
+      <text x="320" y="160" text-anchor="middle" font-size="10.5" fill="#5b6472">sits between the page and the network</text>
+
+      <path d="M320,178 V196 H170 V230" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arSvc10Green)"/>
+      <path d="M320,178 V196 H470 V230" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arSvc10Amber)"/>
+
+      <g filter="url(#shSvc10)"><rect x="50" y="230" width="240" height="60" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="170" y="254" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🗄️ Cache</text>
+      <text x="170" y="270" text-anchor="middle" font-size="10.5" fill="#5b6472">instant — works offline</text>
+
+      <g filter="url(#shSvc10)"><rect x="350" y="230" width="240" height="60" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="470" y="254" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🌐 Real network</text>
+      <text x="470" y="270" text-anchor="middle" font-size="10.5" fill="#5b6472">not cached — goes to server</text>
+    </svg>
+    <figcaption>A Service Worker sits in the request path between the page and the network. It can
+    answer a request straight from its own cache — instantly, even offline — or, when nothing
+    matches, let the request through to the real network.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Registering a Service Worker does not make an app offline by itself.</b>
+    Registration only gives the page a worker that can intercept requests — caching responses and
+    deciding when to serve them is logic you still have to write yourself.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If it can run with no page open, does it run forever in the
+    background?"</b> No — the browser can stop an idle Service Worker to save resources and wake
+    it back up on the next relevant event, like a fetch or a push notification; it's event-driven,
+    not a process that stays running non-stop.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A Service Worker is a special kind of worker that sits between the page
+    and the network like a proxy. It goes through an install-then-activate lifecycle before it
+    starts running, and once active it can intercept requests, cache responses, and serve them
+    back even with no network — that's what makes offline support possible. It also isn't tied to
+    one open tab, so it can keep running or get woken up for events on its own. A Progressive Web
+    App builds on exactly this, plus a manifest, to feel like an installable native app."</p>
+    <ul>
+      <li>Service Worker <span class="rarrow">→</span> a
+      <span class="hl hl-blue">network proxy</span> between the page and the network — it can
+      intercept every request.</li>
+      <li>Lifecycle <span class="rarrow">→</span>
+      <span class="hl hl-inter">install → activate → running</span>, at a high level.</li>
+      <li>Offline support <span class="rarrow">→</span> comes from
+      <span class="hl hl-basic">caching responses</span> and serving them without touching the
+      network.</li>
+      <li>Background behavior <span class="rarrow">→</span> can
+      <span class="hl hl-teal">keep running or receive events</span> with no page using it
+      currently open.</li>
+      <li>Service Worker vs. Web Worker <span class="rarrow">→</span> a Service Worker
+      <span class="hl hl-blue">sits in the network path</span> and persists independent of any
+      page; a Web Worker is scoped to one page and only offloads computation.</li>
+      <li>PWA <span class="rarrow">→</span> a
+      <span class="hl hl-adv">Service Worker plus a manifest</span> = installable, offline-capable,
+      feels like a native app.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A Service Worker is a special kind of worker that sits between your page and the network
+      — once it's registered, it can intercept every request the page makes and decide how to
+      answer it. It goes through a lifecycle before it's actually usable: it's installed first,
+      then activated, and only after that does it start running and intercepting requests. A fresh
+      registration doesn't take control on the very first load — install and activate have to
+      happen first.</p>
+
+      <p>It enables offline support because it can cache responses itself and hand them straight
+      back on a later request, with no network involved at all — check the cache first, fall
+      through to a real network request only when nothing matches. Because it isn't tied to one
+      open tab, it can also keep running, or get woken back up, to handle something like a push
+      notification even when the app isn't open in any window.</p>
+
+      <p>A <b>Progressive Web App (PWA)</b> builds on exactly this: a Service Worker for offline
+      behavior, plus a manifest file describing the app (name, icon, colors) so the browser can
+      offer to install it to the home screen and run it more like a native app. Both stay
+      high-level here — this page is the mental model, not manifest fields or cache-strategy
+      code.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th>Dimension</th><th>Service Worker</th><th>Web Worker</th></tr></thead>
+        <tbody>
+          <tr><th>Scope</th><td>persists independent of any one page</td><td>scoped to the page that created it</td></tr>
+          <tr><th>Job</th><td>sits in the network request path — can intercept and cache</td><td>offloads computation off the main thread</td></tr>
+          <tr><th>Relationship to network</th><td>yes — that's its whole point</td><td>none special</td></tr>
+          <tr><th>Lifetime</th><td>install → activate → running; can run with no tab open</td><td>ends when its page closes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// In the page's own script</span>
+<span class="kw">if</span> (<span class="str">"serviceWorker"</span> <span class="kw">in</span> navigator) {
+  navigator.serviceWorker.register(<span class="str">"/sw.js"</span>); <span class="cx-cmt">// starts install → activate</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Registration alone doesn't cache anything — it just hands control to
+      <code>sw.js</code> once it finishes activating.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Inside sw.js — this is the actual interception</span>
+self.addEventListener(<span class="str">"fetch"</span>, (event) => {
+  event.respondWith(
+    caches.match(event.request).then((cached) =>
+      cached || fetch(event.request) <span class="cx-cmt">// ✅ cache hit, or fall through to network</span>
+    )
+  );
+});</code></pre>
+      </div>
+      <p class="cx-note">The proxy decision, in one line: check the cache first, only reach the
+      real network when nothing matches.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Think of it like a front-desk receptionist who intercepts every call to an office. If
+      they already know the answer, they answer immediately — no need to transfer the call
+      anywhere. Only when they don't know it do they patch the call through to someone else.
+      That's exactly how a Service Worker treats every request the page makes.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <span style="color:var(--ink-soft); font-weight:700;">Web Workers <span style="font-weight:400; font-style:italic;">(coming soon)</span></span>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to JavaScript Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <span style="color:var(--ink-soft); font-weight:700;">Polyfills &amp; Transpilation <span style="font-weight:400; font-style:italic;">(coming soon)</span></span>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · JavaScript · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

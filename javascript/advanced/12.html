@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proxy &amp; Reflect — JavaScript Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="javascript/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fef9c3;--crumb-ink:#854d0e;">🟨 JavaScript</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Proxy &amp; Reflect</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 JavaScript · Advanced · Deep Dive</div>
+    <h1><code>Proxy</code> — who's actually listening when your code reads or <span class="hl hl-blue">writes</span> a property?</h1>
+    <p class="interview-q">"What is a JavaScript <code>Proxy</code>, and how would you use it to
+    intercept reading or writing a property?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>This is a <b>Deep Dive</b> topic, not core interview prep — useful for understanding
+        how frameworks build reactivity, not something you're likely to be asked to implement
+        live on a whiteboard.</li>
+        <li>Recognizing <code>Proxy</code> as the mechanism behind modern reactivity (Vue 3's
+        reactivity system is the well-known example) is the actual signal an interviewer wants,
+        not a recital of every trap type.</li>
+        <li>Most engineers meet it by reading framework internals or a library's source, not by
+        writing it themselves day-to-day.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Proxy</code> <span class="rarrow">→</span> <b>wraps</b> a target object, intercepts operations on it</p>
+      <p class="rrow"><code>Reflect</code> <span class="rarrow">→</span> <b>default</b> behavior — called from inside a trap to finish the job</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> a <b><code>Proxy</code></b> is a gatekeeper in
+    front of an object — a <b><code>get</code></b>/<b><code>set</code></b> trap runs your code
+    first; <b><code>Reflect</code></b> does what would've happened anyway.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shPx12" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arPx12Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arPx12Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">THE PROXY INTERCEPTS BEFORE THE REAL OBJECT EVER SEES IT</text>
+
+      <!-- row: code -> proxy -> target -->
+      <g filter="url(#shPx12)"><rect x="30" y="40" width="150" height="54" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="105" y="64" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🖥️ Your code</text>
+      <text x="105" y="80" text-anchor="middle" font-size="10.5" fill="#5b6472">state.count = 5</text>
+
+      <g filter="url(#shPx12)"><rect x="245" y="40" width="150" height="54" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="64" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🛡️ Proxy</text>
+      <text x="320" y="80" text-anchor="middle" font-size="10.5" fill="#5b6472"><code>set</code> trap intercepts</text>
+
+      <g filter="url(#shPx12)"><rect x="460" y="40" width="150" height="54" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="535" y="64" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">📦 Target object</text>
+      <text x="535" y="80" text-anchor="middle" font-size="10.5" fill="#5b6472">real value stored here</text>
+
+      <path d="M180,67 H245" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arPx12Gray)"/>
+      <path d="M395,67 H460" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arPx12Gray)"/>
+
+      <!-- proxy -> reactive payoff, animated -->
+      <path d="M320,94 V170" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arPx12Amber)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shPx12)"><rect x="345" y="116" width="140" height="20" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.2"/></g>
+      <text x="415" y="130" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">value changed</text>
+
+      <g filter="url(#shPx12)"><rect x="170" y="170" width="300" height="66" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="194" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🔔 Notify subscribers</text>
+      <text x="320" y="210" text-anchor="middle" font-size="10.5" fill="#5b6472">re-render scheduled</text>
+      <text x="320" y="224" text-anchor="middle" font-size="10.5" fill="#5b6472">— this is how reactive UIs work</text>
+    </svg>
+    <figcaption>Your code just writes <code>state.count = 5</code> like normal — the
+    <code>Proxy</code>'s <code>set</code> trap runs first, still forwards the write to the real
+    <code>target object</code> (via <code>Reflect.set</code>), and can trigger custom logic like
+    notifying subscribers on the way. That "notify on every change" step is exactly how a
+    reactive framework knows when to re-render.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A <code>set</code> trap that never calls <code>Reflect.set()</code> (or
+    <code>target[key] = value</code>) doesn't just skip validation — it silently drops the write
+    entirely.</b> The property never actually changes, and nothing throws to tell you why.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How is this different from what Vue 2 used —
+    <code>Object.defineProperty</code>?"</b> <code>Object.defineProperty</code> defines a
+    getter/setter on one property you name ahead of time; a <code>Proxy</code> intercepts
+    operations on the object as a whole, including ones on keys that don't exist yet — which is
+    part of why Vue 3 moved to <code>Proxy</code> for its reactivity system instead.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A <code>Proxy</code> wraps a target object and lets you define custom
+    behavior — traps — for fundamental operations like reading or writing a property: a
+    <code>get</code> trap runs on read, a <code>set</code> trap runs on write.
+    <code>Reflect</code> gives you the matching default implementation of each operation, so a
+    trap can run its own logic and still forward to the normal behavior. This is the mechanism
+    modern reactive frameworks, like Vue 3, use to know exactly when a piece of state changed
+    and trigger a re-render."</p>
+    <ul>
+      <li><code>get</code> trap <span class="rarrow">→</span> runs on <span class="hl hl-blue">every property read</span> — can log, compute, or restrict access.</li>
+      <li><code>set</code> trap <span class="rarrow">→</span> runs on <span class="hl hl-inter">every property write</span> — the point where you can act before the value lands.</li>
+      <li>Validation <span class="rarrow">→</span> a <code>set</code> trap can <span class="hl hl-hot">throw before an invalid write is stored</span>, e.g. a wrong type.</li>
+      <li>Reactive systems <span class="rarrow">→</span> a <code>set</code> trap is how a framework <span class="hl hl-basic">knows exactly which state changed</span>, so it only re-renders what needs it.</li>
+      <li><code>Reflect</code> <span class="rarrow">→</span> the <span class="hl hl-teal">default behavior</span>, called from inside a trap to actually finish the operation.</li>
+      <li>Metaprogramming <span class="rarrow">→</span> <span class="hl hl-adv">code that intercepts other code's behavior</span>, not just plain data — <code>Proxy</code> is JavaScript's main tool for it.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <code>Proxy</code> wraps a <b>target</b> object and lets you supply <b>traps</b> —
+      functions that run instead of the default behavior for a fundamental operation on that
+      object. The two that matter most: a <code>get</code> trap fires whenever a property is
+      read, and a <code>set</code> trap fires whenever one is written. Everywhere else in the
+      app, code just uses the proxy like a normal object — it has no idea anything is being
+      intercepted.</p>
+
+      <p><code>Reflect</code> is the companion tool: it exposes the same fundamental operations
+      (<code>Reflect.get</code>, <code>Reflect.set</code>, …) as plain functions, so a trap can
+      run its own logic first and then call <code>Reflect</code> to actually carry out the
+      normal read or write. A <code>set</code> trap can also reject a write outright — e.g.
+      throwing if a value doesn't match the expected type — which is how <code>Proxy</code> gets
+      used for validation.</p>
+
+      <p>The practical payoff worth remembering is <b>reactivity</b>: a UI framework can put an
+      app's state behind a <code>Proxy</code> and use its <code>set</code> trap to detect the
+      exact moment a piece of state changes, then schedule a re-render — without the app code
+      ever calling something like <code>setState()</code> itself. This is, in general shape, how
+      Vue 3's reactivity system works under the hood. Writing code that intercepts or modifies
+      the behavior of other code like this — rather than just operating on plain data — is called
+      <b>metaprogramming</b>, and <code>Proxy</code> is JavaScript's main built-in tool for it.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">const</span> user = { age: <span class="num">30</span> };
+
+<span class="kw">const</span> proxy = <span class="kw">new</span> Proxy(user, {
+  get(target, prop) {
+    <span class="kw">return</span> Reflect.get(target, prop); <span class="cx-cmt">// ✅ read forwarded as normal</span>
+  },
+  set(target, prop, value) {
+    <span class="kw">if</span> (prop === <span class="str">"age"</span> && <span class="kw">typeof</span> value !== <span class="str">"number"</span>) {
+      <span class="kw">throw new</span> TypeError(<span class="str">"age must be a number"</span>); <span class="cx-err">// ❌ rejected before it's stored</span>
+    }
+    <span class="kw">return</span> Reflect.set(target, prop, value); <span class="cx-ok">// ✅ actually writes the value</span>
+  }
+});
+
+proxy.age = <span class="str">"old"</span>; <span class="cx-cmt">// throws — never reaches `user`</span></code></pre>
+      </div>
+      <p class="cx-note">The <code>set</code> trap decides whether the write even reaches
+      <code>user</code> — <code>Reflect.set</code> is what makes it actually happen.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">function</span> reactive(target, onChange) {
+  <span class="kw">return new</span> Proxy(target, {
+    set(obj, key, value) {
+      <span class="kw">const</span> changed = obj[key] !== value;
+      <span class="kw">const</span> ok = Reflect.set(obj, key, value); <span class="cx-cmt">// real write still happens</span>
+      <span class="kw">if</span> (changed) onChange(key, value); <span class="cx-ok">// 🔔 the reactivity hook</span>
+      <span class="kw">return</span> ok;
+    }
+  });
+}
+
+<span class="kw">const</span> state = reactive({ count: <span class="num">0</span> }, () => rerender());
+state.count++; <span class="cx-cmt">// rerender() fires automatically — no manual "update" call anywhere</span></code></pre>
+      </div>
+      <p class="cx-note">This is the general shape of the trick, not a real framework's actual
+      implementation — the interesting part is that a plain <code>state.count++</code> is enough
+      to trigger <code>rerender()</code> on its own.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A UI framework needs to know the instant <code>state.user.name</code> changes, without
+      the app calling something like <code>setState()</code> itself.</b> Wrapping the state
+      object in a <code>Proxy</code> and reacting inside its <code>set</code> trap is exactly how
+      that gets solved — every plain assignment the app already writes becomes the framework's
+      signal to schedule a re-render.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <span style="color:var(--ink-soft); font-weight:700;">Polyfills &amp; Transpilation <span style="font-weight:400; font-style:italic;">(coming soon)</span></span>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to JavaScript Advanced</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · JavaScript · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
