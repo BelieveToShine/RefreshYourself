@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MRO & Multiple Inheritance — Python Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="python/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#306998;">🐍 Python</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">MRO &amp; Multiple Inheritance</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 Python · Advanced · Deep Dive</div>
+    <h1><code>super()</code> doesn't mean <span class="hl hl-inter">"my parent class"</span> — it
+    means <span class="hl hl-blue">"the next class in the MRO chain"</span></h1>
+    <p class="interview-q">What is MRO? How does Python actually resolve the
+    diamond-inheritance problem?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>MRO questions separate "I memorized <code>super()</code> calls the parent" from
+        actually understanding how Python resolves multiple inheritance.</li>
+        <li>Comes up constantly in real bugs when a codebase stacks several mixins — a wrong
+        assumption about what <code>super()</code> calls next makes logic run in the wrong order,
+        or skip entirely.</li>
+        <li>A common follow-up once someone can explain single inheritance well — interviewers
+        use it to check whether the understanding actually generalizes.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">MRO = <b>"the exact order Python walks the base classes to resolve a
+    name."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>super()</code></b> means <b>"next
+    in the MRO,"</b> not <b>"my parent."</b></p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="mroShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="mroArSlate" markerWidth="10" markerHeight="10" refX="6.5" refY="3" orient="auto">
+          <path d="M0,0 L6.5,3 L0,6 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="mroArPurple" markerWidth="10" markerHeight="10" refX="6.5" refY="3" orient="auto">
+          <path d="M0,0 L6.5,3 L0,6 Z" fill="#7c3aed"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">DIAMOND INHERITANCE → ONE COMPUTED ORDER</text>
+
+      <!-- D: the subclass -->
+      <g filter="url(#mroShadow)"><rect x="250" y="36" width="140" height="48" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">D</text>
+      <text x="320" y="72" text-anchor="middle" font-size="10" fill="#5b6472">extends B, C</text>
+
+      <!-- B and C: middle row -->
+      <g filter="url(#mroShadow)"><rect x="70" y="132" width="150" height="48" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="145" y="152" text-anchor="middle" font-size="14" font-weight="700" fill="#166534">B</text>
+      <text x="145" y="168" text-anchor="middle" font-size="10" fill="#5b6472">extends A</text>
+
+      <g filter="url(#mroShadow)"><rect x="420" y="132" width="150" height="48" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="495" y="152" text-anchor="middle" font-size="14" font-weight="700" fill="#92400e">C</text>
+      <text x="495" y="168" text-anchor="middle" font-size="10" fill="#5b6472">extends A</text>
+
+      <!-- A: common base -->
+      <g filter="url(#mroShadow)"><rect x="250" y="228" width="140" height="48" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="248" text-anchor="middle" font-size="14" font-weight="700" fill="#475569">A</text>
+      <text x="320" y="264" text-anchor="middle" font-size="10" fill="#5b6472">the shared base</text>
+
+      <!-- solid diamond edges (structure only) -->
+      <path d="M285,84 V108 H145 V132" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#mroArSlate)"/>
+      <path d="M355,84 V108 H495 V132" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#mroArSlate)"/>
+      <path d="M145,180 V204 H285 V228" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#mroArSlate)"/>
+      <path d="M495,180 V204 H355 V228" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#mroArSlate)"/>
+
+      <!-- the extra hop the diamond shape alone can't tell you: B before C -->
+      <path d="M220,156 H420" fill="none" stroke="#7c3aed" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#mroArPurple)">
+        <animate attributeName="stroke-dashoffset" values="0;-22" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+      <text x="320" y="140" text-anchor="middle" font-size="9.5" font-weight="700" fill="#6d28d9">next</text>
+
+      <!-- numbered MRO-order badges, overlaid on the diamond -->
+      <circle cx="250" cy="36" r="13" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="250" y="41" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">1</text>
+      <circle cx="70" cy="132" r="13" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="70" y="137" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">2</text>
+      <circle cx="420" cy="132" r="13" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="420" y="137" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">3</text>
+      <circle cx="250" cy="228" r="13" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="250" y="233" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">4</text>
+    </svg>
+    <figcaption>D inherits from both B and C; B and C both inherit from A. The numbered badges are
+    the computed MRO: D (1) first, then A (4) last — that much is obvious from the shape. B before
+    C (2 before 3) is <b>not</b> visible from the diamond alone; that's the exact hop C3
+    linearization decides, shown as the dashed purple arrow.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>super().__init__()</code> does not always call "my parent
+    class's" <code>__init__</code>.</b> In a multiple-inheritance hierarchy it calls whatever's
+    next in the full MRO — which depends on the entire class graph the final subclass was built
+    from, not just the immediate base list of the class you're standing in.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why can multiple inheritance become dangerous, and when is composition
+    preferable?"</b> Deep or wide multiple-inheritance hierarchies get hard to reason about — which
+    method actually runs, and in what order, stops being obvious without checking
+    <code>ClassName.__mro__</code> directly. Composition (an object holding another object and
+    delegating to it) is often clearer, and skips MRO complexity entirely when you just need
+    reuse, not a genuine is-a relationship.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>super()</code> means 'the next class in the MRO,' not 'my
+    parent' — when multiple inheritance gets non-obvious, I check <code>ClassName.__mro__</code>
+    instead of guessing."</p>
+    <ul>
+      <li><span class="hl hl-blue">MRO</span> is computed by <b>C3 linearization</b> —
+      deterministic, and it always puts a subclass before its own bases.</li>
+      <li><code>super()</code> <span class="hl hl-inter">→ next in the MRO</span>, not "my direct
+      parent" — the two only differ once multiple inheritance is involved.</li>
+      <li>Check the real order any time it's non-obvious: <span class="hl hl-basic"><code>ClassName.__mro__</code></span> — never guess from the class's own base list.</li>
+      <li><span class="hl hl-hot">Composition</span> is the safer default when you just need
+      reuse, not a genuine is-a relationship.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>MRO (Method Resolution Order)</b> is the exact, deterministic order Python walks a
+      class's bases when it needs to find an attribute or method. Python computes it with the
+      <b>C3 linearization</b> algorithm, which guarantees two things at once: a subclass always
+      comes before any of its own bases, and each class's own declared base order is preserved.
+      For a standard diamond — <code>D(B, C)</code>, where both <code>B</code> and <code>C</code>
+      extend <code>A</code> — the resulting MRO is <code>D, B, C, A</code>, in that exact order.</p>
+
+      <p>This is what <code>super()</code> actually means: not "go to my declared parent," but
+      "go to whatever comes next in <b>this instance's</b> MRO." In single inheritance the two are
+      the same thing, so the distinction never shows up. In multiple inheritance they can diverge —
+      a class sitting inside a mixin can't tell, just from its own base list, which sibling class
+      <code>super()</code> will land on next; that depends on the whole hierarchy the final
+      subclass was built from, not just its own declaration.</p>
+
+      <p>The diamond problem is exactly the ambiguity C3 resolves: without a defined order, it's
+      unclear whether <code>D</code> should get <code>B</code>'s or <code>C</code>'s version of an
+      overridden method. C3 linearization removes that ambiguity by computing one consistent
+      order every time, so the same hierarchy always resolves the same way.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">class</span> <span class="ty">A</span>:
+    <span class="kw">def</span> who(self): <span class="kw">return</span> <span class="str">"A"</span>
+
+<span class="kw">class</span> <span class="ty">B</span>(A):
+    <span class="kw">def</span> who(self): <span class="kw">return</span> <span class="str">"B"</span>
+
+<span class="kw">class</span> <span class="ty">C</span>(A):
+    <span class="kw">def</span> who(self): <span class="kw">return</span> <span class="str">"C"</span>
+
+<span class="kw">class</span> <span class="ty">D</span>(B, C): <span class="kw">pass</span>
+
+<span class="kw">print</span>(D().who())      <span class="cx-cmt"># "B" — not A, not C</span>
+<span class="kw">print</span>(D.__mro__)</code></pre>
+      </div>
+      <p class="cx-note"><b>Predict the output:</b> <code>D</code> overrides nothing itself, so
+      Python looks at <code>D.__mro__</code> — <code>D, B, C, A</code> — and returns the
+      <b>first</b> override it finds. That's <code>B</code>'s, even though <code>C</code> was
+      declared second and <code>A</code> is the "common" base.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">class</span> <span class="ty">LoggingMixin</span>:
+    <span class="kw">def</span> save(self):
+        <span class="kw">print</span>(<span class="str">"LoggingMixin.save"</span>)
+        <span class="kw">super</span>().save()
+
+<span class="kw">class</span> <span class="ty">ValidationMixin</span>:
+    <span class="kw">def</span> save(self):
+        <span class="kw">print</span>(<span class="str">"ValidationMixin.save"</span>)
+        <span class="kw">super</span>().save()
+
+<span class="kw">class</span> <span class="ty">Model</span>:
+    <span class="kw">def</span> save(self): <span class="kw">print</span>(<span class="str">"Model.save"</span>)
+
+<span class="kw">class</span> <span class="ty">Article</span>(LoggingMixin, ValidationMixin, Model):
+    <span class="kw">pass</span>
+
+Article().save()</code></pre>
+      </div>
+      <p class="cx-note">Prints <code>LoggingMixin.save</code>, then
+      <code>ValidationMixin.save</code>, then <code>Model.save</code>.
+      <code>super()</code> inside <code>LoggingMixin</code> does not call
+      <code>Model.save</code> directly — it calls whatever's next in <code>Article</code>'s MRO,
+      which happens to be <code>ValidationMixin</code>.</p>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A team building on a web framework's class-based views stacked several mixins — logging,
+      permission checks, caching — onto one view class. A developer assumed
+      <code>super().dispatch()</code> inside their custom mixin called the base view's
+      <code>dispatch()</code> directly. It didn't — because of the full MRO across every stacked
+      mixin, it actually called a <b>different</b> mixin's <code>dispatch()</code> next, silently
+      skipping logic the developer thought ran first. The fix was checking the view class's
+      <code>__mro__</code> to see the real order, instead of guessing from the mixin list.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="index.html" style="color:var(--ink-soft);">← Dunder Methods (coming soon)</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Python Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="index.html" style="color:var(--ink-soft);">Descriptors (coming soon) →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Python · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

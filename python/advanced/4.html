@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Descriptors — Python Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="python/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#306998;">🐍 Python</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Descriptors</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 Python · Advanced · Deep Dive</div>
+    <h1><code>property</code> is just a <span class="hl hl-adv">descriptor</span> with a friendlier syntax — that's the whole trick behind ORM field definitions too</h1>
+    <p class="interview-q">What is a descriptor? How does <code>property</code> actually work internally?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>Separates "used <code>@property</code>" from "understands how Python's attribute lookup actually works" — a common way interviewers test real object-model depth.</li>
+        <li>Comes up any time framework internals get discussed — Django model fields, SQLAlchemy columns, and even <code>classmethod</code>/<code>staticmethod</code> lean on this exact mechanism.</li>
+        <li>A frequent follow-up right after any <code>property</code> question, since most candidates can use it but few can explain what it actually is underneath.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Descriptor = <b>"a class attribute with <code>__get__</code> (and maybe <code>__set__</code>) that Python calls instead of just handing back a plain value."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>property</code></b> IS one — built into the language, not a separate feature.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="dShadow4p" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arrowG4p" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+        </marker>
+        <marker id="arrowA4p" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="#475569" letter-spacing="0.3">ATTRIBUTE ACCESS — DIRECT VS. ROUTED THROUGH A DESCRIPTOR</text>
+
+      <line x1="320" y1="40" x2="320" y2="340" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <text x="165" y="44" text-anchor="middle" font-size="11" font-weight="700" fill="#475569" letter-spacing="0.3">PLAIN ATTRIBUTE</text>
+      <text x="475" y="44" text-anchor="middle" font-size="11" font-weight="700" fill="#475569" letter-spacing="0.3">DESCRIPTOR ATTRIBUTE (property / ORM)</text>
+
+      <!-- Left: plain attribute, direct -->
+      <g filter="url(#dShadow4p)"><rect x="45" y="60" width="240" height="50" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="165" y="82" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🔧 obj.count</text>
+      <text x="165" y="100" text-anchor="middle" font-size="9.5" fill="#5b6472">read or write</text>
+
+      <path d="M165,110 V158" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrowG4p)"/>
+      <rect x="180" y="124" width="50" height="20" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2"/>
+      <text x="205" y="138" text-anchor="middle" font-size="9" font-weight="700" fill="#475569">direct</text>
+
+      <g filter="url(#dShadow4p)"><rect x="45" y="158" width="240" height="60" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="165" y="182" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">📦 instance.__dict__</text>
+      <text x="165" y="200" text-anchor="middle" font-size="9.5" fill="#5b6472">'count': 5 — stored plainly</text>
+
+      <text x="165" y="248" text-anchor="middle" font-size="10.5" fill="#166534">nothing intercepts this ✅</text>
+
+      <!-- Right: descriptor attribute, routed -->
+      <g filter="url(#dShadow4p)"><rect x="355" y="60" width="240" height="50" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="475" y="82" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🔧 obj.email</text>
+      <text x="475" y="100" text-anchor="middle" font-size="9.5" fill="#5b6472">read or write</text>
+
+      <path d="M475,110 V158" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrowA4p)">
+        <animate attributeName="stroke-dashoffset" values="11;0" dur="2.5s" repeatCount="indefinite"/>
+      </path>
+      <rect x="475" y="124" width="70" height="20" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.2"/>
+      <text x="510" y="138" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">get / set</text>
+
+      <g filter="url(#dShadow4p)"><rect x="355" y="158" width="240" height="60" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="475" y="182" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🧩 __get__ / __set__</text>
+      <text x="475" y="200" text-anchor="middle" font-size="9.5" fill="#5b6472">a class attribute (property)</text>
+
+      <path d="M475,218 V266" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrowA4p)">
+        <animate attributeName="stroke-dashoffset" values="11;0" dur="2.5s" repeatCount="indefinite"/>
+      </path>
+      <rect x="475" y="232" width="90" height="20" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.2"/>
+      <text x="520" y="246" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">backing store</text>
+
+      <g filter="url(#dShadow4p)"><rect x="355" y="266" width="240" height="60" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="475" y="290" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🗄️ real value / DB row</text>
+      <text x="475" y="308" text-anchor="middle" font-size="9.5" fill="#5b6472">self._email — or a DB row</text>
+    </svg>
+    <figcaption>A plain attribute reads and writes the instance's <code>__dict__</code> directly. A
+    descriptor attribute — <code>property</code>, or an ORM field — routes every single access
+    through its own <code>__get__</code>/<code>__set__</code> first, on the way to wherever the
+    real value actually lives.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Assigning <code>self.x = value</code> doesn't always create a normal instance
+    attribute.</b> That's only true for a <b>non-data descriptor</b> (just <code>__get__</code>,
+    like a plain method) — a <b>data descriptor</b> such as <code>property</code>
+    (<code>__get__</code> + <code>__set__</code>) always intercepts the assignment first, so it can
+    never be shadowed by an instance <code>__dict__</code> entry of the same name.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How do descriptors relate to ORM field definitions?"</b> An ORM field
+    descriptor's <code>__get__</code>/<code>__set__</code> can transparently translate attribute
+    access into database reads/writes (or at least tracked, dirty-checked in-memory state) — that's
+    exactly how <code>user.name = "Alice"</code> can trigger an ORM's change-tracking without the
+    calling code knowing anything about descriptors.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>property</code> is a built-in data descriptor — that's literally the
+    mechanism, not a separate feature. Any object implementing <code>__get__</code>/<code>__set__</code>
+    as a class attribute can intercept attribute access exactly the same way <code>property</code>
+    does."</p>
+    <ul>
+      <li><code>property</code> <span class="hl hl-blue">is sugar for a property object</span> — a data descriptor assigned to a class attribute, nothing more exotic.</li>
+      <li><span class="hl hl-inter">Data descriptor</span> (<code>__get__</code> + <code>__set__</code>) → always wins over an instance <code>__dict__</code> entry of the same name.</li>
+      <li><span class="hl hl-basic">Non-data descriptor</span> (<code>__get__</code> only, e.g. a plain method) → an instance <code>__dict__</code> entry of the same name wins instead.</li>
+      <li>ORM fields (Django, SQLAlchemy) → <span class="hl hl-adv">implemented as descriptors</span> — a plain-looking attribute can transparently read or write a database row.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <b>descriptor</b> is any object that implements <code>__get__</code> (and optionally
+      <code>__set__</code> or <code>__delete__</code>) and is stored as a <b>class</b> attribute.
+      When you access that attribute through an instance, Python's normal attribute-lookup
+      machinery doesn't just hand back a value sitting in <code>__dict__</code> — it calls the
+      descriptor's <code>__get__</code> (or <code>__set__</code>) instead, letting the class
+      intercept and customize what "reading" or "writing" that attribute actually does.</p>
+
+      <p>Descriptors split into two kinds, and the split decides who wins a naming conflict. A
+      <b>non-data descriptor</b> defines only <code>__get__</code> — a plain method is exactly this
+      (accessing it produces a bound method), and an instance <code>__dict__</code> entry of the
+      same name shadows it. A <b>data descriptor</b> defines <code>__get__</code> and
+      <code>__set__</code> (or <code>__delete__</code>) — it always wins over an instance
+      <code>__dict__</code> entry instead, no exceptions. <code>property</code> is a data
+      descriptor built into the language: <code>@property</code> is just shorthand for building a
+      <code>property</code> object — a class attribute whose <code>__get__</code>/<code>__set__</code>/
+      <code>__delete__</code> call your getter/setter/deleter functions — and assigning it to the
+      attribute's name.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Non-data descriptor</th><th>Data descriptor</th></tr></thead>
+        <tbody>
+          <tr><th>Defines</th><td><code>__get__</code> only</td><td><code>__get__</code> + <code>__set__</code> (or <code>__delete__</code>)</td></tr>
+          <tr><th>Instance <code>__dict__</code> wins?</th><td class="yes">✅ yes — shadows it</td><td class="no">❌ no — descriptor always wins</td></tr>
+          <tr><th>Example</th><td>a plain method</td><td><code>property</code></td></tr>
+        </tbody>
+      </table>
+
+      <p>This is also exactly how ORM field definitions work. A Django model field or a SQLAlchemy
+      column is typically a descriptor: accessing <code>model.some_field</code> looks like reading a
+      plain attribute, but really triggers descriptor logic that can read from or write to
+      database-backed row data instead of a plain in-memory value.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">class</span> PositiveNumber:                 <span class="cx-cmt"># a data descriptor: __get__ AND __set__</span>
+    <span class="kw">def</span> __set_name__(<span class="kw">self</span>, owner, name):
+        <span class="kw">self</span>._name = <span class="str">"_"</span> + name          <span class="cx-cmt"># e.g. "quantity" -&gt; "_quantity"</span>
+
+    <span class="kw">def</span> __get__(<span class="kw">self</span>, instance, owner):
+        <span class="kw">return</span> getattr(instance, <span class="kw">self</span>._name)
+
+    <span class="kw">def</span> __set__(<span class="kw">self</span>, instance, value):
+        <span class="kw">if</span> value &lt;= <span class="num">0</span>:
+            <span class="kw">raise</span> ValueError(<span class="str">"must be positive"</span>)
+        setattr(instance, <span class="kw">self</span>._name, value)
+
+<span class="kw">class</span> Order:
+    quantity = PositiveNumber()               <span class="cx-cmt"># class attribute — a descriptor instance</span></code></pre>
+      </div>
+      <p class="cx-note">The hand-written descriptor spelled out: a class attribute whose
+      <code>__get__</code>/<code>__set__</code> intercept every read and write on <code>quantity</code>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">class</span> Order:
+    <span class="kw">def</span> __init__(<span class="kw">self</span>):
+        <span class="kw">self</span>._quantity = <span class="num">1</span>
+
+    <span class="kw">@property</span>
+    <span class="kw">def</span> quantity(<span class="kw">self</span>):
+        <span class="kw">return</span> <span class="kw">self</span>._quantity
+
+    <span class="kw">@quantity.setter</span>
+    <span class="kw">def</span> quantity(<span class="kw">self</span>, value):
+        <span class="kw">if</span> value &lt;= <span class="num">0</span>:
+            <span class="kw">raise</span> ValueError(<span class="str">"must be positive"</span>)
+        <span class="kw">self</span>._quantity = value</code></pre>
+      </div>
+      <p class="cx-note">Same behavior, friendlier syntax: <code>@property</code> just builds a
+      <code>property</code> object — a ready-made data descriptor — and assigns it to
+      <code>quantity</code> on the class. That object <b>is</b> the same mechanism as
+      <code>PositiveNumber</code> above, just written for you.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b><code>user.email</code> looks like a plain attribute — it isn't.</b> Django's
+      <code>CharField</code> and SQLAlchemy's <code>Column</code> are typically implemented as
+      descriptors: reading <code>user.email</code> calls the field descriptor's <code>__get__</code>,
+      and writing <code>user.email = "sam@co.com"</code> calls its <code>__set__</code>, which can
+      validate the value and mark the row as changed for the next database write. The calling code
+      never has to know any of this — it just looks like ordinary attribute access.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="index.html" style="color:var(--ink-soft);">← MRO &amp; Multiple Inheritance (coming soon)</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Python Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="index.html" style="color:var(--ink-soft);">Metaclasses (coming soon) →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Python · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
