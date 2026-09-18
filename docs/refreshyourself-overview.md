@@ -15,8 +15,8 @@ junior/mid-level interview. Two groups of tracks:
 
 - **Core backend interview path**, in this order: C# → OOP → .NET/ASP.NET Core (MVC lives inside
   this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure → AWS.
-- **Other tracks**, not part of the ordered path: React and Angular (both all 7 phases complete,
-  see below), DSA and AI still fully untouched.
+- **Other tracks**, not part of the ordered path: React, Angular, Python, and AI (all 7 phases
+  complete, see below), DSA still fully untouched.
 
 Every track goes through 7 phases before any page is built — see
 [`specs/README.md`](superpowers/specs/README.md) for the full pipeline, and
@@ -162,9 +162,17 @@ through all 7 phases:**
   verification script, run independently against every single page (43 pages, 45 diagrams).
   Not part of the ordered core-backend path — grouped with React/Angular/DSA/AI. See
   [`specs/python/overview.md`](superpowers/specs/python/overview.md).
-- **AI** — roadmap-only skeleton across all three tiers, sourced from `AI-Interview-Topics.md`.
-  **Do not write AI content until told to.** See
-  [`specs/ai/overview.md`](superpowers/specs/ai/overview.md).
+- **AI** — **all 7 phases complete, 48/48 pages written** (2026-09-18):
+  [`question-taxonomy.md`](superpowers/specs/ai/question-taxonomy.md) (48 concept groups,
+  incl. a Phase 2 gap-hunt that added 3 items folded into existing pages — provider-native
+  prompt caching, speculative decoding, constrained/grammar-based decoding) →
+  [`roadmap.md`](superpowers/specs/ai/roadmap.md) → 48 tiered/prioritized pages, live on the site
+  and on [`ai/roadmap.html`](../ai/roadmap.html), grouped by tier rather than cross-tier concept
+  clusters. RAG is the track's single most-asked area per the source material, and the .NET/
+  Azure AI angle (Semantic Kernel, `IChatClient`, Azure OpenAI & Azure AI Search) is this site's
+  own differentiator. Every diagram passed the mandatory automated verification script, run
+  independently against every single page. Not part of the ordered core-backend path — grouped
+  with React/Angular/DSA/Python. See [`specs/ai/overview.md`](superpowers/specs/ai/overview.md).
 - **DSA** — not started, no roadmap planned yet.
 
 ## Adding a new track's spec
