@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory &amp; Garbage Collection — JavaScript Advanced — RefreshYourself</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="javascript/advanced">
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fef9c3;--crumb-ink:#854d0e;">🟨 JavaScript</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Memory &amp; Garbage Collection</span>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 JavaScript · Advanced · Must Know</div>
+    <h1>Your SPA's memory keeps climbing after every page change — <span class="hl hl-hot">what's actually holding on?</span></h1>
+    <p class="interview-q">"What causes memory leaks in JavaScript, and how would you investigate an SPA whose memory usage keeps growing after navigating between pages?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <ul>
+        <li>A real diagnostic question senior engineers get asked directly — "the memory graph keeps
+        climbing" — not a request to recite "JavaScript has garbage collection."</li>
+        <li>Tests whether you understand <b>reachability</b>, the actual rule the engine uses, instead
+        of treating garbage collection as a black box that "just handles it."</li>
+        <li>Detached DOM nodes, forgotten listeners/timers, and long-lived closures are three of the
+        most common real memory leak causes in front-end code, not rare edge cases.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Roots = <b>global object + running call stack</b> <span class="rarrow">→</span> everything reachable from them <b>survives</b></p>
+      <p class="rrow">No path back to any root <span class="rarrow">→</span> <b>eligible for collection</b></p>
+      <p class="rrow">Removed from the DOM, still referenced in JS <span class="rarrow">→</span> <b>detached node — never collected</b></p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> a leak is never "the garbage collector being broken" — it's <b>something you forgot still points at it</b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shM5" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arM5Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arM5Rose" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">MARK-AND-SWEEP: WHO SURVIVES A GC PASS</text>
+
+      <!-- Roots -->
+      <g filter="url(#shM5)"><rect x="40" y="34" width="170" height="58" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="125" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🌐 Global object</text>
+      <text x="125" y="74" text-anchor="middle" font-size="10.5" fill="#5b6472">a GC root</text>
+
+      <g filter="url(#shM5)"><rect x="430" y="34" width="170" height="58" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="515" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">📚 Call stack</text>
+      <text x="515" y="74" text-anchor="middle" font-size="10.5" fill="#5b6472">running now — a root</text>
+
+      <!-- Heap zone -->
+      <g filter="url(#shM5)"><rect x="30" y="110" width="580" height="188" rx="18" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="50" y="128" font-size="11" font-weight="700" fill="#64748b" letter-spacing="0.3">🗄️ HEAP — where every object lives</text>
+
+      <!-- Reachable chain -->
+      <g filter="url(#shM5)"><rect x="60" y="146" width="140" height="58" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="130" y="170" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🧩 Object A</text>
+      <text x="130" y="186" text-anchor="middle" font-size="10.5" fill="#5b6472">kept alive</text>
+
+      <g filter="url(#shM5)"><rect x="250" y="146" width="140" height="58" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="170" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🧩 Object B</text>
+      <text x="320" y="186" text-anchor="middle" font-size="10.5" fill="#5b6472">chained from A</text>
+
+      <!-- Orphan -->
+      <g filter="url(#shM5)"><rect x="440" y="146" width="140" height="58" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="510" y="170" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🪣 Orphan object</text>
+      <text x="510" y="186" text-anchor="middle" font-size="10.5" fill="#5b6472">no root points here</text>
+
+      <!-- Swept -->
+      <g filter="url(#shM5)"><rect x="440" y="224" width="140" height="58" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="510" y="248" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🧹 Swept away</text>
+      <text x="510" y="264" text-anchor="middle" font-size="10.5" fill="#5b6472">freed by GC</text>
+
+      <!-- Roots -> Object A -->
+      <path d="M125,92 V100 H105 V146" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arM5Gray)"/>
+      <path d="M515,92 V100 H155 V146" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arM5Gray)"/>
+
+      <!-- Object A -> Object B (chained reachability) -->
+      <path d="M200,175 H250" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arM5Gray)"/>
+
+      <!-- Orphan -> Swept, marching ants -->
+      <path d="M510,204 V224" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arM5Rose)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+    </svg>
+    <figcaption>The GC starts at the <b>roots</b> — the global object and the currently-executing
+    call stack — and marks everything reachable from there, however many steps away (Object B is
+    only reachable <em>through</em> Object A, and that's still enough). The orphan object has no
+    incoming reference from anywhere, so nothing marks it — it's swept, and its memory is freed.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"JavaScript has garbage collection, so it can't leak memory."</b> The GC only
+    frees objects with no path back to a root — a forgotten listener, timer, or long-lived closure
+    still counts as a path, so the object stays alive even though nothing actually needs it anymore.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If I remove a DOM element from the page, why doesn't its memory get freed
+    right away?"</b> Removing it from the document only detaches it visually — if a variable, array,
+    or closure still references that element, it's still reachable, so it stays on the heap as a
+    <em>detached node</em> until every last reference to it is gone too.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"The garbage collector only frees objects that are unreachable from a
+    root — the global object or the currently-executing call stack — using mark-and-sweep: mark
+    everything reachable, sweep the rest. Real leaks come from something still holding a reference
+    on purpose or by accident — a detached DOM node, a long-lived closure, or a listener/timer that
+    was never removed."</p>
+    <ul>
+      <li><span class="hl hl-blue">Roots</span> = global object + running call stack — everything
+      else is judged reachable starting from there.</li>
+      <li><span class="hl hl-basic">Mark-and-sweep</span> → mark what's reachable, sweep what's
+      left unmarked.</li>
+      <li><span class="hl hl-hot">Detached DOM node</span> → removed from the page but still
+      referenced in JS = never collected.</li>
+      <li><span class="hl hl-inter">Closures</span> keep their whole captured scope alive as long
+      as the closure itself is reachable — a forgotten long-lived one can pin down large objects.</li>
+      <li><span class="hl hl-teal">Forgotten listeners/timers</span> → the callback, and everything
+      it closes over, stays alive indefinitely.</li>
+      <li>Investigate growth with <span class="hl hl-blue">heap snapshots taken over time</span>,
+      never a single snapshot on its own.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>All JavaScript values live on the <b>heap</b> — the memory space the engine manages for
+      you. There's no manual <code>free()</code>; instead the engine periodically decides what's
+      still needed using <span class="hl hl-blue">reachability</span>: starting from a set of
+      <b>roots</b> — the global object and whatever's currently on the call stack — it walks every
+      reference it can follow and <b>marks</b> everything it reaches. Anything left unmarked has no
+      path back to a root, so it's <b>swept</b>: its memory is freed. That's the whole conceptual
+      idea behind <b>mark-and-sweep</b> — reachable survives, unreachable gets freed.</p>
+
+      <p>A "memory leak" in JavaScript really means an object that's technically still reachable, so
+      the GC correctly leaves it alone, even though the app no longer needs it. Three common causes:
+      a <b>detached DOM node</b> — an element removed from the page but still held in a variable,
+      array, or closure never gets collected, because JS is still pointing at it. A
+      <a href="../intermediate/1.html">closure</a> keeps its entire captured scope alive for as long
+      as the closure itself is reachable — a closure that was only meant to run once can end up
+      pinning down large objects it never needed to keep. And a <b>forgotten event listener or
+      timer</b> that's never removed keeps its callback alive indefinitely — and everything that
+      callback closes over goes with it.</p>
+
+      <p><span class="hl hl-basic">Senior scenario:</span> an SPA's memory keeps growing after
+      navigating between pages — walk it through as an investigation, not a definition. Take heap
+      snapshots before and after several navigations, and compare them for object counts that keep
+      climbing instead of settling back down. Look specifically for detached DOM nodes left behind
+      by components that unmounted but left a listener or interval still running. Check for closures
+      capturing something large — a full dataset, a big DOM subtree — that never needed to survive
+      past the page that created it. And check whether the route-change cleanup genuinely removes
+      every listener and subscription it added, rather than assuming it does just because the
+      component "went away."</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err">// ❌ Removed from the page, but a variable still points to it</span>
+<span class="kw">let</span> row = document.getElementById(<span class="str">"row-42"</span>);
+table.removeChild(row);        <span class="cx-cmt">// gone from the DOM...</span>
+<span class="cx-err">// ...but `row` still references it — a detached node, still on the heap</span>
+
+<span class="cx-ok">// ✅ Drop the reference once you're done with it</span>
+row = <span class="kw">null</span>;                <span class="cx-cmt">// nothing points to it now — eligible for GC</span></code></pre>
+      </div>
+      <p class="cx-note"><code>removeChild()</code> only detaches the element from the page's
+      visible tree — the node itself stays on the heap until every JS reference to it (a variable,
+      an array, a closure) is gone too.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">function</span> setup() {
+    <span class="kw">const</span> bigDataset = loadHugeArray();   <span class="cx-cmt">// large — meant for one-time use</span>
+    <span class="kw">const</span> handler = () =&gt; log(bigDataset.length);
+    <span class="cx-err">// ❌ handler is kept forever, so bigDataset never gets collected</span>
+    window.addEventListener(<span class="str">"resize"</span>, handler);
+    <span class="cx-cmt">// no matching removeEventListener anywhere</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">The listener's closure keeps <code>bigDataset</code> alive for as long as
+      the listener stays registered — forever, in this case, since nothing ever removes it.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-ok">// ✅ Remove the listener (and its closure) when it's no longer needed</span>
+<span class="kw">function</span> setup() {
+    <span class="kw">const</span> handler = () =&gt; log(<span class="str">"resized"</span>);
+    window.addEventListener(<span class="str">"resize"</span>, handler);
+    <span class="kw">return</span> () =&gt; window.removeEventListener(<span class="str">"resize"</span>, handler);  <span class="cx-cmt">// call on cleanup/unmount</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Calling <code>removeEventListener</code> drops the engine's own reference to
+      <code>handler</code> — once nothing else points to it either, the handler and everything it
+      closed over can finally be collected.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A contact you never deleted for someone who moved away.</b> The person (the DOM node,
+      the big object) is gone from where they used to live, but the entry in your phone (a variable,
+      a closure, a listener) still points at them — so it stays in your contacts, taking up space,
+      until you actually delete that entry. Nothing was wrong with your phone's storage; it just
+      correctly kept something you told it, indirectly, to keep.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <span style="color:var(--ink-soft); font-weight:700;">Debounce vs. Throttle <span style="font-weight:400; font-style:italic;">(coming soon)</span></span>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to JavaScript Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="6.html">Performance &amp; Rendering →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · JavaScript · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
