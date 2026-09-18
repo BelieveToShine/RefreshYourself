@@ -135,6 +135,108 @@
     <figcaption>ECS and EKS both need something to run containers on — Fargate removes that instance-management step for either one; the EC2 launch type keeps it, trading control/cost-efficiency for operational burden. Lambda skips containers entirely.</figcaption>
   </figure>
 
+  <div class="viz-label">🔍 What each one actually does <span class="viz-sub">— the real placement mechanic, not just the label</span></div>
+  <p style="margin:-4px 0 18px; font-size:14.5px; color:var(--ink-soft); max-width:640px;">The card layout above tells you how much orchestration each option takes on. These three small diagrams show what actually happens when a container gets placed — same starting point for both ECS launch types, a genuinely different API for EKS.</p>
+
+  <div class="diagram-set-label">📦 Three ways a container actually gets placed</div>
+  <div class="diagram-row">
+    <figure class="diagram-card">
+      <svg viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+        <defs>
+          <filter id="shEC2" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+          </filter>
+          <marker id="arrEC2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+          </marker>
+        </defs>
+
+        <text x="150" y="14" text-anchor="middle" font-size="9.5" font-weight="700" fill="#334155" letter-spacing="0.3">ECS (EC2 LAUNCH TYPE)</text>
+
+        <g filter="url(#shEC2)"><rect x="40" y="34" width="220" height="56" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="150" y="58" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📄 Register Task Definition</text>
+        <text x="150" y="76" text-anchor="middle" font-size="10" fill="#5b6472">image, CPU/mem, networking</text>
+
+        <path d="M150,90 V116" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrEC2)"/>
+
+        <g filter="url(#shEC2)"><rect x="40" y="116" width="220" height="56" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="150" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🖥️ Placed on YOUR EC2</text>
+        <text x="150" y="158" text-anchor="middle" font-size="10" fill="#5b6472">scheduler picks an instance you own</text>
+
+        <path d="M150,172 V198" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrEC2)"/>
+
+        <g filter="url(#shEC2)"><rect x="40" y="198" width="220" height="56" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+        <text x="150" y="222" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🔧 You patch that instance</text>
+        <text x="150" y="240" text-anchor="middle" font-size="10" fill="#5b6472">OS updates, capacity are on you</text>
+      </svg>
+      <figcaption>Same task definition as Fargate below — but here the scheduler's landing spot is an EC2 instance you provisioned and still have to maintain.</figcaption>
+    </figure>
+
+    <figure class="diagram-card">
+      <svg viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+        <defs>
+          <filter id="shFG2" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+          </filter>
+          <marker id="arrFG2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+          </marker>
+        </defs>
+
+        <text x="150" y="14" text-anchor="middle" font-size="9.5" font-weight="700" fill="#334155" letter-spacing="0.3">ECS + FARGATE</text>
+
+        <g filter="url(#shFG2)"><rect x="40" y="34" width="220" height="56" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="150" y="58" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📄 Same Task Definition</text>
+        <text x="150" y="76" text-anchor="middle" font-size="10" fill="#5b6472">identical blueprint, different target</text>
+
+        <path d="M150,90 V116" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrFG2)"/>
+
+        <g filter="url(#shFG2)"><rect x="40" y="116" width="220" height="56" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+        <text x="150" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">☁️ AWS runs it, serverless</text>
+        <text x="150" y="158" text-anchor="middle" font-size="10" fill="#5b6472">no EC2 instances provisioned</text>
+
+        <path d="M150,172 V198" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrFG2)"/>
+
+        <g filter="url(#shFG2)"><rect x="40" y="198" width="220" height="56" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+        <text x="150" y="222" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ Zero instances to manage</text>
+        <text x="150" y="240" text-anchor="middle" font-size="10" fill="#5b6472">pay for the task's CPU/memory</text>
+      </svg>
+      <figcaption>Same task definition, same ECS scheduler — the only difference is what it's allowed to land on: no EC2 fleet exists for you to patch.</figcaption>
+    </figure>
+
+    <figure class="diagram-card">
+      <svg viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+        <defs>
+          <filter id="shEKS2" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+          </filter>
+          <marker id="arrEKS2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+          </marker>
+        </defs>
+
+        <text x="150" y="14" text-anchor="middle" font-size="9.5" font-weight="700" fill="#334155" letter-spacing="0.3">EKS — REAL KUBERNETES API</text>
+
+        <g filter="url(#shEKS2)"><rect x="40" y="34" width="220" height="56" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+        <text x="150" y="58" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">⌨️ kubectl apply</text>
+        <text x="150" y="76" text-anchor="middle" font-size="10" fill="#5b6472">a real Kubernetes API call</text>
+
+        <path d="M150,90 V116" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrEKS2)"/>
+
+        <g filter="url(#shEKS2)"><rect x="40" y="116" width="220" height="56" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+        <text x="150" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">☸️ K8s scheduler places a Pod</text>
+        <text x="150" y="158" text-anchor="middle" font-size="10" fill="#5b6472">onto a Node — EC2 or Fargate</text>
+
+        <path d="M150,172 V198" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrEKS2)"/>
+
+        <g filter="url(#shEKS2)"><rect x="40" y="198" width="220" height="56" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+        <text x="150" y="222" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🧩 Full K8s control plane</text>
+        <text x="150" y="240" text-anchor="middle" font-size="10" fill="#5b6472">Helm, operators, native tooling</text>
+      </svg>
+      <figcaption>EKS isn't ECS-with-a-different-name — it's the actual Kubernetes API and scheduler, so every K8s-native tool still applies.</figcaption>
+    </figure>
+  </div>
+
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b>"We should use EKS because Kubernetes is the industry standard."</b> For most AWS-only microservice workloads, <code>ECS</code> (especially on Fargate) gives simpler operations without Kubernetes' learning curve and operational overhead — EKS earns its complexity when you genuinely need Kubernetes-specific tooling or portability, not by default.</p>

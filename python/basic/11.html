@@ -140,6 +140,108 @@
     <figcaption><code>self</code> points INTO the calling instance, <code>cls</code> points at the class itself, and a staticmethod points at neither — it's just a function living inside the class.</figcaption>
   </figure>
 
+  <div class="viz-label">🔍 What each one actually does <span class="viz-sub">— what gets passed in, and what it can reach</span></div>
+  <p style="margin:-4px 0 18px; font-size:14.5px; color:var(--ink-soft); max-width:640px;">The picture above tells you what gets passed in. These three small diagrams show what actually happens at call time for each one — and exactly what each can reach afterward.</p>
+
+  <div class="diagram-set-label">🧍 Instance vs. 🏛️ Class vs. 🚫 Static — who gets passed in</div>
+  <div class="diagram-row">
+    <figure class="diagram-card">
+      <svg viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+        <defs>
+          <filter id="shInst" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+          </filter>
+          <marker id="arInst" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+          </marker>
+        </defs>
+
+        <text x="150" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#475569" letter-spacing="0.3">🧍 INSTANCE METHOD</text>
+
+        <g filter="url(#shInst)"><rect x="40" y="32" width="220" height="52" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="150" y="54" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🧍 obj.foo()</text>
+        <text x="150" y="72" text-anchor="middle" font-size="10" fill="#5b6472">called on an instance</text>
+
+        <path d="M150,84 V108" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arInst)"/>
+
+        <g filter="url(#shInst)"><rect x="40" y="108" width="220" height="64" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+        <text x="150" y="132" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">self = obj</text>
+        <text x="150" y="152" text-anchor="middle" font-size="10" fill="#5b6472">Python fills it in automatically</text>
+
+        <path d="M150,172 V196" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arInst)"/>
+
+        <g filter="url(#shInst)"><rect x="40" y="196" width="220" height="58" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+        <text x="150" y="220" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ self.attr</text>
+        <text x="150" y="238" text-anchor="middle" font-size="10" fill="#5b6472">reads/writes its own state</text>
+      </svg>
+      <figcaption>Called on an instance → Python passes that exact instance in as <code>self</code>, so the method can read and write its own <code>__dict__</code>.</figcaption>
+    </figure>
+
+    <figure class="diagram-card">
+      <svg viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+        <defs>
+          <filter id="shCls" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+          </filter>
+          <marker id="arCls" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+          </marker>
+        </defs>
+
+        <text x="150" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#475569" letter-spacing="0.3">🏛️ CLASSMETHOD</text>
+
+        <g filter="url(#shCls)"><rect x="40" y="32" width="220" height="52" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="150" y="54" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🏛️ Widget.bar()</text>
+        <text x="150" y="72" text-anchor="middle" font-size="10" fill="#5b6472">called on the class itself</text>
+
+        <path d="M150,84 V108" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arCls)"/>
+
+        <g filter="url(#shCls)"><rect x="40" y="108" width="220" height="64" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+        <text x="150" y="132" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">cls = Widget</text>
+        <text x="150" y="152" text-anchor="middle" font-size="10" fill="#5b6472">the class, not an instance</text>
+
+        <path d="M150,172 V196" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arCls)"/>
+
+        <g filter="url(#shCls)"><rect x="40" y="196" width="220" height="58" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+        <text x="150" y="220" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ cls(...)</text>
+        <text x="150" y="238" text-anchor="middle" font-size="10" fill="#5b6472">e.g. an alternate constructor</text>
+      </svg>
+      <figcaption>Called on the class → Python passes the class itself in as <code>cls</code>, commonly used to build and return a new instance another way (e.g. <code>from_string</code>).</figcaption>
+    </figure>
+
+    <figure class="diagram-card">
+      <svg viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+        <defs>
+          <filter id="shStat" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+          </filter>
+          <marker id="arStat" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+          </marker>
+        </defs>
+
+        <text x="150" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#475569" letter-spacing="0.3">🚫 STATICMETHOD</text>
+
+        <g filter="url(#shStat)"><rect x="40" y="32" width="220" height="52" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="150" y="54" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🚫 Widget.baz()</text>
+        <text x="150" y="72" text-anchor="middle" font-size="10" fill="#5b6472">called like a plain function</text>
+
+        <path d="M150,84 V108" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arStat)"/>
+
+        <g filter="url(#shStat)"><rect x="40" y="108" width="220" height="64" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+        <text x="150" y="132" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">def baz():</text>
+        <text x="150" y="152" text-anchor="middle" font-size="10" fill="#5b6472">no self, no cls param at all</text>
+
+        <path d="M150,172 V196" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arStat)"/>
+
+        <g filter="url(#shStat)"><rect x="40" y="196" width="220" height="58" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+        <text x="150" y="220" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">🔒 can't touch either</text>
+        <text x="150" y="238" text-anchor="middle" font-size="10" fill="#5b6472">just lives in the class body</text>
+      </svg>
+      <figcaption>Called with neither an instance nor the class passed automatically — it behaves like a plain function that just happens to live inside the class.</figcaption>
+    </figure>
+  </div>
+
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b><code>__init__</code> is not technically "the constructor."</b> <code>__new__</code> is what actually creates the instance — <code>__init__</code> only initializes it afterward; calling <code>__init__</code> "the constructor" is fine loosely, but know the distinction if an interviewer pushes on it.</p>

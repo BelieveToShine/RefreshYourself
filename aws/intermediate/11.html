@@ -143,6 +143,76 @@
     <figcaption>Timeout without a delete makes the message visible again (redelivered); repeated timeouts past the max receive count send it to the DLQ instead.</figcaption>
   </figure>
 
+  <div class="viz-label">🔍 What each one actually does <span class="viz-sub">— the real delivery mechanic, not just the label</span></div>
+  <p style="margin:-4px 0 18px; font-size:14.5px; color:var(--ink-soft); max-width:640px;">The lifecycle diagram above is <code>SQS</code>'s own delivery loop. These two small diagrams put <code>SQS</code>'s point-to-point delivery next to <code>SNS</code>'s fanout side by side — the part that actually explains "one consumer" vs. "every subscriber."</p>
+
+  <div class="diagram-set-label">📨 SQS vs. SNS — one consumer vs. every subscriber</div>
+  <div class="diagram-row">
+    <figure class="diagram-card">
+      <svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+        <defs>
+          <filter id="shSQ2" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+          </filter>
+          <marker id="arrSQ2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+          </marker>
+        </defs>
+
+        <text x="230" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#334155" letter-spacing="0.3">📨 SQS — POINT-TO-POINT</text>
+
+        <g filter="url(#shSQ2)"><rect x="90" y="36" width="280" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="230" y="62" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">📤 Producer sends message</text>
+        <text x="230" y="82" text-anchor="middle" font-size="10.5" fill="#5b6472">one message, one send</text>
+
+        <path d="M230,96 V124" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrSQ2)"/>
+
+        <g filter="url(#shSQ2)"><rect x="90" y="124" width="280" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="230" y="150" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">📨 Sits in ONE queue</text>
+        <text x="230" y="170" text-anchor="middle" font-size="10.5" fill="#5b6472">a pool of consumers competes for it</text>
+
+        <path d="M230,184 V212" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrSQ2)"/>
+
+        <g filter="url(#shSQ2)"><rect x="90" y="212" width="280" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="230" y="238" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">👷 ONE consumer processes it</text>
+        <text x="230" y="258" text-anchor="middle" font-size="10.5" fill="#5b6472">message removed once processed</text>
+      </svg>
+      <figcaption>Only one consumer in the pool ever ends up handling a given message — the others were just competing for it.</figcaption>
+    </figure>
+
+    <figure class="diagram-card">
+      <svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+        <defs>
+          <filter id="shSN2" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+          </filter>
+          <marker id="arrSN2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+          </marker>
+        </defs>
+
+        <text x="230" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#334155" letter-spacing="0.3">🔀 SNS — FANNED OUT TO EVERYONE</text>
+
+        <g filter="url(#shSN2)"><rect x="90" y="36" width="280" height="60" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+        <text x="230" y="62" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">📤 Publisher sends to topic</text>
+        <text x="230" y="82" text-anchor="middle" font-size="10.5" fill="#5b6472">one message, one publish</text>
+
+        <path d="M230,96 V124" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrSN2)"/>
+
+        <g filter="url(#shSN2)"><rect x="90" y="124" width="280" height="60" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+        <text x="230" y="150" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">🔀 Copied to every subscriber</text>
+        <text x="230" y="170" text-anchor="middle" font-size="10.5" fill="#5b6472">copied, not shared or competed for</text>
+
+        <path d="M230,184 V212" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrSN2)"/>
+
+        <g filter="url(#shSN2)"><rect x="90" y="212" width="280" height="60" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+        <text x="230" y="238" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">📨 🖥️ 📧 Queue + Lambda + Email</text>
+        <text x="230" y="258" text-anchor="middle" font-size="10.5" fill="#5b6472">each gets its own independent copy</text>
+      </svg>
+      <figcaption>Every subscriber gets its own full copy of the same message — nobody is competing, and nobody misses out.</figcaption>
+    </figure>
+  </div>
+
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b>"SQS and SNS guarantee exactly-once processing."</b> Not by default —

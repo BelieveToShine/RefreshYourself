@@ -148,6 +148,84 @@
     <figcaption>Same three-child tree, twice — by default every child cascades when the parent re-renders; wrap one child in <code>React.memo</code> and only that child's cascade is blocked.</figcaption>
   </figure>
 
+  <div class="viz-label">🔍 What each one actually does <span class="viz-sub">— the real mechanic, not just the label</span></div>
+  <p style="margin:-4px 0 18px; font-size:14.5px; color:var(--ink-soft); max-width:640px;">"Render" and "commit" get used almost interchangeably in casual talk, but React treats them as two genuinely different phases with different rules. These two small diagrams show what each phase actually does.</p>
+
+  <div class="diagram-set-label">⚙️ Render Phase &amp; 🔒 Commit Phase</div>
+  <div class="diagram-row">
+    <figure class="diagram-card">
+      <svg viewBox="0 0 460 312" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+        <defs>
+          <filter id="shRendA" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+          </filter>
+          <marker id="arRendA" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+            <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+          </marker>
+        </defs>
+
+        <text x="230" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155" letter-spacing="0.3">⚙️ RENDER PHASE — BUILD &amp; DIFF, NO DOM YET</text>
+
+        <g filter="url(#shRendA)"><rect x="120" y="30" width="220" height="56" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="230" y="54" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Component fn() runs</text>
+        <text x="230" y="74" text-anchor="middle" font-size="10" fill="#5b6472">builds a new virtual tree</text>
+
+        <path d="M230,86 V132" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arRendA)"/>
+        <rect x="155" y="99" width="150" height="20" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.3"/>
+        <text x="230" y="113" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">diffs vs. previous</text>
+
+        <g filter="url(#shRendA)"><rect x="120" y="132" width="220" height="56" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+        <text x="230" y="156" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">Pausable</text>
+        <text x="230" y="176" text-anchor="middle" font-size="10" fill="#5b6472">can pause, discard, redo</text>
+
+        <path d="M230,188 V234" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arRendA)"/>
+        <rect x="155" y="201" width="150" height="20" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.3"/>
+        <text x="230" y="215" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">once settled</text>
+
+        <g filter="url(#shRendA)"><rect x="120" y="234" width="220" height="56" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+        <text x="230" y="258" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">No DOM touched</text>
+        <text x="230" y="278" text-anchor="middle" font-size="10" fill="#5b6472">purely in memory, still</text>
+      </svg>
+      <figcaption>React calls your component function(s) and diffs the result against the last tree — this is pure and interruptible, and nothing has reached the real DOM yet.</figcaption>
+    </figure>
+
+    <figure class="diagram-card">
+      <svg viewBox="0 0 460 312" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+        <defs>
+          <filter id="shRendB" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+          </filter>
+          <marker id="arRendB" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+            <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+          </marker>
+        </defs>
+
+        <text x="230" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155" letter-spacing="0.3">🔒 COMMIT PHASE — MUTATES THE REAL DOM</text>
+
+        <g filter="url(#shRendB)"><rect x="120" y="30" width="220" height="56" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+        <text x="230" y="54" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Diff applied to DOM</text>
+        <text x="230" y="74" text-anchor="middle" font-size="10" fill="#5b6472">real DOM mutated now</text>
+
+        <path d="M230,86 V132" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arRendB)"/>
+        <rect x="155" y="99" width="150" height="20" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.3"/>
+        <text x="230" y="113" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">then, sync</text>
+
+        <g filter="url(#shRendB)"><rect x="120" y="132" width="220" height="56" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+        <text x="230" y="156" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">Layout effects</text>
+        <text x="230" y="176" text-anchor="middle" font-size="10" fill="#5b6472">run synchronously</text>
+
+        <path d="M230,188 V234" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arRendB)"/>
+        <rect x="155" y="201" width="150" height="20" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.3"/>
+        <text x="230" y="215" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">after paint</text>
+
+        <g filter="url(#shRendB)"><rect x="120" y="234" width="220" height="56" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+        <text x="230" y="258" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">Can't stop partway</text>
+        <text x="230" y="278" text-anchor="middle" font-size="10" fill="#5b6472">once commit starts</text>
+      </svg>
+      <figcaption>Commit mutates the real DOM, then runs layout effects synchronously and regular effects after paint — once it starts, it runs to completion.</figcaption>
+    </figure>
+  </div>
+
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b>"A component only re-renders when its own state, props, or context changes — a parent re-rendering shouldn't affect a child whose own props didn't change."</b> By default it does — a parent re-rendering cascades to re-render every child too, even one whose own props are unchanged; <code>React.memo</code> is the specific, opt-in tool that breaks that cascade, not the default behavior.</p>
