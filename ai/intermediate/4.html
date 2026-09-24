@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>The natural next question after hybrid search — interviewers use it to check whether you know retrieval alone isn't the final answer.</li>
-        <li>One of the cheapest, highest-leverage ways to improve RAG answer quality without touching the retrieval pipeline at all.</li>
-        <li>Tests whether you understand the actual reason for a two-stage pipeline, not just that "rerankers exist."</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🔍 Retrieval (bi-encoder)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A query has to be compared against millions of chunks, and a precise query-and-doc-together comparison is too slow to run at that scale.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A bi-encoder embeds the query and every chunk separately, so ranking is just a quick distance check — cheap enough for the whole corpus, but only approximate.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Retrieval/bi-encoder = fast, approximate, runs over the whole corpus.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#166534; --why-bg:#dcfce7">
+          <div class="wc-head">🎯 Reranker (cross-encoder)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>The bi-encoder's approximate ranking can put a topically-close-but-wrong chunk on top — #1 by similarity isn't always #1 by real relevance.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A cross-encoder scores the query and each shortlisted chunk together, precise enough to flip the order — affordable only because it never runs past the small shortlist retrieval already produced.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Reranker/cross-encoder = slow, precise, shortlist only.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -233,6 +246,66 @@ top3 = sorted(scored, reverse=<span class="kw">True</span>)[:<span class="num">3
       </div>
       <p class="cx-note">Only ever runs on the 20 shortlisted candidates — never the full corpus.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> An interviewer asks why retrieval alone isn't the final answer</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">ONE MODEL CAN'T DO BOTH JOBS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">⚡ Fast bi-encoder narrows</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🎯 Slow cross-encoder refines</text>
+            </svg>
+          </div>
+          <p class="uc-what">This checks whether you know the two-stage split is deliberate, not accidental: retrieval's fast, approximate similarity check narrows millions of chunks down to a small shortlist, then the reranker re-scores just that shortlist far more precisely. One model can't affordably do both jobs at once.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Two stages exist because one model can't be both fast and precise.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#166534">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your top-ranked chunk by similarity isn't the one that actually answers the query</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#166534"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">RERANKER FLIPS THE ORDER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">📊 Vector top-1 (.81)</text>
+              <path d="M190,43 H290" stroke="#166534" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🎯 Reranked top-1 (.93)</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is exactly what the reranker step catches — retrieval's similarity score can rank a topically-close-but-wrong chunk above the one that actually answers the query, because the bi-encoder never looked at the query and the chunk together. The cross-encoder does, and can flip that order before the LLM ever sees the list.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Wrong chunk on top by similarity → let the reranker fix the order.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You consider running the cross-encoder over the whole corpus instead of a two-stage pipeline</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">TOO SLOW AT FULL SCALE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">📚 Millions of chunks</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🐌 Cross-encoder per pair</text>
+            </svg>
+          </div>
+          <p class="uc-what">A cross-encoder scores the query and one document together, so it can't be pre-computed or indexed like separate embeddings — checking it against millions of chunks per query would be far too slow. <b>A common trap</b> — candidates sometimes suggest skipping retrieval and relying on the reranker alone, missing why the shortlist step exists in the first place.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Cross-encoder never runs on the full corpus — only the shortlist.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

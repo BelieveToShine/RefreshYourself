@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Every single API call to an LLM carries these settings — this is baseline literacy before RAG, agents, or anything else in the track makes sense.</li>
-        <li>Directly explains why the same prompt can come back with a different answer twice, which is usually the first thing a skeptical stakeholder asks about.</li>
-        <li>A near-universal opening question in AI/GenAI interviews, right after "what is a token" and before anything about architecture comes up.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🌡️ Temperature</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without any control over next-token sampling, the exact same prompt can come back with a different answer on every single call, with no dial to choose repeatable output over varied output.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Temperature reshapes how flat the next-token probability curve is — near 0 greedily picks the single most likely token almost every time, higher values spread real odds across more candidates.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Temperature never changes which token is most likely — only how flat the curve looks before one gets picked.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🎯 Top-p (nucleus)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Top-p and top-k both trim which tokens are even in the running before temperature reshapes their odds, but a single fixed-size cutoff would apply the same-size trim no matter how peaked or flat that call's own distribution actually is.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Top-p keeps the smallest set of candidates whose combined probability crosses a threshold p — the pool size adapts token by token instead of staying fixed.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Top-p → keeps tokens until their combined probability crosses p — an adaptive cutoff.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+          <div class="wc-head">🔢 Top-k</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Computing a cumulative-probability threshold on every call is more moving parts than some use cases need — sometimes the goal is just a simple, predictable limit on how many candidates are even considered.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Top-k keeps a fixed number of the highest-probability candidates every time, regardless of how likely or unlikely that cut-off tail actually is — a simple, blunt way to trim it.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Top-k → keeps only the k most likely tokens — a fixed-size cutoff either way.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -131,6 +152,43 @@
       <text x="580" y="262" text-anchor="middle" font-size="11" fill="#5b6472">vast</text>
     </svg>
     <figcaption>Temperature doesn't change which token is most likely — it changes how flat that curve looks before one gets picked. Top-p and top-k decide which tokens are even in the running before temperature is ever applied.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 190" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="aiShadow2" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">SAME 5 CANDIDATES — TWO WAYS TO TRIM THE POOL</text>
+
+      <!-- left zone: top-p, adaptive cutoff -->
+      <rect x="10" y="30" width="300" height="135" rx="14" fill="#f0fdfa" stroke="#5eead4" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <text x="160" y="46" text-anchor="middle" font-size="12" font-weight="800" fill="#0f766e">🎯 TOP-P — ADAPTIVE POOL</text>
+      <text x="160" y="62" text-anchor="middle" font-size="10.5" fill="#5b6472">keeps candidates until p = 0.9</text>
+
+      <g filter="url(#aiShadow2)"><rect x="45" y="78" width="30" height="70" rx="6" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow2)"><rect x="95" y="104" width="30" height="44" rx="6" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow2)"><rect x="145" y="118" width="30" height="30" rx="6" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow2)"><rect x="195" y="126" width="30" height="22" rx="6" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow2)"><rect x="245" y="134" width="30" height="14" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="4 3" opacity="0.75"/></g>
+      <line x1="235" y1="72" x2="235" y2="158" stroke="#0f766e" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.6"/>
+
+      <!-- right zone: top-k, fixed cutoff -->
+      <rect x="330" y="30" width="300" height="135" rx="14" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <text x="480" y="46" text-anchor="middle" font-size="12" font-weight="800" fill="#b91c1c">🔢 TOP-K — FIXED POOL</text>
+      <text x="480" y="62" text-anchor="middle" font-size="10.5" fill="#5b6472">always keeps exactly k = 3</text>
+
+      <g filter="url(#aiShadow2)"><rect x="365" y="78" width="30" height="70" rx="6" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow2)"><rect x="415" y="104" width="30" height="44" rx="6" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow2)"><rect x="465" y="118" width="30" height="30" rx="6" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.8"/></g>
+      <g filter="url(#aiShadow2)"><rect x="515" y="126" width="30" height="22" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="4 3" opacity="0.75"/></g>
+      <g filter="url(#aiShadow2)"><rect x="565" y="134" width="30" height="14" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="4 3" opacity="0.75"/></g>
+      <line x1="505" y1="72" x2="505" y2="158" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.6"/>
+    </svg>
+    <figcaption>Same 5 ranked candidates on both sides. Top-p keeps as many as it needs to cross 90% combined probability — 4 here. Top-k always keeps exactly k, 3 here, even though the 4th candidate is still fairly likely.</figcaption>
   </figure>
 
   <div class="trap">
@@ -202,6 +260,75 @@
       </div>
       <p class="cx-note">Good for brainstorming — you want a different, creative option each call, not the same tagline twice.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your classification or extraction endpoint returns a different label for the exact same input on two separate calls</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="15" y="14" width="185" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="107" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">SAME INPUT, TWICE</text>
+              <path d="M200,33 H278" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arUc1)"/>
+              <rect x="280" y="14" width="185" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="372" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">temp &gt; 0 → label may differ</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into — check the temperature setting first. Anything above 0 means the greedy, near-deterministic pick isn't guaranteed, so a different plausible token can win on the next call. Setting temperature to 0 (or very low) is the fix for any task that needs the same input to reliably produce the same output — though even at 0, most providers still don't promise bit-for-bit identical output every single call.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Inconsistent output on the same input → check temperature first, set it to 0 for reliability.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> You ask for a creative tagline or brainstorm idea, and want a different, fresh option every time you call it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+                </marker>
+              </defs>
+              <rect x="15" y="14" width="185" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="107" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">SAME PROMPT, TWICE</text>
+              <path d="M200,33 H278" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arUc2)"/>
+              <rect x="280" y="14" width="185" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="372" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">temp 0.9 → wording varies</text>
+            </svg>
+          </div>
+          <p class="uc-what">Good for brainstorming — raising temperature spreads real odds across more candidates, so the same prompt can land on a different, still-plausible wording each call instead of repeating the same tagline.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Want variety, not consistency → raise temperature, no need to touch top-p.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your prompt plus the expected completion is long enough that you're worried about going over the context window</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#6d28d9"/>
+                </marker>
+              </defs>
+              <rect x="15" y="14" width="185" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="107" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">CONVERSATION KEEPS GROWING</text>
+              <path d="M200,33 H278" fill="none" stroke="#6d28d9" stroke-width="1.8" marker-end="url(#arUc3)"/>
+              <rect x="280" y="14" width="185" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="372" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#6d28d9">over window → truncated/error</text>
+            </svg>
+          </div>
+          <p class="uc-what">Go over the context window and the call gets truncated or rejected outright — the model can't attend to tokens beyond that limit, so a long conversation needs older turns trimmed or summarized before the next call.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Context window overflow → trim or summarize older turns before the next call.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Tests whether you reach for the simplest tool that fits, instead of building an agent by default — a real, common over-engineering judgment call.</li>
-        <li>Framed as an architecture question ("would you use an agent here, or just a pipeline?"), not a plain "what is ReAct" definition ask.</li>
-        <li>Separates candidates who can reason about cost, latency, and predictability tradeoffs from ones who just know the buzzword.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔁 Agent Loop (ReAct)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Sometimes the right next step genuinely can't be known ahead of time — a support bot checking account status doesn't know yet whether it'll also need billing history until it sees that first result.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The model reasons about what to do next, acts (usually a tool call), observes the result, then reasons again on that new information — repeating until it decides it has enough to answer.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">ReAct = Reason → Act → Observe, repeated until the model decides it's done.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">➡️ Fixed Chain</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Reaching for a full agent loop "just in case," when the sequence of steps is already known and never varies, spends extra reasoning and tool-call cycles deciding something you already know — pure overhead.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The developer hard-codes the sequence once, up front — always retrieve, then summarize, then format — which is cheaper, more predictable, and easier to test since the order never changes.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Fixed chain = developer decides the steps once, up front — same order every time.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -223,6 +236,66 @@ answer = format(summary)    <span class="cx-cmt"># always format last</span></co
       </div>
       <p class="cx-note">The sequence itself is hard-coded — no step here decides what runs next.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> The next step depends on what the previous step actually returns</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">NOT KNOWN AHEAD OF TIME</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">📋 Account status: ambiguous</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🧠 Model decides live</text>
+            </svg>
+          </div>
+          <p class="uc-what">A support bot that checks account status and only then decides, based on what it sees, whether it also needs billing history is a genuine agent case — the second lookup only happens depending on the first result. This is the case an agent loop actually earns its extra cost.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Next step depends on what you find → agent loop.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#92400e">
+          <div class="uc-sit"><span class="uc-flag">2</span> The workflow runs the exact same steps, in the exact same order, every time</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#92400e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">KNOWN AHEAD OF TIME</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">📥 Always fetch order status</text>
+              <path d="M190,43 H290" stroke="#92400e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🧾 Always format same reply</text>
+            </svg>
+          </div>
+          <p class="uc-what">A bot that always fetches order status and always formats the same reply, in the same order, for every ticket doesn't need any live decision-making. A hard-coded fixed chain does the same job for less cost, with nothing extra to decide.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same steps, same order, every time → fixed chain.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You reach for a full agent loop "just in case," even though the sequence never varies</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">SEQUENCE ALREADY KNOWN</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">✅ Steps never vary</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🔁 Agent loop anyway</text>
+            </svg>
+          </div>
+          <p class="uc-what">If the real sequence of steps is already known and doesn't vary per request, a fixed chain is simpler, cheaper, and easier to test — the extra reasoning and tool-call cycles an agent spends deciding something you already know are pure overhead. <b>A common trap</b> — candidates often assume reaching for a loop is the safer default.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Known sequence + agent loop anyway → over-engineering.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

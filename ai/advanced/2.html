@@ -64,14 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Human review of every LLM output doesn't scale to the volume needed for continuous
-        testing and monitoring — LLM-as-judge is how most teams close that gap.</li>
-        <li>A frequent senior/staff follow-up the moment someone says "we use an LLM to grade our
-        LLM" — it checks whether they know the scoring can't just be trusted blindly.</li>
-        <li>Directly relevant to anyone building an eval pipeline, a CI quality gate, or a
-        production quality dashboard on top of an LLM feature.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🧑‍⚖️ LLM-as-Judge</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Human review of every LLM output doesn't scale to the volume continuous testing and monitoring need, and a rules-based or exact-match check can't capture nuanced quality like tone, faithfulness, or helpfulness.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>LLM-as-judge uses another LLM to score outputs at far higher throughput than a human — but real biases (favoring longer or more confident-sounding answers, or flipping its verdict when the same two answers are shown in a different order) mean its scores only earn trust once checked against a human-labeled sample.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">LLM-as-judge scales evaluation — but its own score still needs checking against real human judgment.</span></div>
+      </div>
     </div>
   </details>
 
@@ -251,6 +251,66 @@ verdict_2 = judge_model.compare(answer_B, answer_A)  <span class="cx-cmt"># "Ans
       <p class="cx-note">Swapping which answer is shown first changed the winner, even though
       neither answer's actual content changed at all — that's position bias.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> The judge is comparing two candidate answers side by side and picking a winner</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">PAIRWISE COMPARE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🅰️ shown first → wins</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🔀 order swapped → 🅱️ wins</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into. The exact same two answers, shown in the opposite order, come back with the opposite winner — that's position bias, not a quality difference between the answers.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same two answers, different order → different verdict is a bias, not a real signal.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> You take a single 1-5 correctness score from the judge as the final word</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">ABSOLUTE SCORE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">📝 Long, confident answer</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">⭐ Scores higher anyway</text>
+            </svg>
+          </div>
+          <p class="uc-what">A longer or more confident-sounding answer can pull the judge's score up even when it isn't actually more correct — the same bias the trap box calls out, just showing up as one number instead of a pairwise flip.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Longer/more confident ≠ more correct — the judge can be fooled the same way a rushed reviewer can.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> An LLM judge feeds a CI quality gate or a production quality dashboard</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#115e59" letter-spacing=".03em">CI / DASHBOARD</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#115e59">📊 "95% pass rate"</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#115e59">❓ never checked vs. humans</text>
+            </svg>
+          </div>
+          <p class="uc-what">The number on the dashboard looks trustworthy just because it's a number — but an unvalidated judge is just a different guesser. It only means something once a smaller human-labeled sample has been scored too and shown to actually correlate.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A pass rate from an unvalidated judge isn't a quality number yet.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

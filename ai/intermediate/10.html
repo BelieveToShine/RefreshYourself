@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Tests whether you know isolation has to happen at the retrieval/vector-store layer itself, not by trusting the prompt to behave.</li>
-        <li>A real, dangerous mistake in production multi-tenant SaaS-style RAG systems — a leak here is a security incident, not just a quality bug.</li>
-        <li>A natural follow-up right after any RAG-pipeline or vector-DB question, the moment the system involves more than one customer.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔐 Multi-Tenant Retrieval Isolation</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Every tenant's chunks sit in the same shared vector index, so a similarity search run for Tenant A's question can come back holding a chunk that belongs to Tenant B — and if that chunk reaches the prompt, the model reads it regardless of what the prompt instructs. That's a security incident, not a quality bug.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Tag every chunk with a tenant identifier as metadata at ingest time, then apply that tenant filter inside the vector-store search itself — so the wrong tenant's vectors are never compared against, scored, or returned in the first place.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Isolation = filter by tenant_id inside the search itself — never after retrieval, and never left to the prompt.</span></div>
+      </div>
     </div>
   </details>
 
@@ -204,6 +207,81 @@ results = index.query(
       </div>
       <p class="cx-note">Tenant B's vectors are never compared against or scored — the filter runs inside the search, not after it.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're ingesting a new document chunk into the shared vector index</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="ucArr1" markerWidth="8" markerHeight="8" refX="6" refY="2.5" orient="auto">
+                  <path d="M0,0 L6,2.5 L0,5 Z" fill="#0f766e"/>
+                </marker>
+              </defs>
+              <rect x="10" y="8" width="170" height="50" rx="10" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="95" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#115e59">📥 New chunk + vector</text>
+              <text x="95" y="46" text-anchor="middle" font-size="9.5" fill="#5b6472">arrives at ingest time</text>
+              <path d="M180,33 H300" fill="none" stroke="#0f766e" stroke-width="1.6" marker-end="url(#ucArr1)"/>
+              <rect x="300" y="8" width="170" height="50" rx="10" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="385" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#115e59">🏷️ tenant_id stored</text>
+              <text x="385" y="46" text-anchor="middle" font-size="9.5" fill="#5b6472">as metadata, right alongside it</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the moment the whole isolation scheme depends on — the tenant ID goes on as metadata right alongside the vector, exactly like the ingest code above. There's nothing to add later; the tag travels with the chunk from the moment it's stored.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Tag at ingest, not afterward — tenant_id is metadata stored with the vector itself.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> A tenant's query runs a similarity search against the shared index</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="ucArr2" markerWidth="8" markerHeight="8" refX="6" refY="2.5" orient="auto">
+                  <path d="M0,0 L6,2.5 L0,5 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="10" y="8" width="170" height="50" rx="10" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🔎 Tenant A's query</text>
+              <text x="95" y="46" text-anchor="middle" font-size="9.5" fill="#5b6472">filter attached to the call</text>
+              <path d="M180,33 H300" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#ucArr2)"/>
+              <rect x="300" y="8" width="170" height="50" rx="10" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">✅ Filtered inside search</text>
+              <text x="385" y="46" text-anchor="middle" font-size="9.5" fill="#5b6472">Tenant B never scored</text>
+            </svg>
+          </div>
+          <p class="uc-what">The filter is passed into the vector-store query call itself, exactly like the retrieval code above — so Tenant B's vectors are never compared against, scored, or returned. This search call is the actual security boundary.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">The filter runs inside the search — that's the real security boundary, not a step after it.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Someone suggests just telling the model in the prompt to "only answer about Tenant A's data"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="ucArr3" markerWidth="8" markerHeight="8" refX="6" refY="2.5" orient="auto">
+                  <path d="M0,0 L6,2.5 L0,5 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="10" y="8" width="170" height="50" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="95" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">📝 Prompt says "Tenant A only"</text>
+              <text x="95" y="46" text-anchor="middle" font-size="9.5" fill="#5b6472">context already has Tenant B</text>
+              <path d="M180,33 H300" fill="none" stroke="#dc2626" stroke-width="1.6" marker-end="url(#ucArr3)"/>
+              <rect x="300" y="8" width="170" height="50" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="385" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🚫 Still reads it</text>
+              <text x="385" y="46" text-anchor="middle" font-size="9.5" fill="#5b6472">leak already happened</text>
+            </svg>
+          </div>
+          <p class="uc-what">If the retrieved context already contains Tenant B's chunks, the model reads them regardless of what the prompt instructs — the leak already happened at retrieval, before the prompt ever ran. Prompt instructions are not a security boundary.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Prompt wording can't undo a leak that already happened at retrieval.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

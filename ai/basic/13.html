@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Token count is what an LLM API actually bills and limits — not the word count a person would naturally guess just by looking at the text.</li>
-        <li>A frequent practical "gotcha" question in GenAI interviews, because it checks whether you understand what the model is really processing, not just prompting syntax.</li>
-        <li>Multilingual products can blow through context limits or cost far more than expected, purely because of which language the input happens to be in.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔤 Tokenizer</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>An LLM API bills and limits by token count, not word count — and a subword tokenizer can split one ordinary word into several tokens, so a word-based estimate can quietly run over budget or over the context window, especially outside English.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Run the exact text through the model's real tokenizer, or the API's token-counting endpoint, and use that count directly — it's the number that actually gets billed and limited, never a word-count guess.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Tokenizer = the real word-to-piece cutter an LLM bills and limits by — always count tokens directly, never estimate from words.</span></div>
+      </div>
     </div>
   </details>
 
@@ -262,6 +265,78 @@ token_count = len(encoder.encode(prompt)) <span class="cx-ok"># ✅ what actuall
       </div>
       <p class="cx-note">Same string, two different numbers — the tokenizer's count is the one that actually determines billing and context usage, not the word split.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're estimating API cost by counting words in the prompt</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcTok1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">WORD COUNT vs TOKEN COUNT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">📝 3 words</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcTok1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🔤 4 tokens</text>
+            </svg>
+          </div>
+          <p class="uc-what">A subword tokenizer can split one ordinary word into several tokens
+          — the exact case this page's main diagram shows with "tokenization" splitting into
+          "token" + "ization" — so a word-count estimate usually lands lower than the real,
+          billed token count, even in English.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Word count → usually undercounts the real token cost.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your product handles non-English or low-resource-language input</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcTok2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">SAME MEANING, MORE PIECES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">💬 Same sentence</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcTok2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🌐 Non-English</text>
+              <text x="375" y="50" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">more tokens needed</text>
+            </svg>
+          </div>
+          <p class="uc-what">The tokenizer's vocabulary was shaped by whatever text it was
+          trained on, usually weighted toward English — so the exact same meaning in a
+          less-represented language or script needs more, smaller tokens, costing more and
+          eating more of the context window for no extra meaning. <b>This is the scenario that
+          blows up an unwary cost estimate the most.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Non-English input → often more tokens for the same meaning.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You need to know if a prompt will actually fit inside the context window before sending it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcTok3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">COUNT DIRECTLY, NEVER GUESS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">📝 Prompt text</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUcTok3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e">🧮 Real tokenizer</text>
+              <text x="375" y="50" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0f766e">exact count</text>
+            </svg>
+          </div>
+          <p class="uc-what">Run the exact text through the model's real tokenizer, or the API's
+          token-counting endpoint — the same approach this page's code example uses — and use
+          that exact count to check cost or context-window fit, rather than approximating from
+          word or character counts.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Checking context fit → count with the real tokenizer, never estimate.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

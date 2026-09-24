@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Almost every RAG, semantic-search, or deduplication system is built on top of this — you can't explain retrieval without explaining what a vector actually represents.</li>
-        <li>It's the foundation an interviewer checks before asking anything about vector databases or nearest-neighbor indexes.</li>
-        <li>Mixing up an embedding call with a chat completion call is an easy, revealing mistake — this checks whether you actually know what's happening under the hood.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔢 Embedding call</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Search, clustering, and dedup all need a fast, comparable score for "how close in meaning are these two pieces of text" — not a written-out answer.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An embedding call skips generation entirely: one forward pass turns text into one fixed-length vector, and cosine similarity scores how close two of those vectors are.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Embedding call = one forward pass → one static vector, used for search/similarity — not for generating text.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">💬 Chat completion call</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Getting an actual answer, summary, or reply back is impossible from a single static vector — a vector has no words in it to read.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A chat completion call runs autoregressively, generating a stream of tokens one at a time until it has produced the actual reply.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Chat completion call = token-by-token generation of new text — not a static representation of meaning.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -204,6 +217,66 @@
       </div>
       <p class="cx-note">Once both vectors are unit length, cosine similarity is just their dot product.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're building semantic search or RAG retrieval over a set of documents</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">SEMANTIC SEARCH / RAG</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">📄 Docs + query</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🎯 Ranked by cosine sim.</text>
+            </svg>
+          </div>
+          <p class="uc-what">You call <code>embed()</code> once per document (and again for the query), then rank by cosine similarity — the same "sneakers" vs. "running shoes" example on this page: no shared words, but close vectors surface the match a keyword search misses.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Semantic search = embed() + cosine similarity ranking, not a chat completion call.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You need to flag near-duplicate text — e.g. two support tickets describing the same issue in different words</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">DEDUP / CLUSTERING</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🗂️ Two items, embedded</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🔁 Close → flag duplicate</text>
+            </svg>
+          </div>
+          <p class="uc-what">Embed each item and compare vectors with cosine similarity — pairs above a similarity threshold get flagged as duplicates. This is the same clustering/dedup use from this page's keypoints list, all built on comparing static vectors — no reply ever gets generated.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Dedup/clustering = compare embedding vectors, never a generated reply.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> A user actually needs a written answer back — a summary, an explanation, a generated reply</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">NEED A WRITTEN REPLY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">💬 Prompt</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">📝 Streamed tokens → reply</text>
+            </svg>
+          </div>
+          <p class="uc-what">That's a chat completion call, not an embedding call — the model generates a stream of tokens autoregressively until it has produced actual words to read, the exact opposite job of the embedding call's single static vector.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need words back → chat completion call; need a comparable score → embedding call.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

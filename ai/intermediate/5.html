@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Checks whether you understand why exact nearest-neighbor search doesn't scale, and what an ANN index actually trades away to fix that.</li>
-        <li>Comes up any time a RAG or search system-design question goes one layer deeper than "it searches embeddings."</li>
-        <li>The vector-DB-choice question (pgvector vs. a dedicated store) almost always follows right behind it.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🕸️ HNSW</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A flat collection of millions of vectors has no shortcut — comparing the query against each one to find the true nearest neighbors is accurate, but the cost grows directly with the size of the collection.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>HNSW builds a multi-layer graph and walks it from a coarse, sparse top layer down to finer, denser layers, following edges straight to a small set of near-neighbor candidates instead of touching the whole collection.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">HNSW = multi-layer graph, walk coarse → fine to reach candidates.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🪣 IVF</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Same full-scan cost problem — without some way to skip most of the collection upfront, a query still ends up touching nearly everything stored.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>IVF clusters vectors into buckets ahead of time; at query time it only searches the handful of buckets closest to the query, skipping the rest of the collection entirely instead of walking a graph node by node.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">IVF = cluster into buckets, search only the nearest few.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -191,6 +204,64 @@
     <figcaption>Every ANN index exposes a tunable knob trading search speed against recall — how likely it is to actually find the true nearest neighbors.</figcaption>
   </figure>
 
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="cardShadow3" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arrGreen3" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arrAmber3" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">🕸️ HNSW GRAPH vs 🪣 IVF BUCKETS — different shortcuts</text>
+
+      <path d="M320,30 V210" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+
+      <!-- LEFT: HNSW -->
+      <g filter="url(#cardShadow3)"><rect x="50" y="40" width="230" height="34" rx="16" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="165" y="62" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🕸️ HNSW — graph index</text>
+
+      <path d="M165,74 V94" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arrGreen3)"/>
+
+      <g filter="url(#cardShadow3)"><rect x="55" y="94" width="220" height="90" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <circle cx="165" cy="125" r="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+      <circle cx="100" cy="135" r="7" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+      <circle cx="230" cy="135" r="7" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+      <circle cx="140" cy="170" r="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+      <circle cx="195" cy="170" r="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+      <path d="M165,125 L100,135" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+      <path d="M165,125 L230,135" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+      <path d="M100,135 L140,170" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+      <path d="M230,135 L195,170" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+
+      <text x="165" y="200" text-anchor="middle" font-size="10.5" fill="#5b6472">follows graph edges to a few candidates</text>
+
+      <!-- RIGHT: IVF -->
+      <g filter="url(#cardShadow3)"><rect x="360" y="40" width="230" height="34" rx="16" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="475" y="62" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🪣 IVF — bucket index</text>
+
+      <path d="M475,74 V94" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arrAmber3)"/>
+
+      <g filter="url(#cardShadow3)"><rect x="365" y="94" width="220" height="90" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <circle cx="475" cy="140" r="18" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+      <circle cx="468" cy="135" r="2.5" fill="#d97706"/><circle cx="482" cy="142" r="2.5" fill="#d97706"/><circle cx="472" cy="148" r="2.5" fill="#d97706"/>
+      <circle cx="420" cy="160" r="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+      <circle cx="416" cy="157" r="2" fill="#94a3b8"/><circle cx="424" cy="163" r="2" fill="#94a3b8"/>
+      <circle cx="530" cy="160" r="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+      <circle cx="526" cy="157" r="2" fill="#94a3b8"/><circle cx="534" cy="163" r="2" fill="#94a3b8"/>
+
+      <text x="475" y="200" text-anchor="middle" font-size="10.5" fill="#5b6472">only the nearest bucket gets searched</text>
+
+      <text x="320" y="228" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Both skip the full scan — just a different shortcut.</text>
+    </svg>
+    <figcaption>HNSW hops across graph edges to reach a small candidate set; IVF skips straight to the nearest pre-built bucket instead of walking a graph — two different structures aiming at the same goal.</figcaption>
+  </figure>
+
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b>ANN doesn't mean "unreliable."</b> It means trading a small, tunable amount of recall for a large speedup — widen the search parameters and it gets closer to exact, at the cost of latency. It's a dial, not a broken shortcut.</p>
@@ -266,6 +337,66 @@ results = index.search(
       </div>
       <p class="cx-note">Same call carries the metadata filter — a normal part of a real vector search query, not an add-on.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A vector DB's docs describe its index as navigating a graph, coarse layer down to fine layer</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">LAYER BY LAYER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">📄 "coarse → fine graph"</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🕸️ HNSW</text>
+            </svg>
+          </div>
+          <p class="uc-what">"Multi-layer graph, coarse-to-fine navigation" is HNSW's own shape — the search walks graph edges down to a small candidate set instead of scanning everything stored.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Layer-by-layer graph walk → HNSW.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#92400e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A vector DB's docs describe vectors already grouped into clusters, and only the nearest ones get searched</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#92400e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">CLUSTERS / BUCKETS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">📄 "clusters, nearest ones"</text>
+              <path d="M190,43 H290" stroke="#92400e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🪣 IVF</text>
+            </svg>
+          </div>
+          <p class="uc-what">"Vectors clustered into buckets, only the closest few searched" is IVF's own shape — it skips straight to the nearest pre-built buckets instead of walking a graph.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Clusters/buckets, nearest ones only → IVF.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A search occasionally misses a true nearest neighbor, and it looks like the index is just broken</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">MISSED MATCH</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">❓ true match not found</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🎛️ widen the dial</text>
+            </svg>
+          </div>
+          <p class="uc-what">It isn't broken — every ANN index (HNSW or IVF) trades a small, tunable amount of recall for speed. Widening the search parameter moves it closer to exact-search accuracy, at the cost of some latency. <b>A common trap</b> — candidates often assume a missed match means the index is unreliable.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Missed match → widen the recall/latency dial, don't assume it's broken.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

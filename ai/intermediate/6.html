@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Tests the single most common misconception about tools/agents — that the model itself runs the function. It never does.</li>
-        <li>Comes up any time you're asked to design a chatbot, agent, or MCP-style integration that needs to act on real systems.</li>
-        <li>The guard question — "what if the model calls a real tool with the wrong arguments?" — is a very common production-risk follow-up.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+        <div class="wc-head">🚧 Execution Boundary</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Assuming the model itself runs the function hides the one place a wrong or adversarially-manipulated tool call actually needs to be caught — a design (or interview answer) built on that assumption skips the guard a side-effecting tool needs before it ever runs.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Tool calling is a loop where the model only ever returns a structured request — name + arguments — and your own code is the one thing that ever actually executes it, which is exactly where a guard belongs before any side-effecting call runs.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Tool calling = the model asks, your code decides whether to run it.</span></div>
+      </div>
     </div>
   </details>
 
@@ -230,6 +233,66 @@ next_response = model.chat(messages, tools=[send_email_schema])</code></pre>
       </div>
       <p class="cx-note">The guard sits entirely in your own code — the model only ever sees the schema and whatever result you choose to send back.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> You see the model return a tool call for send_email and assume the email already went out</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">MODEL RETURNS A REQUEST</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🤖 Requests send_email</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🛑 Not run yet</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 misconception you'll actually run into. The model only ever returned a structured request naming the tool and its arguments — nothing has actually executed. Your own code is the one thing that ever runs the real call, and until it does, no email has been sent.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A tool call is a request, not a receipt — nothing ran yet.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your task needs more than one tool — check inventory, then place the order</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">RESULT FED BACK, LOOP CONTINUES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">📩 Result → model</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🔁 Requests next tool</text>
+            </svg>
+          </div>
+          <p class="uc-what">Each tool's result gets fed back to the model as another message, and the model decides from there whether to answer or request another tool — the request → execute → feed-back cycle repeats as many times as the task genuinely needs.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Multi-step task → the loop repeats until the model has enough to answer.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> The tool call is for something side-effecting — refund_payment, delete_record — and it's tempting to just run whatever the model asked for</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">SIDE-EFFECTING TOOL, NO GUARD</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🤖 Requests delete_record</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">💥 Runs unguarded</text>
+            </svg>
+          </div>
+          <p class="uc-what">The model can propose an incorrect call, or even an adversarially-manipulated one, so running it on blind trust is a real production risk. Add an explicit guard — human confirmation, a restricted scope, or argument validation — before the real call runs.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Side-effecting tool → guard it before it runs, never blind trust.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

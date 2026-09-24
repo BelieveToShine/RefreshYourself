@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Tests whether you actually know vector search's real blind spot — exact identifiers and rare technical terms an embedding model never learned to represent well.</li>
-        <li>Comes up any time someone challenges "why not just use embeddings for everything" in a RAG system design.</li>
-        <li>A very common follow-up right after a chunking or RAG-pipeline question, since retrieval quality is the layer everything downstream depends on.</li>
-      </ul>
+      <div class="why-grid" style="grid-template-columns:1fr">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔑 Keyword Search (BM25)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>An exact identifier like a SKU or error code can land poorly in an embedding model's similarity space, so a search that only compares meaning can miss the one document that actually contains it.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Keyword/BM25 matches exact, lexical term overlap — it reliably finds a document that contains the literal code or rare technical term, regardless of how good the embedding model is.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Keyword (BM25) = exact lexical match — the fix for identifiers embeddings miss.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🧭 Vector Search (semantic)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A user question phrased in completely different words than the source document shares no lexical overlap with it, so a purely keyword-based search finds nothing at all.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Vector search matches on meaning in the embedding's similarity space, so it still surfaces conceptually related content even when the exact wording is totally different.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Vector (semantic) = meaning match — the fix for paraphrases keyword search misses.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#166534; --why-bg:#dcfce7">
+          <div class="wc-head">🎯 Hybrid</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Keyword and vector search each have an opposite blind spot — picking only one guarantees missing whichever failure mode that method has, and no amount of embedding-model improvement closes vector's exact-match gap.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Hybrid search runs both searches on the same query and combines their result sets, so it covers both failure modes at once — exactly why it frequently beats either method alone.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Hybrid = run both, then combine — covers both blind spots at once.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -190,6 +211,75 @@ results = combine(keyword_hits, vector_hits)  <span class="cx-ok"># ✅ covers b
       </div>
       <p class="cx-note">Both searches run on the exact same query — the fusion step is what actually makes it "hybrid," not just running two searches side by side.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your query includes an exact SKU, error code, or rare identifier</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">👤 query: "SKU AX-2091"</text>
+              <path d="M212,33 H262" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arUc1)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">🔑 finds exact SKU/code</text>
+            </svg>
+          </div>
+          <p class="uc-what">Vector search's embedding space can under-represent an exact identifier no matter how good the model is, so relying on vector search alone risks missing the document that actually contains it — keyword/BM25 matches the literal text and finds it reliably. This is the scenario that motivates running keyword search at all in a RAG system.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Exact identifiers → lean on keyword matching, not just embeddings.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your user asks for the same thing your docs describe, but in completely different words</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#d97706"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">👤 query: "money back?"</text>
+              <path d="M212,33 H262" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arUc2)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🧭 finds "Refund Process"</text>
+            </svg>
+          </div>
+          <p class="uc-what">Keyword search finds nothing useful here because the query and the source document share no lexical overlap — vector search matches on meaning instead, so it still surfaces the right document even though the wording is totally different.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Reworded query, no shared words → vector search is what actually finds it.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You assume a bigger, better embedding model will fix a missed exact match</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">📈 bigger embedding model</text>
+              <path d="M212,33 H262" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arUc3)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🐛 still misses exact code</text>
+            </svg>
+          </div>
+          <p class="uc-what">It won't — an exact identifier like a SKU or error code can still land poorly in any embedding model's similarity space, no matter how good that model is. That's a job for keyword matching, not a bigger-model fix.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Better embeddings don't fix missed exact matches — that gap needs keyword search.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

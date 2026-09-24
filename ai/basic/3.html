@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Checks whether you understand what "training an LLM" actually means, not just that it "read a lot of text."</li>
-        <li>Explains why a raw <code>base</code> checkpoint downloaded from a model hub behaves so differently from a <code>chat</code>/<code>instruct</code> model of the same size.</li>
-        <li>A common opener whenever RLHF, SFT, DPO, "base model," or "aligned model" comes up — this one pipeline explains all of those terms at once.</li>
-      </ul>
+      <div class="why-grid" style="grid-template-columns:1fr">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📚 Pretraining</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A model that hasn't been trained yet has no grasp of language at all — not even next-word prediction, let alone facts or style.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Self-supervised training predicts the next token over massive raw text, with no human labeling, producing a base model that's fluent but has no habit of following instructions.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Pretraining = self-supervised next-token prediction on raw text → the base model.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🧑‍🏫 SFT (Instruction-Tuning)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A base model completes text fluently but has no built-in habit of answering a question or following an instruction, since nothing in raw text specifically taught it to do that.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Instruction-tuning (SFT) trains the base model on curated instruction → ideal-response pairs, teaching it the actual shape of a helpful, chat-formatted answer.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">SFT = trains on instruction→answer pairs → the model starts following instructions.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#166534; --why-bg:#dcfce7">
+          <div class="wc-head">🧭 RLHF / DPO</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Following instructions isn't the same as answering the way people actually prefer — and running this stage straight after pretraining fails, since there's no reliable instruction-following behavior yet to align.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>RLHF trains a reward model on human preference judgments then runs reinforcement learning against it; DPO skips that, training directly on chosen-vs-rejected pairs with no reward model and no RL loop.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">RLHF/DPO = aligns to human preference, from chosen-vs-rejected pairs.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -188,6 +209,77 @@ chat = AutoModelForCausalLM.from_pretrained(<span class="str">"acme-model-8b-ins
       </div>
       <p class="cx-note">✅ <code>chosen</code> is the response a human rater preferred; ❌ <code>rejected</code> is the one they preferred less — this pair, not a single "correct" answer, is what RLHF's reward model and DPO both train on.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You download a "base" checkpoint and ask it a direct question.</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="10" y="15" width="170" height="36" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">📚 Base model</text>
+              <rect x="300" y="15" width="170" height="36" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">❌ Rambles, ignores it</text>
+              <path d="M180,33 H300" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#arUc1)"/>
+            </svg>
+          </div>
+          <p class="uc-what">It was only pretrained — self-supervised next-token prediction over raw text — so it just continues text in a plausible style instead of actually answering; it was never taught the habit of following an instruction. This is the #1 scenario you'll actually run into with a raw base checkpoint.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">"base" checkpoint = pretrained only → no instruction-following habit yet.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> You see the same model shipped as both a "base" and an "-instruct"/"-chat" checkpoint.</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#0f766e"/>
+                </marker>
+              </defs>
+              <rect x="10" y="15" width="170" height="36" rx="9" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">acme-8b (base)</text>
+              <rect x="300" y="15" width="170" height="36" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.5"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">acme-8b-instruct</text>
+              <path d="M180,33 H300" fill="none" stroke="#0f766e" stroke-width="1.6" marker-end="url(#arUc2)"/>
+              <text x="240" y="10" text-anchor="middle" font-size="9.5" fill="#0f766e" font-weight="600">+SFT, +RLHF/DPO</text>
+            </svg>
+          </div>
+          <p class="uc-what">Same underlying weights on both sides — the "-instruct"/"-chat" version is that base model after instruction-tuning and, usually, RLHF or DPO on top, which is why it follows instructions and the base doesn't.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same weights, different stages completed → "-instruct" = base + SFT (+ RLHF/DPO).</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A teammate suggests skipping instruction-tuning and jumping straight from pretraining to RLHF/DPO to save a step.</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="10" y="15" width="170" height="36" rx="9" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">📚 Pretraining</text>
+              <rect x="300" y="15" width="170" height="36" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🧭 RLHF/DPO</text>
+              <path d="M180,33 H300" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arUc3)"/>
+              <text x="240" y="10" text-anchor="middle" font-size="9.5" fill="#dc2626" font-weight="700">❌ skips SFT</text>
+            </svg>
+          </div>
+          <p class="uc-what">It doesn't work — the base model was never taught to follow instructions or hold a chat format, so there's no reliable instruction-following behavior yet for RLHF/DPO to align.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Order is fixed → pretrain → instruction-tune → RLHF/DPO, never skip a stage.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

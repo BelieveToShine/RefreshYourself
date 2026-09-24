@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Estimating the cost of any LLM feature means pricing input and output separately — get this backwards and a cost estimate can be badly wrong.</li>
-        <li>Clears up a common misconception: streaming is usually assumed to make answers "come back faster," when it actually changes how the wait <em>feels</em>, not how long generation actually takes.</li>
-        <li>A very common product/systems question — "the chatbot feels slow" almost always gets fixed by adding streaming, not by making the model itself faster.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📨 Input (Prompt) Tokens</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>The whole prompt — system instructions, chat history, retrieved context — gets sent in every call, and it's tempting to assume reading all of it costs the same as writing an answer.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Input tokens are processed together in one parallel pass, so providers price them lower per token — a longer prompt (more context, more history) is what drives this side of the bill up.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Input tokens = the read side — one parallel pass, priced lower.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">⏳ Output (Completion) Tokens</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A longer answer can drive a call's price up much faster than a longer prompt does, and it's easy to assume both sides scale the same way.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Output tokens are generated one at a time, each depending on every token before it — that repeated, sequential work is exactly why output is priced meaningfully higher per token.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Output tokens = the write side — one at a time, priced higher.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -201,6 +214,82 @@
       </div>
       <p class="cx-note">Without <code>stream=True</code>, this same call blocks until the whole answer is ready, then returns it in one piece — the total wait doesn't change, only when you get to see it.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your chatbot's bill is way higher than you estimated, and the answers tend to run long</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">THE DOUBLE HIT</text>
+              <rect x="18" y="24" width="130" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="83" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">📝 Long answer</text>
+              <path d="M148,43 H188" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="188" y="24" width="150" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="263" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">⏳ more output tokens</text>
+              <path d="M338,43 H378" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="378" y="24" width="84" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="420" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">💰 cost ↑</text>
+            </svg>
+          </div>
+          <p class="uc-what">Longer answers hit twice: they use more output tokens, and output
+          tokens are already priced meaningfully higher per token than input — so a chatty model
+          can blow past a cost estimate that only accounted for prompt length.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Long answers cost more twice over — more output tokens, priced higher each.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> You keep stuffing more chat history or retrieved context into every single call</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">CHEAPER EACH, NOT FREE</text>
+              <rect x="18" y="24" width="150" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="93" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📚 history/context grows</text>
+              <path d="M168,43 H208" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="208" y="24" width="140" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="278" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📨 resent every call</text>
+              <path d="M348,43 H388" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="388" y="24" width="74" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="425" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">🧮 adds up</text>
+            </svg>
+          </div>
+          <p class="uc-what">That growing context is all input (prompt) tokens — priced lower per
+          token than output, but reprocessed in full on every single call, so a long-running
+          conversation's input cost climbs even though each of those tokens individually is the
+          cheaper kind.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Input tokens are cheaper each, but a growing prompt still adds up call after call.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> Users say the chatbot "feels slow," but the model itself hasn't changed</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">FIX THE FEEL, NOT THE MODEL</text>
+              <rect x="18" y="24" width="120" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="78" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">🐌 feels slow</text>
+              <path d="M138,43 H178" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="178" y="24" width="154" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="255" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ stream=True (SSE)</text>
+              <path d="M332,43 H372" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="372" y="24" width="90" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="417" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">⚡ instant</text>
+            </svg>
+          </div>
+          <p class="uc-what">The total time to generate the full answer hasn't changed at all —
+          turning on streaming (SSE) just shows each token the moment it's produced, so the first
+          words appear almost instantly instead of a blank screen until the whole answer lands.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Feels slow → check streaming first, not the model.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

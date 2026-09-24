@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A common "do you actually understand what's under the hood" check in GenAI engineering interviews — you're expected to explain it at a high level, not derive the math.</li>
-        <li>Directly explains why a bigger context window costs real money and latency, not just a setting someone flips.</li>
-        <li>The KV cache is the reason token-by-token generation feels like a live conversation instead of a slow batch job.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🧠 Self-attention</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A model that could only look at nearby tokens would miss meaning that lives far earlier in a passage — like knowing "It" refers back to "cat" several tokens earlier — so context tied to distant tokens would just get lost.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Self-attention builds each token's new representation from a weighted mix of every other token in the sequence, pulling context from wherever it actually lives, near or far — the same all-pairs comparison that's also why the cost grows quadratically with sequence length.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Self-attention = every token mixes in every other token — distance doesn't limit it, but comparing every pair is why it gets expensive.</span></div>
+      </div>
     </div>
   </details>
 
@@ -229,6 +232,66 @@
       </div>
       <p class="cx-note">This is the same shape real libraries use (e.g. Hugging Face's <code>past_key_values</code>) — pass the cache back in, get a bigger one out, never redo the whole prefix.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A long conversation and the model still correctly resolves a reference from way earlier</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">LONG-RANGE PULL</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">💬 token far back</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🔎 current token</text>
+            </svg>
+          </div>
+          <p class="uc-what">Self-attention doesn't care about position — every token can pull context from any other token in the sequence, however far back it sits, which is exactly why a model can connect a reference many turns earlier without any special handling for distance. <b>This is the #1 scenario you'll actually notice.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Self-attention → distance doesn't limit which tokens can talk.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> A long reply streams out token-by-token and each token still appears almost instantly</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">REUSED, NOT REBUILT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🗄️ Cached K/V</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🆕 New token only</text>
+            </svg>
+          </div>
+          <p class="uc-what">Each new step reuses the keys/values already computed for every earlier token instead of recomputing the whole prefix again — only the newest token's work is done fresh. That's the KV cache, and it's what makes token-by-token generation feel like a live conversation instead of a slow batch job.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Feels fast → KV cache reuse, not free growth.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Someone asks to just bump the context window as a quick config change</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">ASSUMPTION ≠ REALITY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">⚙️ "Just a flag"</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">📈 Quadratic cost</text>
+            </svg>
+          </div>
+          <p class="uc-what">Attention cost grows quadratically with sequence length, so widening the context window is a real compute and cost increase, not a switch to flip — and the KV cache doesn't fix this either, since a new token still has to attend to everything already cached before it. <b>A classic interview trap</b> — candidates often treat "increase the context window" as free.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Bigger context window → quadratic cost, not a free toggle.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

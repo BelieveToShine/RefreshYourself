@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A prompt hardcoded into application code can't be updated, A/B tested, or rolled back without a full redeploy — a real production pain point.</li>
-        <li>Interviewers ask this to see whether you treat a prompt as a production artifact with its own lifecycle, not just clever wording in a string.</li>
-        <li>Production code has to retry failed calls (timeouts, rate limits) — if a prompt triggers a side effect, that retry has to be safe to repeat.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🗄️ Versioned, Idempotent Prompts</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A prompt hardcoded into application code can't be traced back after a regression or rolled back without a full redeploy, and a call retried after a timeout can fire a real side effect twice if nothing makes that retry safe.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Store prompts in a registry so every change gets a version ID you can trace and roll back, and give any triggered side effect its own idempotency protection so the same retried call is always safe to repeat.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Version = which prompt made this output; idempotent = safe to retry the same call.</span></div>
+      </div>
     </div>
   </details>
 
@@ -194,6 +197,81 @@ prompt = get_prompt(<span class="str">"summarize_ticket"</span>, current_version
       </div>
       <p class="cx-note">The retry loop itself is fine — it's the side effect (the charge) that needs its own protection so repeating the call doesn't repeat the effect.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A new prompt version ships and users start seeing worse answers</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="8" markerHeight="8" refX="6" refY="2.5" orient="auto">
+                  <path d="M0,0 L6,2.5 L0,5 Z" fill="#16a34a"/>
+                </marker>
+              </defs>
+              <rect x="10" y="8" width="170" height="50" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="95" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 v2 — regression</text>
+              <text x="95" y="46" text-anchor="middle" font-size="9.5" fill="#5b6472">worse answers live now</text>
+              <path d="M180,33 H300" fill="none" stroke="#16a34a" stroke-width="1.6" marker-end="url(#arUc1)"/>
+              <rect x="300" y="8" width="170" height="50" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="385" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ v1 — current again</text>
+              <text x="385" y="46" text-anchor="middle" font-size="9.5" fill="#5b6472">no redeploy needed</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into — the exact case in the diagram above. The fix isn't a new deploy, it's pointing the registry's "current" lookup back at the last known-good version, v1.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Rollback = change which version "current" points to, not a redeploy.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> A support ticket asks why an older output doesn't match what the app returns today</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="8" markerHeight="8" refX="6" refY="2.5" orient="auto">
+                  <path d="M0,0 L6,2.5 L0,5 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="10" y="8" width="170" height="50" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="95" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">❓ Old output</text>
+              <text x="95" y="46" text-anchor="middle" font-size="9.5" fill="#5b6472">looks different today</text>
+              <path d="M180,33 H300" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#arUc2)"/>
+              <rect x="300" y="8" width="170" height="50" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="385" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🏷️ Check version ID</text>
+              <text x="385" y="46" text-anchor="middle" font-size="9.5" fill="#5b6472">which prompt made it</text>
+            </svg>
+          </div>
+          <p class="uc-what">Because every change is versioned, you can check exactly which version was "current" when that output was produced — the version ID is what makes an old output traceable after the fact.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Version ID = which exact prompt made this particular output.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">3</span> A network timeout makes your retry logic fire the same tool call again</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="8" markerHeight="8" refX="6" refY="2.5" orient="auto">
+                  <path d="M0,0 L6,2.5 L0,5 Z" fill="#d97706"/>
+                </marker>
+              </defs>
+              <rect x="10" y="8" width="170" height="50" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
+              <text x="95" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">⏱️ Timeout → retry</text>
+              <text x="95" y="46" text-anchor="middle" font-size="9.5" fill="#5b6472">same charge call again</text>
+              <path d="M180,33 H300" fill="none" stroke="#d97706" stroke-width="1.6" marker-end="url(#arUc3)"/>
+              <rect x="300" y="8" width="170" height="50" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
+              <text x="385" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔑 Same idempotency key</text>
+              <text x="385" y="46" text-anchor="middle" font-size="9.5" fill="#5b6472">charged once, not twice</text>
+            </svg>
+          </div>
+          <p class="uc-what">The retry loop itself is fine — it's the side effect, like a payment charge, that needs protecting. Passing the same idempotency key on every attempt is what keeps a retried call from firing that side effect twice.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Idempotency key = same retry, same effect, never duplicated.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

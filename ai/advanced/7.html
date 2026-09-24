@@ -64,15 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Every LLM provider has real production outages and per-key rate limits — a system
-        hard-wired to one provider's exact SDK shape has no fallback the day that happens.</li>
-        <li>A standard senior/architect resilience question, usually phrased almost exactly like
-        the title above — it checks whether you design for the failure path, not just the happy
-        one.</li>
-        <li>Builds directly on the AI Gateway pattern (an earlier page) — routing and failover are
-        exactly why that one abstraction layer exists in the first place.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔀 Model Routing</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Sending every request to the same model regardless of complexity wastes money on simple tasks or under-serves the ones that genuinely need deeper reasoning.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Route each request by what it actually needs — a cheap, fast model for simple classification or extraction, escalating to a stronger model only when the task calls for it.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Routing picks a MODEL, by what the task needs.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🛟 Multi-Provider Failover</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A system hard-wired to one provider's exact SDK shape has no fallback the day that provider has an outage or rate-limits it.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Put every provider call behind one gateway interface, so a rate limit or outage triggers an automatic retry-with-backoff, then a failover to a healthy provider.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Failover picks a PROVIDER, by whether it's currently healthy.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -141,6 +150,57 @@
     <figcaption>Provider A returns a rate-limit or outage error. The system retries with backoff,
     then automatically fails over to Provider B — the request still succeeds, on the same call
     the app made in step ①.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 210" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="rfShadow2" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="rfArrGray2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+        </marker>
+        <marker id="rfArrBlue2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="rfArrAmber2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <!-- root question -->
+      <g filter="url(#rfShadow2)"><rect x="210" y="14" width="220" height="36" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="36" text-anchor="middle" font-size="12.5" font-weight="800" fill="#475569">🔀 TWO REASONS TO SWITCH</text>
+
+      <!-- fork down to the two ideas -->
+      <path d="M320,50 V62 H160 V82" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#rfArrGray2)"/>
+      <path d="M320,50 V62 H480 V82" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#rfArrGray2)"/>
+
+      <!-- headers -->
+      <g filter="url(#rfShadow2)"><rect x="60" y="82" width="200" height="46" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="101" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🔀 Model Routing</text>
+      <text x="160" y="118" text-anchor="middle" font-size="10.5" fill="#5b6472">picks a MODEL</text>
+
+      <g filter="url(#rfShadow2)"><rect x="380" y="82" width="200" height="46" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="101" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🛟 Failover</text>
+      <text x="480" y="118" text-anchor="middle" font-size="10.5" fill="#5b6472">picks a PROVIDER</text>
+
+      <!-- connectors down to the deciding factor -->
+      <path d="M160,128 V148" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#rfArrBlue2)"/>
+      <path d="M480,128 V148" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#rfArrAmber2)"/>
+
+      <!-- deciding factor -->
+      <g filter="url(#rfShadow2)"><rect x="60" y="148" width="200" height="42" rx="12" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/></g>
+      <text x="160" y="165" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">❓ Picks by NEED</text>
+      <text x="160" y="180" text-anchor="middle" font-size="10" fill="#5b6472">cheap vs. strong model</text>
+
+      <g filter="url(#rfShadow2)"><rect x="380" y="148" width="200" height="42" rx="12" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.5"/></g>
+      <text x="480" y="165" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">❤️ Picks by HEALTH</text>
+      <text x="480" y="180" text-anchor="middle" font-size="10" fill="#5b6472">retry, then switch provider</text>
+    </svg>
+    <figcaption>Same gateway abstraction, two independent reasons to switch: routing picks a model
+    by what the task needs; failover picks a provider by whether it's currently healthy.</figcaption>
   </figure>
 
   <div class="trap">
@@ -239,6 +299,75 @@
       <p class="cx-note">Retries happen first, failover happens next, and graceful degradation is
       the last resort — never an unhandled crash.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your request is a short classification or simple extraction, nothing that needs deep reasoning</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">SIMPLE TASK, LOW COST</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">📝 Simple task</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">💵 Cheap model</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is model routing's most common case — the task is simple, so it
+          goes to the cheap, fast model, and only escalates to a stronger model when the task
+          genuinely needs deeper reasoning.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Simple task → cheap model first, escalate only if it needs more.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#92400e">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your primary provider starts returning 429 rate limits or an outage mid-traffic</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#92400e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">RETRY, THEN SWITCH</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🐛 Provider down</text>
+              <path d="M190,43 H290" stroke="#92400e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🛟 Failover succeeds</text>
+            </svg>
+          </div>
+          <p class="uc-what">Retries with backoff happen first — waiting longer between attempts
+          so a brief blip doesn't turn into a request storm — and if that still fails, the gateway
+          automatically routes the request to a different, healthy provider instead of failing
+          outright.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Provider down or rate-limited → retry with backoff, then fail over.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> "We mostly use one provider, so multi-provider design doesn't matter"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">ONE PROVIDER, NO EXIT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🔒 Wired to one SDK</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🐛 No fallback that day</text>
+            </svg>
+          </div>
+          <p class="uc-what">Being able to route elsewhere IS the resilience — a system wired to
+          one provider's exact SDK shape has no fallback option the day that provider has an
+          outage, even if it never actually switches on an ordinary day. <b>A common trap</b> —
+          candidates often assume multi-provider design only matters once you're actually using
+          more than one provider day to day.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Even a single-provider system needs the ability to switch.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

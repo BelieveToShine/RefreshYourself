@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A direct follow-up whenever someone says "I use temperature 0 for consistency" — it checks whether they know what that setting actually controls.</li>
-        <li>Matters for anyone building automated tests, caching, or exact-match evals on top of an LLM API.</li>
-        <li>Comes up in system-design discussions about retries and whether an LLM call can be trusted as idempotent.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🎲 Temp 0, Still Not Deterministic</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Teams build automated tests, caching, or exact-match evals assuming <code>temperature = 0</code> makes an LLM call idempotent — then the same assertion passes locally and flakes intermittently in CI.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>temperature = 0</code> only fixes the decoding rule (always take the top token) — floating-point summation, GPU batching, and provider-side load balancing can still shift the math enough to flip which token wins, so byte-for-byte identical output was never actually guaranteed.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Temp 0 fixes the decoding rule, not the math underneath it.</span></div>
+      </div>
     </div>
   </details>
 
@@ -199,6 +202,66 @@ response2 = callModel(prompt, temperature=<span class="num">0</span>)
       </div>
       <p class="cx-note">A fixed <code>seed</code> is documented as improving reproducibility — never as a guarantee of it.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You call the same prompt twice at temperature 0, expecting a byte-for-byte identical answer</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">SAME PROMPT, TEMP 0</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">📨 Same prompt ×2</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🖥️ Different batch</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into. Greedy decoding is the same rule both times, but each call can land in a different batch of concurrent requests on the server, which shifts the floating-point summation order enough to occasionally flip which token comes out on top.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same rule, different math → occasionally a different token wins.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You add a fixed seed parameter, assuming it locks the output completely</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">SEED PARAMETER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🎲 seed = 42</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">❌ Not guaranteed</text>
+            </svg>
+          </div>
+          <p class="uc-what">Some providers expose <code>seed</code> specifically to help with this, but it's documented as improving reproducibility, not guaranteeing it — it narrows the variation from batching and floating-point math, it doesn't remove it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>seed</code> narrows variance — it doesn't lock the output.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You build an automated eval or cache key on an exact string match of the output</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#115e59" letter-spacing=".03em">EXACT-MATCH EVAL</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#115e59">🧪 Exact match check</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#115e59">🔀 Flakes in CI</text>
+            </svg>
+          </div>
+          <p class="uc-what">The assertion passes locally, then fails intermittently in CI once the server-side batch composition happens to differ between runs — the fix isn't hunting for a bug in the eval, it's comparing parsed, structured fields instead of raw string equality.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Never key a cache or exact-match test on raw LLM output.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

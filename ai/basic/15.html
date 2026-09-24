@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up whenever long-context models or RAG design get discussed — it separates candidates who treat context length as just a token limit from those who know it's also a placement problem.</li>
-        <li>Explains a real production symptom: an answer that misses a fact that's clearly somewhere in the prompt, even though the context window was large enough to hold it.</li>
-        <li>Sets up the follow-up almost every interviewer asks next: why retrieval and reranking still matter even with a huge context window.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">📉 Lost in the middle</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A RAG app can stuff fifteen retrieved passages into a huge context window and still miss a fact that's clearly in there — the window was large enough to hold it, but that alone never guaranteed the model would use it.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Recall follows a U shape across the prompt — strong at the very start and end, weaker for whatever sits in the middle — so moving the most relevant passages to an edge fixes what raw window size alone can't.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Recall isn't decided by window size — position inside the prompt decides what actually gets used.</span></div>
+      </div>
     </div>
   </details>
 
@@ -183,6 +186,80 @@ prompt = <span class="str">f"{context}\n\n{question}"</span></code></pre>
       </div>
       <p class="cx-note">Same five passages, same question — only the order changed, moving the one that matters to an edge the model reliably attends to well.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your RAG app stuffs many retrieved passages into one long prompt</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcCw1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">STUFFED, BEST ONE IN THE MIDDLE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📚 15 passages</text>
+              <text x="105" y="55" text-anchor="middle" font-size="9.5" fill="#1e3a8a">best one = 3rd</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcCw1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🤖 Answer</text>
+              <text x="375" y="55" text-anchor="middle" font-size="9.5" fill="#1e3a8a">misses it ❌</text>
+            </svg>
+          </div>
+          <p class="uc-what">The single most relevant passage lands mid-context, exactly where
+          "lost in the middle" hits hardest — the model answers, but skips over the fact that was
+          technically right there. <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Stuffing more passages in doesn't help if the best one lands in the middle.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A long document or chat history gets replayed back into the prompt every turn</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcCw2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#134e4a" letter-spacing=".03em">DETAIL BURIED MID-HISTORY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="#134e4a">📄 Long history</text>
+              <text x="105" y="55" text-anchor="middle" font-size="9.5" fill="#134e4a">whole doc replayed</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUcCw2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="#134e4a">🤖 Model</text>
+              <text x="375" y="55" text-anchor="middle" font-size="9.5" fill="#134e4a">forgets it 😵</text>
+            </svg>
+          </div>
+          <p class="uc-what">Long-context models can hold a whole document or a long
+          conversation history in one prompt, but a detail stated once in the middle of it is
+          the part most likely to get dropped — the start (system instructions) and the end
+          (the latest turn) are what recall reliably favors.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Fits in the window ≠ reliably recalled from the window.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You assume a bigger context window means you can stop worrying about order</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcCw3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">SIZE ≠ SAFE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🧠 Huge window</text>
+              <text x="105" y="55" text-anchor="middle" font-size="9.5" fill="#991b1b">fits everything</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcCw3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">😵 Middle</text>
+              <text x="375" y="55" text-anchor="middle" font-size="9.5" fill="#991b1b">still skipped</text>
+            </svg>
+          </div>
+          <p class="uc-what">Fitting into the window and being recalled well are two different
+          things. Recall reliably dips for whatever sits in the middle of a long prompt no matter
+          how large the window is — window size never fixes placement. <b>A common interview
+          trap</b> — candidates often assume "huge window" means "no need to think about order."</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A bigger window changes what fits, not what's recalled well.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 
