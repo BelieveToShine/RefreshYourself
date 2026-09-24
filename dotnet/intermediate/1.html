@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A classic opening question — it separates "I can run an app" from "I understand the hosting model underneath it."</li>
-        <li>Comes up the moment you're debugging a startup crash, containerizing an app, or configuring ports and HTTPS.</li>
-        <li>Tests whether you conflate two different things: <b>your app</b> and the <b>HTTP server</b> underneath it.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🧰 Your App (Program.cs)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>The moment <code>builder.Services.Add...</code> or <code>app.Use...</code> executes, it's easy to assume the app is already "running" — but registering config, DI, and middleware isn't the same as serving a request.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>WebApplication.CreateBuilder(args)</code> wires config, DI, and logging, and everything added after it is registration only — none of it executes for a real request until <code>app.Run()</code> hands control to the host.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Program.cs = setup code — it configures, it doesn't listen.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">📡 Kestrel (the Web Server)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Debugging a startup crash, containerizing an app, or configuring ports and HTTPS all go wrong fast if you treat "your app" and "the thing listening for HTTP" as the same piece.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Kestrel is the embedded HTTP server your app sits on top of — <code>app.Run()</code> is what starts it listening, and it's Kestrel that parses raw HTTP into the <code>HttpContext</code> your code works with.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Kestrel = the HTTP server underneath your app, not the app itself.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -229,6 +242,66 @@ app.Run();                    <span class="cx-cmt">// Kestrel never even starts 
       </div>
       <p class="cx-note">A startup exception stops the host <b>before Kestrel ever listens</b> — a request-time exception is a completely different failure, and middleware can catch that one.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You register services and middleware in Program.cs, but nothing serves a request yet</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcD1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">PROGRAM.CS — BEFORE app.Run()</text>
+              <rect x="20" y="24" width="200" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="120" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🧰 Services.Add / app.Use</text>
+              <path d="M220,43 H260" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcD1)"/>
+              <rect x="260" y="24" width="200" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="360" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🚫 registration only</text>
+            </svg>
+          </div>
+          <p class="uc-what">Every line before <code>app.Run()</code> only registers config, DI, and middleware — none of it executes for a real request. It's easy to assume the app is already "running" once this code executes, but nothing is listening yet.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Program.cs before <code>app.Run()</code> → setup only, not execution.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> The first real HTTP request actually reaches your code</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcD2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">KESTREL IN THE MIDDLE</text>
+              <rect x="20" y="24" width="200" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="120" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">📡 Kestrel — raw HTTP</text>
+              <path d="M220,43 H260" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcD2)"/>
+              <rect x="260" y="24" width="200" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="360" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">✅ HttpContext → your code</text>
+            </svg>
+          </div>
+          <p class="uc-what">Once <code>app.Run()</code> starts the Generic Host, Kestrel starts listening — it's Kestrel that turns raw HTTP bytes into the <code>HttpContext</code> your code actually works with. It's the network layer underneath your app, not the app itself.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Kestrel parses the bytes; your code never sees raw HTTP directly.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You consider exposing Kestrel straight to the internet in production</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcD3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing=".03em">KESTREL ALONE</text>
+              <rect x="20" y="24" width="200" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="120" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">📡 Kestrel, no proxy</text>
+              <path d="M220,43 H260" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcD3)"/>
+              <rect x="260" y="24" width="200" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="360" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">🚫 not internet-ready</text>
+            </svg>
+          </div>
+          <p class="uc-what">Kestrel can technically accept connections directly, but the near-universal real-world setup fronts it with a reverse proxy — treating Kestrel by itself as "ready to face the internet" is a common assumption that doesn't hold up in practice.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Kestrel alone ≠ production-ready — a reverse proxy almost always sits in front.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

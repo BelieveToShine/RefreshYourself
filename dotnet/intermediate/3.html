@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Almost certainly the single most-asked ASP.NET Core question — often the first check for "have you actually used DI, or just read about it."</li>
-        <li>Comes up every time you register a service in <code>Program.cs</code>, and every time you're debugging why one user's data showed up in another user's response.</li>
-        <li>The follow-up about a Singleton depending on a Scoped service is a favorite way to separate memorized definitions from real experience.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🌐 Singleton</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Rebuilding an expensive, app-wide service like a cache or configuration object on every single request would waste memory and CPU for no benefit, since nothing about it actually varies per request.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Singleton builds it once, the first time it's needed, and every request from then on shares that exact same instance for the app's whole lifetime.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Singleton = built once, shared by everyone, never resets.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">📨 Scoped</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Something like <code>DbContext</code> has to be shared by every repository or service touched while handling one request — so they all see the same tracked changes — but that sharing must not leak into the next request or the next user.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Scoped creates exactly one instance per HTTP request; everything resolved during that request shares it, then it resets clean for the next request.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Scoped = one instance per request, fresh again next request.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#166534; --why-bg:#dcfce7">
+          <div class="wc-head">⚡ Transient</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A small, stateless service has no data worth sharing between calls — reusing one instance here only creates a risk of accidental shared state for zero upside.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Transient hands back a brand-new instance every single time it's resolved, even twice inside the same request, so there's never anything left to leak.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Transient = brand-new every resolution, nothing to leak.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -277,6 +298,78 @@ Console.WriteLine(c1 == c2);   <span class="cx-err">// ❌ false — Transient r
       </div>
       <p class="cx-note"><code>Broken</code> is a Singleton, so the container builds it once — whatever Scoped instance it grabbed then <b>never gets refreshed</b>.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're registering a service that caches data or holds config — same for every user, nothing request-specific</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 90" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="10" width="150" height="30" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="95" y="29" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Request 1</text>
+              <rect x="20" y="50" width="150" height="30" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="95" y="69" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Request 2</text>
+              <path d="M170,25 L296,40" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <path d="M170,65 L296,52" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="300" y="24" width="160" height="42" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+              <text x="380" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🌐 Singleton</text>
+              <text x="380" y="55" text-anchor="middle" font-size="9.5" fill="#166534">same instance</text>
+            </svg>
+          </div>
+          <p class="uc-what">This kind of service doesn't vary by request, so rebuilding it every
+          time would waste memory for no benefit. Registering it Singleton means the first
+          request builds it and every request after that reuses that exact same instance for the
+          app's whole lifetime.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No per-request state to track → Singleton is the safe, efficient choice.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're registering DbContext, or anything that has to track one request's changes as a single unit</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="14" width="150" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">📨 Request</text>
+              <path d="M170,33 H298" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="300" y="14" width="160" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="380" y="32" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">Scoped: DbContext</text>
+              <text x="380" y="45" text-anchor="middle" font-size="9" fill="#1e3a8a">this request only</text>
+            </svg>
+          </div>
+          <p class="uc-what">Every repository or service touched while handling that one request
+          needs to see the same tracked changes, but the next request has to start clean — that's
+          exactly why <code>DbContext</code> is registered Scoped.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One unit-of-work per request → Scoped.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A Singleton's constructor takes a Scoped service as a dependency</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#94a3b8"/></marker></defs>
+              <rect x="10" y="14" width="200" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="110" y="32" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">Singleton MyService</text>
+              <text x="110" y="45" text-anchor="middle" font-size="8.5" fill="#1e3a8a">constructor takes IScopedThing</text>
+              <path d="M210,33 H258" stroke="#94a3b8" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="260" y="14" width="210" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="365" y="32" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">IScopedThing — frozen 😮</text>
+              <text x="365" y="45" text-anchor="middle" font-size="8.5" fill="#991b1b">captured once, stuck forever</text>
+            </svg>
+          </div>
+          <p class="uc-what">The container only builds that Singleton once, so whatever Scoped
+          instance it grabbed at that moment gets captured and frozen for the app's entire
+          lifetime — a captive dependency. <b>A great interview trap</b> — with scope validation
+          on (the Development default), the container throws instead of silently freezing it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Scoped injected into a Singleton → captive dependency, not normal scoping.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

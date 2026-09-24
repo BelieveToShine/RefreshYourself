@@ -64,15 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A silent wrong value in a bound parameter is almost always the binder picking a
-        different source than the one you expected — knowing the priority order is how you debug
-        that fast.</li>
-        <li>The custom-binder question checks whether you understand why the default binder
-        exists at all, not just that <code>[FromBody]</code>/<code>[FromQuery]</code> are things.</li>
-        <li>Picking MVC vs. Web API vs. Razor Pages for a new feature is a common system-design
-        follow-up — especially for anyone who's only ever worked in one of the three.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🖼️ MVC</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A feature needs full HTML with shared layouts.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Controller returns a View; bad input needs a manual check.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">MVC = Controller + View, manual 400 check.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🔌 Web API</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A SPA or mobile app needs JSON, not HTML.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>[ApiController] returns JSON and auto-rejects bad models with 400.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Web API = JSON out, automatic 400 in.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">📄 Razor Pages</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Simple CRUD pages don't need a separate Controller.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>One .cshtml pairs with its own PageModel; checks stay manual.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Razor Pages = page + PageModel, no Controller.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -448,6 +465,76 @@
       <p class="cx-note">Same underlying endpoint routing, <b>three different shapes</b> — pick by
       what the endpoint needs to produce.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your action gets the same value from both the route and the query string</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">SAME PARAMETER, TWO SOURCES</text>
+              <rect x="20" y="24" width="220" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="130" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">📍 route: id=5</text>
+              <text x="130" y="52" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b6472">🔍 query: id=7</text>
+              <path d="M240,43 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="310" y="24" width="150" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🎯 id = 5 wins</text>
+            </svg>
+          </div>
+          <p class="uc-what">The binder checks route values first, then the query string — route
+          wins on a name match before query is even considered.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Route beats query when both share a name.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#92400e">
+          <div class="uc-sit"><span class="uc-flag">2</span> You need to bind a comma-separated list like ?ids=1,2,3</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#92400e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">ONE VALUE ISN'T ONE LIST</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#fef3c7" stroke="#92400e" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🔍 ?ids=1,2,3</text>
+              <path d="M210,43 H310" stroke="#92400e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="310" y="24" width="150" height="38" rx="10" fill="#fef3c7" stroke="#92400e" stroke-width="1.6"/>
+              <text x="385" y="40" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">🧩 custom binder</text>
+              <text x="385" y="53" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">→ List&lt;int&gt;</text>
+            </svg>
+          </div>
+          <p class="uc-what">The default binder can't split one string into a list — a custom
+          <code>IModelBinder</code> is what makes a comma-separated value bind at all.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Comma-separated values need a custom binder.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> You're deciding between MVC, Web API, and Razor Pages for a new feature</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 130" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="45" width="150" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="95" y="69" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🆕 New feature</text>
+              <path d="M170,55 L300,26" stroke="#16a34a" stroke-width="1.5" fill="none" marker-end="url(#arUc3)"/>
+              <path d="M170,65 H300" stroke="#16a34a" stroke-width="1.5" fill="none" marker-end="url(#arUc3)"/>
+              <path d="M170,75 L300,104" stroke="#16a34a" stroke-width="1.5" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="300" y="10" width="160" height="32" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="380" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🖼️ HTML → MVC</text>
+              <rect x="300" y="50" width="160" height="32" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="380" y="70" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🔌 JSON → Web API</text>
+              <rect x="300" y="90" width="160" height="32" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="380" y="110" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">📄 CRUD → Razor Pages</text>
+            </svg>
+          </div>
+          <p class="uc-what">Pick by what the endpoint needs to produce: full HTML with shared
+          layouts → MVC, JSON only → Web API, a simple CRUD page → Razor Pages.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Pick by what the endpoint returns, not by habit.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

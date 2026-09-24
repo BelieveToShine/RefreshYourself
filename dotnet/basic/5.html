@@ -64,11 +64,40 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Four separate core-knowledge terms interviewers ask about individually — mixing one up costs you an easy point.</li>
-        <li><code>CORS</code> is one of the most misunderstood security terms in web interviews; knowing exactly what it protects is a real differentiator.</li>
-        <li>Where <code>HTTPS</code> redirection sits, and how logging plugs into DI, are both quick "order of the pipeline" questions.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🪝 Filters</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without a shared hook point, the same before/after logic would have to be pasted into every single action method by hand.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Filters are attribute-driven hooks that wrap action execution — before it, after it, or around an exception — so that logic lives in one place instead of every action.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Filters = attribute-driven hooks before/after an action.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🌐 CORS</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A browser's same-origin policy would otherwise block a legitimate script — like a single-page app — from reading a response sent back from an API on a different origin.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Enabling CORS on the server explicitly opts specific origins into reading that response from a browser; it never affects a non-browser client.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">CORS = browser-checked opt-in for who may read the response.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🔒 HTTPS Redirection</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>If HTTPS redirection ran later in the pipeline, some earlier middleware, filter, or action could already be handling a plain, unencrypted request before it ever got redirected.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>app.UseHttpsRedirection()</code> sits early — any HTTP request is redirected to HTTPS before anything else runs, so nothing downstream ever handles unencrypted traffic.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">HTTPS redirection = runs early, before routing/auth.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+          <div class="wc-head">📝 Logging</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>If app code called a specific logging destination directly, swapping where logs end up would mean changing that code everywhere it logs.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Logging is injected as <code>ILogger&lt;T&gt;</code> through the same DI as any service; app code just calls <code>_logger.LogInformation(...)</code>, and the configured provider decides where it lands.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Logging = <code>ILogger&lt;T&gt;</code> injected via DI; a provider decides the destination.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -237,6 +266,75 @@ app.UseRouting();</code></pre>
       </div>
       <p class="cx-note"><code>OrderService</code> never knows or cares whether this line ends up in the console, a file, or Application Insights.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your single-page app, hosted on its own origin, calls this API and JavaScript can't read what comes back</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arF5Uc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">CROSS-ORIGIN FETCH</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🌐 app.example.com</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arF5Uc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">🔌 api.example.com</text>
+            </svg>
+          </div>
+          <p class="uc-what">Different origin → the browser checks CORS headers before letting the
+          SPA's JavaScript read the response. The request still fires either way; without an
+          explicit allowed-origin policy on this API, the browser is the one that blocks the read.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Different origin + browser → the API must explicitly allow it.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Someone hits your API directly over plain http:// instead of https://</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arF5Uc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">REDIRECTED EARLY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🌐 http://…</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arF5Uc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🔒 https://…</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>app.UseHttpsRedirection()</code>, placed early in the pipeline,
+          redirects that request to HTTPS before routing, auth, or any action ever sees it — so
+          nothing downstream ever handles the unencrypted version.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Plain HTTP in → redirected to HTTPS before anything else runs.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> You keep pasting the same "log before / log after" line into every action method</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 100" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arF5Uc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="31" width="150" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="54" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🪝 LogActionFilter</text>
+              <path d="M170,42 L300,20" stroke="#1d4ed8" stroke-width="1.5" fill="none" marker-end="url(#arF5Uc3)"/>
+              <path d="M170,58 L300,80" stroke="#1d4ed8" stroke-width="1.5" fill="none" marker-end="url(#arF5Uc3)"/>
+              <rect x="300" y="6" width="160" height="28" rx="9" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+              <text x="380" y="24" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Action A</text>
+              <rect x="300" y="66" width="160" height="28" rx="9" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+              <text x="380" y="84" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Action B</text>
+            </svg>
+          </div>
+          <p class="uc-what">One <code>IActionFilter</code> applied where it's needed runs its
+          <code>OnActionExecuting</code>/<code>OnActionExecuted</code> hooks around any action it's
+          attached to — the same before/after logic, written once, instead of copied into Action A,
+          Action B, and every action after that.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Repeated before/after code → that's a filter, not a copy-paste.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

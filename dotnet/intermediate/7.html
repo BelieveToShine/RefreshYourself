@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up the moment an action takes any input — every create/update endpoint depends on this working correctly.</li>
-        <li>The <code>[ApiController]</code> auto-400 behavior is a favorite follow-up — a lot of candidates don't realize it's the attribute doing that, not ASP.NET Core in general.</li>
-        <li>Sets up the deeper Advanced topic on binder source order and custom binders — this page is the practical foundation that one builds on.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">⚙️ Model Binding &amp; Validation</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A raw HTTP request is just untyped route values, a query string, JSON text, and headers — nothing has confirmed it's well-formed or safe to hand to your business logic yet.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Model binding converts that raw data into a typed object matched to the action's parameters, and the same step checks its data-annotation attributes and records a pass/fail verdict in <code>ModelState</code> — though only actually checking <code>ModelState.IsValid</code>, yourself or automatically via <code>[ApiController]</code>, stops invalid data from going any further.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">The binder fills the parameter — only checking <code>ModelState.IsValid</code> actually stops bad data.</span></div>
+      </div>
     </div>
   </details>
 
@@ -293,6 +296,80 @@
       </div>
       <p class="cx-note"><code>[ApiController]</code> returns 400 before this line ever runs — a plain <code>Controller</code> needs the <b><code>if (!ModelState.IsValid)</code></b> check written by hand.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your action's parameter needs values from several places at once</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 104" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="14" y="10" width="98" height="26" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+              <text x="63" y="27" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">📍 Route</text>
+              <rect x="132" y="10" width="98" height="26" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+              <text x="181" y="27" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">🔍 Query</text>
+              <rect x="250" y="10" width="98" height="26" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+              <text x="299" y="27" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">📦 Body</text>
+              <rect x="368" y="10" width="98" height="26" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+              <text x="417" y="27" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">🏷️ Headers</text>
+              <path d="M63,36 V50" fill="none" stroke="#94a3b8" stroke-width="1.4"/>
+              <path d="M181,36 V50" fill="none" stroke="#94a3b8" stroke-width="1.4"/>
+              <path d="M299,36 V50" fill="none" stroke="#94a3b8" stroke-width="1.4"/>
+              <path d="M417,36 V50" fill="none" stroke="#94a3b8" stroke-width="1.4"/>
+              <path d="M63,50 H417" fill="none" stroke="#94a3b8" stroke-width="1.4"/>
+              <path d="M240,50 V64" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#arUc7a)"/>
+              <rect x="140" y="66" width="200" height="32" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="240" y="86" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8" font-family="Fira Code, monospace">OrderDto (bound)</text>
+            </svg>
+          </div>
+          <p class="uc-what">The binder pulls matching values from the route, query string, body, and headers in the same pass and hands your action one fully-formed object — exactly what makes <code>CreateOrder(OrderDto order)</code> possible without anyone hand-parsing <code>Request.Body</code>. <b>This is the situation you'll hit on every create or update endpoint.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Many sources, one bind — the framework does the matching for you.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your controller is marked [ApiController] and a client posts an invalid order</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 70" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="10" y="14" width="140" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="80" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">📨 invalid order</text>
+              <path d="M150,33 H195" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc7b)"/>
+              <rect x="195" y="14" width="150" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="270" y="31" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🛡️ [ApiController]</text>
+              <text x="270" y="45" text-anchor="middle" font-size="9" fill="#166534">checks ModelState</text>
+              <path d="M345,33 H385" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc7b)"/>
+              <rect x="385" y="14" width="85" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="427" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🚫 400</text>
+              <text x="240" y="64" text-anchor="middle" font-size="9.5" fill="#5b6472">the action method never runs</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>[ApiController]</code> reads <code>ModelState</code> before your action runs and returns 400 automatically the moment it's invalid — <code>CreateOrder</code>'s own code never executes for that request.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>[ApiController]</code> → invalid data never reaches your action.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You're debugging why an order with a blank name still got saved</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 70" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="15" y="14" width="190" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="110" y="31" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">⚠️ order (invalid)</text>
+              <text x="110" y="45" text-anchor="middle" font-size="9" fill="#92400e">ModelState never checked</text>
+              <path d="M205,33 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUc7c)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+              <rect x="290" y="14" width="175" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="377" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b" font-family="Fira Code, monospace">_orders.Save(order)</text>
+            </svg>
+          </div>
+          <p class="uc-what">On a plain <code>Controller</code>, binding and validation still ran and <code>ModelState</code> recorded the failure — but nobody ever read it, so the invalid object reached <code>_orders.Save()</code> anyway. <b>Candidates often assume binding itself blocks bad data — it doesn't.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Plain <code>Controller</code> + no check → invalid data still runs.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 
