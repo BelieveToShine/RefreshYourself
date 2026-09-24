@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Explains a real, everyday error: filtering on an aggregate in <code>WHERE</code>, and referencing a <code>SELECT</code> alias in <code>WHERE</code>, both fail for the exact same underlying reason.</li>
-        <li>Comes up the moment <code>GROUP BY</code>, <code>HAVING</code>, or a computed column alias enters a query — a near-guaranteed follow-up once either topic is raised.</li>
-        <li>A common way interviewers separate someone who memorized SQL syntax from someone who actually understands how a query runs.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔢 Logical execution order</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>You type <code>SELECT</code> first, so it's easy to assume it also runs first — which is exactly why filtering on an aggregate in <code>WHERE</code>, or referencing a <code>SELECT</code> alias in <code>WHERE</code>, both look like they should work and both fail.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>SQL is logically processed in a fixed order that's different from the order you write it — <code>FROM</code>/<code>JOIN</code>, then <code>WHERE</code>, then <code>GROUP BY</code>, then <code>HAVING</code>, then <code>SELECT</code>, then <code>ORDER BY</code> — so once you know that order, both failures explain themselves.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Written order ≠ executed order — knowing the real one is what separates memorized syntax from real understanding.</span></div>
+      </div>
     </div>
   </details>
 
@@ -198,6 +201,76 @@
       </div>
       <p class="cx-note"><code>WHERE</code> is step 2 — it runs before <code>SELECT</code> (step 5) ever creates <code>new_salary</code>, so the alias doesn't exist yet.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You reference a SELECT alias inside WHERE</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arSql1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">STEP 2 RUNS LONG BEFORE STEP 5</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🔍 WHERE (step 2)</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arSql1)"/>
+              <text x="240" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">❌</text>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">🏷️ alias (step 5)</text>
+            </svg>
+          </div>
+          <p class="uc-what">The alias is only created when <code>SELECT</code> (step 5) runs.
+          <code>WHERE</code> (step 2) runs three steps earlier, so the alias doesn't exist yet —
+          the reference fails.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">WHERE runs before SELECT → the alias isn't there yet.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You try to filter on an aggregate like COUNT(*) directly in WHERE</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arSql2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">AGGREGATES DON'T EXIST YET AT STEP 2</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🔍 WHERE (step 2)</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arSql2)"/>
+              <text x="240" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">❌</text>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Σ GROUP BY (step 3)</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>COUNT(*)</code> isn't computed until the <code>GROUP BY</code>
+          step (step 3), which runs after <code>WHERE</code> (step 2) is already done — that's the
+          direct reason <code>HAVING</code> exists, as the filter that runs after grouping.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Filtering on an aggregate → use HAVING, not WHERE.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You reference that same SELECT alias inside ORDER BY instead</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arSql3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#115e59" letter-spacing=".03em">STEP 6 RUNS AFTER STEP 5</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#115e59">🏷️ SELECT alias (step 5)</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arSql3)"/>
+              <text x="240" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#15803d">✅</text>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#115e59">↕️ ORDER BY (step 6)</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>ORDER BY</code> is step 6, running right after <code>SELECT</code>
+          (step 5) has already created the alias — so by the time <code>ORDER BY</code> runs, the
+          alias is already defined and safe to use. <b>This is the one place the alias reliably
+          works.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">ORDER BY runs after SELECT → the alias already exists.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

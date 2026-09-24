@@ -64,11 +64,25 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Almost every real query plan review starts by asking "is this hitting the clustered index, or doing a lookup through a non-clustered one?"</li>
-        <li>Explains why a table can only have one primary sort order but can be searched efficiently by several other columns at once.</li>
-        <li>One of the most commonly asked SQL interview questions — an easy "must know" that's easy to answer badly under pressure.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🗄️ Clustered Index</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A table's rows have to be stored somewhere — without a defined physical order, they'd just sit in an unordered heap with no guaranteed order to scan efficiently.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A clustered index physically reorders the table's own data pages into that key's order — the table <b>is</b> the index — which is exactly why only one can exist per table.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Clustered index = the table's data, physically stored in key order — only one per table.</span></div>
+        </div>
+
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">📇 Non-Clustered Index</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>The clustered index locks in one physical sort order, but real queries still need to search efficiently by other columns too — like finding a customer by Email when the table itself is sorted by Id.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A non-clustered index builds a separate, smaller structure sorted by that other column, holding just the key plus a pointer back to the real row — so a table can have many of these without touching how it's physically stored.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Non-clustered index = a separate lookup with a pointer back to the row — a table can have many.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -210,6 +224,82 @@
       </div>
       <p class="cx-note">A separate lookup structure — its entries hold an <code>Email</code> plus a pointer back to the real row.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You look up a row by its clustering key, like WHERE Id = 3</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arSqlUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">DIRECT HIT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🔍 WHERE Id = 3</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arSqlUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🗄️ the row itself</text>
+            </svg>
+          </div>
+          <p class="uc-what">Because the clustered index <b>is</b> the table's data pages sorted by
+          <code>Id</code>, the engine walks straight to the matching page and the row is already
+          there — no separate structure, no pointer, no extra hop.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Search by the clustering key → the row is found directly.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You search by an indexed column, like WHERE Email = ..., and need a column that index doesn't hold</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arSqlUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">ONE EXTRA HOP</text>
+              <rect x="8" y="24" width="140" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="78" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">📇 Email index</text>
+              <path d="M148,43 H168" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arSqlUc2)"/>
+              <rect x="168" y="24" width="140" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="238" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">🔑 pointer</text>
+              <path d="M308,43 H328" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arSqlUc2)"/>
+              <rect x="328" y="24" width="144" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="400" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🗄️ real row</text>
+            </svg>
+          </div>
+          <p class="uc-what">The non-clustered index finds the matching key fast, but it only holds
+          that key plus a pointer — so the engine has to take one extra hop back into the clustered
+          index (or heap) to fetch the rest of the row. This is exactly the cost a covering index is
+          designed to avoid.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Missing column in the index → an extra lookup hop.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You assume you can add a second clustered index for another frequent query</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arSqlUc3red" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker>
+                <marker id="arSqlUc3grn" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker>
+              </defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155" letter-spacing=".03em">ONLY ONE PHYSICAL ORDER</text>
+              <rect x="160" y="24" width="160" height="38" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="1.6"/>
+              <text x="240" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">🗄️ Customers table</text>
+              <path d="M160,32 L70,32" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arSqlUc3red)"/>
+              <text x="35" y="27" text-anchor="middle" font-size="15" font-weight="700" fill="#dc2626">✗</text>
+              <text x="35" y="45" text-anchor="middle" font-size="8.5" font-weight="700" fill="#dc2626">2nd clustered</text>
+              <path d="M320,54 L410,54" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arSqlUc3grn)"/>
+              <text x="445" y="49" text-anchor="middle" font-size="15" font-weight="700" fill="#16a34a">✓</text>
+              <text x="445" y="63" text-anchor="middle" font-size="8.5" font-weight="700" fill="#166534">non-clustered</text>
+            </svg>
+          </div>
+          <p class="uc-what">There's only one physical order a table's rows can be stored in, so a
+          second clustered index is impossible — every other index you add, no matter how
+          frequently that column is queried, has to be non-clustered instead.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Only one clustered index, ever — the rest are non-clustered.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

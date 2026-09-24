@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Almost every execution-plan review starts with "is this a seek, a scan, or a table scan" — reading a plan correctly starts here.</li>
-        <li>Explains why "I saw a table scan" isn't automatically a performance complaint — a lot of candidates get this backwards.</li>
-        <li>A near-universal follow-up the moment query tuning or execution plans come up in an interview.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🎯 Index Seek</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Scanning every index entry to find one row wastes work.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>B-tree navigation jumps straight to the matching row(s).</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Seek = direct B-tree jump straight to the matching row(s).</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">📇 Index Scan</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>The predicate isn't selective enough to justify a seek.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Optimizer reads every leaf-level index entry instead, in order.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Scan = uses the index but reads every entry.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#475569; --why-bg:#f1f5f9">
+          <div class="wc-head">📖 Table Scan</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>No useful index exists for this predicate at all.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Engine reads every row directly — cheap on a small table.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Table Scan = skips indexes, reads every row directly.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -249,6 +270,71 @@
       </div>
       <p class="cx-note">A tiny lookup table — the optimizer correctly skips indexing overhead and just reads all 6 rows.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You filter on one exact, highly selective indexed key</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arSql14a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">OrderId = 48213</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🗂️ Orders (millions)</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arSql14a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🎯 1 row (seek)</text>
+            </svg>
+          </div>
+          <p class="uc-what">One exact key matches one row, so the optimizer jumps straight down
+          the B-tree instead of touching any unrelated row — an <b>Index Seek</b>.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Selective equality on an indexed column → seek.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your predicate excludes only a handful of rows</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arSql14b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">Status &lt;&gt; 'Cancelled'</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">📇 Whole index</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arSql14b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">most rows match</text>
+            </svg>
+          </div>
+          <p class="uc-what">Excluding only a few "Cancelled" rows still leaves almost the whole
+          table qualifying, so reading the whole index leaf level beats repeated tree lookups — an
+          <b>Index Scan</b>, still using the index, just reading all of it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Predicate matches most rows → scan, not seek.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You query a tiny lookup table with only a few rows</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arSql14c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#115e59" letter-spacing=".03em">6-ROW LOOKUP TABLE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#115e59">📖 OrderStatusLookup</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arSql14c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#115e59">all 6 rows read</text>
+            </svg>
+          </div>
+          <p class="uc-what">With only 6 rows, reading the whole table outright is cheaper than the
+          overhead of navigating an index at all — a <b>Table Scan</b> is the correct, fastest plan
+          here, not a red flag.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Tiny table → table scan can be the fastest plan.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

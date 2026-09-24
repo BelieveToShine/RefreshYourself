@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>The natural follow-up right after a plain <a href="2.html">CTE</a> question — "can a CTE reference itself?" comes up often.</li>
-        <li>The standard tool for hierarchical data: an org chart, a category tree, a bill-of-materials — anything with an unknown number of levels.</li>
-        <li>A common way in to "find every report under a manager, however deep the chart goes."</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔁 Recursive CTE</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Hierarchical data — an org chart, a category tree, a bill-of-materials — can be arbitrarily deep, but a plain, non-recursive query has to fix its number of joins at write-time, so it structurally can't walk down to a level it doesn't already know exists.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A recursive CTE combines an anchor member with a recursive member that joins back to the CTE's own growing result via <code>UNION ALL</code>, re-running each round until it returns zero new rows — one query walks the whole hierarchy no matter how many levels deep it goes.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Recursive CTE = anchor member + recursive member, re-running until a round adds nothing new.</span></div>
+      </div>
     </div>
   </details>
 
@@ -205,6 +208,73 @@
       </div>
       <p class="cx-note"><code>MAXRECURSION</code> is T-SQL's built-in safety cutoff — useful, but the <code>WHERE o.Depth &lt; 50</code> guard is what actually protects against a genuine cycle (A reports to B, B reports to A) instead of just failing loudly at round 100.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You need every report under a manager, however deep the org chart goes</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 90" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arRcte1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="190" y="8" width="100" height="30" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="240" y="27" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">👑 Manager</text>
+              <path d="M232,38 L145,56" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arRcte1)"/>
+              <path d="M248,38 L335,56" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arRcte1)"/>
+              <text x="240" y="50" text-anchor="middle" font-size="9" fill="#166534">any depth</text>
+              <rect x="90" y="58" width="110" height="30" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="145" y="77" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🧑‍💼 Report</text>
+              <rect x="280" y="58" width="110" height="30" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="335" y="77" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🧑‍💼 Their report</text>
+            </svg>
+          </div>
+          <p class="uc-what">The anchor picks the manager's own row, then the recursive member joins <code>ManagerId</code> back to the growing result set, round after round, until a round finds no new reports. <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Unknown depth under one starting row → recursive CTE.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> The hierarchy is a category tree or bill-of-materials, not an org chart</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arRcte2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="10" y="18" width="135" height="30" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="77" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#134e4a">📁 Category</text>
+              <path d="M145,33 H170" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arRcte2)"/>
+              <rect x="172" y="18" width="135" height="30" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="239" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#134e4a">📂 Subcategory</text>
+              <path d="M307,33 H332" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arRcte2)"/>
+              <rect x="334" y="18" width="135" height="30" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="401" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#134e4a">📦 Product</text>
+            </svg>
+          </div>
+          <p class="uc-what">Same shape as an org chart — one anchor row, then a recursive member joining a "parent id" column back to itself — just applied to a product catalog or a parts list instead of people.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Any self-referencing "parent id" column → same recursive-CTE shape.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> The data has a genuine cycle — A reports to B, B reports to A</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 90" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arRcte3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="100" y="28" width="110" height="30" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="155" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🧍 A</text>
+              <rect x="270" y="28" width="110" height="30" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="325" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🧍 B</text>
+              <path d="M150,28 C150,4 330,4 330,28" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arRcte3)"/>
+              <path d="M330,58 C330,82 150,82 150,58" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arRcte3)"/>
+              <text x="240" y="10" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">reports to</text>
+              <text x="240" y="88" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">reports to</text>
+            </svg>
+          </div>
+          <p class="uc-what">Without a guard, the recursive member never returns zero new rows — it just keeps re-joining forever. <b>A great interview trap</b> — candidates often assume the technique is what's risky, when it's an unguarded cycle in the data.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Cycle in the data → guard depth yourself, don't rely on <code>MAXRECURSION</code> alone.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

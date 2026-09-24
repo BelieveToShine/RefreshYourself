@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>All three look interchangeable for "find rows related to another table" — but they check different things and fail in different ways.</li>
-        <li>Comes up any time a query filters by "has a matching row" instead of returning that row's own columns.</li>
-        <li>A very common follow-up: why a seemingly correct <code>NOT IN</code> query returns nothing at all.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📋 IN</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A seemingly correct <code>NOT IN</code> query can silently return zero rows.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>IN</code> compares the value to a list — one <code>NULL</code> breaks <code>NOT IN</code>.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>IN</code> = compares value to list; <code>NOT IN</code> + <code>NULL</code> can silently fail.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🔍 EXISTS</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A value-based check like <code>IN</code> can break on a <code>NULL</code>.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>EXISTS</code> only checks a row exists — no value compared, no <code>NULL</code> risk.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>EXISTS</code> = yes/no row check — never compares values, immune to <code>NULL</code>.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🔗 JOIN</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span><code>IN</code> and <code>EXISTS</code> only filter rows — they never return columns.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>JOIN</code> returns matched rows directly, so multiple matches duplicate the outer row.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>JOIN</code> = returns matched rows — can duplicate on multiple matches.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -346,6 +367,77 @@
       </div>
       <p class="cx-note">Unlike <code>IN</code>/<code>EXISTS</code>, a <code>JOIN</code> returns one row per match — add <code>DISTINCT</code>, or use <code>EXISTS</code> if you only need a yes/no filter.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You only need a yes/no filter — do any related rows exist?</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="uc11a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">EXISTENCE FILTER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">👤 Customer row</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#uc11a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🔍 any order? yes/no</text>
+            </svg>
+          </div>
+          <p class="uc-what">You don't need the order's own columns, just whether one exists.
+          <code>EXISTS</code> is the safe default here — it never compares values, so it can't
+          be tripped up by a stray <code>NULL</code> in the related table.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Simple existence filter → <code>EXISTS</code> is the safe default.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your "customers with no orders" query returns zero rows — but it shouldn't</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="uc11b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">NOT IN + NULL</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="42" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">📋 Orders.CustomerId</text>
+              <text x="105" y="55" text-anchor="middle" font-size="9.5" fill="#991b1b">5, 8, NULL, 12</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#uc11b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">⚠️ UNKNOWN for all rows</text>
+            </svg>
+          </div>
+          <p class="uc-what">One <code>NULL</code> in <code>Orders.CustomerId</code> (a guest
+          checkout, say) makes every <code>NOT IN</code> comparison <code>UNKNOWN</code> instead
+          of true or false, so nothing passes and the query silently returns zero rows.
+          <b>Candidates often assume <code>NOT IN</code> behaves like <code>NOT EXISTS</code> —
+          it doesn't.</b> Rewriting it as <code>NOT EXISTS</code> fixes it without changing what
+          the query is actually asking for.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>NOT IN</code> + <code>NULL</code> → zero rows; <code>NOT EXISTS</code> is immune.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">3</span> You need the related table's own columns, not just a filter</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="uc11c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#6d28d9"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4c1d95" letter-spacing=".03em">JOIN — RETURNS ROWS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#4c1d95">👤 Customer (3 orders)</text>
+              <path d="M190,43 H290" stroke="#6d28d9" stroke-width="1.6" fill="none" marker-end="url(#uc11c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#4c1d95">🔗 3 rows returned</text>
+            </svg>
+          </div>
+          <p class="uc-what">Once you need actual order columns alongside the customer, only a
+          <code>JOIN</code> returns them directly — but a customer with 3 matching orders now
+          comes back 3 times. Add <code>DISTINCT</code>, or switch to <code>EXISTS</code> if a
+          filter was all you actually needed.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need real columns → <code>JOIN</code>; need just a filter → <code>EXISTS</code>/<code>IN</code>.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,11 +64,40 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up any time reliability of a multi-step write is discussed — a very common, very practical SQL question.</li>
-        <li>Explains a real production bug pattern: a multi-step update that "half-applied" because nothing was ever wrapped in an explicit transaction.</li>
-        <li>A near-guaranteed follow-up the moment ACID or "atomicity" comes up in an interview.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🏁 BEGIN</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A multi-step write can half-apply when one step fails.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>BEGIN groups statements into one all-or-nothing unit.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">BEGIN = turns off autocommit, starts the transaction.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#15803d; --why-bg:#dcfce7">
+          <div class="wc-head">🔒 COMMIT</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Nothing in a transaction is safely finished until it ends.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>COMMIT makes every change since BEGIN permanent.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">COMMIT = locks in the whole transaction so far.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+          <div class="wc-head">↩️ ROLLBACK</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A failed step midway still needs to be undone.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>ROLLBACK undoes everything since BEGIN, or since a SAVEPOINT.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">ROLLBACK = undo, whole transaction or back to a mark.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🚩 SAVEPOINT</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A full ROLLBACK also discards the work that was fine.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>SAVEPOINT marks a spot to roll back to instead.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">SAVEPOINT = a marker, not a commit or undo.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -245,6 +274,70 @@
       </div>
       <p class="cx-note">With no explicit <code>BEGIN TRANSACTION</code>, autocommit was on the whole time — the first two inserts were never part of anything the third one could pull down with it.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Several writes must succeed or fail together</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">ONE UNIT, ALL OR NOTHING</text>
+              <rect x="8" y="24" width="130" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="73" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🏁 BEGIN</text>
+              <path d="M138,43 H176" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="176" y="24" width="130" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="241" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">📝 Stmt 1 + 2</text>
+              <path d="M306,43 H344" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="344" y="24" width="128" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="408" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🔒 COMMIT</text>
+            </svg>
+          </div>
+          <p class="uc-what">Wrap every step in one <code>BEGIN</code>…<code>COMMIT</code> so they succeed or fail as a single unit, instead of one write silently half-applying.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Multi-step change → wrap it in BEGIN…COMMIT.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> One step fails, but an earlier step in the same transaction should survive</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">ROLLBACK TO SAVEPOINT ONLY</text>
+              <rect x="20" y="24" width="200" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="120" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🚩 SAVEPOINT → ❌ fails</text>
+              <path d="M220,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">↩️ ROLLBACK TO SAVEPOINT</text>
+            </svg>
+          </div>
+          <p class="uc-what">Mark a <code>SAVEPOINT</code> before the risky step, then roll back only to it — the work done earlier in the same transaction is left standing.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">ROLLBACK TO SAVEPOINT keeps everything before the mark.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> No BEGIN TRANSACTION was ever called</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">AUTOCOMMIT = 3 SEPARATE TXNS</text>
+              <rect x="8" y="24" width="130" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="73" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ INSERT 1</text>
+              <rect x="176" y="24" width="130" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="241" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ INSERT 2</text>
+              <rect x="344" y="24" width="128" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="408" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">❌ INSERT 3</text>
+            </svg>
+          </div>
+          <p class="uc-what">Without an explicit <code>BEGIN</code>, each statement is already its own committed transaction — Insert 1 and 2 are permanent the instant they succeed, with nothing left to roll back once Insert 3 fails.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No BEGIN → each statement already committed on its own.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

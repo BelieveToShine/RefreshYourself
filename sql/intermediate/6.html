@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up any time you're numbering results — leaderboards, "top N per group," or deduplication logic.</li>
-        <li>The interviewer is really testing whether you know these only diverge <b>at a tie</b> — data with no ties looks identical across all three.</li>
-        <li>A common follow-up right after window functions in general, to check you understand ties, not just the syntax.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔢 ROW_NUMBER()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Leaderboards need one unique number per row, even when scores tie.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Hands out unique sequential numbers; a tie is broken arbitrarily.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Always unique — a tie is split arbitrarily, not meaningfully.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🥈 RANK()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Giving tied rows different numbers hides that they actually tied.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Gives tied rows the same rank, then skips the next number.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Ties share a rank, then a gap follows.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#166534; --why-bg:#dcfce7">
+          <div class="wc-head">🎯 DENSE_RANK()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A skipped number after a tie breaks a clean placement list.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Gives tied rows the same rank, then keeps counting — no gap.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Ties share a rank, next value never skips.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -211,6 +232,72 @@
       </div>
       <p class="cx-note">Same tie, three different outcomes: <code>RN</code> keeps counting straight through, <code>Rnk</code> skips a number right after the tie, <code>DRnk</code> doesn't.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You need exactly one row per duplicate key — dedup or "latest per group"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">DEDUP BY KEY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🗂️ 3 rows, same key</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🔢 keep RN = 1</text>
+            </svg>
+          </div>
+          <p class="uc-what">ROW_NUMBER() numbers every row uniquely, tie or not, so filtering to
+          <code>RN = 1</code> keeps exactly one row per group — which row "wins" the tie doesn't
+          matter here, only that every row gets a distinct number.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need one unique row per group → filter <code>ROW_NUMBER() = 1</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Showing standings where a tie should still skip the next placement</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">RANK() — TIE THEN GAP</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🥈🥈 tie at 2nd</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">next = 4th ⚠️</text>
+            </svg>
+          </div>
+          <p class="uc-what">RANK() gives Bob and Carol's tie the same number, then the next
+          distinct score jumps ahead — the same rule as two runners tying for 2nd and the next
+          real runner becoming 4th, with "3rd" never handed out.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Tie shares a rank, next value skips a number.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> Showing "1st, 2nd, 3rd" with no placement ever skipped, even on a tie</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">DENSE_RANK() — TIE, NO GAP</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🥈🥈 tie at 2nd</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">next = 3rd ✅</text>
+            </svg>
+          </div>
+          <p class="uc-what">DENSE_RANK() also gives tied rows the same rank, but the next
+          distinct score gets the very next integer — the visible sequence of places stays
+          consecutive no matter how many rows tied before it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Tie shares a rank, next value never skips.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

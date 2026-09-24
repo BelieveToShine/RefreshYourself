@@ -64,15 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Almost every "the app just hangs" incident that isn't a bug is really one transaction
-        waiting on another transaction's lock — you can't diagnose that without knowing what a
-        lock actually is.</li>
-        <li>Interviewers ask this to see whether you treat locking and blocking as the same word,
-        or correctly separate the mechanism from the symptom it produces.</li>
-        <li>It's the foundation the Isolation Levels and Deadlock vs. Blocking questions build on
-        — neither makes sense without this one first.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🤝 Shared Lock</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Two transactions that only want to read the same row would needlessly end up waiting on each other if every lock blocked every other lock the same way.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A shared lock can coexist with other shared locks on the same data at the same time — reads don't conflict with other reads.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Shared lock → readers can coexist, nobody waits.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">🔒 Exclusive Lock</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A transaction that's changing a row can't let any other transaction hold a lock on that same row at the same moment, or the data ends up with conflicting changes.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An exclusive lock can't coexist with any other lock on that data — the writer gets sole access until it commits or rolls back.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Exclusive lock → blocks everything else, no exceptions.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -144,6 +153,44 @@
     </svg>
     <figcaption>Transaction A's lock on Row 1 is exactly why Transaction B has to wait — that
     wait is blocking.</figcaption>
+  </figure>
+
+  <div class="viz-label">🧠 Shared vs. Exclusive <span class="viz-sub">— which one actually causes the wait</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 236" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shSx" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arSxGray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shSx)"><rect x="245" y="20" width="150" height="40" rx="13" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="45" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🗄️ Row 1</text>
+
+      <path d="M320,60 V80" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M160,80 H480" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M160,80 V100" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arSxGray)"/>
+      <path d="M480,80 V100" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arSxGray)"/>
+
+      <g filter="url(#shSx)"><rect x="20" y="100" width="280" height="112" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#166534">🤝 Shared Lock (S)</text>
+      <text x="160" y="154" text-anchor="middle" font-size="11.5" fill="#334155">Txn A holds S</text>
+      <text x="160" y="172" text-anchor="middle" font-size="11.5" fill="#334155">Txn B holds S too</text>
+      <line x1="45" y1="182" x2="275" y2="182" stroke="#86efac" stroke-width="1.2"/>
+      <text x="160" y="200" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ neither has to wait</text>
+
+      <g filter="url(#shSx)"><rect x="340" y="100" width="280" height="112" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="480" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#991b1b">🔒 Exclusive Lock (X)</text>
+      <text x="480" y="154" text-anchor="middle" font-size="11.5" fill="#334155">Txn C holds X</text>
+      <text x="480" y="172" text-anchor="middle" font-size="11.5" fill="#334155">Txn D wants Row 1 too</text>
+      <line x1="365" y1="182" x2="595" y2="182" stroke="#fca5a5" stroke-width="1.2"/>
+      <text x="480" y="200" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🚫 Txn D must wait</text>
+    </svg>
+    <figcaption>Shared locks on the same row can pile up with nobody waiting — an exclusive lock
+    is the one that forces everyone else to queue.</figcaption>
   </figure>
 
   <div class="trap">
@@ -221,6 +268,85 @@
       <code>COMMIT</code> or <code>ROLLBACK</code> — any other transaction that tries to touch
       Row 1 in the meantime just has to wait.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Two transactions both just want to read the same row</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">BOTH JUST READING</text>
+              <rect x="10" y="24" width="120" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="70" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">Txn A (S)</text>
+              <rect x="180" y="24" width="120" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="240" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🗄️ Row 1</text>
+              <rect x="350" y="24" width="120" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="410" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">Txn B (S)</text>
+              <path d="M130,43 H180" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <path d="M350,43 H300" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+            </svg>
+          </div>
+          <p class="uc-what">Both transactions only take a shared lock on Row 1. Shared locks
+          coexist with each other, so neither one has to wait for the other. <b>This is the #1
+          scenario you'll actually run into</b> — most reads never block anything.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Shared + shared → no blocking.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> One transaction wants to update Row 1 while another is still reading it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2Grn" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker>
+                <marker id="arUc2Amb" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker>
+              </defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">READER (S) BLOCKS WRITER (X)</text>
+              <rect x="10" y="24" width="120" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="70" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">Reader (S)</text>
+              <rect x="180" y="24" width="120" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="240" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🗄️ Row 1</text>
+              <rect x="350" y="24" width="120" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="410" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">Writer waits</text>
+              <path d="M130,43 H180" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc2Grn)"/>
+              <path d="M350,43 H300" stroke="#b45309" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUc2Amb)"/>
+            </svg>
+          </div>
+          <p class="uc-what">Under a stricter isolation level, the reader's shared lock is still
+          held. The writer needs an exclusive lock, and an exclusive lock can't coexist with any
+          other lock — so the writer waits until the read finishes. Reads locking too is exactly
+          how a reader ends up blocking a writer.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Shared lock in the way → writer waits.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> Two transactions both want to update the same row</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#134e4a" letter-spacing=".03em">WRITER (X) BLOCKS WRITER (X)</text>
+              <rect x="10" y="24" width="120" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="70" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#134e4a">Txn A (X)</text>
+              <rect x="180" y="24" width="120" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="240" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🗄️ Row 1</text>
+              <rect x="350" y="24" width="120" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="410" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#134e4a">Txn B waits</text>
+              <path d="M130,43 H180" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <path d="M350,43 H300" stroke="#0f766e" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUc3)"/>
+            </svg>
+          </div>
+          <p class="uc-what">Both transactions need an exclusive lock, and only one can hold it at
+          a time. The second one waits until the first commits or rolls back — this pair always
+          blocks, no isolation level changes that.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Exclusive + exclusive → always blocking.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

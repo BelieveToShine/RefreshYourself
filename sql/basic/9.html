@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up any time duplicate rows show up in a result — a very common quick-fix interview question.</li>
-        <li>Explains why bolting <code>DISTINCT</code> onto a slow query can make it slower, not fix it.</li>
-        <li>A common opener before a deeper question about sorting/hashing cost elsewhere in SQL.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+        <div class="wc-head">🔁 DISTINCT</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A result full of duplicate rows looks like a simple fix — just add DISTINCT — but treating it as a free keyword hides that finding those duplicates is real work, and bolting it onto an already-slow query can make it slower instead of fixing it.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>DISTINCT removes duplicates by comparing the whole selected row, which means the engine has to sort or hash the entire result set first — genuine work whose cost scales with how many rows and columns are involved.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">DISTINCT fixes duplicates correctly, but the sort/hash behind it isn't free.</span></div>
+      </div>
     </div>
   </details>
 
@@ -179,6 +182,74 @@
       </div>
       <p class="cx-note">Now a row is only a duplicate if <b>both</b> <code>City</code> <b>and</b> <code>Country</code> match another row — the whole selected row is the unit of comparison, not just <code>City</code> on its own.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You just want the unique values from one column</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">CITY COLUMN ONLY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🏙️ Paris, Paris, London</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc9a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ Paris, London</text>
+            </svg>
+          </div>
+          <p class="uc-what">Selecting just <code>City</code> with DISTINCT is the simplest and
+          most common way DISTINCT actually gets used — two rows are duplicates here only if
+          their <code>City</code> values match, so repeated city names collapse down to one row
+          each.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One column selected → dedupe on that column alone.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> You add a second column to the SELECT list</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing=".03em">CITY + COUNTRY = WHOLE ROW</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🏙️ Paris, France</text>
+              <text x="240" y="49" text-anchor="middle" font-size="16" font-weight="700" fill="#1d4ed8">≠</text>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🏙️ Paris, USA</text>
+            </svg>
+          </div>
+          <p class="uc-what">Add <code>Country</code> next to <code>City</code> and the whole
+          selected row — <code>(City, Country)</code> together — becomes the unit of comparison.
+          <code>Paris, France</code> and <code>Paris, USA</code> now count as two different rows,
+          even though <code>City</code> alone would have looked identical.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">More selected columns → the whole row has to match to count as a duplicate.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You bolt DISTINCT onto an already-slow query to "fix" duplicates</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing=".03em">LARGE RESULT SET</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">📊 slow + duplicates</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc9c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">⏱️ real added cost</text>
+            </svg>
+          </div>
+          <p class="uc-what">DISTINCT is a correct fix for duplicate rows, but it isn't free — the
+          engine still has to sort or hash the entire result set to find them. Adding it to a
+          query that's already slow on a large result set can make it slower, not faster — a
+          common trap for candidates who treat it as a free filter keyword.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Large result set → DISTINCT adds real sort/hash cost, not a free filter.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Checks whether you know a CTE is mainly about readability, not an automatic performance boost — a common interview trip-up.</li>
-        <li>Comes up any time a query grows more than one layer of subqueries and gets hard to follow.</li>
-        <li>Recursive CTEs are the standard way to walk a hierarchy (org chart, category tree) — a natural follow-up once the basic form is explained.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🏷️ CTE</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Once a query nests two or three subqueries deep, it's hard to tell which <code>SELECT</code> owns what — you end up reading from the innermost layer outward just to follow the logic.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>WITH name AS (...)</code> names that subquery once, up top, so everything below can reference it by name and the whole query reads top-to-bottom instead of inside-out.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">CTE = naming a subquery once so the query reads top-to-bottom — not an automatic speed boost.</span></div>
+      </div>
     </div>
   </details>
 
@@ -190,6 +193,77 @@
       </div>
       <p class="cx-note">This is the one thing a plain subquery can't easily do — <code>OrgChart</code> refers back to itself to walk down the management chain.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your query has grown two or three layers of nested subqueries</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">NESTED → NAMED</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">🌀 3 nested SELECTs</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🏷️ WITH … AS (…)</text>
+            </svg>
+          </div>
+          <p class="uc-what">Every extra layer needs unwinding just to see which <code>SELECT</code>
+          feeds which. Naming the innermost piece as a CTE turns it into one readable step instead
+          of a nested block. <b>This is the #1 reason most people reach for a CTE.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Nested layers piling up → name the subquery with a CTE.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You reach for a CTE expecting it to run faster than the subquery it replaced</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">SAME PLAN UNDER THE HOOD</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🏷️ WITH … AS (…)</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="43" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">⚙️ optimizer</text>
+              <text x="375" y="57" text-anchor="middle" font-size="8.5" fill="#991b1b">≈ same as subquery</text>
+            </svg>
+          </div>
+          <p class="uc-what">A standard, non-recursive CTE is a readability tool — most optimizers
+          turn it into a plan similar to the equivalent subquery, so naming it doesn't buy speed by
+          itself.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Standard CTE → clarity, not an automatic performance win.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You need to walk a self-referencing hierarchy, like an org chart or category tree</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 130" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="160" y="4" width="160" height="30" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="240" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="#115e59">👤 CEO (anchor)</text>
+              <path d="M240,34 V52" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="160" y="52" width="160" height="30" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="240" y="72" text-anchor="middle" font-size="11" font-weight="700" fill="#115e59">🧑‍💼 Manager</text>
+              <path d="M240,82 V100" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="160" y="100" width="160" height="30" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="240" y="120" text-anchor="middle" font-size="11" font-weight="700" fill="#115e59">🧑‍💻 Employee</text>
+              <text x="380" y="70" text-anchor="middle" font-size="9" fill="#115e59">joins back</text>
+              <text x="380" y="82" text-anchor="middle" font-size="9" fill="#115e59">to itself ↻</text>
+            </svg>
+          </div>
+          <p class="uc-what">A recursive CTE references itself: an anchor picks the starting row,
+          then a recursive part joins back to the CTE's own name, repeating until nothing new is
+          found — something a plain subquery can't easily do.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Hierarchy to walk → recursive CTE, not a plain subquery.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

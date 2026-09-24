@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up as a natural follow-up any time raw SQL, an ORM, or app-layer query logic gets discussed.</li>
-        <li>Explains a real production choice: fewer network round trips, tighter permissions, and one shared place to fix a query.</li>
-        <li>A common opener before diving into permissions, SQL injection, or performance topics.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🗄️ Stored Procedures</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without one, the same query logic ends up duplicated across every caller, the full SQL text has to be sent over the network on every call, and each caller needs direct table permissions just to run it.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A stored procedure saves that logic once on the server under a name — callers send a short parameterized call, get <b>EXECUTE</b> permission instead of direct table access, and everyone shares the one saved copy.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Stored procedure = named SQL saved server-side — short call, shared logic, EXECUTE not table access.</span></div>
+      </div>
     </div>
   </details>
 
@@ -186,6 +189,86 @@
       </div>
       <p class="cx-note">Every caller sends this one short line — the actual query behind it never travels over the network again.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">1</span> Several different callers already need the exact same query logic</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 130" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcSp1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#6d28d9"/></marker></defs>
+              <rect x="20" y="12" width="150" height="28" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <text x="95" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#4c1d95">📊 Reporting job</text>
+              <rect x="20" y="50" width="150" height="28" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <text x="95" y="68" text-anchor="middle" font-size="11" font-weight="700" fill="#4c1d95">🖥️ Web app</text>
+              <rect x="20" y="88" width="150" height="28" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <text x="95" y="106" text-anchor="middle" font-size="11" font-weight="700" fill="#4c1d95">⏱️ Nightly batch job</text>
+              <path d="M170,26 L300,64" stroke="#6d28d9" stroke-width="1.5" fill="none" marker-end="url(#arUcSp1)"/>
+              <path d="M170,64 H300" stroke="#6d28d9" stroke-width="1.5" fill="none" marker-end="url(#arUcSp1)"/>
+              <path d="M170,102 L300,64" stroke="#6d28d9" stroke-width="1.5" fill="none" marker-end="url(#arUcSp1)"/>
+              <rect x="300" y="34" width="160" height="60" rx="12" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.8"/>
+              <text x="380" y="59" text-anchor="middle" font-size="12" font-weight="700" fill="#4c1d95">🗄️ GetOrdersBy-</text>
+              <text x="380" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#4c1d95">Customer</text>
+            </svg>
+          </div>
+          <p class="uc-what">A reporting job, the web app, and a nightly batch process all need
+          the same order-lookup logic. Instead of copy-pasting that SQL into three places, they
+          all call the one saved procedure — fix the query once and every caller gets the fix.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Many callers, one saved copy — fix it once.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A caller should run this query but never get direct table access</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 100" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcSp2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="15" y="22" width="140" height="34" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="85" y="43" text-anchor="middle" font-size="11" font-weight="700" fill="#134e4a">🙋 Reporting tool</text>
+              <rect x="195" y="22" width="150" height="34" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="270" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#134e4a">🗄️ Procedure</text>
+              <text x="270" y="51" text-anchor="middle" font-size="9" fill="#134e4a">(EXECUTE only)</text>
+              <rect x="380" y="22" width="90" height="34" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="425" y="43" text-anchor="middle" font-size="11" font-weight="700" fill="#134e4a">📋 Table</text>
+              <path d="M155,39 H195" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUcSp2)"/>
+              <path d="M345,39 H380" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUcSp2)"/>
+              <path d="M85,56 V76 H425 V56" stroke="#dc2626" stroke-width="1.4" stroke-dasharray="4 3" fill="none"/>
+              <text x="255" y="90" text-anchor="middle" font-size="9.5" font-weight="700" fill="#b91c1c">🚫 no direct table access</text>
+            </svg>
+          </div>
+          <p class="uc-what">The reporting tool only needs to run this one query, never anything
+          else against the Orders table. Granting <b>EXECUTE</b> on the procedure gives it exactly
+          that, without ever handing out direct SELECT/INSERT/UPDATE access to the underlying
+          table.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">EXECUTE on the procedure, not access to the table.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">3</span> This same query gets called very often, and the full SQL text adds up over the wire</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcSp3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">CALLED OFTEN, EVERY DAY</text>
+              <rect x="20" y="24" width="150" height="34" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="95" y="46" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">💻 App</text>
+              <path d="M170,41 H310" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcSp3)"/>
+              <circle r="3" fill="#b45309"><animateMotion dur="1.4s" repeatCount="indefinite" path="M170,41 H310"/></circle>
+              <rect x="310" y="24" width="150" height="34" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="385" y="46" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🗄️ Procedure</text>
+            </svg>
+          </div>
+          <p class="uc-what">Every extra byte adds up when the same call happens many times a
+          minute. Sending a short named call instead of the full SQL text every time is real,
+          measurable savings in network chatter — not a claim about the query itself running
+          faster.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Short call, repeated often — real network savings, not raw speed.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

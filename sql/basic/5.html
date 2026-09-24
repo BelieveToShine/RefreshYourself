@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>The most common reason a WHERE clause silently returns fewer rows than expected — a comparison against NULL that nobody noticed was failing.</li>
-        <li>One of the most-asked "gotcha" questions across every SQL interview, junior through architect.</li>
-        <li>Sets up every later topic that filters or joins on a possibly-missing column.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">❓ NULL in Comparisons</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>NULL isn't a value, it's <i>unknown</i> — so a WHERE clause comparing a column to NULL with <code>=</code> silently drops rows the developer expected to match, even when comparing NULL to NULL itself.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>IS NULL</code> and <code>IS NOT NULL</code> exist as dedicated operators built specifically to test for NULL, not ordinary comparisons — using them instead of <code>=</code> or <code>&lt;&gt;</code> is the reliable fix.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">NULL = unknown, not empty — <code>= NULL</code> never matches, not even <code>NULL = NULL</code>.</span></div>
+      </div>
     </div>
   </details>
 
@@ -197,6 +200,74 @@
       <p class="cx-note"><code>IS NULL</code> / <code>IS NOT NULL</code> are dedicated operators, not
       ordinary comparisons — this is the reliable way to test for NULL.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> You write WHERE Email = NULL, expecting it to find the NULL rows</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arNc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">= NULL</text>
+              <rect x="10" y="24" width="200" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="110" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">Email = NULL</text>
+              <path d="M210,43 H280" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arNc1)"/>
+              <rect x="280" y="24" width="190" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">UNKNOWN → 0 rows</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into — the comparison
+          evaluates to UNKNOWN, not TRUE, so the query returns zero rows even though matching
+          NULL rows exist in the table.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">= NULL never finds NULL rows — it evaluates to UNKNOWN.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You write WHERE Email &lt;&gt; NULL, expecting it to find the non-NULL rows</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arNc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">&lt;&gt; NULL</text>
+              <rect x="10" y="24" width="200" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="110" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">Email &lt;&gt; NULL</text>
+              <path d="M210,43 H280" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arNc2)"/>
+              <rect x="280" y="24" width="190" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">UNKNOWN → still 0 rows</text>
+            </svg>
+          </div>
+          <p class="uc-what">Same mechanism as the trap above — comparing anything against NULL,
+          including with <code>&lt;&gt;</code>, still evaluates to UNKNOWN, so this also returns
+          zero rows, not the non-NULL rows wanted. <b>A common trap</b> — candidates often assume
+          <code>&lt;&gt;</code> is the fix for <code>= NULL</code>; it isn't, it has the exact
+          same problem.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">&lt;&gt; NULL has the exact same problem as = NULL.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> You use IS NULL / IS NOT NULL instead of = or &lt;&gt;</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arNc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">IS NULL</text>
+              <rect x="10" y="24" width="200" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="110" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">Email IS NULL</text>
+              <path d="M210,43 H280" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arNc3)"/>
+              <rect x="280" y="24" width="190" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ finds NULL rows</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>IS NULL</code> and <code>IS NOT NULL</code> are dedicated
+          operators, not ordinary comparisons, so they correctly test for NULL directly — this is
+          the reliable way to filter on it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">IS NULL / IS NOT NULL are the only operators built to test for NULL.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 
