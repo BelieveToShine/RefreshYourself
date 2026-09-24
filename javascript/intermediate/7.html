@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>"Predict the output" of a <code>setTimeout</code> / <code>Promise</code> snippet is one of the single most common JavaScript interview screens, at every level.</li>
-        <li>Real production bugs — a UI update that should happen "right after" a promise resolves, but a timer callback jumps in first — trace directly back to not knowing this ordering rule.</li>
-        <li>It's the fastest way an interviewer separates someone who memorized <code>async</code>/<code>await</code> syntax from someone who understands what's actually running underneath it.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">⚡ Microtask Queue</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A <code>Promise.then()</code> callback needs to run right after the current sync code finishes — if it had to wait behind whatever macrotask happened to be queued, a UI update chained off a resolved promise could get delayed behind an unrelated timer.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Promise.then()</code>/<code>queueMicrotask()</code> queue directly here, and the event loop drains the whole queue — even new microtasks added mid-drain — before it ever looks at the macrotask queue.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Microtask Queue = Promise/queueMicrotask, drains 100% before the next macrotask.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#475569; --why-bg:#f1f5f9">
+          <div class="wc-head">🐢 Macrotask (Task) Queue</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A fired <code>setTimeout</code>/<code>setInterval</code> callback still has to get back onto the call stack somehow — without a rule for when that happens, "runs after 0ms" could mean anything, including cutting in front of pending microtasks.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Fired timer/I/O callbacks land here after Web APIs hands them off, and the event loop pulls exactly <b>one</b> per cycle — only once the call stack is empty AND the microtask queue is fully drained.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Macrotask (Task) Queue = setTimeout/setInterval/I/O, exactly ONE per cycle, only after microtasks are empty.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -328,6 +341,69 @@ Promise.resolve().then(() =&gt; console.log(<span class="str">"promise"</span>))
       </div>
       <p class="cx-note">One microtask still beats two macrotasks — the whole microtask queue empties before the event loop touches the macrotask queue at all, and the two timeouts then run in the order they were scheduled.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're asked to predict the console.log order of a setTimeout/Promise snippet</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">THE #1 SCREENING QUESTION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🧩 setTimeout/Promise</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="43" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">📋 Sync → ALL micro</text>
+              <text x="375" y="56" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">→ ONE macro</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into — "predict the output" of a mixed <code>setTimeout</code>/<code>Promise</code> snippet is one of the single most common JavaScript interview screens, at every level. Trace it the same way every time: sync code first, then drain the <b>entire</b> microtask queue, then exactly <b>one</b> macrotask, repeat.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Sync first, then ALL microtasks, then ONE macrotask — repeat.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> A .then() UI update keeps finishing before a setTimeout(fn, 0) analytics call — even though the timer was written first</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">NOT A BUG — QUEUE ORDER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">⚡ .then() UI update</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="43" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🐢 setTimeout(fn,0)</text>
+              <text x="375" y="56" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">analytics call</text>
+            </svg>
+          </div>
+          <p class="uc-what">The microtask queue always drains completely before the next macrotask runs, no matter which line was written first in the code — so the <code>.then()</code> callback always beats the timer's callback to the call stack.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Written-first order doesn't matter — microtasks still win.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You assume setTimeout(fn, 0) fires after exactly 0ms, no matter what else is running</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">0MS IS NOT A GUARANTEE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">⏱️ setTimeout(fn, 0)</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="43" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🐛 blocked by</text>
+              <text x="375" y="56" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">.then() chain</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>setTimeout(fn, 0)</code> doesn't mean "run immediately" — it means "queue this once the call stack is empty AND every pending microtask has drained." <b>A common trap</b> — a long enough chain of <code>.then()</code> calls can push that 0ms callback back arbitrarily far.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">0ms means "queue me," never "run me now."</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

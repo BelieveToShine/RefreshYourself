@@ -64,16 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>This is one of the most common senior-level diagnostic questions — it directly tests
-        whether you understand the browser's rendering pipeline, or only know "it's slow, add a
-        cache."</li>
-        <li>The exact bug in "forced synchronous layout" (reading a layout property right after
-        writing a style, in a loop) is real, common, and something a lot of engineers write by
-        accident.</li>
-        <li>Frames a whole class of production complaints — "it feels janky," "scrolling stutters,"
-        "typing lags" — as one mechanic: something is keeping the main thread from doing its job.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">🐌 Fast API, Slow Page</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Good API response times make it tempting to rule out performance entirely — so a slow-feeling page gets chased as a network problem while a long task, forced layout, or an unthrottled handler keeps quietly hogging the main thread.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The browser has one main thread doing JS, layout, paint, AND input — profile it directly (script vs. layout vs. paint) instead of the network, since anything that blocks that thread is felt as "slow" no matter how fast the API responded.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Fast API doesn't rule out a busy main thread — profile before you blame the network.</span></div>
+      </div>
     </div>
   </details>
 
@@ -290,6 +288,67 @@ window.addEventListener(<span class="str">"scroll"</span>, () =&gt; {
       slow" that has nothing to do with the API — it's re-running expensive work far more often
       than the screen can actually repaint.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your performance timeline shows repeated short Layout entries stacked back-to-back inside one task</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">WRITE THEN READ, IN A LOOP</text>
+              <text x="240" y="30" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">🔁 forces Layout</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">✍️ Write style</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">📏 Read offsetHeight</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is forced synchronous layout: reading a layout-dependent value (<code>offsetHeight</code>, <code>getBoundingClientRect()</code>) right after writing a style can't be answered with a stale number, so the browser runs Layout immediately. Do that write-then-read pair inside a loop and you pay for a full Layout on every single pass instead of once per frame.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Repeated short Layout entries in one task → a write-then-read pattern in a loop.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> The page feels sluggish from the very first moment, before any of your interaction code has even run</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">BIG BUNDLE, BEFORE ANYTHING RUNS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">📦 Big JS bundle</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">⏳ Still parsing</text>
+            </svg>
+          </div>
+          <p class="uc-what">The main thread has to download, parse, and execute that bundle before it's free to do layout, paint, or handle input at all — a bigger bundle delays every one of those, not just "your" code. Code splitting and lazy loading shrink that up-front cost.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Slow from the start → the main thread isn't free yet, not a rendering bug.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> Everything's fine until the user scrolls or resizes, then it stutters</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#115e59" letter-spacing=".03em">DOZENS OF EVENTS PER SECOND</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#115e59">🖱️ Scroll fires</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#115e59">🥴 No throttle</text>
+            </svg>
+          </div>
+          <p class="uc-what">A scroll or resize handler that isn't throttled re-runs its work dozens of times per second — far more often than the screen can actually repaint — and that has nothing to do with the API at all. Wrapping it in <code>requestAnimationFrame</code> so it runs roughly once per frame fixes it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Stutters only on scroll/resize → check for an unthrottled handler, not the network.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

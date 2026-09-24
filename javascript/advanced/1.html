@@ -64,17 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Every other topic in this tier quietly assumes you already have this picture —
-        Advanced Async Concurrency, Memory &amp; Garbage Collection, and Performance &amp;
-        Rendering all lean on "execution context, call stack, heap" without re-explaining it.</li>
-        <li>A common senior-level follow-up right after the Event Loop question: once you've
-        named the task/microtask order correctly, the next question is "okay, but what structure
-        is the engine actually operating on to make that order possible?"</li>
-        <li>It ties together three things most candidates have studied as separate facts —
-        scope/hoisting, closures, and the event loop's ordering — into one picture of the whole
-        machine.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🏗️ The Structure Under the Loop</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A candidate who correctly names the event loop's task/microtask order still goes blank on the common senior-level follow-up right after it — what execution contexts, call stack, and heap is that order actually operating on — because they studied the loop as the whole runtime instead of the last stage sitting on top of it.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Name the structure explicitly: one global execution context built once, a fresh execution context pushed per function call onto the call stack, and a heap that keeps a closure's variables alive after its own context is popped — the event loop only decides the order work runs in on top of that already-built structure.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Runtime = context + stack + heap, built once — the event loop only decides order on top of it.</span></div>
+      </div>
     </div>
   </details>
 
@@ -251,6 +248,66 @@ counter();                       <span class="cx-cmt">// 2</span></code></pre>
       but its lexical environment survives on the heap because <code>increment</code> still
       references <code>count</code>.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You name the event loop's task/microtask order correctly — then get asked what it's actually ordering</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">THE FOLLOW-UP QUESTION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">✅ Order explained</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">❓ Structure, too?</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into. Reciting the task/microtask order is only the last stage — the interviewer's next question is testing whether you can also name the execution contexts, call stack, and heap that order is being applied to.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Order ≠ structure — the loop question has a structure question right behind it.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> The same function calls itself twice (recursion), and you assume it's reusing one shared set of local variables</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">SAME FUNCTION, CALLED TWICE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">📞 fn() calls fn()</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">📚 2 separate contexts</text>
+            </svg>
+          </div>
+          <p class="uc-what">Every call — even the same function calling itself — pushes a brand-new execution context onto the call stack with its own copy of the local variables. That's exactly why recursion works: the inner call's variables never overwrite the outer call's.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same function, called twice → two independent execution contexts.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> The function that created a closure already returned — but you need to say where its variable still lives</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">CLOSURE OUTLIVES ITS CONTEXT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">📤 outer() returns</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🗄️ heap keeps it</text>
+            </svg>
+          </div>
+          <p class="uc-what">The outer function's execution context is normally popped and discarded the moment it returns — but if an inner function still references its variables, the engine keeps that lexical environment alive on the heap for as long as the closure is reachable.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Context is popped; a closure's variable survives on the heap instead.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

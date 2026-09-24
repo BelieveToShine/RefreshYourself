@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Testing questions show up in almost every JavaScript interview now — expect to explain your mocking strategy, not just write a happy-path test.</li>
-        <li>The forgotten-<code>await</code> bug is a real, common way a green CI pipeline hides an actual bug — a favorite thing for an interviewer to probe.</li>
-        <li>Gap-hunt addition: the track's original plan flagged "Testing" as a priority topic but never gave it a dedicated page — this session's own review caught and filled that gap.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🌐 Mock fetch itself</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>If a test only fakes the wrapper's return value, the wrapper's own fetch-handling code — building the request, checking the response — never actually runs, so a bug living inside it stays hidden.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Replace the global <code>fetch</code> and fake a whole <code>Response</code>-shaped object instead, so the wrapper's real logic executes against a controlled answer — the right call when the wrapper function itself is what's under test.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Mock fetch itself → fake a full Response, exercises the wrapper's own logic.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#166534; --why-bg:#dcfce7">
+          <div class="wc-head">🎭 Mock the wrapper function</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Testing code that merely calls a wrapper doesn't need the wrapper's real network call running underneath it — faking a whole <code>Response</code> object is more setup than that test actually needs.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>jest.mock()</code>/<code>vi.mock()</code> swaps in a fake wrapper that returns the resolved value directly, no <code>Response</code> object needed — best when testing code that calls the wrapper, though it hides real fetch-specific bugs like headers or status.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Mock the wrapper → return the value directly, but can hide real fetch-specific bugs.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -246,6 +259,67 @@ jest.mock(<span class="str">'./api.js'</span>);   <span class="cx-ok">// ✅ eve
       </div>
       <p class="cx-note">Same assertion, now awaited — this one lives or dies on what <code>depositAsync(-5)</code> actually does.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#166534">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're testing code that calls a wrapper like getUserName() — not the wrapper itself</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">TESTING THE CALLER</text>
+              <rect x="15" y="24" width="200" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🧪 test calls getUserName(42)</text>
+              <path d="M215,43 H295" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="295" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="380" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🎭 mocked api.js → 'Sam'</text>
+            </svg>
+          </div>
+          <p class="uc-what">The code under test just needs a wrapper that returns a predictable value — <code>jest.mock('./api.js')</code> swaps in exactly that, so <code>getUserName()</code> runs against a canned <code>{ name: 'Sam' }</code> result instead of a real network call.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Testing the caller → mock the wrapper's return value directly.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're testing the wrapper function itself — the one that actually calls fetch</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#3b82f6"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing=".03em">TESTING THE WRAPPER</text>
+              <rect x="15" y="24" width="200" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">🧪 test calls api.fetchUser()</text>
+              <path d="M215,43 H295" stroke="#3b82f6" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="295" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="380" y="40" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">🌐 fetch mocked</text>
+              <text x="380" y="55" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">→ fake Response</text>
+            </svg>
+          </div>
+          <p class="uc-what">Here the wrapper's own request/response-handling logic is exactly what needs to run, so faking only its return value would skip right over the code you're trying to test — <code>fetch</code> itself gets mocked instead, with a fake <code>Response</code>-shaped object standing in for the real network answer.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Testing the wrapper's own logic → mock fetch itself, not the wrapper.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> An async assertion like expect(promise).rejects.toThrow() isn't awaited or returned</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">NOT AWAITED</text>
+              <rect x="15" y="24" width="230" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">❌ assertion promise not awaited</text>
+              <path d="M245,43 H325" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="325" y="24" width="140" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="395" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🐛 passes anyway</text>
+            </svg>
+          </div>
+          <p class="uc-what">The test function finishes before the promise ever settles, so the runner marks it passed no matter what <code>depositAsync(-5)</code> actually does — a green checkmark that never actually checked anything. <b>A common trap</b> — an async assertion has to be awaited or returned, or the test can pass on a real bug.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No await/return on an async assertion → passes even when broken.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

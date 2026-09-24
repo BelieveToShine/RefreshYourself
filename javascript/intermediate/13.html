@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li><code>for...of</code>, spread (<code>...</code>), and destructuring all quietly run on the iterator protocol — knowing it explains why some things are "spreadable" and others aren't.</li>
-        <li>Generators are the real building block behind infinite sequences, custom data-structure traversal, and (historically) async flow-control libraries before <code>async</code>/<code>await</code> existed.</li>
-        <li>A common interview opener: "write a generator that produces an infinite sequence" — it's really testing whether you understand lazy evaluation, not generator syntax.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">📦 Array</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Some sequences are infinite or too large to ever fit in memory — building one as an array means computing and holding every single element before it's even usable, so an unbounded one could never finish.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An array is exactly what works when that's not the goal: every value gets computed and held in memory up front, giving you a fixed, finite collection you can read from as many times as you like.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Array = every value computed and held up front — finite, re-readable.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">⏸️ Generator</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Writing that one-value-at-a-time behavior by hand means building your own iterator object — tracking state yourself and returning <code>{ value, done }</code> on every call.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A <code>function*</code> does it for you: each <code>yield</code> pauses the function and hands out exactly one value, and <code>next()</code> resumes right where it stopped — so a value is only ever computed the moment it's actually asked for.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Generator = <code>yield</code> pauses, <code>next()</code> resumes — one value computed only when asked.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -214,6 +227,66 @@ it.next(); <span class="cx-cmt">// { value: 2, done: false } — could run forev
       </div>
       <p class="cx-note"><code>for...of</code> just keeps calling <code>next()</code> for you until <code>done</code> is <code>true</code> — or until you <code>break</code>, which the array version never needed because it was already fully built.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">1</span> You already have a small, fixed list of items to loop over</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">ALREADY FIXED &amp; SMALL</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">📋 Known list of items</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">📦 Plain array</text>
+            </svg>
+          </div>
+          <p class="uc-what">There's no memory problem to solve and no reason to pause execution — a plain array already holds every value, and you can read it with <code>for...of</code> (or spread) as many times as you like. This is the #1 scenario you'll actually reach for day to day.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Fixed, small list → a plain array is already the right tool.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#92400e">
+          <div class="uc-sit"><span class="uc-flag">2</span> You need values from something huge or endless — a log file, an ID stream, a counter with no end</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#92400e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">HUGE OR ENDLESS SOURCE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">♾️ Endless / huge source</text>
+              <path d="M190,43 H290" stroke="#92400e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">⏸️ yield, one at a time</text>
+            </svg>
+          </div>
+          <p class="uc-what">Loading it all into memory first isn't possible, or isn't worth it — a generator's <code>function*</code> / <code>yield</code> produces exactly one value per <code>next()</code> call, so the caller pulls only what it actually needs, one at a time.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Huge or endless source → generator, pull one value at a time.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You spread an infinite generator, expecting it to behave like an array</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">INFINITE SPREAD TRAP</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🌀 [...counter()]</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">⛔ never finishes</text>
+            </svg>
+          </div>
+          <p class="uc-what">Spread pulls values with <code>next()</code> until <code>done</code> is <code>true</code> — an infinite generator's <code>done</code> never becomes true, so <code>[...counter()]</code> never finishes, unlike an array literal, which is already fully built. <b>A common trap</b> — assuming a generator can be flattened into an array the same way any other iterable can.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Infinite generator + spread → never finishes, unlike an array.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

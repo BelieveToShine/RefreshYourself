@@ -64,11 +64,40 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Every array method you already reach for — <code>map</code>, <code>filter</code>, <code>reduce</code>, <code>sort</code> — is a higher-order function; recognizing the pattern is what's actually being tested, not the vocabulary.</li>
-        <li>"Why is this component re-rendering" and "why is this test flaky" almost always trace back to a side effect or a mutated shared value — the fix is usually "make this pure."</li>
-        <li>Composition, currying, and memoization show up whenever code chains transformations, builds reusable single-purpose functions, or avoids re-running an expensive calculation — the vocabulary for patterns you already write, not academic trivia.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🔗 Composition</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>One giant function that does every transformation end-to-end is hard to test on its own or reuse in a different order.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Chain small pure functions so each one's output becomes the very next one's only input — <code>pipe</code> reads that chain left to right, <code>compose</code> right to left.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Composition = one function's output → the next one's input, chained.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🧬 Currying</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A generic multi-argument function can't be specialized gradually one known value at a time — you either supply every argument or none.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Break it into a chain of one-argument calls, supplying exactly one argument each time until every argument has arrived.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Currying = one argument per call, chained, until all arrive.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🧩 Partial Application</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Sometimes you just want to pre-configure a function with a fixed value now — a logger with a fixed prefix — without being forced into currying's one-argument-per-call chain.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Lock in some arguments right now and hand back a function that still takes the rest together, in a single call.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Partial application = some args fixed now, the rest arrive together.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">🗄️ Memoization</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Re-running the same expensive pure calculation for the same input, over and over, wastes time recomputing an answer that will never change.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Cache the return value keyed by its input, so a repeat call with the same input returns the cached result instantly — safe only because the function is pure.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Memoization = same input again → cached result, only safe on pure functions.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -273,6 +302,83 @@ addFive(<span class="num">2</span>, <span class="num">3</span>);                
       </div>
       <p class="cx-note">Only safe because <code>fn</code> is <b>pure</b> — the same arguments always mean the same result, so caching by arguments never returns a stale answer.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're chaining several small transformations into one pipeline (parse → validate → format)</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc12a" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="10" y="16" width="140" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="80" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">double(3) → 6</text>
+              <path d="M150,33 H185" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arUc12a)"/>
+              <rect x="185" y="16" width="140" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="255" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">increment(6) → 7</text>
+              <path d="M325,33 H360" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arUc12a)"/>
+              <rect x="360" y="16" width="110" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="415" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">square(7) → 49</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: each function only handles one transformation, and <code>pipe</code> wires them together so one step's output becomes the very next step's only input — exactly the <code>pipe(double, increment, square)(3)</code> chain in the diagram above, just with your own steps swapped in.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Chained transformations, output feeding the next input → composition.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You derive a specific function from a generic one, and aren't sure whether you're currying it or partially applying it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 140" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc12b" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+                </marker>
+              </defs>
+              <rect x="140" y="10" width="200" height="34" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="240" y="31" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">add(a, b, c) — generic</text>
+              <path d="M240,44 V60 H100 V88" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arUc12b)"/>
+              <path d="M240,44 V60 H380 V88" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arUc12b)"/>
+              <rect x="20" y="88" width="160" height="42" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="100" y="106" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0f766e">curriedAdd(1)(2)(3)</text>
+              <text x="100" y="121" text-anchor="middle" font-size="8.5" fill="#5b6472">one argument per call</text>
+              <rect x="300" y="88" width="160" height="42" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="380" y="106" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">addFive(2, 3)</text>
+              <text x="380" y="121" text-anchor="middle" font-size="8.5" fill="#5b6472">rest arrive together</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>add(a, b, c)</code> is one generic function, but "derive a version of it" can mean two different things. Currying always breaks it into a chain of one-argument calls (<code>curriedAdd(1)(2)(3)</code>); partial application fixes some arguments now and hands back a function that still takes the rest together in one call (<code>addFive(2, 3)</code>).</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One arg at a time, chained → currying. Some args fixed, rest together → partial application.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> The same expensive pure calculation keeps getting called with the same input, over and over</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc12c" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#16a34a"/>
+                </marker>
+              </defs>
+              <rect x="10" y="16" width="210" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🔁 same input, again</text>
+              <path d="M220,33 H260" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arUc12c)"/>
+              <rect x="260" y="16" width="210" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="365" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ cached, no recompute</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>memoize()</code> wraps the function with a cache keyed by its arguments, so a repeat call with the same input returns the cached answer immediately instead of recomputing it. This is only safe because the wrapped function is pure — caching something with a side effect would silently skip that side effect on every repeat call.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same input again → return the cached result, safe only on pure functions.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

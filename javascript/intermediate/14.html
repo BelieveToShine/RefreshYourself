@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Almost everyone can name all four storage options, but far fewer can say which one an XSS bug can actually read — that gap is exactly what this question is testing.</li>
-        <li>Comes up any time the discussion turns to "how do we keep a user logged in" or "how do we cache data for offline use."</li>
-        <li>A common interview opener that's really a security question wearing a storage-APIs costume.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🍪 Cookies</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Something has to travel to the server automatically with every matching request, and if that something is sensitive, it can't be left readable by any script that happens to be running on the page — including one an XSS bug injected.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Cookies are attached automatically to every matching request, and can be marked <code>httpOnly</code> so no JavaScript — injected or not — can ever read them back.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Cookies = auto-sent, and the one option that can hide from JS via httpOnly.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📦 localStorage / sessionStorage</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Routing plain client-side data — a theme choice, an in-progress form draft — through cookies means it rides along on every request even though the server never needed to see it, and cookies' ~4KB cap isn't built for that anyway.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Plain key-value storage that only JavaScript touches, nothing sent to the server on its own: <code>localStorage</code> survives closing the tab, <code>sessionStorage</code> uses the same API but disappears when that tab closes.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Same JS-only API — localStorage persists, sessionStorage dies with the tab.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#15803d; --why-bg:#dcfce7">
+          <div class="wc-head">🗄️ IndexedDB</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A few MB of flat string values isn't shaped right once the data is genuinely large, or needs indexes and queries instead of a handful of settings.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>IndexedDB is a real, structured database running inside the browser, sized much larger and disk-limited rather than capped at a few MB — the answer for offline caches and large local datasets.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">IndexedDB = real database in the browser, for when flat strings aren't enough.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -277,6 +298,75 @@ console.log(localStorage.getItem(<span class="str">"draft"</span>));  <span clas
       </div>
       <p class="cx-note">Same read/write API for both — the only real difference is <b>how long the value survives</b>, not who's allowed to read it.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your app needs to keep a user logged in after they refresh or reopen the tab</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#d97706"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🔑 session token</text>
+              <path d="M212,33 H262" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arUc1)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🍪 httpOnly cookie</text>
+            </svg>
+          </div>
+          <p class="uc-what">The token needs to survive a refresh and reach the server automatically, but must stay out of reach of any script running on the page. An <code>httpOnly</code> cookie is built for exactly that: the browser still sends it with matching requests, but no JavaScript — including one an XSS bug injected — can read it back.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Sensitive + must survive a refresh → httpOnly cookie, not localStorage.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your app wants to remember something purely client-side, like a form draft or a UI setting</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">📝 form draft</text>
+              <path d="M212,33 H262" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arUc2)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">💾 localStorage / sessionStorage</text>
+            </svg>
+          </div>
+          <p class="uc-what">There's nothing sensitive here and nothing the server needs to see, so a plain JS-readable key-value store is the right fit — <code>localStorage</code> if it should survive closing the tab, <code>sessionStorage</code> if it should disappear once that tab closes. This is the #1 scenario you'll actually reach for day to day.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Non-sensitive + client-only → localStorage/sessionStorage, split by whether it should outlive the tab.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your app needs to cache a large or structured dataset in the browser for offline use</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#16a34a"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">📊 large / structured data</text>
+              <path d="M212,33 H262" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arUc3)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🗄️ IndexedDB</text>
+            </svg>
+          </div>
+          <p class="uc-what">A few MB of flat key-value strings isn't shaped right for this — IndexedDB is a real, structured database running inside the browser, with room for much more data and actual indexes/queries, built for exactly this kind of offline cache or large local dataset.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Large or structured client data → IndexedDB, not localStorage's flat strings.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

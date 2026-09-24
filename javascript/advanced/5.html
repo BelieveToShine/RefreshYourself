@@ -64,14 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A real diagnostic question senior engineers get asked directly — "the memory graph keeps
-        climbing" — not a request to recite "JavaScript has garbage collection."</li>
-        <li>Tests whether you understand <b>reachability</b>, the actual rule the engine uses, instead
-        of treating garbage collection as a black box that "just handles it."</li>
-        <li>Detached DOM nodes, forgotten listeners/timers, and long-lived closures are three of the
-        most common real memory leak causes in front-end code, not rare edge cases.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🧟 Reachable, But Not Needed</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Your SPA's memory keeps climbing after every page change, and assuming "JavaScript has garbage collection, so it can't leak" only stops you from finding the reference that's still keeping the old page's objects alive.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The GC only frees objects with no path back to a root — a detached DOM node, a forgotten listener/timer, or a long-lived closure all count as a path, so fixing a leak means finding and dropping that one forgotten reference, not distrusting the collector.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">A leak isn't the GC breaking — it's a reference you forgot you left behind.</span></div>
+      </div>
     </div>
   </details>
 
@@ -276,6 +276,66 @@ row = <span class="kw">null</span>;                <span class="cx-cmt">// nothi
       <code>handler</code> — once nothing else points to it either, the handler and everything it
       closed over can finally be collected.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You remove an element from the page, but a variable still holds a reference to it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">REMOVED FROM THE DOM</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">🗑️ removeChild(row)</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">📌 row still points to it</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into. <code>removeChild()</code> only detaches the element from the page's visible tree — the node itself stays on the heap for as long as any variable, array, or closure still references it, so nothing gets collected until that last reference is dropped too.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Removed from the DOM ≠ removed from the heap.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You add a resize or scroll listener whose closure captures a large variable, and never remove it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">NO removeEventListener</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🖱️ resize listener added</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🔒 closure pins bigDataset</text>
+            </svg>
+          </div>
+          <p class="uc-what">The listener's closure keeps everything it captured alive for as long as the listener stays registered — with no matching <code>removeEventListener</code> anywhere, that includes any large data the closure closed over, for good.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No removeEventListener → the closure, and everything it closed over, lives forever.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your SPA's memory keeps climbing after every route change, and you need to find out why</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#115e59" letter-spacing=".03em">NAVIGATE, SNAPSHOT, COMPARE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#115e59">🧭 Route changes</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#115e59">📈 Heap snapshot climbs</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the exact investigation the interview question is asking about. Take heap snapshots before and after several navigations and compare object counts that keep climbing instead of settling back down — look for detached DOM nodes left by components that unmounted but left a listener or interval still running, and closures capturing something large that never needed to survive past the page that created it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Compare heap snapshots over time — never judge growth from just one.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

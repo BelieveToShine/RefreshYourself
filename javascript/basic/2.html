@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Almost every JavaScript interview opens here — it's the fastest way to check whether you actually understand scope, not just syntax.</li>
-        <li><code>var</code>'s function-scope leak is a real source of bugs in loops, callbacks, and conditionals in production code, not just a trivia question.</li>
-        <li>Getting the classic "predict the output" loop question wrong is one of the most common early red flags interviewers watch for.</li>
-      </ul>
+      <div class="why-grid" style="grid-template-columns:1fr">
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🕳️ var</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A <code>var</code> declared inside an <code>if</code> or <code>for</code> block isn't contained by that block — it leaks out to the whole function, and every loop callback closes over that same shared variable, so all of them print its final value instead of the value at their own iteration.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>var</code> is scoped to the nearest function, not the block, and hoisted with an initial value of <code>undefined</code> — that's the exact mechanism behind the classic loop bug.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">var = function-scoped, leaks out of blocks, shared across a loop.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🧊 let</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>With only <code>var</code> available, a loop can't give each iteration its own copy of a variable, and reading a variable before its declaration line silently returns <code>undefined</code> instead of catching the mistake.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>let</code> is block-scoped — a fresh binding per iteration, per block — and hoisted into the Temporal Dead Zone, so touching it before its own line throws a <code>ReferenceError</code> instead of hiding the bug.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">let = block-scoped, fresh per iteration, throws if read too early.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🔒 const</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A plain reassignable binding gives no signal that a name is meant to keep pointing at the same value — nothing stops a later line from reassigning it by mistake.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>const</code> locks the name→value binding so reassignment throws — though it only locks the binding, not the object: <code>user.name = "Alex"</code> on a <code>const user</code> still works.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">const = binding is locked, the object's own properties aren't.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -345,6 +366,75 @@ user = { name: <span class="str">"Jo"</span> };     <span class="cx-err">// ❌ 
       </div>
       <p class="cx-note"><code>const</code> locks the <b>variable</b>, not the object — properties on the object it points to can still change freely.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're asked to predict the output of a for (var i...) loop with a setTimeout inside it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#d97706"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">one shared var i (ends at 3)</text>
+              <path d="M212,33 H262" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arUc1)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">all 3 callbacks print 3, 3, 3</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into — every callback closes over the exact same function-scoped <code>i</code>, and by the time any of them runs the loop has already finished, so they all read its final value. Swapping the loop to <code>let</code> is a one-word fix, because <code>let</code> creates a brand-new <code>i</code> per iteration.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Shared var → same final value everywhere. Fresh let → each iteration's own value.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your code reads a let/const variable before its declaration line runs</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">touched inside Temporal Dead Zone</text>
+              <path d="M212,33 H262" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arUc2)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">🐛 ReferenceError, not undefined</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>let</code> and <code>const</code> are hoisted just like <code>var</code>, but they stay uninitialized in the Temporal Dead Zone until their own line runs — so touching them early throws immediately instead of silently handing back <code>undefined</code> the way a <code>var</code> would.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">var before its line → undefined. let/const before its line → throws.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You expect a const object to be fully immutable</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">const user = { name: "Sam" }</text>
+              <path d="M212,33 H262" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arUc3)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">user.name = "Alex" — still works</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>const</code> only locks the <b>binding</b> — the variable can never point at a different object — it never freezes the object's own properties. <code>user.name = "Alex"</code> succeeds; only <code>user = {...}</code> (reassigning the binding itself) throws. Reaching for <code>Object.freeze(obj)</code> is the actual way to stop property mutation.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">const locks the binding, not the object — mutation still works.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

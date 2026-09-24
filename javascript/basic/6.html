@@ -64,11 +64,40 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Almost every "predict the output" warm-up that mixes <code>var</code> and <code>let</code> before their declaration line is testing exactly this.</li>
-        <li>Explains a real bug class: a <code>var</code> declared inside an <code>if</code>/<code>for</code> block leaking out and clashing with a variable of the same name outside it.</li>
-        <li>The scope chain built here is the exact mechanic closures (the next tier) hold onto — you can't reason about what a closure "remembers" without this first.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔧 var</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A <code>var</code> declared inside an <code>if</code>/<code>for</code> block isn't sealed inside it — it silently leaks out and can clash with a variable of the same name outside the block.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>var</code> is scoped to the whole enclosing function, not the block — it's hoisted and auto-initialized to <code>undefined</code> during the creation phase, so it's already usable (just <code>undefined</code>) before its own line runs.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>var</code> → function-scoped, hoisted and auto-set to <code>undefined</code>.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+          <div class="wc-head">🔒 let</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Reading a <code>let</code> before its declaration line doesn't quietly return <code>undefined</code> like <code>var</code> does — it throws, and without knowing about the TDZ that looks like a completely different bug.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>let</code> is hoisted into its block scope but left uninitialized in the Temporal Dead Zone until its own declaration line actually executes — read it early and it's a <code>ReferenceError</code>, not <code>undefined</code>.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>let</code> → block-scoped, hoisted into the TDZ, throws if read early.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+          <div class="wc-head">📌 const</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Sitting in its own column right next to <code>let</code>, it's tempting to assume <code>const</code> must hoist or scope differently since it's the "stricter" one.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>On scope, hoisting, and the TDZ it doesn't — <code>const</code> is block-scoped and hoisted into the TDZ exactly like <code>let</code>, with the same <code>ReferenceError</code> if read before its own line.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>const</code> → same scope/hoisting/TDZ behavior as <code>let</code>.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">✅ function declaration</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Calling a function before the line it's written on looks like it should throw the same "used before declaration" error as <code>let</code> — but it works, which is confusing without knowing why.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A function declaration is hoisted with its <b>entire body</b>, not just its name, and made callable immediately during the same creation phase that only sets <code>var</code> to <code>undefined</code> and leaves <code>let</code>/<code>const</code> in the TDZ.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">function declaration → fully hoisted with its body, callable before its own line.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -232,6 +261,81 @@
       </div>
       <p class="cx-note">A function declaration is hoisted with its <b>whole body</b>, not just its name — so it's safe to call above where it's written.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You log a var and a let, both before their own declaration line, in the same function</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 106" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="15" y="8" width="180" height="34" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="105" y="29" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">read var x EARLY</text>
+              <path d="M195,25 H267" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arUc1)"/>
+              <rect x="275" y="8" width="190" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="370" y="29" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">→ undefined (ok)</text>
+
+              <rect x="15" y="58" width="180" height="34" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="105" y="79" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">read let y EARLY</text>
+              <path d="M195,75 H267" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arUc1)"/>
+              <rect x="275" y="58" width="190" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="370" y="79" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">→ ❌ ReferenceError</text>
+            </svg>
+          </div>
+          <p class="uc-what">Same "used before its declaration line" mistake, two different outcomes. The <code>var</code> read early comes back <code>undefined</code> because it was already hoisted and auto-initialized. The <code>let</code> read early throws instead, because it's hoisted into the TDZ and only initializes when its own line actually runs — <code>const</code> behaves the same way as <code>let</code> here.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Read early → <code>var</code> gives <code>undefined</code>, <code>let</code>/<code>const</code> throw (TDZ).</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> You declare a variable inside an if/for block, then read it right after the block closes</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+                </marker>
+              </defs>
+              <rect x="15" y="14" width="200" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">var a declared inside { }</text>
+              <path d="M215,33 H287" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arUc2)"/>
+              <rect x="295" y="14" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="380" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">→ read outside: ✅</text>
+            </svg>
+          </div>
+          <p class="uc-what">Declare it with <code>var</code> and the read outside the block succeeds — <code>var</code> is function-scoped, so it was never sealed inside that block to begin with. Swap in <code>let</code> or <code>const</code> for the same read and it throws a <code>ReferenceError</code>, because the block boundary is real for both of them.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>var</code> leaks past <code>{ }</code>; <code>let</code>/<code>const</code> stay sealed inside it.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> You call a function on a line above where it's actually declared, further down in the same file</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+                </marker>
+              </defs>
+              <rect x="15" y="14" width="230" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="130" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">sayHi() called before its line</text>
+              <path d="M245,33 H323" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arUc3)"/>
+              <rect x="331" y="14" width="134" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="398" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">→ ✅ works</text>
+            </svg>
+          </div>
+          <p class="uc-what">It works — a function declaration is hoisted with its <b>entire body</b>, not just its name, and is made callable immediately during the creation phase. That's the same creation phase that only sets <code>var</code> to <code>undefined</code> and leaves <code>let</code>/<code>const</code> parked in the TDZ, so a function declaration is the one of these four that's actually safe to use before its own line.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Function declaration → hoisted with its whole body, callable before its own line.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

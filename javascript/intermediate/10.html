@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Nearly every real app talks to a server through <code>fetch</code>, and getting this exact behavior wrong is why apps silently show broken or empty UI on a 404 instead of an error message.</li>
-        <li>Comes up whenever an interviewer wants to check you actually understand what "reject" means for a Promise, not just that you can write <code>await fetch(...)</code>.</li>
-        <li><code>AbortController</code> and timeout handling are near-guaranteed follow-ups once basic <code>fetch</code> usage is confirmed.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#991b1b; --why-bg:#fee2e2">
+          <div class="wc-head">🔌 Network failure</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>When DNS fails, the device is offline, or CORS blocks the call, the request never reaches a server at all, so there's no response object to check — the failure has to surface some other way.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>fetch()</code>'s Promise rejects only in this exact case, so a <code>try/catch</code> or <code>.catch()</code> actually catches it — the one real reject case.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Network failure (DNS/offline/CORS) = the only case that rejects the Promise.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">📨 HTTP error (404/500)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A server that's reached and answers with a 404 or 500 completed the request just fine at the network level — code that assumes that status rejects the Promise silently shows broken or empty UI instead of an error message.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>fetch()</code> resolves the Promise for any status code and hands back a full <code>response</code> with <code>response.ok === false</code>, so you must check <code>response.ok</code> yourself before trusting the body.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">HTTP error (404/500) = Promise still resolves — check response.ok yourself.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -251,6 +264,66 @@ console.log(res.headers.get(<span class="str">'content-type'</span>)); <span cla
       </div>
       <p class="cx-note"><code>Headers</code> is its own object with <code>get()</code>/<code>has()</code>/<code>entries()</code> — not a plain <code>{}</code> you can index into directly.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#92400e">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your API call gets back a 404 or 500 from the server</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc10a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#92400e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">STILL A RESOLVED PROMISE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">📨 Server replies 404</text>
+              <path d="M190,43 H290" stroke="#92400e" stroke-width="1.6" fill="none" marker-end="url(#arUc10a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">✅ resolves, ok:false</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into. The server was reached and answered, so <code>fetch()</code> resolves the Promise normally and hands back a full <code>response</code> with <code>response.ok === false</code> — nothing ever reaches a <code>.catch()</code> on its own, so you have to check <code>response.ok</code> yourself before touching the body.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">HTTP error → resolved, not rejected — check response.ok.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#991b1b">
+          <div class="uc-sit"><span class="uc-flag">2</span> The user's connection drops or DNS fails mid-request</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc10b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#991b1b"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">THE ONE REAL REJECT CASE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🔌 DNS fails / offline</text>
+              <path d="M190,43 H290" stroke="#991b1b" stroke-width="1.6" fill="none" marker-end="url(#arUc10b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">❌ Promise rejects</text>
+            </svg>
+          </div>
+          <p class="uc-what">The request never reaches a server at all — no <code>response</code> object is ever created — so this is the only case where <code>fetch()</code>'s Promise actually rejects, and a <code>try/catch</code> or <code>.catch()</code> is what runs.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Network failure → the only case that actually rejects.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> A slow backend is taking too long and you need to give up</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc10c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">FETCH HAS NO TIMEOUT ON ITS OWN</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">⏱ setTimeout fires</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc10c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">🛑 controller.abort()</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>fetch()</code> has no built-in timeout, so a hung request just sits there forever on its own. Pairing an <code>AbortController</code> with <code>setTimeout</code> is the standard fix: the timer calls <code>controller.abort()</code>, which makes the in-flight fetch reject with an <code>AbortError</code> instead of hanging the UI.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No built-in timeout → pair AbortController with setTimeout.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 
