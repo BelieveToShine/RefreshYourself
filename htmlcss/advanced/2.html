@@ -64,16 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Knowing the rendering pipeline exists (<a href="../advanced/1.html">Browser Rendering</a>)
-        isn't the same skill as knowing what makes it slow on a real page — interviewers push on
-        this exact gap at senior/architect level.</li>
-        <li>"The API is fast but the page still feels janky" is a genuinely common real-world and
-        interview scenario — it separates candidates who reach for devtools from ones who guess.</li>
-        <li>Ties expensive selectors, stylesheet size, and animation cost back to the same
-        Layout/Paint/Composite pipeline — nothing here is a new mechanism, just where that
-        pipeline gets expensive.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🐢 CSS Never Crashes — So Where's the Slowdown?</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Layout, Paint, and Composite never throw an error when they're expensive — so a page that scrolls janky while the API responds in under 50ms gives a candidate nothing to point at, and it's easy to guess the network is the culprit instead.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Open devtools' Performance panel and read which stage is actually long — expensive selectors and stylesheet size cost matching time, layout thrashing forces Layout again and again, and animating a paint-triggering property like <code>box-shadow</code> costs Paint every frame — measuring finds the real one, guessing doesn't.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">No crash to chase — measure which pipeline stage is actually long.</span></div>
+      </div>
     </div>
   </details>
 
@@ -254,6 +252,66 @@ boxes.forEach((box, i) => {
       <p class="cx-note">Same end result for every box — the batched version forces Layout once
       instead of once per box in the loop.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your API responds in under 50ms, but scrolling still feels janky</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">FAST API, JANKY SCROLL</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">⚡ API: 50ms</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">🐢 Scroll still janky</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into. A fast API response doesn't rule out a slow render — stop looking at the network, open the Performance panel, record the scroll, and read which stage (Layout, Paint, or Composite) is actually taking the time.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Fast API + janky scroll → open the Performance panel, not the network tab.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You assume layout thrashing is a CSS bug and go hunting in the stylesheet for it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">READ-AFTER-WRITE LOOP</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🔁 read after write</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🐢 Layout reruns</text>
+            </svg>
+          </div>
+          <p class="uc-what">Layout thrashing isn't a stylesheet problem — it's JavaScript reading a layout value like <code>offsetHeight</code> right after writing a style change, inside a loop. Each read forces the browser to run Layout synchronously, again and again; editing CSS won't fix it, batching the reads before the writes will.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Layout thrashing lives in the JS loop, not the stylesheet.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> Elements repaint on every frame because of something like box-shadow or a gradient</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#115e59" letter-spacing=".03em">REPAINTING EVERY FRAME</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#115e59">🎨 box-shadow scroll</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#115e59">🖌️ Paint every frame</text>
+            </svg>
+          </div>
+          <p class="uc-what">Something like <code>box-shadow</code> or a gradient on many scrolling or animating elements can force a full repaint every single frame, when a cheaper, Composite-only alternative would look identical — that's a Paint cost, not a network cost, and no amount of API tuning fixes it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>box-shadow</code>/gradient on a scrolling element → Paint cost, every frame.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

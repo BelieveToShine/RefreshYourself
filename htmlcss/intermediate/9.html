@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Light/dark theme switching is one of the most common practical CSS interview asks, and custom properties are the standard, framework-free way to do it without duplicating every color rule.</li>
-        <li>It's the detail that separates "knows Sass variables" from "understands the platform" — a CSS variable lives in the browser at runtime, so JavaScript can read and change it without any build step.</li>
-        <li>Component libraries and design systems lean on this daily — a component's own local variables let it stay themeable without leaking its internals into the rest of the page.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🎛️ CSS Custom Properties</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A Sass or Less variable is compiled away before any CSS reaches the browser, so by the time the page is actually running there's nothing left for JavaScript to read or change — teams are left duplicating every rule per theme just to swap a palette.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A custom property (<code>--name</code>) is never compiled away — it's a real, live value the browser holds onto, so <code>setProperty()</code> can change it after the page has already rendered and every <code>var()</code> consumer repaints instantly, with zero rule duplication.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">CSS variable = still live in the running page; Sass variable = already gone by the time the page runs.</span></div>
+      </div>
     </div>
   </details>
 
@@ -243,6 +246,66 @@ body { background: <span class="ty">var</span>(<span class="kw">--bg</span>); co
       </div>
       <p class="cx-note">This line alone is the whole difference from Sass — a Sass variable can never be touched by running JavaScript, because it no longer exists by the time the page runs.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You need a light/dark theme toggle without duplicating every color rule</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">THEME TOGGLE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">🎨 :root palette</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🌙 [data-theme] swap</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into. Define the palette once as custom properties on <code>:root</code>, then override just those properties under <code>[data-theme="dark"]</code> — toggling one attribute on <code>&lt;html&gt;</code> swaps every rule already reading <code>var(--bg)</code>/<code>var(--text)</code> at once, with no per-rule duplication.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Toggle the values, not the rules.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A component like .card needs its own local variable that shouldn't leak into the rest of the page</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#115e59" letter-spacing=".03em">SCOPED COMPONENT VARIABLE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#115e59">🗂️ .card scope</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#115e59">🚫 Outside: undefined</text>
+            </svg>
+          </div>
+          <p class="uc-what">Declaring <code>--card-gap</code> directly inside <code>.card</code> scopes it to just that component — outside <code>.card</code>, <code>--card-gap</code> doesn't exist at all, unlike <code>--spacing</code> declared on <code>:root</code>, which reaches every descendant.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same <code>--name</code> syntax, different reach — declare it where you want it visible.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You write var(--name) but --name was never defined anywhere, and there's no fallback</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">MISSING VARIABLE, NO FALLBACK</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🔎 var(--missing)</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">↩️ Silent fallback</text>
+            </svg>
+          </div>
+          <p class="uc-what">The property becomes invalid at that point, so the browser treats it as unset — it falls back to the property's own inherited or initial value instead of breaking the page. That's exactly the case <code>var(--name, fallback)</code> exists to avoid.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Missing variable ≠ broken page — it quietly falls back, but <code>var(--name, fallback)</code> is the safer bet.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

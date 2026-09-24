@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Almost every "why does my page jump around while it's loading" bug traces back to font swapping — interviewers use this to check you understand what's happening during load, not just CSS syntax.</li>
-        <li><code>font-family</code>, <code>font-weight</code>, <code>line-height</code>, and <code>letter-spacing</code> show up in nearly every real stylesheet — knowing exactly what each one controls is a fast way to separate "has used CSS" from "has only read about CSS."</li>
-        <li>This connects straight to Core Web Vitals — font-driven layout shift is something real teams get paged about, not a trivia footnote.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+        <div class="wc-head">🔤 Web Font Loading &amp; Layout Shift</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A custom web font takes real time to download, so the browser has to render the text with <em>something</em> before that file arrives — and whatever it shows first rarely takes up the exact same space as the font that shows up later.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>font-family</code>, <code>font-size</code>, <code>font-weight</code>, <code>line-height</code>, and <code>letter-spacing</code> together decide how much room text takes up in each state, so once the real font swaps in, a mismatch in those values reflows the page — a real, measurable layout shift Core Web Vitals-style metrics are built to catch, not a cosmetic flicker.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">The swap isn't the bug — a fallback and a real font with different metrics is.</span></div>
+      </div>
     </div>
   </details>
 
@@ -228,6 +231,66 @@
       </div>
       <p class="cx-note">Drop either <code>white-space: nowrap</code> or <code>overflow: hidden</code> and <code>text-overflow: ellipsis</code> quietly does nothing — all three are required together.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your custom web font is still downloading when the heading first renders</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">FALLBACK NOW, SWAP LATER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">⏳ Fallback renders now</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🔁 Web font swaps in</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into. The browser shows the next name in the <code>font-family</code> list — or keeps text invisible, depending on <code>font-display</code> — while the real file downloads, then swaps the web font in once it arrives. If the fallback and the web font don't share the same average character width or line-height, the text reflows to a different width or height and everything below it visibly jumps.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Fallback shows now, real font swaps in later — mismatched metrics push the page.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You dismiss the jump as "just a flicker," not a real bug</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">FLICKER OR REAL METRIC?</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">👀 "Looks like a flicker"</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">📉 Real, measurable CLS</text>
+            </svg>
+          </div>
+          <p class="uc-what">A font swap that changes line count or line height is a real, measurable layout shift — exactly what Core Web Vitals-style metrics like Cumulative Layout Shift are built to score, not just an appearance change. Calling it "just a flicker" in an interview is the exact trap this topic is testing for.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Visual flicker ≠ harmless — a reflow is a real CLS hit.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You add the ellipsis truncation rule and the text still doesn't truncate</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#115e59" letter-spacing=".03em">ELLIPSIS NEEDS ALL THREE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#115e59">✂️ ellipsis alone</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#115e59">❌ silently ignored</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>text-overflow: ellipsis</code> only truncates visibly once <code>overflow: hidden</code> and <code>white-space: nowrap</code> are also set on the same element — drop either one and the ellipsis rule quietly does nothing, with no error to warn you.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Ellipsis needs all three: <code>nowrap</code> + <code>hidden</code> + <code>ellipsis</code>.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Every other page in this track that touches performance points here instead of re-explaining it — <b>HTML Fundamentals</b>, <b>CSS Fundamentals &amp; Cascade</b>, the <b>Box Model</b>, <b>Display &amp; Visibility</b>, and <b>Transitions &amp; Animations</b> all lean on this exact pipeline rather than repeating it.</li>
-        <li>The near-guaranteed follow-up once someone says "the page feels janky" — the real answer is almost always which pipeline stage a change forces, not a code-style opinion.</li>
-        <li><b>CSS Performance</b>, right after this page, assumes this five-stage picture as a given and builds the deeper optimization advice on top of it.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">🐢 width / position</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Changing <code>width</code>, <code>margin</code>, or <code>position</code> genuinely moves or resizes the element, so every stage that already ran — sizing, painting, compositing — is now based on stale numbers.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>These properties force Layout to run again, which cascades into Paint and Composite too — the full, most expensive path through the pipeline.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">width / position → forces Layout → Paint → Composite, the expensive path.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🎨 background-color</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span><code>background-color</code> doesn't move or resize anything, but the pixels in that region are still wrong until something redraws them.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It skips Layout since no geometry changed, but still triggers Paint and Composite — a real but medium cost, cheaper than a layout change.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">background-color → skips Layout, still Paint + Composite — medium cost.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🚀 transform / opacity</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Animating a move or fade by changing <code>width</code>, <code>left</code>, or <code>background-color</code> every frame forces Layout and/or Paint to re-run on every single frame — exactly what drops frames.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>transform</code> and <code>opacity</code> can often skip Layout AND Paint entirely and go straight to Composite, making them the cheapest properties to animate.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">transform / opacity → often skip Layout AND Paint — straight to Composite, cheapest.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -330,6 +351,75 @@ nav ul li a { color: <span class="str">#1d4ed8</span>; }
       </div>
       <p class="cx-note">Both are invisible, but only <code>display: none</code> actually removes the element from the Render Tree — <code>visibility: hidden</code> still takes up space and still runs Layout.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> You toggle a hover/active/selected state that only changes background-color or box-shadow</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#d97706"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🖱️ toggle background-color</text>
+              <path d="M212,33 H262" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arUc1)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🎨 Paint + Composite only</text>
+            </svg>
+          </div>
+          <p class="uc-what">Layout has nothing to recompute since no geometry moved, but the pixels in that region still need to be redrawn and recomposited — safe to do often, but not completely free. This is the most common everyday case of the medium-cost path.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No geometry change → Layout skipped, but Paint + Composite still run.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're building a slide or fade animation and choosing which property to animate</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#16a34a"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🎬 animate transform/opacity</text>
+              <path d="M212,33 H262" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arUc2)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🚀 straight to Composite</text>
+            </svg>
+          </div>
+          <p class="uc-what">Animating <code>transform</code> (translate/scale) or <code>opacity</code> instead of <code>width</code>/<code>left</code>/<code>background-color</code> lets most frames skip Layout AND Paint entirely, which is why they're the properties to reach for on anything that moves every frame.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Animate transform/opacity, not width/left — the smoothest path through the pipeline.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You reposition or resize an element inside a scroll, drag, or resize handler by changing left, width, or margin directly</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🔁 left/width every frame</text>
+              <path d="M212,33 H262" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arUc3)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🐢 Layout → Paint → Composite</text>
+            </svg>
+          </div>
+          <p class="uc-what">Changing a layout-affecting property forces Layout, Paint, and Composite to all run again — doing that on every single scroll/drag/resize tick is exactly what causes dropped frames and visible jank.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Repositioning via left/width every frame → the expensive path, every frame.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Each of these replaces an old hack — a padding-top percentage trick for aspect ratio, a pile of media-query breakpoints, left/right rules that quietly break in a right-to-left layout.</li>
-        <li>Comes up whenever an interviewer asks "how would you stop this image from causing layout shift" or "how would you support a right-to-left language without doubling your CSS."</li>
-        <li><code>subgrid</code> specifically is newer and still not everyone's daily habit — being able to explain exactly what it fixes is a real differentiator.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🧩 Say What You Mean, Not the Hack</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Every one of these layout needs used to force a workaround — a padding-top percentage trick to fake an aspect ratio, a growing pile of media-query breakpoints for one fluid width, or a left/right rule that quietly breaks the moment the page switches to a right-to-left language — each one an extra hack a reviewer has to reverse-engineer to see what it's actually doing.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>aspect-ratio</code>, <code>object-fit</code>/<code>object-position</code>, <code>clamp()</code>, logical properties, <code>gap</code>, and <code>subgrid</code> each name the real intent directly — lock a shape, fit content inside a box, give one value a floor and ceiling, follow text direction, space items with no margin math, reuse a parent's exact tracks — so the browser handles it instead of a hand-rolled workaround.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Six properties, six retired hacks — no padding-top trick, no breakpoint wall, no LTR-only rule.</span></div>
+      </div>
     </div>
   </details>
 
@@ -253,6 +256,66 @@
       </div>
       <p class="cx-note"><code>.card</code> reuses <code>.row</code>'s exact 3 tracks (columns 2–4) instead of inventing its own.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your product images cause the page to jump while they're still loading in</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">IMAGE STILL LOADING</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">🖼️ No box size yet</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">📐 aspect-ratio locks it</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into. Without a reserved shape, the browser doesn't know a box's real size until the image finishes loading, so the layout jumps once it does. <code>aspect-ratio</code> locks the box's width-to-height shape immediately, and <code>object-fit: cover</code> then crops the image's real content to fill that box without stretching it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>aspect-ratio</code> reserves the shape before the pixels arrive.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your container needs a fluid width, and the media-query list keeps growing every time a design tweak calls for one more breakpoint</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#115e59" letter-spacing=".03em">GROWING BREAKPOINT LIST</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#115e59">📏 Breakpoint wall</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#115e59">🌊 clamp(min,pref,max)</text>
+            </svg>
+          </div>
+          <p class="uc-what">Instead of stacking a <code>width: XX%</code> rule at every media-query breakpoint, one <code>width: clamp(min, preferred, max)</code> line gives the container a floor, a ceiling, and a fluid width in between — no breakpoint list left to maintain.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>clamp()</code> = one line, a floor and a ceiling, no breakpoint wall.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#15803d">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your site is about to ship a right-to-left language, and every spacing rule was written with left/right</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#15803d"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">LTR-ONLY RULES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#15803d" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">↔️ left / right</text>
+              <path d="M190,43 H290" stroke="#15803d" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#15803d" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🔁 margin-inline</text>
+            </svg>
+          </div>
+          <p class="uc-what">A hardcoded left/right rule stays pointed the same physical way once text direction flips, so someone has to hand-write an override for every single one. Logical properties like <code>margin-inline</code> and <code>padding-block</code> are defined relative to the text's own reading direction instead, so the exact same CSS is already correct in a right-to-left layout — no separate override rule needed.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Logical properties follow text direction — zero separate RTL override.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 
