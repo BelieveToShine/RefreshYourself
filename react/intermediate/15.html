@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use this to check you don't assume React "adds" accessibility just by being a modern framework.</li>
-        <li>Comes up as a natural follow-up any time hooks, portals/modals, or server rendering already came up in the interview.</li>
-        <li><code>useId</code> is a favorite follow-up precisely because it sits at the intersection of accessibility and hydration safety.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+        <div class="wc-head">♿ Accessibility Baseline</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A <code>&lt;div onClick&gt;</code> compiles down to a plain <code>&lt;div&gt;</code> with none of a real button's built-in keyboard support or role, and a toast or live result count that updates on screen gives a screen-reader user no signal anything changed at all.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>React renders exactly the DOM you write and nothing more — semantic HTML and correct ARIA usage are entirely the developer's job, and any content that changes without a full page navigation needs <code>aria-live</code> so assistive tech actually announces it.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">React adds zero accessibility on its own — semantic HTML, correct ARIA, and aria-live for updates are all on you.</span></div>
+      </div>
     </div>
   </details>
 
@@ -245,6 +248,71 @@
       </div>
       <p class="cx-note">Without <code>aria-live</code>, a sighted user sees the new count — <b>a screen-reader user gets no signal anything changed</b>.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">1</span> Something on screen changes without a full page navigation — a toast, a live result count, a validation message</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🔔 {count} results</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#0f766e">aria-live="polite" →</text>
+              <path d="M170,33 H310" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🔊 announced</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: without <code>aria-live</code>, a sighted user sees the new count but a screen-reader user gets no signal anything changed at all. Adding <code>aria-live="polite"</code> (or <code>"assertive"</code> for something urgent) is what actually gets the update announced.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A visual-only update is invisible to a screen reader — aria-live is what announces it.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You open a modal, dialog, or dropdown that sits on top of the page</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 84" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker>
+                <marker id="arUc2b" markerWidth="7" markerHeight="7" refX="2" refY="2" orient="auto"><path d="M4.5,0 L0,2 L4.5,4 Z" fill="#b45309"/></marker>
+              </defs>
+              <text x="240" y="10" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">opens, traps focus in →</text>
+              <rect x="20" y="14" width="130" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="85" y="32" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔘 Open button</text>
+              <rect x="310" y="14" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="385" y="32" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔒 Modal, focus trapped</text>
+              <path d="M150,28 H310" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2a)"/>
+              <text x="240" y="55" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">← closes, focus restored</text>
+              <path d="M310,64 H150" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2b)"/>
+            </svg>
+          </div>
+          <p class="uc-what">Opening the modal should trap keyboard focus inside it, so tabbing never lands back on the page behind it — and closing it should return focus to whatever button triggered it. Skip either half and a keyboard or screen-reader user loses their place in the page entirely.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Modal open → trap focus in. Modal close → restore focus out.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You generate an id for a label/input pair (or any aria-* reference) with something other than useId</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🎲 Math.random()</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">differs every render →</text>
+              <path d="M170,33 H310" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">❌ server ≠ client id</text>
+            </svg>
+          </div>
+          <p class="uc-what">Candidates often assume any unique-enough value works for an <code>aria-*</code> id, but a randomly generated one produces a different value on the server render and the client's first render — that mismatch trips a real hydration warning, on top of the accessibility link silently breaking. <code>useId()</code> is the fix precisely because it stays identical on both passes.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Any id used for aria-* needs useId — a randomly generated one breaks hydration too.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

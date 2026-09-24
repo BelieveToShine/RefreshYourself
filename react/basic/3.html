@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Almost every "how do two components talk to each other" question starts here.</li>
-        <li>Thinking a child can just change a prop it received is the single most common early mistake in a real codebase.</li>
-        <li>Prop drilling and the callback pattern show up the moment an app has more than two component levels — which is almost immediately.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">📦 Props</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A child component needs data from whoever renders it, but if it could also reach up and freely rewrite that data, no one could predict what a component renders just from its own inputs — and two components could stomp on the same state with no clear owner.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>React hands data down as read-only props, one-way, parent to child — a component's output only ever depends on what it was given; when a child needs to affect the parent, the parent hands it a callback function as a prop instead, so the parent still owns and controls the real state.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Props = read-only data down; a callback prop is the only way back up.</span></div>
+      </div>
     </div>
   </details>
 
@@ -213,6 +216,80 @@
       <p class="cx-note"><code>theme</code> passes through two components that never touch it — this is the exact
       pain prop drilling causes, and exactly what Context or composition exists to remove.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> You need to quickly tweak a value inside a prop your component received</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcP1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="16" y="14" width="200" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="116" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🧩 Child mutates the prop</text>
+              <path d="M216,33 H300" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcP1)"/>
+              <rect x="300" y="14" width="164" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="382" y="30" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">🔁 Parent re-renders</text>
+              <text x="382" y="44" text-anchor="middle" font-size="9.5" fill="#991b1b">❌ change overwritten</text>
+            </svg>
+          </div>
+          <p class="uc-what">Mutating a prop directly breaks React's one-way data flow — and since the
+          parent still owns the real value, its very next re-render just overwrites your change, so
+          the edit doesn't even stick.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Mutate a prop → the parent's next re-render silently overwrites it.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A prop like theme has to pass through two or three components that never actually use it, just to reach one deeply nested child</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcP2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="6" y="18" width="105" height="32" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="58.5" y="38" text-anchor="middle" font-size="10" font-weight="700" fill="#134e4a">App</text>
+              <path d="M111,34 H131" stroke="#0f766e" stroke-width="1.4" fill="none" marker-end="url(#arUcP2)"/>
+              <rect x="131" y="18" width="105" height="32" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="183.5" y="38" text-anchor="middle" font-size="10" font-weight="700" fill="#134e4a">Layout</text>
+              <path d="M236,34 H256" stroke="#0f766e" stroke-width="1.4" fill="none" marker-end="url(#arUcP2)"/>
+              <rect x="256" y="18" width="105" height="32" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="308.5" y="38" text-anchor="middle" font-size="10" font-weight="700" fill="#134e4a">Sidebar</text>
+              <path d="M361,34 H381" stroke="#0f766e" stroke-width="1.4" fill="none" marker-end="url(#arUcP2)"/>
+              <rect x="381" y="18" width="93" height="32" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="427.5" y="38" text-anchor="middle" font-size="9.5" font-weight="700" fill="#134e4a">ThemeIcon</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>App</code>, <code>Layout</code>, and <code>Sidebar</code> never touch
+          <code>theme</code> themselves — they only forward it so <code>ThemeIcon</code> can finally use
+          it. That's prop drilling; Context or restructuring the component tree (composition) is the
+          usual fix.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Prop passes through components that never use it → prop drilling.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">3</span> You pass a new object, array, or inline function as a prop, and the receiving component is wrapped in memo</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcP3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#6d28d9"/></marker></defs>
+              <rect x="16" y="14" width="200" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="116" y="30" text-anchor="middle" font-size="10" font-weight="700" fill="#4c1d95">🧑‍💼 Parent renders</text>
+              <text x="116" y="44" text-anchor="middle" font-size="9" fill="#4c1d95">new {} every time</text>
+              <path d="M216,33 H300" stroke="#6d28d9" stroke-width="1.6" fill="none" marker-end="url(#arUcP3)"/>
+              <rect x="300" y="14" width="164" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="382" y="30" text-anchor="middle" font-size="10" font-weight="700" fill="#4c1d95">🧩 memo(Child)</text>
+              <text x="382" y="44" text-anchor="middle" font-size="9.5" fill="#4c1d95">❌ still re-renders</text>
+            </svg>
+          </div>
+          <p class="uc-what">Even though the values inside look the same, a new object, array, or
+          inline function literal is a brand-new reference on every render — <code>React.memo</code>
+          compares references, so it can't tell the new one apart from the old one and re-renders
+          anyway.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">New object/array/function prop each render → defeats React.memo even when the values match.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,11 +64,25 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Explains why React can support features like transitions and Suspense at all — Fiber is the re-architecture that made them possible, not a separate add-on bolted on top.</li>
-        <li>Interviewers use this question to separate "knows the term" from "understands what actually changed inside React."</li>
-        <li>A common opener before diving into concurrent rendering, since concurrency only makes sense once interruptible rendering is understood first.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">⛔ Old (stack) reconciler</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Computing a render's DOM updates as one recursive call stack means once it starts walking the tree, it can't stop until the whole thing is done — no way to pause for anything more urgent.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The old reconciler solved reconciliation correctly with exactly that approach: one synchronous pass, start to finish — simple, but it's this "can't pause" property that later became the limitation.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Old reconciler = one recursive pass, correct but can't pause once started.</span></div>
+        </div>
+
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">⏸ Fiber</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A reconciler that can't pause has to block the browser for the entire time it's computing an update — leaving no room for concurrent features like transitions or Suspense to exist at all.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Fiber reorganizes the same reconciliation work into small units, so React can pause between units, resume later, or abandon and restart — the re-architecture that makes concurrent rendering possible.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Fiber = same work, broken into pausable units — that's what enables concurrency.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -203,6 +217,87 @@
       </div>
       <p class="cx-note">There's no public API to "see" a unit of work directly — this just illustrates the shape of the idea: one component tree, broken into pieces small enough to pause between.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You reorder a list, and items visually swap but keep their own state</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+                </marker>
+              </defs>
+              <text x="90" y="12" text-anchor="middle" font-size="9.5" fill="#5b6472">BEFORE</text>
+              <text x="390" y="12" text-anchor="middle" font-size="9.5" fill="#5b6472">AFTER (reordered)</text>
+              <rect x="55" y="20" width="70" height="32" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="90" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🔑 A</text>
+              <rect x="140" y="20" width="70" height="32" rx="8" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="175" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🔑 B</text>
+              <path d="M220,36 H260" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arUc1)"/>
+              <rect x="270" y="20" width="70" height="32" rx="8" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="305" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🔑 B</text>
+              <rect x="355" y="20" width="70" height="32" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="390" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🔑 A</text>
+              <text x="240" y="62" text-anchor="middle" font-size="9.5" fill="#5b6472">same key ⇒ same identity across renders</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is reconciliation matching elements by their <b>key</b>, not by position — because each box kept its own key, React knows it's the same element that moved, not two brand-new ones, so its internal state travels with it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Keys let React match by identity across renders — not by position in the list.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> A big update is rendering, and you start typing in an input at the same time</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+                </marker>
+              </defs>
+              <text x="240" y="11" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">⌨️ keystroke jumps in here</text>
+              <rect x="62" y="18" width="56" height="32" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="90" y="38" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">U1</text>
+              <path d="M118,34 H212" fill="none" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arUc2)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+              <rect x="212" y="18" width="56" height="32" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="240" y="38" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">U2</text>
+              <path d="M268,34 H362" fill="none" stroke="#3b82f6" stroke-width="1.6" marker-end="url(#arUc2)"/>
+              <rect x="362" y="18" width="56" height="32" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="390" y="38" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">U3</text>
+              <text x="240" y="61" text-anchor="middle" font-size="9.5" fill="#5b6472">render pauses between units so the keystroke can go first</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is Fiber's interruptibility in action — because the render is broken into small units instead of one unbroken pass, React can pause between units, let your keystroke's update through first, then resume the big render exactly where it left off.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Fiber's units of work are what let an urgent update jump ahead of one already in progress.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You put a side effect (an API call, a log, a mutation) directly in the component body</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 96" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="90" y="8" width="300" height="28" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="240" y="26" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🎭 Render body (pure, may repeat)</text>
+              <path d="M240,36 V60" fill="none" stroke="#dc2626" stroke-width="1.6" marker-end="url(#arUc3)"/>
+              <rect x="90" y="60" width="300" height="28" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="240" y="78" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🐛 Effect fires the wrong number of times</text>
+            </svg>
+          </div>
+          <p class="uc-what">Because the render phase is pure and may run more than once — or get abandoned entirely before commit — a side effect sitting directly in render body can fire extra times, or fire on a render that never even reaches the screen.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Side effects belong in the commit phase (<code>useEffect</code>), never directly in render body.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

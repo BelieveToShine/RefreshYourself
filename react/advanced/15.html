@@ -64,14 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A 5,000-row table and a search box firing on every keystroke are two of the most
-        common "your app is slow under real data" interview scenarios, not rare edge cases.</li>
-        <li>Interviewers use this to check whether a candidate reaches for the fix that actually
-        matches the problem, instead of a surface-level one that doesn't.</li>
-        <li>A natural follow-up once a performance discussion moves from "how do you profile" to
-        "what do you actually change."</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">📊 Scaling a Large List</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Wrapping the row component in <code>React.memo</code> feels like the fix for a slow 5,000-row table, but the very first render still has to mount every one of those 5,000 real DOM nodes — memo only skips re-renders on later updates, it never touches that up-front mount cost.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Virtualization changes the actual number of DOM nodes that exist at any moment: it tracks scroll position and renders only the slice of rows currently inside the viewport (plus a small buffer), so mounting stays cheap no matter how many rows are in the underlying data.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>React.memo</code> skips re-rendering unchanged rows — it does NOT reduce how many DOM nodes exist. Virtualization is the actual fix for a genuinely large list.</span></div>
+      </div>
     </div>
   </details>
 
@@ -227,6 +227,66 @@
       <p class="cx-note">Typing "react" resets the timer on every keystroke — only the last one,
       after a 300ms pause, actually fires <code>search()</code>.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your table renders thousands of rows and feels slow to mount or scroll</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">📋 5,000 rows</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">only viewport mounts →</text>
+              <path d="M170,33 H310" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">👁 ~10 real DOM nodes</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: mounting thousands of real DOM nodes at once is expensive no matter what happens afterward. Virtualization tracks scroll position and renders only the slice of rows currently inside the viewport (plus a small buffer), so the real DOM node count stays tiny regardless of how many rows are in the underlying data.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Virtualization renders only the visible slice — the fix for a genuinely large list.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You already wrapped the row component in React.memo, but the table is still slow to load</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🧠 Rows wrapped in memo</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">mount cost unchanged →</text>
+              <path d="M170,33 H310" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐌 still 5,000 nodes</text>
+            </svg>
+          </div>
+          <p class="uc-what">Candidates often assume <code>React.memo</code> alone should fix this once they've applied it — but memo only skips re-rendering a row on a <i>later</i> update if its props haven't changed. It has no effect on the very first render, since every row still has to mount once regardless — the 5,000-node mount cost is untouched.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">React.memo helps updates, not the first mount — it can't reduce how many nodes get created.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your search input fires an API call on every single keystroke</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">⌨️ fires every keystroke</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">debounce delays →</text>
+              <path d="M170,33 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📡 ~1 request per pause</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is a different problem entirely — too many requests, not too many DOM nodes. Debouncing delays firing the request until typing pauses for a short window, collapsing what would otherwise be one request per keystroke into roughly one request per pause, and any response that's no longer for the current input value should be cancelled or ignored.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Debounce waits for a pause in typing, then cancels or ignores stale responses.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,14 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Answering "concurrent = multi-threaded" is a common first mistake that immediately
-        signals shallow understanding to a senior interviewer.</li>
-        <li>It's what actually explains why a search box can stay instantly responsive while a
-        huge list is re-filtering behind it — a real UX problem, not just trivia.</li>
-        <li>A near-guaranteed Deep Dive follow-up the moment React 18+, <code>startTransition</code>,
-        or <code>useDeferredValue</code> comes up.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🐢 startTransition</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Calling <code>setState</code> directly for an expensive update — like re-filtering a big list — makes it just as urgent as everything else, so it can block a keystroke that should feel instant.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Wrapping that specific state update in <code>startTransition</code> marks it non-urgent, so React is free to interrupt it the moment something more urgent comes in.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">startTransition = wrap the update, tell React it can wait.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">⏳ useTransition</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span><code>startTransition</code> alone gives no way to show the user that a non-urgent update is still catching up in the background.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The <code>useTransition</code> hook does the same wrapping, plus returns an <code>isPending</code> flag your UI can render while the deferred update finishes.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">useTransition = startTransition + an isPending flag to show.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">📦 useDeferredValue</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Sometimes the value driving an expensive render doesn't come from a <code>setState</code> call you own — a parent prop, a router, a library — so there's no update to wrap in a transition.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>useDeferredValue</code> takes that existing value and hands back a deliberately lagging, lower-priority copy of it to render the expensive part from.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">useDeferredValue = lag a value whose update you don't control.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -256,6 +274,75 @@
       <p class="cx-note">The input never waits on the big list — it renders from the
       always-current <code>query</code>, while the list catches up on the deferred copy.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're calling setState directly for an expensive update, and don't need a pending indicator</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">⌨️ setFilterText(v)</text>
+              <path d="M212,33 H262" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arUc1)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">🐢 marked non-urgent</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the plain case: you already own the state update, you just need React to know it can wait — wrap that one <code>setState</code> call in <code>startTransition</code> and move on.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Own the update, no loading UI needed → startTransition is enough.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> You want that same protection, plus something to show while the update is still catching up</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#0f766e"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">🐢 marked non-urgent</text>
+              <path d="M212,33 H262" fill="none" stroke="#0f766e" stroke-width="1.8" marker-end="url(#arUc2)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">⏳ isPending: true</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually reach for: this is exactly <code>startTransition</code>'s job plus the one thing it can't give you — an <code>isPending</code> flag to dim the list or show a spinner while the non-urgent render is still in flight.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need a pending indicator → reach for useTransition, not startTransition.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">3</span> The expensive part renders from a value you don't own the update for — a parent prop, a router param, a library</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#b45309"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b45309">📦 value from parent</text>
+              <path d="M212,33 H262" fill="none" stroke="#b45309" stroke-width="1.8" marker-end="url(#arUc3)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b45309">🐌 deferred copy</text>
+            </svg>
+          </div>
+          <p class="uc-what">There's no <code>setState</code> call here to wrap — the value just arrives from outside. <code>useDeferredValue</code> takes that value and hands back a lagging, lower-priority copy for the expensive part to render from instead.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No update to wrap, only a value → useDeferredValue.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

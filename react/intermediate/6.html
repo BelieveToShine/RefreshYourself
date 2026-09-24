@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use this to check you know Context's actual job — <code>skipping</code> prop drilling — not "a built-in Redux."</li>
-        <li>Comes up any time a value (theme, current user, locale) needs to reach many components at different depths.</li>
-        <li>The re-render cost is the favorite follow-up — a lot of candidates assume Context is free performance-wise.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">⚛️ Context API</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A value like theme or the current user often needs to reach components sitting at very different depths, and passing it down as a prop means every component in between has to relay it along, whether it actually uses that value or not.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Context lets any component below a Provider read the value directly, skipping the relay entirely — but every consumer re-renders on any value change, even one that only needed part of it, so it isn't built for high-frequency updates.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Context skips the relay, not a performance-free global store.</span></div>
+      </div>
     </div>
   </details>
 
@@ -247,6 +250,66 @@
       </div>
       <p class="cx-note">Without <code>useMemo</code>, every render hands the Provider a <b>brand-new object</b>, which alone can trigger consumers to re-render.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your value (theme, current user, locale) is needed by components sitting at very different depths, and props would have to relay through every one in between</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🎯 Value: theme</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">skips every level →</text>
+              <path d="M170,33 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">✅ Deep consumer</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: components in between (like <code>Header</code>, <code>Layout</code>, <code>Sidebar</code>) don't use the value at all, but a plain prop still has to pass through each one to reach the component that does. A <code>Provider</code> lets that deep component read the value directly, skipping every one of those relays.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Context reaches a deep consumer directly — no relay through components that don't use the value.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You wrap a value in a Provider, and every consumer re-renders whenever that value changes — even ones that only read part of it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔄 Value changes</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">not fine-grained →</text>
+              <path d="M170,33 H310" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">😮 ALL re-render</text>
+            </svg>
+          </div>
+          <p class="uc-what">Because Context has no fine-grained subscriptions, every component calling <code>useContext</code> on that context re-renders whenever the Provider's value changes — even a consumer that only reads one field of a larger value object. This is the re-render cost interviewers like to probe on.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Every consumer re-renders on any Provider value change — Context has no fine-grained subscriptions.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You pass a brand-new object literal straight to the Provider's value prop on every render, without memoizing it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">❌ fresh object ref</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">no useMemo →</text>
+              <path d="M170,33 H310" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🔁 all re-render</text>
+            </svg>
+          </div>
+          <p class="uc-what">Even after splitting contexts by concern, a fresh object reference handed to the Provider on every render can by itself trigger every consumer to re-render — the value "changed" by reference whether or not the underlying data actually did. Wrapping it in <code>useMemo</code>, keyed on its real dependencies, is what fixes this.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">An unmemoized value object defeats even a well-split context — memoize it.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

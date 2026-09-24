@@ -64,14 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Micro-frontend, monorepo, and React Native questions come up as soon as a team scales
-        past one app — they check for real multi-app experience, not just React syntax.</li>
-        <li>Confusing "same React model" with "same environment" is a fast tell that someone's
-        React Native exposure is shallow.</li>
-        <li>A common opener before an interviewer digs into how you'd structure a large,
-        multi-team React codebase.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔌 Module Federation</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Build-time composition means every consumer app has to rebuild and redeploy just to pick up another team's update — slow when apps ship on separate schedules.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Module Federation fetches a remote app's bundle over the network at runtime and shares its already-loaded dependencies live, so a consumer never needs to rebuild.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Module Federation = runtime fetch, same JS realm, live shared deps.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">📦 Build-time packages</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Fetching another team's bundle over the network at runtime puts every consumer in the same live runtime as that remote — weaker isolation than some teams want.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Each app publishes the shared code as a package and bakes it into its own build — no runtime fetch between apps, but every app must rebuild to pick up an update.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Build-time packages = compiled in at build time, rebuild to update.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#475569; --why-bg:#f1f5f9">
+          <div class="wc-head">🧱 iframes / Web Components</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Module Federation and build-time packages both still share one JS realm or build — not enough isolation for embedding a much less-trusted or foreign-framework app.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An iframe or Web Component sits behind a genuinely separate document/element boundary — strong isolation, but only <code>postMessage</code> crosses it, with no shared React state.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">iframes/Web Components = last resort, strong isolation, postMessage only.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -317,6 +335,73 @@
       question than something React itself goes deep on: it touches locale-aware routing and
       URLs, where translated strings actually live, and formatting dates, numbers, and currency
       per locale.</p>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your team owns one app, and another team's app needs to load into it at runtime without a rebuild every time they ship</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">RUNTIME FETCH, SAME REALM</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">Host shell</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc9a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">Remote loads live ✅</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the Module Federation case: the host fetches the other team's
+          bundle over the network at runtime and loads it into the same page, so their next
+          deploy doesn't require your app to rebuild at all.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Independent deploy schedules, same runtime → Module Federation.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You want to share a design-system or utility package across apps, without one app's runtime silently pulling in another app's code over the network</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">BAKED IN AT BUILD TIME</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">Shared package</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc9b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">Each app's own build</text>
+            </svg>
+          </div>
+          <p class="uc-what">Publishing the shared code as a package and letting each app bake it
+          into its own build avoids any runtime fetch between apps — the trade-off is that every
+          consumer has to rebuild and redeploy to pick up the next update.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No runtime coupling wanted → build-time packages, accept the rebuild cost.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#475569">
+          <div class="uc-sit"><span class="uc-flag">3</span> You need to embed a widget from a completely different framework — or a much less-trusted source — and it must not be able to touch your app's own React state</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#475569"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155" letter-spacing=".03em">postMessage ONLY CROSSES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">Host page</text>
+              <path d="M190,43 H290" stroke="#475569" stroke-width="1.6" fill="none" marker-end="url(#arUc9c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">Isolated iframe</text>
+            </svg>
+          </div>
+          <p class="uc-what">An iframe (or Web Component) sits behind a genuinely separate browser
+          context — strong isolation, communication only through <code>postMessage</code>, no
+          shared React state — exactly why it's a last resort: you gain isolation but lose
+          integration flexibility.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need real isolation from an untrusted or foreign-framework app → iframe/Web Component, last resort.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

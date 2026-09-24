@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A tooltip, dropdown, or popover that visibly "jumps" into place on first render is almost always a symptom of measuring the DOM in the wrong hook.</li>
-        <li>Comes up whenever you need to read a rendered element's size/position and adjust it before the user sees the wrong frame.</li>
-        <li>The "why does my effect fire twice" question is one of the most common early-React confusions, and interviewers use it to check you know it's a deliberate dev-only check, not a bug.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🌀 useEffect</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>If every side effect had to finish before the browser could paint, even ordinary work like fetching data or subscribing to an event would delay what the user sees for no good reason.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>useEffect runs asynchronously, after the browser has already painted — it never blocks the frame the user sees, which is why it's the right default for most side effects.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">useEffect = the safe default: async, after paint.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">📐 useLayoutEffect</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Measuring a just-rendered element (like a tooltip's own height) inside useEffect happens one frame too late — the user already sees a wrong-position flash before it gets corrected.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>useLayoutEffect runs synchronously, before the browser paints, so a measure-then-adjust fix lands before the user ever sees the wrong frame.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">useLayoutEffect = sync, before paint, for measure-then-adjust.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">💉 useInsertionEffect</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A CSS-in-JS library needs to inject its style rules before layout is even read — running that any later risks useLayoutEffect measuring against layout the injected styles hadn't affected yet.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>useInsertionEffect fires even earlier than useLayoutEffect, before layout is read at all — built specifically for library authors injecting styles, not for everyday application code.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">useInsertionEffect = earliest of the three, style-injection only.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -214,6 +235,66 @@
       </div>
       <p class="cx-note">Identical logic, just in <code>useEffect</code> — the DOM read/adjust happens <b>one frame too late</b> to avoid the flicker.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're fetching data, subscribing to an event, or running any other ordinary side effect on mount</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">BROWSER PAINTS FIRST</text>
+              <rect x="10" y="24" width="210" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🖌 Paint happens</text>
+              <path d="M220,43 H260" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="260" y="24" width="210" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">useEffect: fetch/subscribe ✅</text>
+            </svg>
+          </div>
+          <p class="uc-what">The effect fires only after the browser has already shown the frame, so there's nothing to flicker — it just runs async, in the background. <b>This is the #1 scenario you'll actually run into</b>, which is exactly why useEffect is the default.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Ordinary side effect, no visible flicker risk → useEffect.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> You need to measure a just-rendered element (like a tooltip's height) and reposition it before the user sees it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">FIX BEFORE PAINT</text>
+              <rect x="10" y="24" width="210" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">📐 Measure &amp; adjust</text>
+              <path d="M220,43 H260" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="260" y="24" width="210" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">🖌 Paint (already correct) ✅</text>
+            </svg>
+          </div>
+          <p class="uc-what">useLayoutEffect blocks paint on purpose here — the corrected position is what the user sees on the very first frame, instead of a wrong frame followed by a jump.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Would otherwise visibly flicker → useLayoutEffect.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You're the author of a CSS-in-JS library and need styles injected before layout is read</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">EARLIEST OF THE THREE</text>
+              <rect x="10" y="24" width="210" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">💉 Inject styles</text>
+              <path d="M220,43 H260" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="260" y="24" width="210" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Layout read → useLayoutEffect</text>
+            </svg>
+          </div>
+          <p class="uc-what">useInsertionEffect exists so styles are already in the DOM before anything (including useLayoutEffect) reads layout — as an application author you'll almost never call this one directly.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">CSS-in-JS style injection, not app code → useInsertionEffect.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

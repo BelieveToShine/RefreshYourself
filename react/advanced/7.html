@@ -64,14 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Every state-heavy React codebase eventually asks "why is everything wrapped in a
-        global store" — this is the question that tells you whether that was ever necessary.</li>
-        <li>Interviewers use it to check whether you reach for tools based on a real missing
-        capability, or just because a library is popular.</li>
-        <li>A very common senior/architect question when a team is deciding how to structure
-        state for a growing app.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🖱️ UI state</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A dropdown's open/closed flag or the active tab has no source of truth outside the component tree — running it through a global store or data-fetching machinery adds caching and refetch logic it never needed.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Keep it as local state, lifted at most one level up, or in Context once several components deep genuinely need it — ephemeral values that live and die with the UI don't need a heavier tool.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">UI state = ephemeral, client-only → local state or Context, not a store.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🌐 Server state</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Fetched data can go stale the moment it arrives, and treating it like ordinary component state gives no built-in way to know when to refetch or handle a race between requests.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Server state gets its own handling — caching, refetching, staleness tracking — because its real source of truth lives on the server, not in the component tree.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Server state = fetched, can go stale → needs caching/refetch, not plain state.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+          <div class="wc-head">🎯 State library</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Once several unrelated components each read a different slice of one shared value, a single Context Provider re-renders every consumer on any change — even ones whose own slice never changed.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A dedicated state library adds fine-grained subscriptions via selectors, so only the components reading the changed slice re-render — earned by that missing capability, not just "the app got bigger."</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">State library = fine-grained subscriptions, not "app got bigger."</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -331,6 +349,80 @@
       <code>store.subscribe</code>/<code>store.getSnapshot</code> can point at a browser API or a
       library's own internal store, and React handles the concurrency-safe part.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A dropdown's open/closed flag or the active tab is sitting in Context or a global store "just in case"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">EPHEMERAL FLAG, NO OUTSIDE SOURCE OF TRUTH</text>
+              <rect x="40" y="24" width="180" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">isOpen (UI state)</text>
+              <path d="M220,43 H260" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc7a)"/>
+              <rect x="260" y="24" width="180" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="350" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">local state ✅</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is UI state — ephemeral, client-only, with no source of truth
+          outside the component tree — so it belongs in local state, or Context only once several
+          components deep genuinely need it, not in machinery built for shared or fetched data.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Ephemeral UI flag → local state, not a store.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You fetched data with a plain state hook and effect, and different parts of the UI now show different, stale copies of it after a mutation</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">FETCHED DATA, NO STALENESS TRACKING</text>
+              <rect x="10" y="24" width="140" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="80" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">fetched once</text>
+              <path d="M150,43 H195" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc7b)"/>
+              <rect x="195" y="24" width="150" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="270" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">server mutates it</text>
+              <path d="M345,43 H390" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc7b)"/>
+              <rect x="390" y="24" width="80" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="430" y="41" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">stale copy</text>
+              <text x="430" y="55" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">shown ❌</text>
+            </svg>
+          </div>
+          <p class="uc-what">Server state's real source of truth lives on the server, not in the
+          component tree — plain component state was never built to track staleness or coordinate
+          a refetch across every place that data gets shown.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Fetched data going stale → treat it as server state, not local state.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A fast-changing shared value lives in Context, and every consumer re-renders on every change — even ones only reading an untouched slice</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">CONTEXT CHANGE → EVERY CONSUMER RE-RENDERS</text>
+              <rect x="30" y="24" width="150" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">Provider value changes</text>
+              <path d="M180,43 H225" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc7c)"/>
+              <rect x="225" y="24" width="140" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="295" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">every consumer</text>
+              <path d="M365,43 H410" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc7c)"/>
+              <rect x="410" y="24" width="60" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="440" y="47" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">redraws ❌</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is Context's real limit, not a bug: every consumer re-renders on
+          any change to it, with no way to subscribe to just one slice. A dedicated state
+          library's selectors solve exactly this — fine-grained subscriptions — which is the
+          actual missing capability that justifies reaching for one, not the app simply growing.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Every consumer re-renders on any Context change → that's when a state library's selectors earn their place.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

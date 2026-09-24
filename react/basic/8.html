@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up almost every time Hooks are discussed — usually as the very next question after "what is <code>useState</code>."</li>
-        <li>Explains a real, easy-to-hit bug: a Hook tucked inside an <code>if</code>, loop, or early return silently attaches its state to the wrong slot.</li>
-        <li>Separates someone who's memorized the syntax from someone who actually understands how React keeps track of Hook state.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🪝 Rules of Hooks</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>React doesn't track a Hook's state by name — it matches each call to its stored slot purely by call <b>position</b>. Tuck a Hook inside an <code>if</code>, loop, or early return, and a render that skips it silently shifts every Hook called after it onto the wrong stored slot.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The Rules of Hooks force every Hook to run at the top level, unconditionally, in the exact same order on every render — only from a function component or another custom Hook — so the fixed sequence React depends on for slot-matching never breaks.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Fixed call order keeps every Hook matched to its own slot — break the order, and state shifts to the wrong one.</span></div>
+      </div>
     </div>
   </details>
 
@@ -231,6 +234,66 @@
       </div>
       <p class="cx-note"><code>useState</code> runs unconditionally on every render — the condition moves inside the Hook's own logic or around its usage, never around the call itself.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> You put a Hook call inside an if block, telling yourself the condition will always evaluate the same way</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">INSIDE AN IF</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🔀 if (cond) useState()</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">❌ Hook sometimes skipped</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into. On a render where <code>cond</code> flips, that Hook call doesn't happen at all — but React still expects the same fixed sequence it saw last render, so every Hook called after it now lines up against the wrong stored slot instead of its own.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A Hook inside an if always risks a skipped call on some render — no condition is "safe" enough to excuse it.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> A Hook sits after an early return, or inside a loop whose iteration count can change between renders</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">EARLY RETURN / LOOP</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">↩️ return early / 🔁 loop</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🔀 Hook count changes</text>
+            </svg>
+          </div>
+          <p class="uc-what">An early return before the Hook, or a loop that runs a different number of times, both change how many Hooks actually get called on that render — the exact same problem as an if, just without a condition in sight: the call sequence stops being fixed, so slot-matching breaks.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Put every Hook before any return, and never call one inside a loop.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> A Hook gets called from a plain helper function instead of a function component or custom Hook</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">PLAIN HELPER FUNCTION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">🧩 function getUser()</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">❌ no render to track it</text>
+            </svg>
+          </div>
+          <p class="uc-what">React only tracks a fixed call-order sequence for whichever function component (or custom Hook) is currently rendering. A plain helper function isn't part of that tracked render at all, so there's no sequence for the Hook call to attach to.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Only a function component or another custom Hook gives a Hook call a render to attach to.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use this to check you actually understand the render cycle, not just that you can paste a <code>useEffect</code> call.</li>
-        <li>Comes up any time a component talks to something outside React — a subscription, a timer, a manual DOM measurement, or a fetch.</li>
-        <li>The dependency-array and cleanup-timing details are a favorite follow-up trap — a lot of candidates get the empty-vs-missing array distinction backwards.</li>
-      </ul>
+      <div class="why-grid" style="grid-template-columns:1fr">
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">🔁 No array</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Leaving the dependency array off entirely still runs the effect — silently — after every single render, so a subscription, timer, or fetch inside it fires far more often than intended.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>React only skips an effect when it's told what to compare against; give it nothing to compare, and "rerun every render" is the only behavior it can safely fall back to.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">No array = reruns after every render — almost never what you actually want.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🌱 Empty array []</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>One-time setup work — a subscription, a timer, an initial fetch — needs to run exactly once, but the wrong array shape either skips a later update it needed or reruns it needlessly.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An empty array tells React there's nothing to watch for changes, so the effect runs once, right after the very first render, and never again on its own.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">[] = runs once, right after mount — for setup that truly never needs to repeat.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🎯 [dep]</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>An effect that's actually syncing with one specific value — like an id — needs to redo that work whenever the value changes, not just once at mount.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Listing the real dependency in the array makes React compare it render-to-render and rerun the effect only when that value is actually different.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">[dep] = reruns only when a listed dependency changes — the right tool for syncing with a value.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -220,6 +241,75 @@
       </div>
       <p class="cx-note">The effect captured <code>count</code> from the render where it was created (<code>0</code>) and, with an empty array, never reruns to pick up a newer value — a classic <b>stale closure</b>.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your effect needs to redo work whenever one specific prop — like a user id — changes</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">🆔 id: 1 → 2</text>
+              <path d="M212,33 H262" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arUc1)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">🔁 effect reruns</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: an effect that fetches or subscribes based on one changing value — like the <code>subscribe(id)</code> code above — belongs on <code>[dep]</code>, so it reruns exactly when that value does, no more and no less.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A changing value the effect depends on → list it in the array.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your effect starts a one-time subscription, timer, or analytics ping that should never restart</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#0f766e"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">🌱 mounts once</text>
+              <path d="M212,33 H262" fill="none" stroke="#0f766e" stroke-width="1.8" marker-end="url(#arUc2)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">📡 setup starts</text>
+            </svg>
+          </div>
+          <p class="uc-what">Setup that genuinely never needs to repeat — a connection, an analytics ping, a one-time timer — belongs on an empty array, so it fires once after the first render, and its cleanup only runs again when the component actually unmounts.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One-time setup → empty array, not no array at all.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your effect fires after every render, even ones that have nothing to do with what it's syncing</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="12" y="16" width="200" height="34" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="112" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🔁 any render</text>
+              <path d="M212,33 H262" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arUc3)"/>
+              <rect x="268" y="16" width="200" height="34" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="368" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">😵 effect fires again</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is almost always a missing dependency array, not a missing dependency — the array itself was left off entirely, so React has no way to know it's safe to skip this render, exactly the "No array" card above.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Effect fires on every render → check the array is there at all, not just what's inside it.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

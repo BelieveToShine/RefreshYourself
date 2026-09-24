@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use this to check you actually think about component lifecycle, not just "call <code>fetch</code> inside <code>useEffect</code> and move on."</li>
-        <li>Comes up any time a search box, filter, or dropdown fires a new request before the previous one has finished.</li>
-        <li>The race-condition mechanics are a favorite deep-dive follow-up the moment you say "useEffect."</li>
-      </ul>
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">🐢 Race Condition</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A fetch has no idea its component might unmount or get superseded — a slower, earlier-fired request can still resolve after a faster, later one, silently overwriting the correct, newer data already on screen.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Track which request is actually the latest (a ref, an incrementing id, or <code>AbortController</code>) and discard or cancel any response that isn't from it, so a stale result can never overwrite a newer one.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">A fetch outlives its component — without cleanup, a slow, now-irrelevant request can overwrite newer data when it finally arrives.</span></div>
+      </div>
     </div>
   </details>
 
@@ -219,6 +222,76 @@
       </div>
       <p class="cx-note">No cancellation here — a stale response just gets <b>ignored instead of applied</b>.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your search box fires a new fetch on every keystroke</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="5" y="18" width="145" height="30" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="77" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">⌨️ Types quickly</text>
+              <rect x="168" y="18" width="150" height="30" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="243" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🔁 New fetch fires</text>
+              <rect x="336" y="18" width="140" height="30" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="406" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">⚠️ Now racing</text>
+              <path d="M150,33 H168" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <path d="M318,33 H336" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+            </svg>
+          </div>
+          <p class="uc-what">Every keystroke can fire its own fetch, so more than one request is often in flight at once — this is the #1 way a real race condition actually gets triggered.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Typeahead/search → multiple in-flight requests is the normal case, not the exception.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> The user navigates away while a fetch is still in flight</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="5" y="18" width="150" height="30" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="80" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#134e4a">📡 Fetch in flight</text>
+              <rect x="175" y="18" width="140" height="30" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="245" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#134e4a">🚪 Unmounts early</text>
+              <rect x="335" y="18" width="140" height="30" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="405" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#134e4a">⚠️ Late setState</text>
+              <path d="M155,33 H175" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <path d="M315,33 H335" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+            </svg>
+          </div>
+          <p class="uc-what">The fetch itself doesn't know the component is gone — without an <code>AbortController</code> or a mounted check, the response still tries to run <code>setState</code> on a component that's no longer there.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Unmount doesn't cancel a fetch — cleanup has to do that explicitly.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You assume the request fired last also arrives last</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 96" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="60" y="6" width="150" height="28" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="135" y="24" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🐢 A fires 1st, slow</text>
+              <rect x="270" y="6" width="150" height="28" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="345" y="24" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">⚡ B fires 2nd, fast</text>
+              <path d="M135,34 V58" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <path d="M345,34 V58" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <text x="160" y="50" font-size="8.5" fill="#991b1b">resolves last</text>
+              <text x="370" y="50" font-size="8.5" fill="#991b1b">resolves first</text>
+              <rect x="60" y="58" width="150" height="28" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="135" y="76" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">❌ Overwrites B</text>
+              <rect x="270" y="58" width="150" height="28" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="345" y="76" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">✅ Was correct</text>
+            </svg>
+          </div>
+          <p class="uc-what">Fire order and arrival order aren't the same thing. <b>A great interview trap</b> — candidates often assume whichever request was sent later must also finish later, when a slow earlier request can land after it and stomp on the right answer.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Fire order ≠ arrival order — always check which response is actually the latest.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 
