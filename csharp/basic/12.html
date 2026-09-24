@@ -63,11 +63,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Explains why comparing a status to a "magic number" like <code>2</code> is a code smell.</li>
-        <li>Shows up constantly — order status, day of week, log level, HTTP-ish state.</li>
-        <li>Sets up <code>switch</code> statements/expressions used on almost every enum.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔢 enum</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A status stored as a bare number like <code>2</code> forces every place that reads it to remember what each number means, and nothing stops a comparison against the wrong number.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An <code>enum</code> gives that fixed set of options real names, so code reads and compares <code>Status.Active</code> instead of a memorized <code>1</code>.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Enum = a fixed list of meaningful choices, compared by name, never by the raw number.</span></div>
+      </div>
     </div>
   </details>
 
@@ -165,6 +168,72 @@ Console.WriteLine(weird);   <span class="cx-err">// prints "99" — no exception
       </div>
       <p class="cx-note">C# doesn't validate the cast — <b>an enum variable can hold a number that isn't one of its named values</b>.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your code compares or switches on a status-like value</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">EVERYDAY CASE</text>
+              <rect x="15" y="24" width="200" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">current = Status.Active</text>
+              <path d="M215,43 H295" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="295" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="380" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">== Status.Active ✅</text>
+            </svg>
+          </div>
+          <p class="uc-what">You read and compare by the name, <code>Status.Active</code>, never a
+          bare number — this is the everyday reason <code>enum</code> exists, the exact pattern in
+          this page's own code example. <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Compare and switch by name, never by the raw number.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> The exact underlying number matters — it's saved or sent somewhere</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f5952" letter-spacing=".03em">CUSTOM NUMBERING</text>
+              <rect x="15" y="24" width="180" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f5952">Closed = 5</text>
+              <path d="M195,43 H295" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="295" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="380" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f5952">💾 database / 🔌 wire</text>
+            </svg>
+          </div>
+          <p class="uc-what">You deliberately assign the numbers yourself when that exact value
+          gets stored in a database or sent over a wire — outside code depends on the number
+          staying stable, so the default 0/1/2 numbering isn't good enough here.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Assign custom numbers only when the number itself must stay stable.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A number outside the enum's defined range gets cast straight to it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">INVALID CAST</text>
+              <rect x="15" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="100" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">(Status)99</text>
+              <path d="M185,43 H295" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="295" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="380" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">runs, prints "99" ⚠️</text>
+            </svg>
+          </div>
+          <p class="uc-what">C# doesn't validate the cast, so a variable declared as <code>Status</code>
+          can silently hold <code>99</code> — a number that isn't <code>Pending</code>,
+          <code>Active</code>, or <code>Closed</code> — and no exception ever fires.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">An invalid cast to an enum compiles and runs — it doesn't throw.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

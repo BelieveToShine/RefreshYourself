@@ -63,11 +63,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Explains a real, measurable performance mistake — concatenating strings in a loop.</li>
-        <li>Tells you exactly when reaching for StringBuilder actually pays off.</li>
-        <li>A clean follow-up once immutability (from Value vs. Reference) has come up.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">🔤 string</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>string is immutable, so a line like <code>s += x</code> doesn't edit it — it throws the old string away and allocates a brand-new one, every single time.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>For a handful of concatenations that's a non-issue — string stays the simpler, better choice whenever a loop isn't the one doing the concatenating.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">string <code>+=</code> → new allocation every time; fine outside a loop.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🧱 StringBuilder</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Put that same allocate-and-discard pattern inside a loop of a thousand iterations, and you've paid for a thousand new strings while throwing 999 of them straight in the garbage.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>StringBuilder keeps one resizable buffer and writes into it directly — <code>.Append()</code> extends that same buffer instead of replacing it, so the loop does far less allocation work overall.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">StringBuilder = one buffer, grows in place — built for loops and long chains.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -200,6 +213,73 @@
       </div>
       <p class="cx-note">Same 1000 iterations, <b>one allocation instead of a thousand</b>.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're joining a couple of values into one message, just once</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">JUST A FEW PIECES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🧩 a += b += c</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc9a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🔤 one final string</text>
+            </svg>
+          </div>
+          <p class="uc-what">A one-off concatenation is exactly what <code>string</code> is
+          for — a few <code>+=</code> calls never add up to a real cost, so there's no reason to
+          reach for <code>StringBuilder</code> here.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No loop, just a few pieces → plain string, keep it simple.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're appending pieces onto a string inside a loop that runs many times</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">LOOP: 1000×</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🔁 sb.Append(i)</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc9b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🧱 one growing buffer</text>
+            </svg>
+          </div>
+          <p class="uc-what"><b>This is the #1 scenario you'll actually run into.</b> A loop means
+          every <code>+=</code> allocates and discards a new string on each pass, so swapping in
+          <code>StringBuilder.Append()</code> keeps one buffer and skips almost all of that
+          allocation work.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Loop + many appends → StringBuilder, every time.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You reach for string interpolation inside that same loop, assuming it's the fast option</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing=".03em">STILL COMPILES TO +=</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">🔤 $"Hi {name}"</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc9c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">⚠️ same cost as +=</text>
+            </svg>
+          </div>
+          <p class="uc-what">String interpolation isn't magic — <code>$"Hello {name}"</code>
+          still compiles down to concatenation under the hood, so it pays the exact same
+          allocation cost as <code>+=</code> inside a loop.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>$"..."</code> in a loop = same cost as <code>+=</code>, still swap in StringBuilder.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

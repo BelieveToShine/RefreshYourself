@@ -19,14 +19,15 @@ The site is moving from "topic tutorial" to "interview question bank" (locked wi
   The tables below mirror `roadmap.md` exactly and are also live on the site's tier-index pages
   and [`roadmap.html`](../../../csharp/roadmap.html).
 
-**The 14 *original* C# Basic pages remain frozen exactly as before** — including the left
-tier-navigation sidebar (see [`rules/tier-navigation.md`](../../rules/tier-navigation.md)) —
-untouched by this rebuild. **The other 35 pages (Basic 15–18, all of Intermediate and
-Advanced) are new** and, while built to the same rules, have not yet been through the
-user's page-by-page review the original 14 went through — treat them as awaiting approval,
-not yet as settled as the original 14.
+**The 14 *original* C# Basic pages were frozen exactly as originally built (2026-09-16) until
+the 2026-09-24 retrofit** (see [`rules/retrofit-why-usecases.md`](../../rules/retrofit-why-usecases.md))
+added the site-wide Problem/Solution why-cards + Use Cases panel to them, by explicit user
+approval, matching all other C# pages and every other track. The left tier-navigation sidebar
+(see [`rules/tier-navigation.md`](../../rules/tier-navigation.md)) was left untouched by that
+retrofit. All 18 Basic pages, plus Intermediate and Advanced, now share the same
+why-it-matters/Use-Cases structure.
 
-## Basic (18 topics) — 18 written (14 frozen + 4 new)
+## Basic (18 topics) — 18 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|

@@ -63,11 +63,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Explains how a method can hand back more than one result without a wrapper object.</li>
-        <li>Tells you exactly what the compiler will and won't let you get away with for each keyword.</li>
-        <li>A sharp way to show you understand C# beyond "everything is pass by value."</li>
-      </ul>
+      <div class="why-grid" style="grid-template-columns:1fr">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔄 ref</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Normally C# passes a copy — a method like <code>AddOne</code> can't actually change the caller's <code>n</code>, because it's only working on its own copy of the value.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>ref</code> hands over the real variable instead (it must already have a value going in), so <code>AddOne(ref n)</code> changes <code>n</code> itself — the caller sees 6, not 5, after the call.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>ref</code> = must init before calling, method can read + write it.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">📤 out</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A method like <code>TryDivide</code> needs to hand back both whether it succeeded and the actual quotient — returning just one value forces a wrapper type just to carry the second result.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>out</code> doesn't need a value going in, but the compiler forces every path through the method to assign it before returning — the same shape <code>int.TryParse</code> relies on.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>out</code> = no init needed going in, but must be written on every path out.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#15803d; --why-bg:#dcfce7">
+          <div class="wc-head">👀 in</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span><code>PrintTotal</code> only needs to read <code>price</code>, but passing it normally still copies the whole value in — wasted work if it were a large <code>struct</code> instead of a <code>decimal</code>.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>in</code> passes the real variable in but blocks any write — <code>price++</code> inside <code>PrintTotal</code> is a compile error — so it's safe to skip the copy purely for performance.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>in</code> = read-only, purely for performance — no copy, no writes allowed.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -215,6 +236,76 @@ AddOne(<span class="kw">ref</span> n);   <span class="cx-ok">// ✅ n is now 6 �
       </div>
       <p class="cx-note"><code>in</code> skips the copy <b>purely for performance</b> — the compiler blocks any write, so nothing can change underneath the caller.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> You need a method to hand back a second result — like whether it worked, and what it computed</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8Out" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">OUT — WRITE ONLY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">❓ int result;</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc8Out)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">✅ TryDivide(...)</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>TryDivide</code> doesn't need <code>result</code> to have a
+          value going in, but the compiler checks every path through the method and refuses to
+          compile until each one assigns it — the same shape <code>int.TryParse</code> and the
+          other <code>Try*</code> methods use to hand back an extra result with no wrapper type.
+          <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>out</code> → no wrapper type, just an extra result the method must write.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> You need a method to change the caller's own variable, not just read it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8Ref" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">REF — CHANGE IN PLACE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">🧍 n = 5</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc8Ref)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🔁 AddOne(ref n)</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>AddOne(ref n)</code> isn't handed a copy of <code>n</code> —
+          it's handed the real variable, so <code>x++</code> inside the method changes the exact
+          same <code>n</code> the caller declared. Miss the <code>ref</code> keyword on either
+          side and you're back to a harmless copy that changes nothing.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>ref</code> → the caller's own variable can come back changed.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> You're passing something into a method that only ever reads it, and copying it would be wasted work</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8In" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">IN — READ ONLY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🧍 price</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc8In)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🔒 PrintTotal(...)</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>PrintTotal(in decimal price)</code> skips copying
+          <code>price</code> in, but the compiler still protects the caller —
+          <code>price++</code> inside the method is a compile error, not a runtime surprise. This
+          only pays off for something expensive to copy, like a large <code>struct</code>.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>in</code> → skips the copy, but the compiler blocks every write.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 
