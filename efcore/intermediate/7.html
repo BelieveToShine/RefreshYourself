@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>This is the deeper, file-level follow-up to <a href="../basic/3.html">Migrations &amp; SaveChanges() — the Basics</a> — if "migration" or "snapshot" are still new words, start there first.</li>
-        <li>Comes up whenever you're debugging "why didn't my migration apply" or "why did the deploy fail right after someone touched the database by hand."</li>
-        <li>The two-developers-merge-a-migration scenario is a genuinely common real-world pain point, not a made-up interview trick.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📝 migrations add</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>After changing the model at dev time, there's no reviewable record of what changed — without one, nobody can check the change in a pull request before it goes anywhere near a real database.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It diffs the current model against <code>ModelSnapshot.cs</code> and writes the result to a new <code>Up()</code>/<code>Down()</code> file pair plus an updated snapshot — a reviewable artifact that never touches a real database.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">migrations add = writes the plan to disk, dev time only, no database touched.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🚀 database update</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>That same reviewed change still has to run safely on dev, staging, and production without re-running something already applied or running blind against a schema someone edited by hand.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It (or <code>Database.Migrate()</code>) reads <code>__EFMigrationsHistory</code> in that specific database and runs only the migrations not yet recorded there, at deploy/startup time.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">database update = runs only what's missing, checked against history, at deploy time.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -275,6 +288,77 @@ context.Database.Migrate();
       </div>
       <p class="cx-note"><code>GetPendingMigrations()</code> trusts the history table completely — it has <b>no way to see a manual schema change</b>.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You just changed an entity's model and need EF Core to record it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">MIGRATIONS ADD — DEV TIME</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🧩 Model changed</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">📄 New migration file</text>
+            </svg>
+          </div>
+          <p class="uc-what">The model changed but nothing has run against a database yet.
+          <code>migrations add</code> just diffs the model against the stored snapshot and writes
+          the change to a new file pair you can review before it goes anywhere. <b>This is the #1
+          moment you'll actually hit day to day.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Model changed → migrations add writes the file, nothing runs.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> A reviewed migration needs to run on a real database at deploy time</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">DATABASE UPDATE — DEPLOY TIME</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">📄 Pending migration</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🗄️ Database +</text>
+              <text x="375" y="54" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">history updated</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>database update</code> (or <code>Database.Migrate()</code> at
+          startup) reads <code>__EFMigrationsHistory</code> first and only runs what isn't
+          recorded there yet — already-applied migrations are skipped, never re-run.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Deploy time → database update runs only what's new.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">3</span> Two teammates each generate their own migration, then merge branches</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 100" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#6d28d9"/></marker></defs>
+              <rect x="20" y="10" width="185" height="34" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="112" y="31" text-anchor="middle" font-size="11" font-weight="700" fill="#5b21b6">🌿 Branch A migration</text>
+              <rect x="275" y="10" width="185" height="34" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="367" y="31" text-anchor="middle" font-size="11" font-weight="700" fill="#5b21b6">🌿 Branch B migration</text>
+              <path d="M112,44 V60 H240 V76" fill="none" stroke="#6d28d9" stroke-width="1.6" marker-end="url(#arUc3)"/>
+              <path d="M367,44 V60 H240" fill="none" stroke="#6d28d9" stroke-width="1.6"/>
+              <rect x="120" y="76" width="240" height="22" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="240" y="91" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b21b6">⚠️ conflicting Up() / snapshot</text>
+            </svg>
+          </div>
+          <p class="uc-what">Both migrations were diffed against the same starting snapshot, so
+          merging the branches can leave conflicting <code>Up()</code> steps or a snapshot file
+          that matches neither branch — usually needs one migration manually resolved or
+          regenerated.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same starting snapshot, two migrations → expect a manual merge fix.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

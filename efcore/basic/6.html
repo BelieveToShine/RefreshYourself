@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes right after the N+1 problem in real interviews — once the query count is fixed, the next question is "now shrink what each query pulls."</li>
-        <li>Shows up any time an API response or a list screen only needs a handful of fields, not every column on the entity.</li>
-        <li>A common interview opener when someone's optimizing a slow list or grid endpoint.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+        <div class="wc-head">📦 Projection</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Pulling every column of a full entity — when a list screen or API response only needs a handful of fields — wastes bandwidth and memory on data nobody asked for.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>.Select()</code> into exactly the shape you need — a DTO or anonymous type — so EF Core's query translator only pulls those columns from the database.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Projection = ask the database for only the columns you actually need.</span></div>
+      </div>
     </div>
   </details>
 
@@ -217,6 +220,73 @@
       </div>
       <p class="cx-note"><code>.Select()</code> here runs on an in-memory <code>List&lt;Product&gt;</code>, not the database query — nothing about what was fetched changes.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your list screen or API response only needs a few fields</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="ucP1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">GRID / API RESPONSE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">📦 Product (15 cols)</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#ucP1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🏷️ ProductDto (3)</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: a grid or API
+          response that only displays a name, price, and SKU. <code>.Select()</code> into a DTO
+          here, and EF Core's SQL only lists those three columns.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">List/API screen needing a few fields → project into a DTO.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're about to modify the entity and call SaveChanges()</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="ucP2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">EDIT + SAVE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">📌 Full entity, tracked</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#ucP2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">💾 SaveChanges()</text>
+            </svg>
+          </div>
+          <p class="uc-what">Here you need change tracking, so pull the full entity instead — a
+          projected DTO is never registered with the change tracker, so there'd be nothing to
+          snapshot or save.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Planning to modify + save → skip projection, keep the full entity.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You call .Select() right after .ToList()</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="ucP3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">TOO LATE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">📌 .ToList() (all 15)</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#ucP3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🔁 .Select() in memory</text>
+            </svg>
+          </div>
+          <p class="uc-what">By the time <code>.ToList()</code> ran, every mapped column was
+          already pulled from the database and tracked — the later <code>.Select()</code> only
+          reshapes data that was already fully loaded. <b>A common interview trap</b> — it looks
+          like the same optimization, but the database work is already done.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>.Select()</code> after <code>.ToList()</code> → too late, full entity already loaded.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

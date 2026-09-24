@@ -64,14 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A team fixes the obvious N+1 problem, ships it, and the endpoint is still slow under
-        real load — this is exactly the gap this page exists to close.</li>
-        <li>Interviewers use this to check whether "I know about N+1" is the whole story, or
-        whether you actually understand what else EF Core can quietly waste.</li>
-        <li>A common trap for anyone who assumes a clean-looking LINQ query and a fast database
-        query are the same thing.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📦 Over-fetching</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Every mapped column and included navigation comes back, unused.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Project into a DTO with <code>Select()</code> — load only what's used.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Over-fetching → wasted bandwidth &amp; memory → fix with <code>Select()</code> into a DTO.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#15803d; --why-bg:#dcfce7">
+          <div class="wc-head">📸 Tracking overhead</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>EF Core snapshots every tracked row for a change that never happens.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>AsNoTracking()</code> skips that snapshot entirely for read-only queries.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Tracking overhead → skip the snapshot with <code>AsNoTracking()</code>.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+          <div class="wc-head">🔍 Missing indexes</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>An unindexed filtered/sorted column forces a full table scan.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Add a database index — EF Core can't fix this itself.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Missing indexes → EF Core can't see or fix them; that's the DBA's job.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -278,6 +296,72 @@
       <p class="cx-note">The fix here isn't in this file at all — it's a migration that adds an
       index on <code>OrderDate</code>.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your listing page loads full entities just to show a title</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc4a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">TITLE-ONLY LIST</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🧩 Posts + Include</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc4a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">❌ full entity, unused</text>
+            </svg>
+          </div>
+          <p class="uc-what">Loading <code>.Include(Author)</code> and every mapped column just to
+          print a title wastes bandwidth and memory before tracking even starts. Projecting into a
+          DTO with <code>Select()</code> fixes this directly.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Full entity for a title-only list → project with <code>Select()</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#15803d">
+          <div class="uc-sit"><span class="uc-flag">2</span> You run a read-only report over thousands of rows</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc4b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#15803d"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">READ-ONLY REPORT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#15803d" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">📊 Orders (read-only)</text>
+              <path d="M190,43 H290" stroke="#15803d" stroke-width="1.6" fill="none" marker-end="url(#arUc4b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🧾 snapshot per row</text>
+            </svg>
+          </div>
+          <p class="uc-what">A read-only query still gets a full change-tracking snapshot per row,
+          kept for a change that will never happen. <code>AsNoTracking()</code> removes that
+          snapshot entirely. <b>This is the #1 checkpoint after ruling out over-fetching.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Read-only + thousands of rows → <code>AsNoTracking()</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your query is fast in staging, then times out in production</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc4c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">STAGING → PRODUCTION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">🧪 staging: small table</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc4c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🐌 full table scan</text>
+            </svg>
+          </div>
+          <p class="uc-what">The LINQ never changed — staging's small table scanned fast enough to
+          hide a missing index, production's real-sized table couldn't. That's a schema-side fix,
+          decided from the execution plan, not a code change.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Fast in staging, slow in prod → check the execution plan for a missing index.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

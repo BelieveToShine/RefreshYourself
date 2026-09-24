@@ -64,14 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A query with two collection <code>Include()</code>s looks perfectly normal — it
-        compiles, it runs, and it silently returns far more rows than the data actually has.</li>
-        <li>Interviewers use this to check whether you understand what <code>Include()</code>
-        actually compiles down to in SQL, not just that it "eager loads" related data.</li>
-        <li>A common trap for anyone who assumes a second <code>Include()</code> just adds a
-        second set of rows onto the same result.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔗 Default (JOIN)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Include()ing two or more collection navigations onto the same parent forces the database to join both into one query — every row in the first collection pairs with every row in the second, so 5 related rows and 4 related rows come back as 20 duplicated parent rows, not 9.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>For a single collection <code>Include()</code>, or only reference <code>Include()</code>s, this default one-query JOIN is exactly right — one round trip, one atomic snapshot, and nothing to multiply against.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Default (JOIN) = one query, correct for one collection, multiplies rows once a second collection joins in.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🧩 AsSplitQuery()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Once a second collection <code>Include()</code> joins in, the single JOINed query's cartesian product (20 rows instead of 9) is silently wrong and only gets worse as either collection grows.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It issues one separate query per collection <code>Include()</code> (2, here) instead of one join, so each collection comes back correctly shaped — 5 rows plus 4 rows — at the cost of an extra round trip per split collection and no longer reading from one atomic snapshot.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">AsSplitQuery() = one query per collection, correct row counts, more round trips, no atomic snapshot.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -288,6 +298,77 @@
       with — <code>AsSplitQuery()</code> only matters once a <b>second</b> collection
       <code>Include()</code> joins in.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your query only Include()s one collection navigation</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcQ1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">ONE COLLECTION INCLUDE()</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">📦 Order</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcQ1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">📄 Items ×5 (JOIN)</text>
+            </svg>
+          </div>
+          <p class="uc-what">One collection has nothing to join against — the default single JOIN
+          query is already correctly shaped, so there's no cartesian product and no reason to
+          reach for <code>AsSplitQuery()</code> here.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One collection <code>Include()</code> → default JOIN is already correct.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You Include() two or more collections without AsSplitQuery()</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcQ2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">TWO COLLECTIONS, ONE JOIN</text>
+              <rect x="20" y="24" width="200" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="120" y="41" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">📦 Items ×5 + 📝 Notes ×4</text>
+              <text x="120" y="55" text-anchor="middle" font-size="9" fill="#991b1b">same query, no split</text>
+              <path d="M220,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcQ2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">❌ 20 rows</text>
+            </svg>
+          </div>
+          <p class="uc-what">Every row in the first collection pairs with every row in the second
+          inside one JOINed query, so the parent row duplicates once per pairing — 5 related rows
+          and 4 related rows come back as 20 duplicated rows, not 9. The query still compiles and
+          runs with no error, which is exactly why candidates who assume a second
+          <code>Include()</code> just adds a second set of rows get caught out by this.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">2+ collection <code>Include()</code>s, no split → rows multiply (5 × 4 = 20, not 9).</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> You Include() two or more collections and add AsSplitQuery()</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcQ3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">ASSPLITQUERY() — 2 QUERIES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Q1 Items ×5</text>
+              <text x="105" y="55" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Q2 Notes ×4</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcQ3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ 9 rows correct</text>
+            </svg>
+          </div>
+          <p class="uc-what">EF Core issues one separate query per collection <code>Include()</code>
+          (2, here) instead of one join, so each collection comes back correctly shaped — 5 rows
+          plus 4 rows, no duplicates — at the cost of an extra round trip and no longer reading
+          from one atomic snapshot.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>AsSplitQuery()</code> → correct row counts, more round trips, no atomic snapshot.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

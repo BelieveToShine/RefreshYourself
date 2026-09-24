@@ -64,15 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A common assumption is that a <code>DbContext</code> keeps one connection open for as
-        long as it's alive — that assumption drives wrong decisions about DbContext lifetime and
-        connection pool sizing.</li>
-        <li>Interviewers use this to check whether you understand what's actually being reused —
-        the physical connection, or the C# object — since those are two separate costs.</li>
-        <li>A frequent follow-up in performance/scalability rounds, right after a question about
-        <code>DbContext</code> lifetime or scoped services.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🏊 Connection Pooling</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>If every "open" paid for a brand-new physical network handshake, opening and closing a connection before and after every single operation would be far too slow to use by default.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The ADO.NET provider owns its own connection pool — on by default for essentially every mainstream provider — so "open" is really just a cheap checkout of an already-established physical connection, and "close" just returns it.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Connection pooling = the physical connection, reused, on by default, matters always.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🧩 DbContext Pooling</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>At very high request throughput, constructing and allocating a brand-new <code>DbContext</code> object per request adds real, measurable overhead — separate from anything the connection pool already handles.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>AddDbContextPool</code>, EF Core's own DI registration, opts into reusing the <code>DbContext</code> object itself by resetting its internal state between uses — avoiding that construction/allocation cost.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">DbContext pooling = the C# object, reused, opt-in, matters at high throughput.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -297,6 +306,80 @@
       <p class="cx-note"><code>AddDbContextPool</code> reuses <b>DbContext instances</b> across
       requests — it has nothing to do with how the underlying connection is opened or closed.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Two separate queries run back-to-back on the same DbContext</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 90" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcCm1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="10" width="180" height="34" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="110" y="32" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">▶️ Query 1</text>
+              <rect x="280" y="10" width="180" height="34" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="370" y="32" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">▶️ Query 2</text>
+              <path d="M110,44 V58 H240 V72" fill="none" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arUcCm1)"/>
+              <path d="M370,44 V58 H240 V72" fill="none" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arUcCm1)"/>
+              <rect x="170" y="72" width="140" height="18" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.2"/>
+              <text x="240" y="85" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">🏊 pool checkout ×2</text>
+            </svg>
+          </div>
+          <p class="uc-what">Each query opens the connection right before it runs and closes it
+          right after — "closed" just returns it to the ADO.NET pool, so the second query's open
+          is a cheap pool checkout, not a new handshake.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same DbContext, two queries → two independent opens/closes, both cheap.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your code wraps several operations in an explicit transaction</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 120" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcCm2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="20" y="8" width="150" height="26" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="1.4"/>
+              <text x="95" y="25" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🔓 BeginTransaction</text>
+              <rect x="60" y="42" width="360" height="42" rx="10" fill="#fffbeb" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 3"/>
+              <text x="240" y="59" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">AddAsync → SaveChangesAsync → ExecuteSqlRawAsync</text>
+              <text x="240" y="74" text-anchor="middle" font-size="9" fill="#92400e">connection stays open for all three</text>
+              <path d="M95,34 V42" fill="none" stroke="#b45309" stroke-width="1.4" marker-end="url(#arUcCm2)"/>
+              <path d="M240,84 V98" fill="none" stroke="#b45309" stroke-width="1.4" marker-end="url(#arUcCm2)"/>
+              <rect x="160" y="98" width="160" height="22" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.4"/>
+              <text x="240" y="113" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🔒 Commit → closes</text>
+            </svg>
+          </div>
+          <p class="uc-what">Once <code>BeginTransactionAsync()</code> runs, the connection stays
+          open across every operation inside that transaction, and only closes again after
+          <code>Commit</code> — this is the one common exception to "open right before, close
+          right after."</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Explicit transaction → connection stays open until commit, not per operation.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> Profiling under high request throughput shows CPU going into allocation, not database waits</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcCm3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="14" width="200" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="120" y="34" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">📈 High throughput</text>
+              <text x="120" y="47" text-anchor="middle" font-size="9" fill="#1e3a8a">new DbContext per request</text>
+              <path d="M220,33 H270" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcCm3)"/>
+              <rect x="270" y="14" width="190" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="365" y="34" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">♻️ AddDbContextPool</text>
+              <text x="365" y="47" text-anchor="middle" font-size="9" fill="#1e3a8a">object reused, not constructed</text>
+            </svg>
+          </div>
+          <p class="uc-what">The bottleneck here is <code>DbContext</code> construction, not the
+          physical connection — switching to <code>AddDbContextPool</code> reuses the
+          <code>DbContext</code> object itself, a separate pool from the connection pool
+          underneath it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Allocation-bound, not connection-bound → reach for <code>AddDbContextPool</code>, not pool size.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

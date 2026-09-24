@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up as the very first EF Core question in almost every .NET backend interview.</li>
-        <li>Explains why "slow LINQ" and N+1 bugs happen — they trace back to not knowing what SQL actually got generated.</li>
-        <li>Sets up every later EF Core topic — DbContext, tracking, and migrations all sit on top of this one idea.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔄 LINQ → SQL translation</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Not knowing what SQL your LINQ actually generated is exactly why "slow LINQ" and N+1 bugs happen — the query reads fine in C# but can do far more work than it looks like against the database.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>EF Core translates your LINQ into real SQL and runs that — it's a translator standing between your code and the database, not magic, so the SQL it generated is always there to go check.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">EF Core = translator from LINQ to SQL — check what it generated, don't just trust it.</span></div>
+      </div>
     </div>
   </details>
 
@@ -215,6 +218,78 @@ Console.WriteLine(query.ToQueryString());  <span class="cx-cmt">// 🔍 prints t
       </div>
       <p class="cx-note">Checking the actual generated SQL is what catches an N+1 or an inefficient query before it hits production.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're about to write a simple CRUD query against the database</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcEf1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">ONE LINQ STATEMENT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✍️ Your LINQ</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcEf1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="43" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🗄️ EF Core builds</text>
+              <text x="375" y="56" text-anchor="middle" font-size="10" fill="#166534">SQL + maps rows</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the common case — one LINQ statement instead of hand-building
+          a SQL string, wiring parameters, and copying each column off a data reader yourself.
+          <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Simple CRUD → let EF Core write and map the SQL for you.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your LINQ query feels slower than it should</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcEf2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">DON'T GUESS — LOOK</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="43" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">query.ToQueryString()</text>
+              <text x="105" y="56" text-anchor="middle" font-size="9.5" fill="#92400e">🔍 prints it</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcEf2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">the actual SQL</text>
+            </svg>
+          </div>
+          <p class="uc-what">A LINQ query that looks trivial can quietly generate an inefficient
+          query or an N+1 — printing the actual generated SQL with <code>ToQueryString()</code> is
+          what catches it before it hits production, instead of guessing at the cause.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Feels slow → check the generated SQL, don't guess.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You assume EF Core means never having to think about SQL again</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcEf3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing=".03em">MYTH VS. REALITY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="43" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">❌ "Never write</text>
+              <text x="105" y="56" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">SQL again"</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcEf3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="43" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">✅ Still read the</text>
+              <text x="375" y="56" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">SQL it generates</text>
+            </svg>
+          </div>
+          <p class="uc-what">EF Core removes writing SQL by hand, not understanding it — anything
+          beyond trivial CRUD still needs you to read and reason about the SQL it actually
+          generated, and for bulk operations or heavy reporting queries it's often better to skip
+          it and write raw SQL (or use something like Dapper) instead. <b>A common interview
+          trap</b> — candidates often assume an ORM removes the need for SQL knowledge entirely.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">"Never think about SQL again" is false — you still need to read what it generated.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

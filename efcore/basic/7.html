@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Every real schema has related tables — Customer/Orders, Student/Course — this isn't an edge case.</li>
-        <li>Comes up naturally while designing an entity model, and often opens into a Fluent API or cascade-delete follow-up.</li>
-        <li>A quick way for an interviewer to separate "knows EF Core conventions" from "just copied a tutorial."</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">👤 One-to-many</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Customer/Orders is parent/child — a bare link can't show one owns many.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Collection nav on Customer, single reference + FK on Order.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">1-to-many → collection one side, FK the other.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#15803d; --why-bg:#dcfce7">
+          <div class="wc-head">🔷 Many-to-many (default)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Student/Course is a pure link — no natural owner, no extra data.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>EF Core hides an EF-managed join table — no entity to write yourself.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Pure link, no metadata → default many-to-many.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+          <div class="wc-head">✅ Many-to-many (join entity)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>The link itself needs data — e.g. EnrolledOn — with nowhere to put it.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A real join entity you map yourself, wired as two one-to-many.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Needs metadata → explicit join entity, two one-to-many.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -265,6 +286,76 @@
       </div>
       <p class="cx-note"><code>Enrollment</code> is a real entity now — two one-to-many relationships, <code>Student</code>→<code>Enrollment</code> and <code>Course</code>→<code>Enrollment</code>, each with room for its own data.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your two tables have a natural parent/child — one row owns many rows of the other</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">PARENT / CHILD</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">👤 Customer (1)</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc7a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">📦 Orders (*)</text>
+            </svg>
+          </div>
+          <p class="uc-what">Customer owns many Orders — give Customer a collection nav and
+          give Order the single reference plus foreign key. <b>This is the #1 scenario you'll
+          actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Parent/child → one-to-many, not many-to-many.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your two tables are a pure link — neither side owns the other, and the link carries no data</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">PURE LINK, NO ENTITY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">🎓 Student</text>
+              <path d="M190,38 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc7b)"/>
+              <path d="M290,50 H190" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc7b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">📘 Course</text>
+            </svg>
+          </div>
+          <p class="uc-what">A collection navigation on both sides is enough — EF Core builds
+          the join table for you, and there's no class to add for it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No metadata → let EF Core hide the join table.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">3</span> That link between two tables needs to carry its own data, like a date or a role</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">JOIN ENTITY HOLDS THE DATA</text>
+              <rect x="14" y="24" width="110" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="69" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🎓 Student</text>
+              <path d="M124,43 H168" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc7c)"/>
+              <rect x="168" y="24" width="144" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="240" y="40" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">📋 Enrollment</text>
+              <text x="240" y="53" text-anchor="middle" font-size="8.5" fill="#92400e">+EnrolledOn</text>
+              <path d="M312,43 H356" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc7c)"/>
+              <rect x="356" y="24" width="110" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="411" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">📘 Course</text>
+            </svg>
+          </div>
+          <p class="uc-what">Swap the convention-based many-to-many for an explicit
+          <code>Enrollment</code> entity — two ordinary one-to-many relationships through it,
+          with room for <code>EnrolledOn</code>.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Needs a column → explicit join entity, not a bolted-on property.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 
