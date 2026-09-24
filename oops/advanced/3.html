@@ -64,15 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A class that builds its own database connection, its own logger, and calls a static
-        email method can't be unit-tested without a real database, a real file, and a real mail
-        server — you can't substitute any of the three.</li>
-        <li>This exact shape — one method quietly doing three unrelated jobs — is one of the most
-        common live-coding refactor exercises in senior and lead interviews.</li>
-        <li>It's rarely asked as a spoken definition question; it usually shows up as actual code
-        you're handed on a screen and asked to fix, out loud, on the spot.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔌 Hard-Coded Dependencies</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A class that builds its own database connection, its own logger, and calls a static email method can't be unit-tested — none of the three can be substituted for a fake.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Inject an abstraction for each dependency through the constructor instead, so a test can hand in three fakes and substitute every one of them.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Own the dependency = untestable. Inject the abstraction = swappable in a test.</span></div>
+      </div>
     </div>
   </details>
 
@@ -270,6 +269,78 @@
       still hard-depends on <code>SqlOrderRepository</code> specifically — swap in
       <code>IOrderRepository</code> to actually invert the dependency.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're handed this exact class live, on a screen, with the clock running</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arOopsUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="14" width="180" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="110" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🖥️ Live coding round</text>
+              <path d="M200,33 H280" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arOopsUc1)"/>
+              <rect x="280" y="14" width="180" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="370" y="30" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">📝 DB → Logger → Email</text>
+              <text x="370" y="44" text-anchor="middle" font-size="9" fill="#166534">naming the principle each time</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the exact shape of the interview question at the top of this
+          page, not a spoken definition question. Work top to bottom: extract the database
+          connection first, then the logger, then the static email call, naming Dependency
+          Inversion out loud after each one. <b>This is the #1 scenario you'll actually run
+          into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Live refactor = the same three extractions, named out loud, every time.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> The hidden dependency isn't a constructor call — it's a static method, EmailSender.SendStatic()</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arOopsUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="20" y="14" width="180" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="110" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">⚠️ EmailSender</text>
+              <text x="110" y="44" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">.SendStatic()</text>
+              <path d="M200,33 H280" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arOopsUc2)"/>
+              <rect x="280" y="14" width="180" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="370" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">✅ IEmailSender</text>
+            </svg>
+          </div>
+          <p class="uc-what">A static call is a coupling dead-end in a way <code>new</code> isn't
+          quite as bad — a test can at least construct a real <code>FileLogger</code> pointed at a
+          throwaway path, but it can't substitute a static method call without extra tooling.
+          Wrapping it behind <code>IEmailSender</code> removes a hidden global dependency, not
+          just an inconvenient one.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Can't fake a static call directly — wrap it behind an interface too.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You only have time to fix one of the three dependencies before the clock runs out</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 130" xmlns="http://www.w3.org/2000/svg">
+              <rect x="20" y="8" width="440" height="34" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.8"/>
+              <text x="45" y="30" font-size="12" font-weight="700" fill="#134e4a">1st</text>
+              <text x="280" y="30" text-anchor="middle" font-size="11.5" font-weight="700" fill="#134e4a">🗄️ DB connection — the biggest blocker</text>
+              <rect x="20" y="52" width="440" height="34" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="45" y="74" font-size="12" font-weight="700" fill="#475569">2nd</text>
+              <text x="280" y="74" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">📄 File logger</text>
+              <rect x="20" y="96" width="440" height="34" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="45" y="118" font-size="12" font-weight="700" fill="#475569">3rd</text>
+              <text x="280" y="118" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">📧 Static email call</text>
+            </svg>
+          </div>
+          <p class="uc-what">The database connection is normally the single biggest blocker to
+          writing any unit test for this class at all, so fixing it first unlocks testing the rest
+          of the refactor incrementally.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Only time for one fix? Start with the database connection.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

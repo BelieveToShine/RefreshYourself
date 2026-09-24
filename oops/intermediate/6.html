@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use this to see whether you reach for <b>polymorphism</b> instead of a conditional that grows every time a new case shows up.</li>
-        <li>Comes up anywhere behavior varies by type — payment methods, shipping options, pricing rules, notification channels.</li>
-        <li>A common opener right after Open/Closed Principle, since Strategy is literally the pattern OCP's switch example resolves into.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🔀 Conditional Logic</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Behavior varies by type — payment methods, shipping options, pricing rules, notification channels — so the caller needs some way to run the right code for whichever type it's handed.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A switch (or if/else chain) branches directly on the type and runs the matching case inline — simple to write, but every case still lives inside that one shared method.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Switch → caller decides every time, and a new type means editing shared code.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🎯 Strategy Pattern</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>That switch's cases all sit in the same method, so a new type means opening already-tested code and risking a break in a branch that isn't even changing.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Strategy puts each type behind one shared interface like <code>IPaymentProcessor</code> — each type implements it in its own class, and the caller just calls <code>processor.Pay(amount)</code> without ever branching on type.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Strategy → caller just calls the interface; a new type means adding one class.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -274,6 +287,106 @@ processor.Pay(amount);   <span class="cx-ok">// ✅ no switch — the caller doe
       </div>
       <p class="cx-note">The caller <b>never branches on type</b> — it just calls <code>Pay()</code> on whatever <code>IPaymentProcessor</code> it was handed.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your checkout needs to price standard, express, and overnight shipping</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 104" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="15" y="8" width="120" height="30" rx="9" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="75" y="27" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">📦 Checkout</text>
+              <rect x="160" y="8" width="305" height="30" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="312" y="27" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🔌 IShippingCost</text>
+              <path d="M135,23 H160" stroke="#94a3b8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <path d="M312.5,38 V52" stroke="#1d4ed8" stroke-width="1.4" fill="none"/>
+              <path d="M80,52 H400" stroke="#1d4ed8" stroke-width="1.4" fill="none"/>
+              <path d="M80,52 V64" stroke="#1d4ed8" stroke-width="1.4" fill="none" marker-end="url(#arUc1)"/>
+              <path d="M240,52 V64" stroke="#1d4ed8" stroke-width="1.4" fill="none" marker-end="url(#arUc1)"/>
+              <path d="M400,52 V64" stroke="#1d4ed8" stroke-width="1.4" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="15" y="64" width="130" height="30" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
+              <text x="80" y="83" text-anchor="middle" font-size="10" font-weight="700" fill="#1e3a8a">Standard</text>
+              <rect x="175" y="64" width="130" height="30" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
+              <text x="240" y="83" text-anchor="middle" font-size="10" font-weight="700" fill="#1e3a8a">Express</text>
+              <rect x="335" y="64" width="130" height="30" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
+              <text x="400" y="83" text-anchor="middle" font-size="10" font-weight="700" fill="#1e3a8a">Overnight</text>
+            </svg>
+          </div>
+          <p class="uc-what">Each shipping option becomes its own class implementing one
+          <code>IShippingCost</code> interface — checkout just calls <code>Calculate(order)</code>
+          without ever asking which option it's holding. Adding same-day delivery later is one new
+          class, not a new branch in checkout's pricing method.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">New shipping option → one new class, checkout code untouched.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your app sends alerts by email, SMS, or push depending on user settings</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 104" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="15" y="8" width="120" height="30" rx="9" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="75" y="27" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">🔔 Notifier</text>
+              <rect x="160" y="8" width="305" height="30" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="312" y="27" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e">🔌 INotificationChannel</text>
+              <path d="M135,23 H160" stroke="#94a3b8" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <path d="M312.5,38 V52" stroke="#0f766e" stroke-width="1.4" fill="none"/>
+              <path d="M80,52 H400" stroke="#0f766e" stroke-width="1.4" fill="none"/>
+              <path d="M80,52 V64" stroke="#0f766e" stroke-width="1.4" fill="none" marker-end="url(#arUc2)"/>
+              <path d="M240,52 V64" stroke="#0f766e" stroke-width="1.4" fill="none" marker-end="url(#arUc2)"/>
+              <path d="M400,52 V64" stroke="#0f766e" stroke-width="1.4" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="15" y="64" width="130" height="30" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.5"/>
+              <text x="80" y="83" text-anchor="middle" font-size="10" font-weight="700" fill="#134e4a">Email</text>
+              <rect x="175" y="64" width="130" height="30" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.5"/>
+              <text x="240" y="83" text-anchor="middle" font-size="10" font-weight="700" fill="#134e4a">SMS</text>
+              <rect x="335" y="64" width="130" height="30" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.5"/>
+              <text x="400" y="83" text-anchor="middle" font-size="10" font-weight="700" fill="#134e4a">Push</text>
+            </svg>
+          </div>
+          <p class="uc-what">Each channel implements the same <code>INotificationChannel</code>
+          interface, so the code deciding to send an alert never branches on which channel the
+          user picked — it just calls <code>Send(message)</code>. A new channel is one more
+          class, not a new case in an existing method.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same interface, different channel → caller never branches on channel type.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your checkout applies a different discount for regular, member, and bulk-order pricing</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 104" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#6d28d9"/></marker></defs>
+              <rect x="15" y="8" width="120" height="30" rx="9" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="75" y="27" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">📦 Checkout</text>
+              <rect x="160" y="8" width="305" height="30" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="312" y="27" text-anchor="middle" font-size="11" font-weight="700" fill="#6d28d9">🔌 IPricingRule</text>
+              <path d="M135,23 H160" stroke="#94a3b8" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <path d="M312.5,38 V52" stroke="#6d28d9" stroke-width="1.4" fill="none"/>
+              <path d="M80,52 H400" stroke="#6d28d9" stroke-width="1.4" fill="none"/>
+              <path d="M80,52 V64" stroke="#6d28d9" stroke-width="1.4" fill="none" marker-end="url(#arUc3)"/>
+              <path d="M240,52 V64" stroke="#6d28d9" stroke-width="1.4" fill="none" marker-end="url(#arUc3)"/>
+              <path d="M400,52 V64" stroke="#6d28d9" stroke-width="1.4" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="15" y="64" width="130" height="30" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <text x="80" y="83" text-anchor="middle" font-size="10" font-weight="700" fill="#4c1d95">Regular</text>
+              <rect x="175" y="64" width="130" height="30" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <text x="240" y="83" text-anchor="middle" font-size="10" font-weight="700" fill="#4c1d95">Member</text>
+              <rect x="335" y="64" width="130" height="30" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <text x="400" y="83" text-anchor="middle" font-size="10" font-weight="700" fill="#4c1d95">Bulk</text>
+            </svg>
+          </div>
+          <p class="uc-what">Without Strategy, that pricing logic is exactly the kind of switch
+          this page opened with — one method branching on customer type, growing every time a new
+          pricing rule ships. One <code>IPricingRule</code> implementation per rule means adding a
+          seasonal-sale rule later is a new class, and the existing rules stay untouched and
+          already-tested.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Every "behavior varies by type" case is a Strategy candidate — pricing rules included.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

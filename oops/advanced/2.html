@@ -64,16 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A real production bug pattern: someone makes a "safe" change to a widely-used base
-        class, and a subclass three levels down starts failing for reasons its own author can't
-        see.</li>
-        <li>Interviewers use this to check whether you understand depending on a base class's
-        <b>full implementation</b>, not just its public contract — not just whether you know the
-        phrase "favor composition."</li>
-        <li>A natural senior/architect follow-up once a candidate mentions the four pillars —
-        this is where "I know inheritance" turns into "I know when inheritance bites back."</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🏗️ Fragile Base Class Problem</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A change that looks completely safe from inside a widely-used base class can silently break a subclass several levels down, because that subclass depends on the base's full implementation, not just its public contract — and its own author usually can't see the breakage coming.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Composition avoids that hidden coupling: a class holds a behavior object instead of inheriting one, so swapping what's held never touches anything above it.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Inheritance shares the whole implementation; composition shares only a contract.</span></div>
+      </div>
     </div>
   </details>
 
@@ -316,6 +314,82 @@
       genuinely applies — an <code>Eagle</code> would hold a <code>FlyBehavior</code> instead — so
       no subtype is ever forced into a capability it doesn't have.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're about to make Penguin inherit from Bird because it looks like a clean is-a relationship</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">IS-A DOESN'T ACTUALLY FIT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🐦 Bird.Fly()</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <text x="240" y="37" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">extends</text>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🐧 Penguin</text>
+              <text x="375" y="55" text-anchor="middle" font-size="9.5" fill="#991b1b">Fly()? ❌ can't</text>
+            </svg>
+          </div>
+          <p class="uc-what">Bird already hands <code>Fly()</code> to every subclass. The moment a
+          type can't actually do what the base assumes, the awkward override — throw or silent
+          no-op — is the tell that the is-a claim doesn't really hold, not just an edge case to
+          patch around.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Forced override on a subclass → the is-a claim doesn't actually hold.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> A teammate makes what looks like a safe change inside a base class your code depends on</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">"SAFE" CHANGE INSIDE THE BASE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">⚙️ Base.Save()</text>
+              <text x="105" y="55" text-anchor="middle" font-size="9" fill="#1e3a8a">+ new internal call</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🐛 AuditedRecord</text>
+              <text x="375" y="55" text-anchor="middle" font-size="9" fill="#991b1b">now throws</text>
+            </svg>
+          </div>
+          <p class="uc-what">Adding a call from one of the base's own methods to another —
+          <code>Save()</code> now calling <code>Validate()</code> — looks completely safe from
+          inside the base itself. But a subclass written earlier, assuming that method only ran
+          in a different context, breaks the moment it runs — and the base's own author usually
+          never sees it coming.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A change that looks safe inside the base can still break a subclass down the chain.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> You're deciding how to give two different subtypes their own version of a shared capability</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">HELD BEHAVIOR, SWAPPED FREELY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🐧 Penguin</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <text x="240" y="37" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">holds</text>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🏊 SwimBehavior</text>
+            </svg>
+          </div>
+          <p class="uc-what">Instead of inheriting <code>Fly()</code> and overriding it away,
+          each type holds whichever <code>IMovementBehavior</code> actually applies —
+          <code>Penguin</code> holds a <code>SwimBehavior</code>, an <code>Eagle</code> would hold
+          a <code>FlyBehavior</code> instead — so swapping what's held never touches anything
+          above it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Swap the held behavior → nothing above it has to change.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 
