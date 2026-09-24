@@ -13,6 +13,16 @@ it's actually useful to know, and (only if genuinely true) that it's a common in
 Never a paragraph, never article prose. This is still the default — most topics don't need
 Shape B.
 
+**"Plain bullets" describes the content shape, not permission to leave the markup visually
+flat.** A real gap this session: retrofitting a track's why-grid pages while explicitly leaving
+Shape A pages' *content* untouched (correct) was read as also meaning their *rendered look*
+didn't need re-checking — it does. `.topic-hook .toggle-body li` in `assets/style.css` already
+styles a plain `<ul>` as small colored cards (cycling the site's accent palette), specifically so
+a Shape A page still reads as the same visual system as a Shape B page next to it, not a flat
+dash list beside a colorful grid. Just write the `<ul><li>` markup as normal — the styling is
+automatic — but when touching any page's "Why it matters" box (even a "leave it as-is" retrofit),
+actually render it next to a Shape B page and confirm they still look like one design, not two.
+
 **Shape B — the Problem → Solution why-grid.** Use only when the page itself differentiates
 **multiple named sub-concepts** that readers genuinely confuse with each other (the CORS page has
 four: Same-Origin Policy, CORS itself, wildcard vs. allow-list, and CORS-vs-Authentication). One
