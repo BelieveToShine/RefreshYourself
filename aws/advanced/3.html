@@ -65,16 +65,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Multi-region questions are a favorite way to separate someone who's read about AWS
-        from someone who has actually reasoned through what happens when two regions can both
-        take traffic at once.</li>
-        <li>Getting active/active vs. active/passive backwards for <b>writes specifically</b> is
-        one of the fastest ways to accidentally propose a design that produces split-brain.</li>
-        <li>A common senior/architect follow-up after "how would you make this system
-        multi-region" — expect it phrased as "what happens if both regions accept a write for the
-        same record at the same time?"</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔒 Active/Passive</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A single-region deployment has no fallback — if that region goes down, every read and every write goes down with it.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Keep one region as the only reader and writer while a second region stands by as a replica; Route 53 health checks fail traffic over to the standby only if the primary goes down, so there's still only ever one source of truth.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Active/Passive = one live region, one standby — split-brain risk is none, because only one region ever writes.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">⚡ Active/Active</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Routing every read back to one region adds latency for users far from it, and picking "active/active" without a plan for writes just means both regions could accept conflicting writes with no way to reconcile them.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Both regions serve live traffic — CloudFront and Global Accelerator make reads from either region fast and safe — but writes are only safe this way with one designated writer, or a real conflict-resolution strategy.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Active/Active = both regions live — reads are always safe, writes are safe only with one designated writer or real conflict resolution.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -230,6 +238,78 @@
           <tr><th>Split-brain risk</th><td>None — only one region ever writes</td><td>Real risk if both regions independently accept writes with no reconciliation</td></tr>
         </tbody>
       </table>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You only need disaster recovery, not multi-region reads</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">ONE WRITER, ONE STANDBY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">✍️ Region A — active</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">📖 Region B — standby</text>
+            </svg>
+          </div>
+          <p class="uc-what">One region handles every read and write; the standby stays idle until
+          Route 53's health checks catch a failure and redirect traffic to it. There's only ever
+          one source of truth, so split-brain isn't possible — this is the simplest, lowest-risk
+          multi-region setup.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">DR only, no live second region → plain Active/Passive.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> Users worldwide need fast reads, but writes must stay consistent</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 96" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">ONE WRITER, MANY READERS</text>
+              <rect x="155" y="18" width="170" height="32" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="240" y="38" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">✍️ Region A — writer</text>
+              <path d="M215,50 L110,68" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <path d="M265,50 L370,68" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="20" y="68" width="180" height="24" rx="8" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.4"/>
+              <text x="110" y="84" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0f766e">📖 Region B — read replica</text>
+              <rect x="280" y="68" width="180" height="24" rx="8" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.4"/>
+              <text x="370" y="84" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0f766e">📖 Region C — read replica</text>
+            </svg>
+          </div>
+          <p class="uc-what">CloudFront and Global Accelerator make reads fast from any region,
+          while cross-region replication (Aurora Global Database, DynamoDB Global Tables) keeps
+          replicas current — but only one region ever accepts writes, so there's still nothing to
+          reconcile.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Reads active/active, writes single-writer → the safe hybrid.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Both regions accept writes with no plan to reconcile conflicts</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">BOTH WRITE, NO RECONCILIATION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">✍️ Region C — writes</text>
+              <path d="M190,38 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUc3)"/>
+              <path d="M290,48 H190" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">✍️ Region D — writes</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is exactly the common trap: designing active/active with
+          independent regional writes and no conflict-resolution strategy. Neither region's write
+          is more "correct" than the other's, so there's no way to reconcile them after the fact.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Both write, no reconciliation → split-brain.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,15 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>API Gateway → Lambda → a database is the default shape of a serverless REST API —
-        expect a "design this" whiteboard question built exactly on this pattern.</li>
-        <li>Connection exhaustion under Lambda's burst concurrency is a real, well-known production
-        failure, not a theoretical edge case — naming RDS Proxy as the fix is a strong signal in an
-        interview.</li>
-        <li>Step Functions vs. chaining Lambda calls by hand is a common comparison question inside
-        this same design.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+        <div class="wc-head">🔗 RDS Proxy</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Lambda scales by running many invocations at once, and each concurrent invocation can open its own database connection — under a real burst, that's exactly how teams exhaust a relational database's fixed connection limit and cause cascading failures under load.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>RDS Proxy sits between Lambda and the database and holds a pool of real connections that a burst of invocations shares and reuses, so a spike in concurrency doesn't each grab a brand-new one.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">RDS Proxy = a connection pool between bursty Lambda and a connection-limited database.</span></div>
+      </div>
     </div>
   </details>
 
@@ -199,6 +198,84 @@
       connection limit. <b>RDS Proxy</b> sits between Lambda and the database specifically to
       absorb this: it holds a pool of real connections and lets a burst of Lambda invocations share
       and reuse them, instead of each invocation needing a brand-new one.</p>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're scoping a brand-new serverless REST API and haven't picked the backing database yet.</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="20" y="14" width="130" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="85" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🗄️ DynamoDB</text>
+              <text x="85" y="43" text-anchor="middle" font-size="9" fill="#5b6472">HTTP, no conn limit</text>
+              <rect x="330" y="14" width="130" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/>
+              <text x="395" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🐘 RDS / Aurora</text>
+              <text x="395" y="43" text-anchor="middle" font-size="9" fill="#5b6472">needs pooling</text>
+              <path d="M150,33 H330" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arUc1)"/>
+              <text x="240" y="26" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">if relational instead</text>
+            </svg>
+          </div>
+          <p class="uc-what">DynamoDB fits the default API Gateway → Lambda → DynamoDB shape well because it's reached over HTTP calls rather than a pooled connection, so it never hits this problem at all. Pick RDS or Aurora instead, and RDS Proxy has to be part of the design from the start, not bolted on after a connection-exhaustion incident.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">DynamoDB sidesteps this problem entirely; RDS/Aurora needs RDS Proxy designed in up front.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your Lambda-backed API connects straight to RDS or Aurora and has passed every load test you've run so far.</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="20" y="14" width="130" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/>
+              <text x="85" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🔀 Direct connection</text>
+              <text x="85" y="43" text-anchor="middle" font-size="9" fill="#5b6472">"works" at low volume</text>
+              <rect x="330" y="14" width="130" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+              <text x="395" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🔗 RDS Proxy</text>
+              <text x="395" y="43" text-anchor="middle" font-size="9" fill="#5b6472">pools &amp; reuses conns</text>
+              <path d="M150,33 H330" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arUc2)"/>
+              <text x="240" y="26" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">add before it bites you</text>
+            </svg>
+          </div>
+          <p class="uc-what">"Working under every test so far" isn't proof it's safe — each concurrent Lambda invocation still opens its own connection, and it only takes one real burst for that to add up past the database's connection limit and cascade into failures. Add RDS Proxy before that first real spike, not after.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Passing load tests without RDS Proxy isn't safety — it just means you haven't hit a real burst yet.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your serverless workflow has several steps that depend on each other's results, with retries and branching between them.</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#0f766e"/>
+                </marker>
+              </defs>
+              <rect x="20" y="14" width="130" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="85" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">🔗 Lambda→Lambda</text>
+              <text x="85" y="43" text-anchor="middle" font-size="9" fill="#5b6472">hand-rolled retries</text>
+              <rect x="330" y="14" width="130" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="395" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#134e4a">🗺️ Step Functions</text>
+              <text x="395" y="43" text-anchor="middle" font-size="9" fill="#5b6472">state, retries built in</text>
+              <path d="M150,33 H330" fill="none" stroke="#0f766e" stroke-width="1.8" marker-end="url(#arUc3)"/>
+              <text x="240" y="26" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0f766e">coordinate, don't chain</text>
+            </svg>
+          </div>
+          <p class="uc-what">Step Functions coordinates a multi-step workflow with built-in state, retries, and branching. Having one Lambda invoke the next does something similar, but clumsily — there's no built-in visibility into which step you're on, and retries/error handling have to be hand-rolled in every function instead of configured once.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Dependent multi-step workflow → Step Functions, not Lambda calling Lambda by hand.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

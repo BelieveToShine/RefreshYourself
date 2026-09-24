@@ -64,11 +64,40 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Checks whether you know the real trade-off between rollback speed and infrastructure cost across deployment strategies.</li>
-        <li>Comes up in almost every "how would you deploy without downtime" or "tell me about a bad release" question.</li>
-        <li>A natural follow-up after any CI/CD pipeline, ECS/Lambda, or production-incident question.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔁 Blue/Green</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A bad release has to be undone in seconds, not minutes — redeploying the old build from scratch while users are already hitting broken code takes real time.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Blue/green keeps the whole old environment running untouched while the new one goes live, so rollback is just switching traffic back — the fastest undo of the four.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Blue/green = instant rollback, at double capacity for a while.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🐤 Canary</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Sending 100% of traffic straight to a new version means any regression hits every user at once, and you only find out after the damage is already done.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Canary shifts a small % of real traffic to the new version first and watches its error rate, only growing further once it proves healthy.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Canary = smallest blast radius, grows only if healthy.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#475569; --why-bg:#f1f5f9">
+          <div class="wc-head">🔄 Rolling</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Doubling infrastructure for every single release isn't always affordable, but replacing a whole fleet at once risks an outage if the new build is bad.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Rolling replaces instances a few at a time while always keeping a minimum healthy capacity live — cheap on infra, but old and new run together briefly, so they must share the same contract.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Rolling = cheapest, but old + new must stay backward-compatible mid-deploy.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#991b1b; --why-bg:#fee2e2">
+          <div class="wc-head">🏗️ Immutable</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Patching a server in place lets it quietly drift into a state nobody can fully account for, which makes a bad deploy hard to reason about — or reliably undo.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Immutable deployment never patches a running instance — it always builds a brand-new one from the new version and swaps it in, so nothing already running ever silently changes.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Immutable = never patch, always rebuild fresh.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -222,6 +251,77 @@
           <tr><th>Extra infra cost</th><td>double capacity, briefly</td><td>small extra capacity</td><td>little to none — within existing capacity</td><td>double capacity, briefly</td></tr>
         </tbody>
       </table>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Leadership wants zero risk of last time's bad release happening again — any problem has to be undoable in seconds</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">HIGH-RISK RELEASE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🆕 NEW · live now</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🟢 OLD · flip back</text>
+            </svg>
+          </div>
+          <p class="uc-what">Blue/green is the natural fit here — the old environment is still
+          fully running and untouched, so undoing a bad release is just switching traffic back to
+          it, no redeploy needed. <b>This is why blue/green gets picked for the highest-risk
+          releases.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Undo has to be instant → blue/green.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You want to try a risky change on real traffic without gambling the whole user base on it at once</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">SMALL SLICE FIRST</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🐤 New · 5% traffic</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">😀 Rest · 95% safe</text>
+            </svg>
+          </div>
+          <p class="uc-what">Canary fits — a small slice of real users hits the new version while
+          its error rate is watched closely, and only gets scaled up if it stays healthy. If
+          something's wrong, most of the user base never saw it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Test on a slice first → canary.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You assume "we're doing a rolling deployment" already means zero downtime, full stop</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3R" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker>
+                <marker id="arUc3L" markerWidth="7" markerHeight="7" refX="2" refY="2" orient="auto"><path d="M4.5,0 L0,2 L4.5,4 Z" fill="#dc2626"/></marker>
+              </defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">OLD + NEW LIVE TOGETHER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🆕 NEW instance</text>
+              <path d="M197,43 H283" stroke="#dc2626" stroke-width="1.6" fill="none" marker-start="url(#arUc3L)" marker-end="url(#arUc3R)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">🗄️ OLD instance</text>
+            </svg>
+          </div>
+          <p class="uc-what">Not quite true. A rolling deployment briefly runs both versions live
+          at the same time while it replaces instances a few at a time — if the two aren't
+          backward-compatible, that overlap window can throw real errors, even though most of the
+          fleet stayed up the whole time.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Rolling ≠ automatically safe — old + new must agree.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

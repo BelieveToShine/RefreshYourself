@@ -64,16 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Distributed-systems interviews almost always probe "what happens when a downstream
-        service fails" — preventing cascading failure is the real test of whether a candidate
-        has run microservices in production, not just deployed them.</li>
-        <li>The Saga pattern is the standard answer whenever a data-consistency question crosses
-        service boundaries — reaching for "just wrap it in a transaction" is the tell that a
-        candidate hasn't worked with genuinely independent services.</li>
-        <li>Common follow-up to "design an order system with multiple services" in a
-        senior/architect AWS interview.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+        <div class="wc-head">🔀 Saga Pattern</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Each microservice owns its own database, so there's no shared lock to hold across all of them — if a later step in a multi-service operation fails after earlier steps already committed, those committed changes are left stuck with nothing coordinating a rollback.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The Saga pattern defines a compensating action for every step, so a failure triggers those compensating actions in reverse commit order — undoing what already committed without ever needing a distributed lock.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Saga = local transactions + a compensating action per step, run backward on failure.</span></div>
+      </div>
     </div>
   </details>
 
@@ -217,6 +215,103 @@
       how long a caller waits, and <b>bulkheads</b> isolate failure domains so one service's
       problem can't exhaust a shared resource, like a thread pool, that healthy services also
       depend on.</p>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">1</span> A step in your saga fails after earlier steps already committed</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1F" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+                </marker>
+                <marker id="arUc1R" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+                </marker>
+              </defs>
+              <rect x="20" y="6" width="140" height="34" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="90" y="22" text-anchor="middle" font-size="10" font-weight="700" fill="#5b21b6">PAYMENT</text>
+              <text x="90" y="34" text-anchor="middle" font-size="7.5" fill="#5b21b6">✅ committed</text>
+              <rect x="320" y="6" width="140" height="34" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="390" y="22" text-anchor="middle" font-size="10" font-weight="700" fill="#b91c1c">SHIP</text>
+              <text x="390" y="34" text-anchor="middle" font-size="7.5" fill="#b91c1c">❌ fails</text>
+              <path d="M160,23 H320" fill="none" stroke="#16a34a" stroke-width="2" marker-end="url(#arUc1F)"/>
+              <path d="M390,40 V52 H90 V40" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arUc1R)"/>
+              <text x="240" y="62" text-anchor="middle" font-size="8" fill="#92400e">↩ compensate</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario the Saga pattern exists for: the shipping
+          step fails after inventory and payment already committed as separate local
+          transactions. There's no cross-service lock to roll back, so the failure instead
+          triggers each already-committed step's own compensating action, undone in reverse
+          order — refund the payment, then release the inventory reservation.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Failure after commit → run compensating actions backward, not a rollback.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b91c1c">
+          <div class="uc-sit"><span class="uc-flag">2</span> A downstream service starts timing out under load, and every caller keeps waiting on it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#b91c1c"/>
+                </marker>
+              </defs>
+              <rect x="20" y="14" width="110" height="32" rx="10" fill="#f1f5f9" stroke="#64748b" stroke-width="1.6"/>
+              <text x="75" y="34" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">CALLER</text>
+              <rect x="350" y="14" width="110" height="32" rx="10" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.6"/>
+              <text x="405" y="30" text-anchor="middle" font-size="10" font-weight="700" fill="#b91c1c">PAYMENT</text>
+              <text x="405" y="42" text-anchor="middle" font-size="7.5" fill="#b91c1c">⏱ slow</text>
+              <path d="M130,30 H350" fill="none" stroke="#b91c1c" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arUc2)"/>
+              <text x="240" y="26" text-anchor="middle" font-size="13">⛔</text>
+              <text x="240" y="56" text-anchor="middle" font-size="8" fill="#b91c1c">breaker opens — stops calling</text>
+            </svg>
+          </div>
+          <p class="uc-what">Without protection, every caller piles up threads or connections
+          waiting on the slow service, and that pileup can exhaust a shared resource pool that
+          healthy services also depend on — turning one slow service into a system-wide outage.
+          A circuit breaker stops calling the failing service, a timeout caps how long a caller
+          waits, and a bulkhead isolates the resource pool so the slowdown can't spread.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One slow service, no circuit breaker/timeout/bulkhead → cascading failure.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> A payment call times out, and your caller retries it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 70" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+                </marker>
+                <marker id="arUc3b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#0f766e"/>
+                </marker>
+              </defs>
+              <rect x="20" y="8" width="100" height="54" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="70" y="38" text-anchor="middle" font-size="10" font-weight="700" fill="#0f766e">CLIENT</text>
+              <rect x="360" y="8" width="100" height="54" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="410" y="32" text-anchor="middle" font-size="10" font-weight="700" fill="#0f766e">PAYMENT</text>
+              <text x="410" y="44" text-anchor="middle" font-size="10" font-weight="700" fill="#0f766e">SVC</text>
+              <path d="M120,24 H360" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arUc3a)"/>
+              <text x="240" y="16" text-anchor="middle" font-size="7.5" fill="#0f766e">🔑 key=abc123</text>
+              <path d="M120,50 H360" fill="none" stroke="#0f766e" stroke-width="2" marker-end="url(#arUc3b)"/>
+              <text x="240" y="66" text-anchor="middle" font-size="7.5" fill="#0f766e">retry — same key ⇒ no double charge</text>
+            </svg>
+          </div>
+          <p class="uc-what">If the retry isn't idempotent, the customer could be charged twice —
+          the original call may have actually succeeded server-side even though the response
+          never made it back. An idempotency key lets the payment service recognize the retry
+          as the same request and return the original result instead of repeating the charge.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Retry without idempotency → possible double charge; retry with it → safe.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

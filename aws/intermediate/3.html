@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Checks whether you understand that <code>Organizations</code>/SCPs and regular IAM policies solve different problems — one restricts a whole account, the other grants an identity.</li>
-        <li>Comes up any time the conversation turns to multi-account setups, guardrails, or "how do teams share access safely across accounts."</li>
-        <li>A natural follow-up into secrets handling — Secrets Manager vs. Parameter Store is one of the most common "which service" questions on AWS.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔑 Regular IAM policy</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>An IAM user, group, or role starts with zero permissions, and an SCP's <code>Allow</code> statements can't fix that — an SCP with nothing but <code>Allow</code>s still grants nothing.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A regular IAM policy attached directly to that user, group, or role is what actually grants or denies access — it's the only layer here that can hand out a permission, not just cap one.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Regular IAM policy = the only layer that actually grants access.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">🚧 Service Control Policy (SCP)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A regular IAM policy only ever governs its own account, so nothing stops one account in an OU from launching resources outside the regions leadership approved.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An SCP attaches at the Organization/OU level and sets a ceiling every account underneath must obey — a <code>Deny</code> in it blocks the whole account no matter what any local IAM <code>Allow</code> says.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">SCP = an Org/OU-level ceiling — it can restrict but never grant.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -176,6 +189,78 @@
       </div>
       <p class="cx-note">This is called from Account A. It only works because Account B's role already trusts Account A in its trust policy — no user or key in Account B is involved.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Account A needs to read an S3 bucket that lives in Account B, without a new IAM user in Account B</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="ucArrow1" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#16a34a"/>
+                </marker>
+              </defs>
+              <rect x="6" y="14" width="180" height="38" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="96" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">Account A caller</text>
+              <path d="M190,33 H286" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" marker-end="url(#ucArrow1)"/>
+              <text x="238" y="24" text-anchor="middle" font-size="9.5" fill="#166534">sts:AssumeRole</text>
+              <rect x="294" y="14" width="180" height="38" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="384" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">Role in Account B</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into. Account B's role already trusts Account A in its trust policy, so Account A calls <code>sts:AssumeRole</code> and gets back temporary credentials scoped to that role — no standing user or key in Account B ever exists.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Cross-account access → a trust policy plus <code>AssumeRole</code>, never a shared user.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You write an SCP that only contains Allow statements, expecting it to hand out extra permissions org-wide</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="ucArrow2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="6" y="14" width="180" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="96" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">SCP: Allow only</text>
+              <path d="M190,33 H286" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 4" marker-end="url(#ucArrow2)"/>
+              <text x="238" y="24" text-anchor="middle" font-size="9.5" fill="#991b1b">grants nothing</text>
+              <rect x="294" y="14" width="180" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="384" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">Identity: still 0 perms</text>
+            </svg>
+          </div>
+          <p class="uc-what">Nothing changes. An SCP never grants — an <code>Allow</code> inside one does nothing on its own, so every identity in the account is still exactly as permissioned as its own local IAM policies say, no more.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">SCP <code>Allow</code> ≠ access — only a local IAM policy actually grants.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your RDS database credentials need to rotate on a schedule, but a handful of config values don't</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="ucArrow3" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#0f766e"/>
+                </marker>
+              </defs>
+              <rect x="6" y="14" width="180" height="38" rx="10" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="96" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">RDS credentials</text>
+              <path d="M190,33 H286" fill="none" stroke="#0f766e" stroke-width="2" stroke-linecap="round" marker-end="url(#ucArrow3)"/>
+              <text x="238" y="24" text-anchor="middle" font-size="9.5" fill="#0f766e">needs rotation</text>
+              <rect x="294" y="14" width="180" height="38" rx="10" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="384" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">Secrets Manager</text>
+            </svg>
+          </div>
+          <p class="uc-what">The RDS credentials go in Secrets Manager, which has built-in automatic rotation for them; the static config values go in the cheaper Parameter Store, since they never need to change on a schedule.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Needs rotation → Secrets Manager; static and cheap → Parameter Store.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

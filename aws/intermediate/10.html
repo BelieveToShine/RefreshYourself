@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Tests whether you see API Gateway as a policy-enforcement layer — throttling, auth, transformation — in front of Lambda, not just a URL router.</li>
-        <li>Comes up any time a public-facing API or "how do you secure this endpoint" question surfaces.</li>
-        <li>Sets up the classic mix-up: treating Cognito and IAM authorizers as interchangeable, when they solve genuinely different problems.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">📄 REST API</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A public API that needs request/response transformation, usage plans, or API keys can't get any of that from the leaner HTTP API type — that feature set simply isn't there.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>REST API is the older, fuller-featured type — it keeps transformation, usage plans, and API keys built in, at the cost of higher cost and latency than HTTP API.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">REST API = more built-in features, higher cost and latency.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">⚡ HTTP API</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Paying REST API's extra cost and latency for a straight proxy to Lambda that never touches transformation, usage plans, or API keys wastes both money and speed.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>HTTP API trims to a leaner feature set built for exactly that case — cheaper and lower latency — which is why most new serverless APIs default to it.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">HTTP API = leaner, cheaper, lower latency — today's default.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -133,6 +146,39 @@
     <figcaption>Every request passes through API Gateway's throttling and auth check before Lambda ever runs — Cognito validates end users, IAM validates AWS principals, two different jobs feeding the same backend.</figcaption>
   </figure>
 
+  <div class="viz-label">🧠 REST API vs HTTP API <span class="viz-sub">— same job, different trade-off</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 226" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="gwCmpShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="gwCmpArrow" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#gwCmpShadow)"><rect x="220" y="20" width="200" height="42" rx="13" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="46" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🚪 API Gateway type?</text>
+
+      <path d="M320,62 V72" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M170,72 H470" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M170,72 V98" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#gwCmpArrow)"/>
+      <path d="M470,72 V98" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#gwCmpArrow)"/>
+
+      <g filter="url(#gwCmpShadow)"><rect x="40" y="98" width="260" height="100" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="170" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#92400e">📄 REST API</text>
+      <text x="170" y="152" text-anchor="middle" font-size="11" fill="#5b6472">more features</text>
+      <text x="170" y="172" text-anchor="middle" font-size="11" fill="#5b6472">higher cost, higher latency</text>
+
+      <g filter="url(#gwCmpShadow)"><rect x="340" y="98" width="260" height="100" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="470" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">⚡ HTTP API</text>
+      <text x="470" y="152" text-anchor="middle" font-size="11" fill="#5b6472">fewer features</text>
+      <text x="470" y="172" text-anchor="middle" font-size="11" fill="#5b6472">cheaper, lower latency</text>
+    </svg>
+    <figcaption>Same job — a front door in front of Lambda — different trade-off: REST API keeps more built-in features at higher cost and latency; HTTP API trims down to be cheaper and faster, which is why most new serverless APIs default to it.</figcaption>
+  </figure>
+
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b>"IAM auth and Cognito solve the same problem."</b> They don't — an IAM authorizer checks a SigV4-signed request from an AWS principal (another service, another account), while a Cognito user pool authorizer checks a token issued to an actual human user of the app. Swapping one for the other doesn't just fail, it answers the wrong question entirely.</p>
@@ -187,6 +233,66 @@
           <tr><th>Typical use</th><td>public mobile/web app login</td><td>service-to-service, AWS-to-AWS calls</td><td>a non-standard or third-party auth scheme</td></tr>
         </tbody>
       </table>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your API is a straight pass-through to Lambda — no transformation, usage plans, or API keys</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">STRAIGHT PROXY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🔌 Lambda proxy</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">⚡ HTTP API</text>
+            </svg>
+          </div>
+          <p class="uc-what">A straight proxy to Lambda never touches REST API's extra machinery, so paying its higher cost and latency buys nothing here — HTTP API gives the same proxy behavior for less. <b>This is the default for most new serverless APIs.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Plain Lambda proxy → HTTP API is the default.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Partners need API keys, usage plans, or request/response transformation</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">NEEDS THE EXTRA FEATURES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🗝️ API keys / plans</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">📄 REST API</text>
+            </svg>
+          </div>
+          <p class="uc-what">Usage plans, API keys, and request/response transformation only exist on the REST API type — HTTP API's leaner feature set has no built-in way to add them. This is the one case where REST API's extra cost and latency earns its keep.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Usage plans / API keys / transformation → REST API.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your API is public-facing, called by real people signing into your app</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">END USER, NOT AWS ITSELF</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">👤 App login</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🔐 Cognito</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is a Cognito user-pool job, not an IAM job — Cognito validates a token issued to an actual human user of the app, while IAM checks a signed request from an AWS principal, which a real end user's login never is.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Real human sign-in → Cognito, not IAM.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

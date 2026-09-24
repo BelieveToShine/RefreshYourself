@@ -66,16 +66,20 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Reliability questions ask you to design a system that <b>survives</b> a partial
-        failure instead of <b>amplifying</b> it — this exact set of primitives (backoff+jitter,
-        circuit breaker, bulkhead, timeout, idempotency, backpressure) is the standard vocabulary
-        for that conversation.</li>
-        <li>Comes up directly in senior/architect interviews as "how would you handle a
-        downstream dependency going down" or "how do you stop a retry storm."</li>
-        <li>Real production outages have been caused by exactly this gap — retries fired without
-        backoff and jitter turning a brief blip into a full outage.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+        <div class="wc-head">🔁 Backoff + Jitter</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>If every failed
+          call retries immediately at the same fixed interval, thousands of clients retry in
+          lockstep and synchronize into a retry storm — turning a brief blip into a full
+          outage.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Exponential
+          backoff makes each retry wait longer than the last, and jitter adds randomness to that
+          wait, so retries spread out over time instead of all firing at once.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Backoff+jitter
+        = growing, randomized waits between retries — that's what stops the storm.</span></div>
+      </div>
     </div>
   </details>
 
@@ -287,6 +291,86 @@
       different outcome — without it, a retry can double-charge a customer or double-send a
       message. Backpressure is a system telling its upstream producers to slow down when it can't
       keep up, instead of silently failing or queuing requests without limit.</p>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your service calls a dependency that starts failing, and every caller retries at the same instant</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="12" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">GAPS GROW &amp; STAY RANDOM</text>
+              <path d="M20,40 H460" stroke="#94a3b8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <circle cx="34" cy="40" r="5" fill="#dc2626"/>
+              <text x="34" y="58" text-anchor="middle" font-size="7" fill="#991b1b">fail</text>
+              <circle cx="80" cy="40" r="5" fill="#1d4ed8"/>
+              <text x="80" y="58" text-anchor="middle" font-size="7" fill="#1e3a8a">retry 1</text>
+              <circle cx="185" cy="40" r="5" fill="#1d4ed8"/>
+              <text x="185" y="58" text-anchor="middle" font-size="7" fill="#1e3a8a">retry 2</text>
+              <circle cx="345" cy="40" r="5" fill="#1d4ed8"/>
+              <text x="345" y="58" text-anchor="middle" font-size="7" fill="#1e3a8a">retry 3</text>
+            </svg>
+          </div>
+          <p class="uc-what">Retrying at a fixed interval means every failed caller retries in near
+          lockstep, piling more load onto a dependency that's already struggling. Backoff makes
+          each retry wait longer than the last; jitter randomizes that wait so the retries land
+          spread out instead of all at once. <b>This is the #1 scenario you'll actually run
+          into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Fixed-interval retries in lockstep → retry storm; backoff+jitter spreads them out.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> A dependency goes down completely and keeps failing every single call you send it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="10" y="14" width="120" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="70" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">📞 Caller</text>
+              <path d="M130,33 H176" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="178" y="14" width="130" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="243" y="33" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🚫 Breaker: OPEN</text>
+              <text x="243" y="46" text-anchor="middle" font-size="7.5" fill="#92400e">fails fast</text>
+              <path d="M308,33 H340" stroke="#94a3b8" stroke-width="1.6" fill="none" stroke-dasharray="3 3"/>
+              <text x="325" y="24" text-anchor="middle" font-size="10" fill="#94a3b8">✕</text>
+              <rect x="340" y="14" width="130" height="38" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.6"/>
+              <text x="405" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#64748b">🔥 dependency</text>
+            </svg>
+          </div>
+          <p class="uc-what">A circuit breaker watching this dependency trips to OPEN after enough
+          consecutive failures — it stops calling that dependency entirely for a cooldown period,
+          failing fast instead of piling more load on top of calls that were going to fail anyway.
+          After the cooldown it sends a few test calls through to check if it's safe to
+          resume.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Dependency failing repeatedly → breaker trips OPEN and fails fast.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> One dependency slows to a crawl and its connection pool fills up completely</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="8" width="140" height="30" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="80" y="27" text-anchor="middle" font-size="10.5" font-weight="700" fill="#15803d">🟢 Pool A — ok</text>
+              <rect x="170" y="8" width="140" height="30" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="240" y="27" text-anchor="middle" font-size="10.5" font-weight="700" fill="#dc2626">🔴 Pool B — full</text>
+              <rect x="330" y="8" width="140" height="30" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="400" y="27" text-anchor="middle" font-size="10.5" font-weight="700" fill="#15803d">🟢 Pool C — ok</text>
+              <path d="M160,4 V44" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>
+              <path d="M320,4 V44" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>
+              <text x="240" y="58" text-anchor="middle" font-size="8.5" fill="#475569">walls keep B's overflow from touching A &amp; C</text>
+            </svg>
+          </div>
+          <p class="uc-what">Because each dependency has its own bulkhead pool, Pool B filling up
+          doesn't touch the connections Pools A and C need — the isolation is what keeps the two
+          healthy dependencies serving normally while the struggling one is contained.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One dependency's pool exhausted → bulkhead keeps the others unaffected.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

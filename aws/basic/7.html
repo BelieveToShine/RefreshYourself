@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Almost every AWS reliability/scalability question comes back to this pairing — it's the backbone of "how do you survive a traffic spike" and "how do you survive an instance failure."</li>
-        <li>Explains a real design decision: elasticity comes from the ASG's scaling policy, never from the load balancer itself.</li>
-        <li>Sets up the exact distinction candidates get wrong: crediting the ALB with capacity it doesn't actually control.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">⚖️ ALB</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A web app or microservices setup needs traffic routed by URL path or hostname, not just by IP and port — a balancer that only sees packets has no way to make that call.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The ALB operates at Layer 7, reading the actual HTTP/HTTPS request, so it can route by path, host, or headers — the right fit for web apps and microservices.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">ALB = Layer 7, routes by path/host — the web-app and microservices choice.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🔌 NLB</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Non-HTTP TCP/UDP traffic has no HTTP request for a Layer 7 balancer to read, and traffic that needs extreme throughput, the lowest possible latency, or a fixed IP to point at doesn't need the ALB's HTTP-aware overhead.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The NLB operates at Layer 4, forwarding by IP and port only — that's exactly what gives it ultra-low latency, extreme throughput, and support for static IPs.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">NLB = Layer 4, IP + port only — the non-HTTP, high-throughput, static-IP choice.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -156,6 +169,46 @@
     <figcaption>The ALB only routes to instances already healthy inside its target group. Instance D failed its health check and was pulled from rotation — the ASG is the one launching replacement instance E so the pool stays the right size.</figcaption>
   </figure>
 
+  <div class="viz-label">🧠 ALB vs NLB <span class="viz-sub">— same pairing, different layer</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 264" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shAlbNlb" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arAlbNlbBlue" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arAlbNlbTeal" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#0f766e"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">ALB VS NLB — PICK BY LAYER</text>
+
+      <g filter="url(#shAlbNlb)"><rect x="195" y="34" width="250" height="42" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="320" y="60" text-anchor="middle" font-size="12" fill="#334155">🤔 HTTP/S or raw TCP/UDP?</text>
+
+      <path d="M320,76 V88" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M158,88 H482" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M158,88 V108" fill="none" stroke="#3b82f6" stroke-width="1.6" marker-end="url(#arAlbNlbBlue)"/>
+      <path d="M482,88 V108" fill="none" stroke="#0f766e" stroke-width="1.6" marker-end="url(#arAlbNlbTeal)"/>
+
+      <g filter="url(#shAlbNlb)"><rect x="48" y="108" width="220" height="108" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="158" y="134" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">⚖️ ALB — Layer 7</text>
+      <text x="158" y="156" text-anchor="middle" font-size="9.5" fill="#5b6472">Routes by path, host, headers</text>
+      <text x="158" y="173" text-anchor="middle" font-size="9.5" fill="#5b6472">Best for web apps, microservices</text>
+      <text x="158" y="190" text-anchor="middle" font-size="9.5" fill="#5b6472">Low latency</text>
+
+      <g filter="url(#shAlbNlb)"><rect x="372" y="108" width="220" height="108" rx="14" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.8"/></g>
+      <text x="482" y="134" text-anchor="middle" font-size="13" font-weight="700" fill="#0f766e">🔌 NLB — Layer 4</text>
+      <text x="482" y="156" text-anchor="middle" font-size="9.5" fill="#5b6472">Routes by IP + port only</text>
+      <text x="482" y="173" text-anchor="middle" font-size="9.5" fill="#5b6472">Best for non-HTTP, extreme throughput</text>
+      <text x="482" y="190" text-anchor="middle" font-size="9.5" fill="#5b6472">Ultra-low latency, static IPs</text>
+    </svg>
+    <figcaption>Same two layers as the comparison table above — HTTP-aware routing on the ALB side, raw IP/port forwarding on the NLB side.</figcaption>
+  </figure>
+
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b>The ALB alone provides elasticity.</b> It doesn't — the ALB only distributes traffic across whatever's currently registered in its target group; it's the ASG that actually launches or terminates instances in response to load or failures.</p>
@@ -191,6 +244,87 @@
           <tr><th>Latency / IPs</th><td>low latency</td><td>ultra-low latency, supports static IPs</td></tr>
         </tbody>
       </table>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your web app or microservices need traffic routed by URL path or hostname</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#64748b"/>
+                </marker>
+              </defs>
+              <rect x="5" y="13" width="130" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.4"/>
+              <text x="70" y="37" text-anchor="middle" font-size="9.5" fill="#1d4ed8">🌐 Request</text>
+              <path d="M135,33 H160" fill="none" stroke="#64748b" stroke-width="1.3" marker-end="url(#arUc1)"/>
+              <rect x="163" y="8" width="155" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="240" y="28" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">⚖️ ALB</text>
+              <text x="240" y="44" text-anchor="middle" font-size="8.5" fill="#5b6472">path / host routing</text>
+              <path d="M318,33 H343" fill="none" stroke="#64748b" stroke-width="1.3" marker-end="url(#arUc1)"/>
+              <rect x="346" y="13" width="129" height="40" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+              <text x="410" y="37" text-anchor="middle" font-size="9.5" fill="#166534">✅ Right service</text>
+            </svg>
+          </div>
+          <p class="uc-what">The ALB reads the actual HTTP/HTTPS request and routes it by path, host, or header — this is the #1 scenario you'll actually run into for a web app or microservices setup.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Layer 7 request → ALB reads it → routes by path/host.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Traffic suddenly spikes and your current instances start getting overloaded</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#64748b"/>
+                </marker>
+              </defs>
+              <rect x="5" y="13" width="140" height="40" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/>
+              <text x="75" y="37" text-anchor="middle" font-size="9" fill="#92400e">📈 Avg CPU rising</text>
+              <path d="M145,33 H170" fill="none" stroke="#64748b" stroke-width="1.3" marker-end="url(#arUc2)"/>
+              <rect x="173" y="8" width="150" height="50" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="248" y="28" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">📈 ASG policy</text>
+              <text x="248" y="44" text-anchor="middle" font-size="8.5" fill="#5b6472">target-tracking triggers</text>
+              <path d="M323,33 H348" fill="none" stroke="#64748b" stroke-width="1.3" marker-end="url(#arUc2)"/>
+              <rect x="351" y="13" width="124" height="40" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+              <text x="413" y="37" text-anchor="middle" font-size="9" fill="#166534">🚀 New instance</text>
+            </svg>
+          </div>
+          <p class="uc-what">A target-tracking scaling policy launches new instances once the tracked metric crosses its threshold — the ALB doesn't need to be told anything, it starts routing to each new instance the moment it passes its health check.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Metric crosses threshold → ASG launches → ALB picks it up automatically.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your traffic is non-HTTP TCP/UDP, or needs extreme throughput and a static IP</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#64748b"/>
+                </marker>
+              </defs>
+              <rect x="5" y="13" width="140" height="40" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.4"/>
+              <text x="75" y="37" text-anchor="middle" font-size="9" fill="#0f766e">🔌 Raw TCP/UDP</text>
+              <path d="M145,33 H170" fill="none" stroke="#64748b" stroke-width="1.3" marker-end="url(#arUc3)"/>
+              <rect x="173" y="8" width="150" height="50" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="248" y="28" text-anchor="middle" font-size="10" font-weight="700" fill="#0f766e">🔌 NLB</text>
+              <text x="248" y="44" text-anchor="middle" font-size="8.5" fill="#5b6472">IP + port only</text>
+              <path d="M323,33 H348" fill="none" stroke="#64748b" stroke-width="1.3" marker-end="url(#arUc3)"/>
+              <rect x="351" y="13" width="124" height="40" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+              <text x="413" y="37" text-anchor="middle" font-size="9" fill="#166534">✅ Static IP target</text>
+            </svg>
+          </div>
+          <p class="uc-what">An ALB has no HTTP request to read here, so it's the wrong tool — the NLB forwards by IP and port only, which is exactly what gives it ultra-low latency, extreme throughput, and support for a static IP.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Non-HTTP or extreme throughput → NLB, not ALB.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

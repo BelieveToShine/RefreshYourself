@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>One of the most commonly confused RDS pairs — both "add another copy of the database," but they solve completely different problems.</li>
-        <li>Useful the moment a production database goes down: knowing whether failover is automatic or something you have to trigger yourself.</li>
-        <li>A near-guaranteed follow-up once a candidate says "we use read replicas" for availability.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔁 Multi-AZ</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>When the AZ hosting the primary goes down, there's nothing already in sync and ready to take over — the database stays down until someone manually rebuilds it.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Multi-AZ keeps a synchronously replicated standby in another AZ that RDS automatically fails over to, typically within one to two minutes, with no action needed from anyone.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Multi-AZ → automatic failover standby, not extra read capacity.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">📖 Read Replica</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Heavy reporting or analytics queries competing with regular checkout/app traffic on the primary can slow the whole app down for everyone.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A read replica is an asynchronous copy that takes that read traffic off the primary — it can be promoted to standalone during a disaster, but that's a manual step with replication-lag risk, not automatic protection.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Read Replica → scales reads; promotion during a disaster is manual, not HA.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -189,6 +202,75 @@
           <tr><th>Location</th><td>a different AZ, same Region</td><td>same Region or a different one</td></tr>
         </tbody>
       </table>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> The AZ hosting your primary database goes down</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">MULTI-AZ AUTOMATIC FAILOVER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🗄️ Primary AZ down</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ Standby takes over</text>
+            </svg>
+          </div>
+          <p class="uc-what">RDS detects the failure and redirects the database's endpoint to the
+          already-in-sync standby on its own — no one is paged for it, and no manual step is
+          needed. <b>This is the #1 reason Multi-AZ exists.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">AZ outage → Multi-AZ fails over automatically, no manual step.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#92400e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A reporting dashboard's heavy queries are competing with checkout traffic on the primary</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">READ REPLICA SCALES READS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">🗄️ Primary (checkout)</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">📖 Replica (reports)</text>
+            </svg>
+          </div>
+          <p class="uc-what">A read replica takes the reporting/analytics queries off the primary
+          entirely, so checkout traffic stops competing with them — the trade-off is that the
+          replica's data can genuinely lag behind under load, since it's kept in sync
+          asynchronously.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Read-heavy load → add a replica, not more failover.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You only have a read replica and assume that alone covers high availability</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">NO AUTOMATIC FAILOVER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">📖 Read Replica only</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">⚠️ Manual promote only</text>
+            </svg>
+          </div>
+          <p class="uc-what">A read replica alone gives no automatic failover — it can lag behind
+          the primary, and turning it into a usable primary during an outage is a manual step
+          someone has to trigger, not something RDS does for you the way Multi-AZ does.
+          <b>A great interview trap</b> — candidates often say "we use read replicas" when asked
+          about availability.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Replica ≠ HA — promotion is manual, with lag risk.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

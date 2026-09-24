@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up any time a system-design question touches latency for global users, or serving static/media content at scale.</li>
-        <li>Explains a real production trade-off: how aggressively to cache, and how to keep private content private while still using a CDN.</li>
-        <li>A natural follow-up after S3, ALB, or API Gateway questions — "how do you speed this up for users far from the origin?"</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">📍 CloudFront</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Serving static or media content straight from one origin — an S3 bucket, an ALB, or a custom HTTP origin — means every user's request travels all the way back to that one place, which is slow for users far from it and piles the full load of repeat requests onto the origin itself.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>CloudFront caches responses at edge locations close to users, so most requests never reach the origin at all — and a signed URL or signed cookie can still gate access to private content sitting behind that cache, without ever making the origin itself public.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">CloudFront = caches at the edge, from almost any origin — signed URLs gate private content without exposing that origin.</span></div>
+      </div>
     </div>
   </details>
 
@@ -220,6 +223,84 @@
     </svg>
     <figcaption>The origin behind private content never has to be public — CloudFront checks the signature and time window before serving anything.</figcaption>
   </figure>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your site serves the same images, JS bundles, or video to users spread across many countries.</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="20" y="14" width="130" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="85" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">👤 Users</text>
+              <text x="85" y="43" text-anchor="middle" font-size="9" fill="#5b6472">many countries</text>
+              <rect x="330" y="14" width="130" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+              <text x="395" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">📍 Edge cache</text>
+              <text x="395" y="43" text-anchor="middle" font-size="9" fill="#5b6472">nearest location</text>
+              <path d="M150,33 H330" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arUc1)"/>
+              <text x="240" y="26" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">served locally, no trip to origin</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario CloudFront exists for — the response gets cached at an edge location close to each user, so nobody's request has to cross an ocean back to the single S3/ALB/custom origin on every load.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same content, users everywhere → cache it at the edge, don't route everyone to one origin.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're serving a paid video, or any file that shouldn't be downloadable by just anyone who has the URL.</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+                </marker>
+              </defs>
+              <rect x="20" y="14" width="130" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/>
+              <text x="85" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🔗 Signed URL</text>
+              <text x="85" y="43" text-anchor="middle" font-size="9" fill="#5b6472">time-limited</text>
+              <rect x="330" y="14" width="130" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="395" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">🗄️ Origin</text>
+              <text x="395" y="43" text-anchor="middle" font-size="9" fill="#5b6472">stays private</text>
+              <path d="M150,33 H330" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arUc2)"/>
+              <text x="240" y="26" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">signature checked first</text>
+            </svg>
+          </div>
+          <p class="uc-what">A signed URL or signed cookie lets CloudFront check for a valid signature and time window before serving anything — the origin behind it can stay completely private, and access gets cut off just by letting the signature's expiry pass.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Private content → sign the URL/cookie, keep the origin itself locked down.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You just pushed new content, ran a cache invalidation, and expect it to be instant and free everywhere.</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="20" y="14" width="130" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/>
+              <text x="85" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🧹 Invalidation</text>
+              <text x="85" y="43" text-anchor="middle" font-size="9" fill="#5b6472">costs $ + time</text>
+              <rect x="330" y="14" width="130" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="395" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">🔗 Versioned URL</text>
+              <text x="395" y="43" text-anchor="middle" font-size="9" fill="#5b6472">cheaper, instant</text>
+              <path d="M150,33 H330" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arUc3)"/>
+              <text x="240" y="26" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">the cheaper alternative</text>
+            </svg>
+          </div>
+          <p class="uc-what">Invalidation requests have a free tier but cost money beyond it and still take real time to propagate across edge locations — assuming it's instant and free is exactly the trap; a versioned URL (a new path per release) is often cheaper and faster than repeated invalidations.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Invalidation isn't instant or free at scale → prefer versioned URLs.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
 
   <details class="realworld toggle">
     <summary>🌍 Real-world example <span class="chev">▾</span></summary>

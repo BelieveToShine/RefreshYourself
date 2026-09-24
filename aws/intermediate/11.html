@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Checks whether you know AWS's two core decoupling primitives, not just that "SQS is a queue."</li>
-        <li>Comes up any time a design question touches order processing, notifications, or fan-out to multiple services.</li>
-        <li>A very common follow-up: "so what happens if a message gets delivered twice?" — this is where idempotency comes in.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📨 SQS Standard</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Strict order and built-in dedup on every message would cost throughput most independent workloads don't need.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>SQS Standard skips those guarantees for very high throughput — best-effort order, duplicates possible.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">SQS Standard = highest throughput, best-effort order, duplicates possible.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🔒 SQS FIFO</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Two messages for the same entity processing out of order, or one processing twice, can corrupt that entity's state.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>SQS FIFO guarantees strict per-group order and exactly-once processing within that one queue — at lower throughput.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">SQS FIFO = strict order + exactly-once, but only inside that one queue.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🔀 SNS</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Point-to-point delivery only ever hands a message to one consumer group, never to several independent systems at once.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>SNS publishes once to a topic and fans it out as its own independent copy to every current subscriber.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">SNS = one publish → every subscriber gets its own copy.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -273,6 +294,81 @@
           <tr><th>Throughput</th><td>very high</td><td>lower (per message-group limits)</td><td>very high</td></tr>
         </tbody>
       </table>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Ingesting a high-volume stream of independent events — clicks, log lines, image jobs</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">ORDER DOESN'T MATTER</text>
+              <rect x="20" y="24" width="150" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">📤 Event producers</text>
+              <path d="M170,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">📨 SQS Standard pool</text>
+            </svg>
+          </div>
+          <p class="uc-what">Each event is independent, so processing them slightly out of order is
+          harmless and raw throughput matters far more than sequence — exactly what SQS Standard is
+          built for. A stray duplicate now and then is expected; the consumer's idempotency check
+          absorbs it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Independent events, need throughput → SQS Standard.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> Applying a sequence of status changes to the same order — created → paid → shipped</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#134e4a" letter-spacing=".03em">STRICT ORDER, ONE ORDER ID</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#134e4a">📤 created → paid → shipped</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#134e4a">🔒 SQS FIFO queue</text>
+            </svg>
+          </div>
+          <p class="uc-what">Processing "shipped" before "paid" would corrupt that order's state, so
+          this needs the strict per-message-group order and exactly-once-within-the-queue guarantee
+          only SQS FIFO provides — accepting the lower throughput that comes with it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same entity, order-sensitive steps → SQS FIFO.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> One "order placed" event needs to reach a fulfillment queue, a Lambda, and a confirmation email — all at once</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 100" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="32" width="120" height="36" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="80" y="54" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">📤 Publisher</text>
+              <rect x="180" y="32" width="120" height="36" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="240" y="54" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🔀 SNS topic</text>
+              <path d="M140,50 H180" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <path d="M300,50 L370,14" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <path d="M300,50 H370" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <path d="M300,50 L370,86" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="370" y="0" width="100" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+              <text x="420" y="18" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">📨 Queue</text>
+              <rect x="370" y="36" width="100" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+              <text x="420" y="54" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">🖥️ Lambda</text>
+              <rect x="370" y="72" width="100" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+              <text x="420" y="90" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">📧 Email</text>
+            </svg>
+          </div>
+          <p class="uc-what">No single point-to-point queue can hand the same message to three
+          independent systems. SNS publishes once and fans that message out as an independent copy
+          to every current subscriber — nobody competes for it, and nobody misses out.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One event, several independent subscribers → SNS.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

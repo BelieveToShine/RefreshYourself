@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Checks whether you understand that DynamoDB's scaling story lives at the <b>partition</b> level, not just the table's headline capacity number.</li>
-        <li>Comes up any time a "why is my table throttling even though I over-provisioned it" story is discussed, or any NoSQL data-modeling question.</li>
-        <li>A common opener before a deeper question about GSIs, LSIs, or capacity modes.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🌐 GSI</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>The base table's partition key only serves fast lookups on that one key — a table partitioned by <code>userId</code> can't efficiently answer "which orders have status X?" without scanning the whole table.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A GSI defines its own separate partition/sort key on the same items — eventually consistent, and it can be added or removed at any time, so a brand-new access pattern doesn't require rebuilding the table.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">GSI = a different partition key, added anytime, eventually consistent.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#166534; --why-bg:#dcfce7">
+          <div class="wc-head">📌 LSI</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Sometimes a read genuinely needs strong consistency on an alternate sort order for the same partition key — a GSI's eventual consistency can't guarantee that.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An LSI keeps the exact same partition key as the base table but adds a different sort key, and is the only one of the two that supports strongly consistent reads — the trade-off is it must be declared at table-creation time and can never be added later.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">LSI = same partition key, different sort key, strong consistency, creation-time only.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -165,6 +178,47 @@
     <figcaption>Same table, two partition-key choices. A high-cardinality key like <code>userId</code> spreads requests evenly; a low-cardinality key like <code>status</code> crowds most traffic onto one physical partition, which throttles on its own.</figcaption>
   </figure>
 
+  <div class="viz-label">🧠 Don't mix these two <span class="viz-sub">— GSI vs. LSI on the same base table</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shGL" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arGLBlue" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#1d4ed8"/>
+        </marker>
+        <marker id="arGLGreen" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#166534"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="0.5" fill="#475569">SAME TABLE, TWO INDEX SHAPES</text>
+
+      <g filter="url(#shGL)"><rect x="200" y="36" width="240" height="56" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">📋 Base table</text>
+      <text x="320" y="76" text-anchor="middle" font-size="10.5" fill="#5b6472">userId (PK) · orderId (SK)</text>
+
+      <path d="M320,92 V112" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,112 H480" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,112 V136" fill="none" stroke="#1d4ed8" stroke-width="2" marker-end="url(#arGLBlue)"/>
+      <path d="M480,112 V136" fill="none" stroke="#166534" stroke-width="2" marker-end="url(#arGLGreen)"/>
+
+      <g filter="url(#shGL)"><rect x="40" y="136" width="240" height="104" rx="14" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.8"/></g>
+      <text x="160" y="162" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">🌐 GSI</text>
+      <text x="160" y="182" text-anchor="middle" font-size="10.5" fill="#1e3a8a">New partition key — e.g. status</text>
+      <text x="160" y="200" text-anchor="middle" font-size="10.5" fill="#1e3a8a">Eventually consistent</text>
+      <text x="160" y="220" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">Add or remove anytime</text>
+
+      <g filter="url(#shGL)"><rect x="360" y="136" width="240" height="104" rx="14" fill="#dcfce7" stroke="#166534" stroke-width="1.8"/></g>
+      <text x="480" y="162" text-anchor="middle" font-size="14" font-weight="700" fill="#166534">📌 LSI</text>
+      <text x="480" y="182" text-anchor="middle" font-size="10.5" fill="#134e4a">Same partition key as base table</text>
+      <text x="480" y="200" text-anchor="middle" font-size="10.5" fill="#134e4a">New sort key — e.g. total</text>
+      <text x="480" y="220" text-anchor="middle" font-size="10.5" font-weight="700" fill="#134e4a">Must be declared at creation</text>
+    </svg>
+    <figcaption>Same base table, two different index shapes: a GSI picks its own partition key and can be added anytime; an LSI keeps the same partition key and must be declared when the table is created.</figcaption>
+  </figure>
+
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b>"Plenty of provisioned capacity means no throttling."</b> A low-cardinality key like a fixed <code>status</code> field crowds nearly all traffic onto the same few physical partitions — that one partition throttles no matter how much capacity the table as a whole has provisioned.</p>
@@ -238,6 +292,75 @@
       </div>
       <p class="cx-note"><code>userId</code> decides which partition this item lands on; <code>orderId</code> just sorts items within that same partition key.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your app needs to query by a totally different attribute than the base table's partition key</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcDy1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">NEW ACCESS PATTERN</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📋 Table (userId)</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcDy1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🌐 GSI (status)</text>
+            </svg>
+          </div>
+          <p class="uc-what">The base table's partition key only serves fast lookups keyed on
+          <code>userId</code>. A GSI defines a fresh partition/sort key — like <code>status</code>
+          — as its own index over the same items, and it can be added at any point after the table
+          already exists.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">New access pattern on a live table → add a GSI, not a new table.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#166534">
+          <div class="uc-sit"><span class="uc-flag">2</span> You need strongly consistent reads on an alternate sort order, and you're still at table-creation time</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcDy2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#166534"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#134e4a" letter-spacing=".03em">AT TABLE CREATION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#166534" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#134e4a">📋 New table (userId)</text>
+              <path d="M190,43 H290" stroke="#166534" stroke-width="1.6" fill="none" marker-end="url(#arUcDy2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#166534" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#134e4a">📌 LSI (new sort key)</text>
+            </svg>
+          </div>
+          <p class="uc-what">An LSI keeps the same partition key as the base table but adds a
+          different sort key, and it's the only one of the two that supports strongly consistent
+          reads — but it has to be declared right now, while the table is being created, because
+          it can never be added afterward.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need strong consistency on an alternate sort order → LSI, decided at creation only.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You want to add a strongly-consistent alternate index to a table that's already live</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcDy3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">TABLE ALREADY LIVE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🏗️ Live table</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcDy3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🚫 LSI (too late)</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is exactly where an LSI can't help — it can only be declared at
+          table-creation time, and a live table's LSIs are already fixed. The only paths from here
+          are a GSI (which stays eventually consistent) or building a brand-new table with the LSI
+          declared from the start.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Table already exists → LSI is off the table; a GSI is the only index you can still add.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

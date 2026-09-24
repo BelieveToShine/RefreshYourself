@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Almost always one of the first AWS questions asked — it directly tests whether you reach for a role instead of a stored key.</li>
-        <li>Explains a real production risk: a leaked access key is one of the most common real-world AWS security incidents.</li>
-        <li>Sets up the exact distinction interviewers probe next: a role's temporary, assumed credentials vs. a user's long-lived, fixed ones.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🔑 IAM Role</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Something running inside AWS, like an EC2 app that needs S3 access, could be given a fixed, long-lived key — but that's a secret sitting in code or config that can leak, one of the most common real AWS security incidents.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A role has no fixed credentials of its own — EC2 assumes it, and STS issues short-lived, auto-rotated credentials on demand, so there's never a secret stored anywhere.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">IAM Role → temporary creds via STS, auto-rotated, nothing hard-coded.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">👤 IAM User</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A human logging in, or an external system outside AWS, genuinely needs its own persistent access — but it can't "assume" a role the way an AWS resource like EC2 does.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An IAM User gets long-lived credentials created directly and stored wherever it's used — the right fit for exactly the cases a role genuinely can't cover.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">IAM User → long-lived, fixed access key, reserved for a human or an external system that truly needs persistent access.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -208,6 +221,72 @@ s3 = boto3.<span class="kw">client</span>(
       </div>
       <p class="cx-note">Any key typed into code or config is a secret that can leak — the role above needs none.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your EC2 app needs to read and write objects in an S3 bucket</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">INSIDE AWS — ASSUMES A ROLE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">💻 EC2 app</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🔑 IAM Role</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: attach the role via
+          an instance profile, and STS hands the instance temporary, auto-rotated credentials —
+          nothing to hard-code, nothing that can leak.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">EC2 talking to AWS → an IAM Role, never a stored key.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> A teammate needs their own AWS console login, or an outside system needs lasting access</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">A ROLE CAN'T COVER THIS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">🧑 Human/System</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">👤 IAM User</text>
+            </svg>
+          </div>
+          <p class="uc-what">A role can't be assumed by a person sitting at a keyboard, or by a
+          system living outside AWS, the same way an AWS resource assumes it — so this is exactly
+          the case an IAM User's long-lived credentials are meant for.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A human or outside system → an IAM User's long-lived credentials.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Someone pastes a fixed AWS access key into the EC2 app's code to get it working fast</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing=".03em">SECRET THAT CAN LEAK</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">💻 EC2 app code</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b91c1c">🔓 hard-coded key</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the trap this page's own security-review example calls out:
+          a hard-coded key is exactly the kind of secret that gets flagged after the fact — swap
+          it for an IAM Role attached via an instance profile instead.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Hard-coded key on EC2 → the trap; an IAM Role is always the fix.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Tests whether you know peering's 1:1 limit before reaching for a bigger network pattern.</li>
-        <li>Comes up any time a design question involves connecting many VPCs, or on-prem networks via VPN/Direct Connect.</li>
-        <li>A common opener right before a hybrid-connectivity or private-access (VPC endpoints) follow-up.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">🔗 VPC Peering</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Two specific VPCs need to reach each other privately, without their traffic ever touching the public internet.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Peering opens a direct 1:1 connection between exactly those two VPCs over AWS's own backbone — but it's strictly point-to-point, so a third VPC needing the same access needs its own separate connection; A↔B plus B↔C never gives you A↔C.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">VPC Peering = 1:1, non-transitive — doesn't chain beyond the two VPCs it joins.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🌐 Transit Gateway</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Once several VPCs — and on-prem networks over VPN/Direct Connect — all need to reach each other, a full peering mesh needs a connection for every pair (15 VPCs = 105 connections), and peering can't attach on-prem directly at all.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Transit Gateway is one regional hub that every VPC and VPN/Direct Connect attachment plugs into once, so N networks need only N attachments and anything on the hub can reach anything else on it.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Transit Gateway = one hub, N attachments — scales linearly instead of exploding.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -185,6 +198,89 @@
       </table>
 
       <p>A related but different tool: <b>VPC endpoints</b> let resources inside a VPC reach AWS services privately, without going over the internet or through a NAT Gateway. <b>Gateway endpoints</b> are free and route-table based, but only support S3 and DynamoDB. <b>Interface endpoints</b> are powered by PrivateLink — an actual network interface (ENI) with a private IP inside your VPC — and cover most other AWS services, at an hourly plus per-GB cost.</p>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your app VPC and a shared-services VPC just need to talk to each other — nothing else is in the picture yet.</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="40" y="15" width="90" height="36" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="85" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📦 VPC A</text>
+              <rect x="350" y="15" width="90" height="36" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📦 VPC B</text>
+              <path d="M130,33 H350" fill="none" stroke="#1d4ed8" stroke-width="2" marker-end="url(#arUc1)"/>
+              <text x="240" y="21" text-anchor="middle" font-size="10" fill="#5b6472">direct, private peering link</text>
+            </svg>
+          </div>
+          <p class="uc-what">Two VPCs needing a private link is exactly what VPC Peering is for — a direct, 1:1 connection between just those two, carried over AWS's own backbone instead of the public internet. This is the #1 scenario you'll actually reach for peering in.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Two VPCs, one direct need → VPC Peering.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your company keeps adding VPCs — now there are 15 of them — plus an on-prem network over VPN, and all of them need to reach each other.</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 108" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#16a34a"/>
+                </marker>
+              </defs>
+              <rect x="30" y="6" width="90" height="26" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+              <text x="75" y="23" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">📦 VPC A</text>
+              <rect x="30" y="39" width="90" height="26" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+              <text x="75" y="56" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">📦 VPC B</text>
+              <rect x="30" y="74" width="90" height="26" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+              <text x="75" y="91" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">🔌 On-prem</text>
+              <rect x="330" y="37" width="110" height="30" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="385" y="56" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🌐 TGW hub</text>
+              <path d="M120,19 H300 V45 H330" fill="none" stroke="#16a34a" stroke-width="2" marker-end="url(#arUc2)"/>
+              <path d="M120,52 H330" fill="none" stroke="#16a34a" stroke-width="2" marker-end="url(#arUc2)"/>
+              <path d="M120,87 H300 V60 H330" fill="none" stroke="#16a34a" stroke-width="2" marker-end="url(#arUc2)"/>
+            </svg>
+          </div>
+          <p class="uc-what">A full peering mesh for 15 VPCs needs 105 separate connections (15×14/2) to maintain, and peering can't attach an on-prem network directly at all. Transit Gateway replaces the whole mesh with one hub: each VPC, plus the on-prem VPN connection, attaches once, and traffic between any two of them routes through that single hub.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Many networks needing mutual reach → Transit Gateway, one hub.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You've peered VPC A with VPC B, and separately peered VPC B with VPC C — and you're assuming A can now reach C through B.</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 110" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="30" y="45" width="80" height="32" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="70" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📦 A</text>
+              <rect x="200" y="45" width="80" height="32" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="240" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📦 B</text>
+              <rect x="370" y="45" width="80" height="32" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="410" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📦 C</text>
+              <path d="M110,61 H200" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+              <text x="155" y="52" text-anchor="middle" font-size="9.5" fill="#5b6472">peered</text>
+              <path d="M280,61 H370" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+              <text x="325" y="52" text-anchor="middle" font-size="9.5" fill="#5b6472">peered</text>
+              <path d="M70,45 V18 H410 V45" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arUc3)"/>
+              <text x="240" y="9" text-anchor="middle" font-size="10" font-weight="700" fill="#dc2626">✗ assumed path — doesn't exist</text>
+            </svg>
+          </div>
+          <p class="uc-what">Peering is strictly point-to-point — each connection only ever knows about the two VPCs it directly joins. A↔B and B↔C existing does not create A↔C; there's zero transitivity no matter how many hops it looks like on paper, so A and C would each need their own separate peering connection to talk directly.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Peering never chains — non-transitive, zero exceptions.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

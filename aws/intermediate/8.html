@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Tests whether you know what actually makes Aurora different from "RDS but faster," not just a marketing name.</li>
-        <li>A natural entry point into the RDS vs. Aurora vs. DynamoDB decision question.</li>
-        <li>Explains why Aurora failover feels near-instant compared to standard RDS Multi-AZ failover.</li>
-      </ul>
+      <div class="why-grid" style="grid-template-columns:1fr">
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🗄️ RDS</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A workload just needs a standard relational database — paying for Aurora's read-scaling and fast-failover machinery it will never use is wasted cost.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>RDS gives you a standard managed relational instance where each replica keeps its own copy, replicated over the network — simpler, and enough when you don't need Aurora's extras.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">RDS = standard relational, no Aurora premium needed.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🔗 Aurora</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Standard RDS read replicas each keep their own copy and catch up asynchronously, which caps how many replicas you can add before lag and failover time both get worse.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Aurora puts one shared, self-healing storage layer under the primary and every replica, so up to 15 replicas all read the same live data — lag stays single-digit ms, and failover just repoints traffic instead of re-attaching storage.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Aurora = one shared storage layer under many computes.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🔑 DynamoDB</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A workload at massive scale with a simple key-value/document access pattern doesn't fit — or need — the relational replica model at all.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>DynamoDB scales by partitioning instead of adding relational replicas, trading cross-table joins/transactions for scale on simple access patterns.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">DynamoDB = partitioned key-value/document, not a relational replica setup.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -185,6 +206,81 @@
           <tr><th>Best fit</th><td>a standard relational workload without Aurora's premium</td><td>relational workloads that need read scaling, fast failover, or serverless elasticity</td><td>massive scale, simple access patterns, no cross-table joins/transactions</td></tr>
         </tbody>
       </table>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're adding several read replicas for reporting/analytics, and you can't afford lag to creep in</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 96" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#16a34a"/>
+                </marker>
+              </defs>
+              <rect x="20" y="8" width="100" height="26" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="70" y="25" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">Primary</text>
+              <rect x="190" y="8" width="100" height="26" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="240" y="25" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">Replica</text>
+              <rect x="360" y="8" width="100" height="26" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="410" y="25" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">Replica</text>
+              <path d="M70,34 V64" fill="none" stroke="#16a34a" stroke-width="1.6" marker-end="url(#arUc1)"/>
+              <path d="M240,34 V64" fill="none" stroke="#16a34a" stroke-width="1.6" marker-end="url(#arUc1)"/>
+              <path d="M410,34 V64" fill="none" stroke="#16a34a" stroke-width="1.6" marker-end="url(#arUc1)"/>
+              <rect x="20" y="64" width="440" height="26" rx="9" fill="#f1f5f9" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="240" y="81" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🗄️ Shared storage layer</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into. Because every replica reads the same shared storage instead of its own catching-up copy, you can keep adding Aurora replicas for reads and the lag stays negligible.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">More Aurora replicas ≠ more lag — they share the same storage.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your workload is a standard relational database that doesn't need extra read scaling or fast failover</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#d97706"/>
+                </marker>
+              </defs>
+              <rect x="20" y="18" width="180" height="30" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+              <text x="110" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">Standard relational app</text>
+              <path d="M200,33 H288" fill="none" stroke="#d97706" stroke-width="1.6" marker-end="url(#arUc2)"/>
+              <rect x="290" y="18" width="170" height="30" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+              <text x="375" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">RDS — no premium needed</text>
+            </svg>
+          </div>
+          <p class="uc-what">Nothing about this workload needs Aurora's shared-storage extras, so a plain RDS instance — each replica keeping its own copy — is the simpler, cheaper fit.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No need for Aurora's extras → plain RDS is the right fit.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your access pattern is key-value/document at massive scale, with no joins or transactions across tables</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#0f766e"/>
+                </marker>
+              </defs>
+              <rect x="20" y="18" width="180" height="30" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.5"/>
+              <text x="110" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e">Key-value, massive scale</text>
+              <path d="M200,33 H288" fill="none" stroke="#0f766e" stroke-width="1.6" marker-end="url(#arUc3)"/>
+              <rect x="290" y="18" width="170" height="30" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.5"/>
+              <text x="375" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e">DynamoDB — partitioned</text>
+            </svg>
+          </div>
+          <p class="uc-what">There's no relational replica question to even ask here — DynamoDB scales this by partitioning, in exchange for giving up joins/transactions across arbitrary tables.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No cross-table joins/transactions needed → DynamoDB, not a relational replica setup.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

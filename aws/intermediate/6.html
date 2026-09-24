@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Tests whether you reach for the familiar-sounding managed service or actually reason about what the workload needs.</li>
-        <li>Comes up any time a design mentions "multiple instances need access to the same files."</li>
-        <li>A common follow-up once someone proposes shared storage in an architecture review — the interviewer wants to hear you justify EFS specifically, not default to it.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🪣 S3</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>"Multiple instances need access, so it must be EFS" is the default assumption in an architecture review — but most of those workloads never actually need directories or file locking, just shared access.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>S3 serves them through a plain object API — no mount, addressed by key, virtually unlimited scale, paid per GB stored + requests — which is the right fit for almost every case per the "reach for it when" row above.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">S3 = object API, no mount — the default answer for shared access.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">📁 EFS</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Some apps genuinely expect POSIX filesystem semantics — real directories, file paths, file locking — that S3's object API simply doesn't have.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>EFS is a fully-managed NFS filesystem that multiple EC2 instances or containers mount at the same time, giving that real POSIX behavior — the one case that earns paying for a mounted filesystem.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">EFS = real mounted filesystem — only when POSIX semantics are genuinely required.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -202,6 +215,80 @@
           <tr><th>Reach for it when</th><td>the app can work through an object API (almost always)</td><td>the app genuinely expects a shared POSIX filesystem</td></tr>
         </tbody>
       </table>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Multiple EC2 instances or containers just need to read and write the same set of files</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">APP CALLS S3 DIRECTLY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🖥️ Instances</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🪣 S3 (object API)</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into. The app doesn't need
+          directories or file locking — it can call S3's object API directly, which scales further
+          and costs less than provisioning a mounted filesystem for the same job.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Several instances + an API-friendly app → S3, not EFS.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#92400e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A legacy app expects real file paths, directories, and file locking across every instance</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 120" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">BOTH MOUNT ONE FILESYSTEM</text>
+              <rect x="50" y="22" width="160" height="32" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="130" y="43" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🖥️ Instance A</text>
+              <rect x="270" y="22" width="160" height="32" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="350" y="43" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🖥️ Instance B</text>
+              <path d="M130,54 V76" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <path d="M350,54 V76" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="90" y="76" width="300" height="28" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/>
+              <text x="240" y="95" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">📁 EFS filesystem</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is exactly the case EFS exists for — a legacy content-management
+          app that expects a real shared filesystem gets mounted onto EFS by every web-tier
+          instance and keeps working unchanged, because EFS gives genuine POSIX semantics that S3
+          doesn't have.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Genuine POSIX semantics needed → EFS earns its place.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> Retained records must stay unalterable for a compliance period, even from an admin</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 140" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">WORM RETENTION + REPLICATION</text>
+              <rect x="30" y="24" width="170" height="36" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="115" y="46" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">🪣 S3 bucket</text>
+              <path d="M200,42 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="160" height="36" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="370" y="46" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">🔒 Object Lock</text>
+              <path d="M115,60 V90" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="30" y="90" width="170" height="32" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="115" y="110" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🌍 Replica region</text>
+            </svg>
+          </div>
+          <p class="uc-what">Object Lock's Compliance mode enforces write-once-read-many retention,
+          so locked objects can't be deleted or overwritten by anyone — even the account's root
+          user — until the retention period passes. Combine it with versioning, cross-/same-region
+          replication, and access logging for a defensible compliance setup.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Compliance retention → S3 Object Lock (WORM), not EFS.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 
