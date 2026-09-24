@@ -5,29 +5,48 @@ the section wasn't earning its name: it read as a definition plus a bolded "Why?
 actual answer to *why does this topic exist, what problem does it solve.* The fix isn't more
 words — it's a different shape: **state the problem, then state the solution**, explicitly.
 
-## Two shapes — pick by whether the topic has sub-concepts to differentiate
+## One shape, always: Problem → Solution. Card count is the only thing that varies
 
-**Shape A — plain bullets.** Use for a normal, single-concept topic (the common case). `<details
-class="topic-hook toggle">` with 2-3 short bullets: what real bug/situation this explains, when
-it's actually useful to know, and (only if genuinely true) that it's a common interview opener.
-Never a paragraph, never article prose. This is still the default — most topics don't need
-Shape B.
+**Every "Why it matters" box is Problem → Solution card(s) — there is no plain-bullets fallback
+anymore.** An earlier version of this rule let a single-concept topic use plain `<li>` bullets
+("what bug this explains / when it's useful / whether it's a common opener") instead. That was a
+real mistake, caught directly: a single-concept topic still has a real problem it solves and a
+real mechanism that solves it — bullets about the topic are strictly weaker than just stating
+that problem and solution outright, the exact thing CORS's card format already does well. Fix a
+single-concept topic the same way as a multi-concept one, just with **one card instead of many**:
 
-**"Plain bullets" describes the content shape, not permission to leave the markup visually
-flat.** A real gap this session: retrofitting a track's why-grid pages while explicitly leaving
-Shape A pages' *content* untouched (correct) was read as also meaning their *rendered look*
-didn't need re-checking — it does. `.topic-hook .toggle-body li` in `assets/style.css` already
-styles a plain `<ul>` as small colored cards (cycling the site's accent palette), specifically so
-a Shape A page still reads as the same visual system as a Shape B page next to it, not a flat
-dash list beside a colorful grid. Just write the `<ul><li>` markup as normal — the styling is
-automatic — but when touching any page's "Why it matters" box (even a "leave it as-is" retrofit),
-actually render it next to a Shape B page and confirm they still look like one design, not two.
+- **Single-concept topic (the common case)** — one `.why-card`, standalone, **not** wrapped in a
+  `.why-grid` (a 1-item grid either stretches to a large empty half-card or leaves a visible gap
+  beside it — skip the grid wrapper entirely and let the single card render full-width).
+- **Multi-concept topic** — the page differentiates **multiple named sub-concepts** that readers
+  genuinely confuse with each other (the CORS page has four: Same-Origin Policy, CORS itself,
+  wildcard vs. allow-list, and CORS-vs-Authentication). One `.why-card` per sub-concept, laid out
+  in a `.why-grid` — see the column-count section below for how many per row.
 
-**Shape B — the Problem → Solution why-grid.** Use only when the page itself differentiates
-**multiple named sub-concepts** that readers genuinely confuse with each other (the CORS page has
-four: Same-Origin Policy, CORS itself, wildcard vs. allow-list, and CORS-vs-Authentication). One
-`.why-card` per sub-concept, laid out in a `.why-grid`, each card built around an explicit
-Problem/Solution pair — never a flowing paragraph with a bolded aside.
+Either way, every card is built around an explicit Problem/Solution pair — never a flowing
+paragraph, never a bolded "Why?" aside, never a plain bulleted list of angles on the topic.
+
+**Single-card markup** — same `.why-card` internals as a grid card, just placed directly inside
+`.toggle-body` with no `.why-grid` wrapper around it:
+
+```html
+<details class="topic-hook toggle">
+  <summary>Why it matters <span class="chev">▾</span></summary>
+  <div class="toggle-body">
+    <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+      <div class="wc-head">🌐 REST</div>
+      <div class="wc-ps">
+        <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without agreed constraints, a "REST API" can be anything — actions baked into the URL, state stored server-side, no consistent rules — so calling it RESTful doesn't actually say how it behaves.</span></div>
+        <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>REST names the actual constraints (stateless, resource-based, uniform interface) that make an API predictable — meeting them is what makes it genuinely RESTful, not just using HTTP and JSON.</span></div>
+      </div>
+      <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">REST = a set of constraints for building predictable, scalable APIs — not a protocol.</span></div>
+    </div>
+  </div>
+</details>
+```
+
+**Multi-card markup** (unchanged from before — one `.why-card` per sub-concept inside a
+`.why-grid`):
 
 ```html
 <details class="topic-hook toggle">
@@ -69,9 +88,8 @@ before adding a second sentence, don't let the card grow into a paragraph again.
 
 **The Problem must name a real consequence, not just gesture at "confusion."** A row that reads
 "Problem: people mix this up with X" hasn't said what actually breaks — rewrite it to name the
-concrete bug, exposure, or wrong outcome, per [accuracy.md](accuracy.md) (never invent one that
-isn't real — if you can't state a genuine concrete consequence, the topic may not need Shape B at
-all).
+concrete bug, exposure, or wrong outcome, per [accuracy.md](accuracy.md) — never invent one that
+isn't real.
 
 ## Column count is a judgment call, not a fixed default
 

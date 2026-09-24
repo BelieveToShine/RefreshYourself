@@ -14,6 +14,7 @@ override default behavior — read the relevant one before doing the thing, not 
 | Write a technical claim of any kind (diagram, explanation, code, key point) | [accuracy.md](accuracy.md) |
 | Draw or edit a diagram | [diagram-style.md](diagram-style.md) |
 | Touch fonts, colors, highlights, logos, breadcrumbs | [visual-style.md](visual-style.md) |
+| Touch link hover behavior, or add a new chip/tile/pill/button-style anchor | [link-hover.md](link-hover.md) |
 | Add or restructure a page, folder, or the tier index | [content-structure.md](content-structure.md) |
 | Write or edit the "Say this in the interview" box | [keypoints.md](keypoints.md) |
 | Write or edit the "🔥 Easy interview recall" box | [interview-recall.md](interview-recall.md) |
