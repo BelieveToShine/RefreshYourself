@@ -129,6 +129,23 @@ reach measured from the marker's actual inner shape, not its declared `markerWid
 3. Only after every page in the track passes with `issueCount: 0` — from your own independent
    run — is Phase 7 done.
 
+**This same "render it, measure it, don't eyeball it" discipline applies beyond SVGs.** A real
+incident: the CORS page's `.wc-recall`/`.uc-remember` tag+text pairs shipped with zero visible
+spacing between the label and the following word — a pure-HTML markup bug (two bare adjacent
+inline elements with no whitespace between them in the source), invisible in a quick screenshot
+glance but real in the rendered page. Whenever a page introduces a new small inline
+label-then-text pattern (a badge, a tag, anything styled to look separated from what follows it),
+verify the actual rendered gap with a pixel measurement —
+`tagEl.getBoundingClientRect().right` vs. `textEl.getBoundingClientRect().left` in a live browser
+check — and confirm it's a real positive number, the same way diagram overlap is measured by
+coordinates rather than assumed from the code. See
+[why-it-matters.md](why-it-matters.md#markup-discipline-the-tag-and-its-text-are-always-two-separate-dedicated-spans)
+for the exact markup fix this verifies. The same "render it and look before calling it done"
+rule applies to any new grid/layout choice too (see
+[why-it-matters.md](why-it-matters.md#column-count-is-a-judgment-call-not-a-fixed-default) on
+`.why-grid` column counts) — a layout that's correct CSS can still look cramped or leave an
+orphan card, and that only shows up by actually rendering it at real content length.
+
 ## Subagent concurrency
 
 There is a **20-concurrent-subagent limit**. Dispatch up to 20 at once (a single message with

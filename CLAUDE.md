@@ -64,6 +64,8 @@ Full action → rule lookup table: [`docs/rules/README.md`](docs/rules/README.md
 - **Visual style (fonts, highlights, logos, breadcrumb):** [`docs/rules/visual-style.md`](docs/rules/visual-style.md)
 - **Global search:** [`docs/rules/search.md`](docs/rules/search.md)
 - **"Say this in the interview" box:** [`docs/rules/keypoints.md`](docs/rules/keypoints.md)
+- **"Why it matters" box (plain bullets or the Problem→Solution why-grid):** [`docs/rules/why-it-matters.md`](docs/rules/why-it-matters.md)
+- **"🧭 Use Cases" panel (optional, multi-scenario topics only):** [`docs/rules/use-cases.md`](docs/rules/use-cases.md)
 - **Tier/priority assignment (Phase 4/5):** [`docs/rules/interview-depth-and-priority.md`](docs/rules/interview-depth-and-priority.md)
 - **Running Phase 7 itself (subagents, safety, verification, wiring):** [`docs/rules/build-process.md`](docs/rules/build-process.md)
 
@@ -78,7 +80,19 @@ Full action → rule lookup table: [`docs/rules/README.md`](docs/rules/README.md
 - **Every topic page needs at least one diagram**, inline in that page's own HTML (never a
   separate `.svg` file), placed right next to the part of the explanation it supports.
 - **Very simple words only**, and genuinely short — 2-3 tight paragraphs. "Why it matters" is
-  2-3 bullets, not a paragraph. One real-world example, one breath long.
+  2-3 bullets for a single-concept topic, or a Problem→Solution why-grid (one card per
+  differentiated sub-concept) for a topic that's really comparing several named things — see
+  [`docs/rules/why-it-matters.md`](docs/rules/why-it-matters.md); never a flowing paragraph
+  either way. One real-world example, one breath long.
+- **Any new small inline label+text pattern (a badge, a tag) must render with an actual visible
+  gap** — verify by measuring the rendered pixel gap in a live browser check, not by eyeballing a
+  screenshot; two bare adjacent inline elements with no whitespace between them in the HTML
+  source render with zero gap regardless of CSS `gap`/`margin`. See
+  [`docs/rules/why-it-matters.md`](docs/rules/why-it-matters.md#markup-discipline-the-tag-and-its-text-are-always-two-separate-dedicated-spans).
+- **A grid/multi-card layout's column count is a judgment call made by actually rendering it at
+  real content length** — never a fixed default applied without looking, and never left to
+  `auto-fit` guessing either (it can silently orphan a trailing card). See
+  [`docs/rules/why-it-matters.md`](docs/rules/why-it-matters.md#column-count-is-a-judgment-call-not-a-fixed-default).
 - **Every new written page needs an entry in `assets/search-index.js`** — the site-wide search
   box depends on it.
 - **Never commit, push, or open a PR without being asked that turn** — same rule as every other

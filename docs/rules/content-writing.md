@@ -122,10 +122,12 @@ In this exact order:
    this line only if the H1 already *is* essentially the literal question verbatim (rare — most
    hook titles are punchier than the literal phrasing on purpose).
 4. **"Why it matters" — collapsed toggle, closed by default.** `<details class="topic-hook
-   toggle">` with a `<summary>` (not a plain label — the summary IS the clickable toggle).
-   2-3 short bullets inside, never a paragraph, never article prose: what real bug/situation this
-   explains, when it's actually useful to know, and (only if genuinely true) that it's a common
-   interview opener.
+   toggle">` with a `<summary>` (not a plain label — the summary IS the clickable toggle). Full
+   rules for both shapes (plain bullets for a single-concept topic vs. the Problem → Solution
+   why-grid for a topic differentiating multiple named sub-concepts) live in their own dedicated
+   file: [why-it-matters.md](why-it-matters.md) — read it before writing or editing this box,
+   including its rule on picking the why-grid's column count deliberately rather than defaulting
+   to one layout every time.
 5. **"🔥 Easy interview recall" — always visible, never a toggle.** `<div class="recall">` sitting
    right after "Why it matters." Full rules for what goes inside it live in
    [interview-recall.md](interview-recall.md) — read it before writing or editing this box.
@@ -237,7 +239,14 @@ In this exact order:
      making. Before shipping a code card, ask "does running this in my head prove the page's one
      idea, or would it look identical for a different concept?" — if the latter, redesign the
      example.
-12. **"🌍 Real-world / Scenario" — collapsed toggle, closed by default.** `<details
+12. **"🧭 Use Cases" — collapsed toggle, closed by default, optional.** `<details class="usecase
+   toggle">`. Only add this when a topic genuinely has 3+ practically distinct real-world
+   scenarios worth walking through separately (a single-scenario topic just uses the
+   Real-world/Scenario section below instead). Full rules — the Situation → mini-diagram → What
+   happens → Remember structure per scenario, the trap-scenario variant, mini-diagram id-safety —
+   live in their own dedicated file: [use-cases.md](use-cases.md) — read it before writing or
+   editing this panel.
+13. **"🌍 Real-world / Scenario" — collapsed toggle, closed by default.** `<details
    class="realworld toggle">` with `<summary>🌍 Real-world example</summary>` (keep the same
    summary text/emoji unless the page is scenario-led — see below). Two shapes, pick whichever
    the concept actually earns, per
@@ -252,7 +261,7 @@ In this exact order:
      just applied to a real-world problem instead of an analogy.
    - A page can use either shape or both (analogy first, scenario after) — never neither; every
      page still ends with something in this section.
-13. **Prev / Next** — links to the previous and next topic in this tier's hot-first order, plus a
+14. **Prev / Next** — links to the previous and next topic in this tier's hot-first order, plus a
    link back up to the tier index. First topic has no "prev", last has no "next." **If the
    neighbouring topic is still `planned` (not written), don't link to its not-yet-existing file**
    — show its title muted, pointing at the tier index instead, labelled "(coming soon)."

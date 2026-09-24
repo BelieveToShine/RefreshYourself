@@ -18,6 +18,8 @@ override default behavior — read the relevant one before doing the thing, not 
 | Write or edit the "Say this in the interview" box | [keypoints.md](keypoints.md) |
 | Write or edit the "🔥 Easy interview recall" box | [interview-recall.md](interview-recall.md) |
 | Write or edit the "⚠️ Common Trap" box | [common-trap.md](common-trap.md) |
+| Write or edit the "Why it matters" box (plain bullets or the Problem→Solution why-grid) | [why-it-matters.md](why-it-matters.md) |
+| Write or edit the "🧭 Use Cases" panel | [use-cases.md](use-cases.md) |
 | Add a new page, or touch `assets/site.js` / the search index | [search.md](search.md) |
 | Wire up the left "tier navigation" sidebar for a tier, or touch `assets/nav-index.js` | [tier-navigation.md](tier-navigation.md) |
 | Touch the crumb bar's "← Back" button, or the click-tagging/URL-param logic behind it in `assets/site.js` | [back-navigation.md](back-navigation.md) |
