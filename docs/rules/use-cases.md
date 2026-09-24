@@ -25,7 +25,7 @@ per-scenario that it earns being a toggle). `<details class="usecase toggle">` w
   <div class="toggle-body">
     <div class="uc-scenarios">
 
-      <div class="uc-scenario">
+      <div class="uc-scenario" style="--uc-color:#16a34a">
         <div class="uc-sit"><span class="uc-flag">1</span> Your frontend and API live on the exact same origin</div>
         <div class="uc-mini">
           <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
@@ -36,12 +36,45 @@ per-scenario that it earns being a toggle). `<details class="usecase toggle">` w
         Same-Origin Policy was never blocking anything here.</p>
         <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same origin → CORS isn't the problem.</span></div>
       </div>
-      <!-- one .uc-scenario per recognizable situation -->
+      <!-- one .uc-scenario per recognizable situation, each its own --uc-color -->
 
     </div>
   </div>
 </details>
 ```
+
+## Color: one accent per scenario, never one blue theme for the whole panel
+
+**Do not paint every scenario the same color.** The first version of this panel hardcoded one
+dark blue (`#1d4ed8`) for every scenario's flag, border, and Remember badge regardless of that
+scenario's own content — called out directly as monotonous and not "catchier." The fix, and the
+standing pattern now: the outer `<details class="usecase toggle">` chrome (border, background
+gradient, summary color) stays a neutral slate (`#334155` / `var(--border)`) — it's just the
+frame. Each `.uc-scenario` then sets its **own** accent inline via `style="--uc-color:#..."`
+(same per-element CSS-variable pattern as `.why-card`'s `--why-color`), which drives that
+scenario's left border stripe, `.uc-flag` badge, and `.uc-remember` tag color all at once.
+
+- **Match the scenario's own mini-diagram colors** — if `.uc-mini`'s SVG already uses green boxes
+  for this situation, set `--uc-color` to that same green, so the chrome and the diagram read as
+  one cohesive scenario instead of two unrelated color choices stacked on top of each other.
+- **Give adjacent scenarios visibly different hues**, not near-duplicates — reuse the site's
+  established palette (green `#16a34a`, blue `#1d4ed8`, amber `#b45309`, teal `#0f766e`, purple
+  `#6d28d9`) and spread them across the list rather than repeating the same one twice in a row.
+- **A trap scenario (`.uc-trap`) still gets its own `--uc-color` set to `#dc2626`** (the site's
+  `--hot` red) via the same inline `style=""` — don't rely on a separate `.uc-trap`-only CSS rule
+  to override the color; setting the variable inline keeps every scenario's color handled the
+  same way, trap or not.
+
+## Text sharpness: solid card background, not a translucent one
+
+Each `.uc-scenario`'s background is solid white (`var(--uc-bg, #ffffff)`), not a translucent
+white layered over the panel's gradient — a translucent card picks up a faint tint from
+whatever's behind it, which measurably softens body-text contrast even though the color still
+"looks white" at a glance. `.uc-what` and `.uc-remember .uc-rtext` also use a slightly heavier
+font-weight (500 and 600) than the site's default body text — Lexend's regular weight reads
+thinner than it needs to at 14px inside a card with this much visual chrome around it (colored
+border, badges, a diagram) competing for attention. Both changes were made together after direct
+feedback that the panel's body text "doesn't look sharper for human eyes."
 
 1. **`.uc-sit`** — the situation, named as something the reader would recognize happening to
    *them*, not a documentation heading. Prefer "Your frontend calls an API on a different origin"
