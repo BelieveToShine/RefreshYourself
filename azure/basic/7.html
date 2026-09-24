@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up the moment app configuration or secrets management is discussed — a near-universal Azure fundamentals question.</li>
-        <li>Explains a real production practice: a connection string or password should never live in <code>appsettings.json</code> or source control.</li>
-        <li>Sets up Managed Identity, RBAC, and secrets-management-as-a-practice — every one of those builds on knowing what Key Vault actually stores.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔒 Key Vault</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A connection string or password typed straight into <code>appsettings.json</code> ends up sitting in plain text — and one careless commit puts it in source control for good.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Key Vault stores that secret (plus encryption keys and certificates) centrally, and the app authenticates with an identity to read it by name at runtime instead of having the value baked into a file.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Key Vault = secrets/keys/certs an app reads by name — never a config file.</span></div>
+      </div>
     </div>
   </details>
 
@@ -171,6 +174,83 @@
       </div>
       <p class="cx-note">Creates or updates the secret named <code>DbPassword</code> inside <code>my-vault</code> — the app reads it back by name at runtime instead of storing the value itself.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your app needs a database password or connection string at startup</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="ucKv1Arrow" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">SECRET</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">💻 App</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#ucKv1Arrow)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🔑 DbPassword</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the <b>#1 scenario you'll actually run into</b> — the exact
+          case the CLI example above creates. The app authenticates in and asks Key Vault for
+          <code>DbPassword</code> by name; the value is never typed into a config file.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Connection string / password → a secret, read by name at runtime.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your app needs to encrypt or decrypt data with a key</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="ucKv2Arrow" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">KEY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">💻 App</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#ucKv2Arrow)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🗝️ Encryption key</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is a <code>key</code>, not a <code>secret</code> — a distinct
+          object type Key Vault stores, some backed by a hardware security module for extra
+          protection. The app calls Key Vault to use the key, the same way it would ask for a
+          secret by name.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need to encrypt/decrypt → a key, can be HSM-backed.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You're tempted to put feature flags or general app settings in Key Vault too</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 118" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="ucKv3ArrowBad" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker>
+                <marker id="ucKv3ArrowGood" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker>
+              </defs>
+              <rect x="155" y="8" width="170" height="32" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="240" y="28" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">🚩 Feature flag / config</text>
+
+              <path d="M215,40 L110,76" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#ucKv3ArrowBad)"/>
+              <text x="130" y="60" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">✕</text>
+              <rect x="10" y="76" width="200" height="34" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="110" y="97" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">🔒 Key Vault — rate-limited</text>
+
+              <path d="M265,40 L370,76" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#ucKv3ArrowGood)"/>
+              <text x="350" y="60" text-anchor="middle" font-size="12" font-weight="700" fill="#16a34a">✓</text>
+              <rect x="270" y="76" width="200" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="370" y="97" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🗂️ App Configuration</text>
+            </svg>
+          </div>
+          <p class="uc-what">Key Vault carries request-rate limits that make it a poor fit for
+          general config — feature flags and settings belong in Azure App Configuration instead.
+          <b>A common trap</b> — candidates often assume Key Vault is a generic "settings store"
+          because it's secure, when its real job is narrower than that.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Feature flags / general config → App Configuration, not Key Vault.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up the moment scaling, reliability, or "high availability" is discussed — the natural first question before drilling into which Azure service handles it.</li>
-        <li>Explains a real production behavior: why an app keeps serving traffic without interruption when one instance behind it goes down.</li>
-        <li>Sets up the comparison question that follows right after — which specific Azure service to actually reach for, covered in Intermediate.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">⚖️ Load Balancing</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A single backend instance can get overwhelmed by all incoming traffic, and if that one instance goes down, the whole app goes down with it.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A load balancer spreads requests across multiple instances and runs a health probe against each one, routing new traffic away from any instance that fails its probe.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Load balancing = spread the traffic, skip the sick instance.</span></div>
+      </div>
     </div>
   </details>
 
@@ -165,6 +168,69 @@
     <div class="toggle-body">
       <p><span class="hl hl-blue">Load balancing</span> means spreading incoming requests across more than one backend instance, so no single instance gets overloaded while the others sit idle. It also keeps the app available when one instance goes down: the load balancer runs a health probe against every instance, and any instance that fails its probe stops receiving new traffic until it starts passing again.</p>
       <p>This is a general networking idea, not one specific product. It can happen at the transport layer (<b>L4</b> — routes by IP/port, has no idea what's inside the request) or the application layer (<b>L7</b> — understands HTTP, so it can route by path, header, or hostname). Azure has more than one service built around this same idea, each suited to a different layer and scope (a single region vs. spread across the globe) — comparing those specific services is its own Intermediate-tier topic, deliberately left out here.</p>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Traffic keeps landing on several backend instances at once, none of them maxed out</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">SPREAD, NOT STACKED</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">📥 All requests</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">⚖️ Spread across pool</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the everyday case: the load balancer is quietly spreading every incoming request across the pool, so no single instance ends up carrying all the load.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No load balancer → one instance takes 100% of the hit.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> One instance starts failing its health probe mid-traffic</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">PROBE FAILS → PULLED OUT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🩺 Health probe ❌</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="375" y="43" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">🚫 Instance excluded</text>
+              <text x="375" y="57" text-anchor="middle" font-size="8.5" fill="#475569">back once healthy again</text>
+            </svg>
+          </div>
+          <p class="uc-what">The load balancer stops sending that instance new requests the moment it fails a probe — users don't notice, because the remaining healthy instances absorb its share automatically.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Failed probe → pulled from rotation, not deleted.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You need routing decisions based on the request's path or hostname, not just its IP and port</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="155" y="2" width="170" height="20" rx="8" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.4"/>
+              <text x="240" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#115e59">📨 GET /api/orders</text>
+              <path d="M240,22 V30 H110 V38" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <path d="M240,22 V30 H370 V38" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="20" y="38" width="180" height="26" rx="9" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="110" y="55" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">🌐 L4 — IP:port only</text>
+              <rect x="280" y="38" width="180" height="26" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="370" y="55" text-anchor="middle" font-size="9.5" font-weight="700" fill="#115e59">🛣️ L7 — path &amp; host too</text>
+            </svg>
+          </div>
+          <p class="uc-what">An L4 balancer can't see any of that — it only sees IP and port. Once the decision needs the request's path or hostname, it has to be an L7 balancer, which is why the layer choice isn't cosmetic.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need to route on path/host → L7, not L4.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

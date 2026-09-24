@@ -64,15 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Real Azure environments grow to dozens of team-owned VNets — without a hub, every pair
-        that needs to talk to each other needs its own peering and its own firewall rules, and
-        that stops being manageable fast.</li>
-        <li>Centralizing the firewall/NVA, the VPN/ExpressRoute gateway, and DNS in one hub means a
-        security rule change or a new on-prem connection happens once, not once per spoke.</li>
-        <li>A common senior/architect networking question — expect it phrased as "how would you
-        connect a dozen team VNets together" or "what's the actual point of a hub VNet."</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🛡️ Hub-Spoke Topology</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Real Azure environments grow to dozens of team-owned VNets — without a hub, every pair that needs to talk to each other needs its own peering and its own firewall rules, so a single security change means touching every VNet instead of one.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Centralizing the firewall/NVA, the VPN/ExpressRoute gateway, and DNS in one hub VNet means every spoke just peers to that hub once — a rule change or a new on-prem connection happens in one place, not once per spoke.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">One hub with the firewall, gateway, and DNS beats configuring those same three things again for every new team VNet.</span></div>
+      </div>
     </div>
   </details>
 
@@ -211,6 +210,78 @@
       <code>az network vnet peering create</code> command (hub as the remote) is needed too —
       peering is configured on both ends before traffic flows either way.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your org is onboarding a new team that needs its own VNet</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcOnboard" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">ONBOARDING A NEW SPOKE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🆕 New Spoke</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcOnboard)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🛡️ Hub VNet</text>
+            </svg>
+          </div>
+          <p class="uc-what">Onboarding just means one new peering connection from the new spoke to
+          the hub — the firewall rules, gateway, and DNS already live in the hub, so nothing on
+          the existing spokes has to change. <b>This is the #1 scenario hub-spoke is built for.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">New team → 1 new peering connection, 0 changes elsewhere.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> Two spokes, both peered to the same hub, try to reach each other</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 130" xmlns="http://www.w3.org/2000/svg">
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155" letter-spacing=".03em">NOT DIRECTLY CONNECTED</text>
+              <rect x="20" y="20" width="150" height="34" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="95" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">🖥️ Spoke A</text>
+              <rect x="310" y="20" width="150" height="34" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="385" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">🖥️ Spoke B</text>
+              <path d="M170,37 H310" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 5"/>
+              <text x="240" y="30" text-anchor="middle" font-size="13">🚫</text>
+              <rect x="165" y="88" width="150" height="32" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/>
+              <text x="240" y="108" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🛡️ Hub</text>
+              <path d="M95,54 V72 H200 V88" fill="none" stroke="#3b82f6" stroke-width="1.6"/>
+              <path d="M385,54 V72 H280 V88" fill="none" stroke="#3b82f6" stroke-width="1.6"/>
+            </svg>
+          </div>
+          <p class="uc-what">Peering isn't transitive — both spokes being peered to the same hub
+          doesn't connect them to each other. Traffic only flows between them if the hub's
+          firewall/NVA is explicitly configured (with user-defined routes) to route it — exactly
+          the Common Trap called out above.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same hub ≠ connected — peering never chains on its own.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You're deciding how to connect 10+ team VNets together</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 90" xmlns="http://www.w3.org/2000/svg">
+              <text x="240" y="12" text-anchor="middle" font-size="10" font-weight="700" fill="#134e4a" letter-spacing=".03em">10 SPOKES — PEERING CONNECTIONS NEEDED</text>
+              <text x="20" y="37" font-size="11" font-weight="700" fill="#475569">Full Mesh</text>
+              <rect x="140" y="24" width="280" height="18" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+              <text x="430" y="37" font-size="11" font-weight="700" fill="#475569">45</text>
+              <text x="20" y="67" font-size="11" font-weight="700" fill="#0f766e">Hub-Spoke</text>
+              <rect x="140" y="54" width="70" height="18" rx="6" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="220" y="67" font-size="11" font-weight="700" fill="#0f766e">10</text>
+            </svg>
+          </div>
+          <p class="uc-what">A full mesh of 10 spokes needs 45 pairwise peering connections
+          (<code>n(n-1)/2</code>) and up to 10 separate firewall rule sets; hub-spoke needs just 10
+          connections total and one firewall ruleset, in the hub. That management gap only grows as
+          more teams get added.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">10 spokes: hub-spoke = 10 connections, full mesh = 45.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

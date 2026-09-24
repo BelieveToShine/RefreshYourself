@@ -64,11 +64,40 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Checks whether you think about failure as something you design around, not just something you hope doesn't happen.</li>
-        <li>Comes up any time a call to another service, database, or API is in the picture — which is almost every real system.</li>
-        <li>A common follow-up after any "how would you handle a dependency going down" question.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔁 Retry</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A call can fail from a short-lived blip — a dropped connection, a one-off 503 — and giving up right away treats a passing glitch as a real failure.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Retry waits (with exponential backoff + jitter) and tries again, recovering from the blip instead of piling more load on immediately.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Retry = wait, then try again — never without backoff, or it becomes a retry storm.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">⏱️ Timeout</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A dependency that's merely slow — not down — can hang a single attempt indefinitely, tying up the caller waiting on it.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Timeout caps how long one attempt is allowed to run and cancels it at N seconds, so a hang can't block the request forever.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Timeout = cap how long you'll wait on a single attempt.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+          <div class="wc-head">🚦 Circuit breaker</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Once a dependency is clearly down, retrying it anyway just hammers a struggling service with more load and wastes time on calls that won't succeed.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>After N consecutive failures the breaker opens and skips the call instantly for a cooldown period, giving the dependency room to recover.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Circuit breaker = stop calling, fail fast, until the cooldown passes.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#166534; --why-bg:#dcfce7">
+          <div class="wc-head">🛟 Fallback</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Even after retry, timeout, and the breaker, a call can still ultimately fail — and the caller shouldn't just be handed a raw error.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Fallback returns a safe, degraded answer — a cached or default value — instead of failing the whole request outright.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Fallback = hand back a safe default instead of an error.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -205,6 +234,83 @@
       </div>
       <p class="cx-note">Each retry waits longer than the last (2s, 4s, 8s…) plus a small random jitter — that spacing is exactly what stops a retry storm.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A call fails once with a dropped connection, then succeeds on the very next try</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="10" y="13" width="190" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+              <text x="105" y="31" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">Call #1</text>
+              <text x="105" y="45" text-anchor="middle" font-size="9.5" fill="#b91c1c">dropped connection ❌</text>
+              <path d="M203,33 H272" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arUc1)"/>
+              <text x="238" y="24" text-anchor="middle" font-size="8" font-weight="700" fill="#1d4ed8" letter-spacing="0.3">RETRY</text>
+              <rect x="280" y="13" width="190" height="40" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+              <text x="375" y="31" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">Call #2</text>
+              <text x="375" y="45" text-anchor="middle" font-size="9.5" fill="#1d4ed8">succeeds ✅</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into — a transient blip, not a real outage. The short wait-then-retry with backoff quietly fixes it before the caller ever notices.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Transient blip → retry (with backoff) is all it takes.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#92400e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A downstream call just sits there — no error back, the request never returns on its own</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#92400e"/>
+                </marker>
+              </defs>
+              <rect x="10" y="13" width="190" height="40" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+              <text x="105" y="31" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">Call sent…</text>
+              <text x="105" y="45" text-anchor="middle" font-size="9.5" fill="#92400e">no response yet</text>
+              <path d="M203,33 H272" fill="none" stroke="#92400e" stroke-width="1.8" marker-end="url(#arUc2)"/>
+              <text x="238" y="24" text-anchor="middle" font-size="8" font-weight="700" fill="#92400e" letter-spacing="0.3">N SEC</text>
+              <rect x="280" y="13" width="190" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+              <text x="375" y="31" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">Timeout</text>
+              <text x="375" y="45" text-anchor="middle" font-size="9.5" fill="#b91c1c">call canceled ❌</text>
+            </svg>
+          </div>
+          <p class="uc-what">No response isn't the same as a fast failure — without a cap, this attempt hangs indefinitely and ties up the caller. A per-attempt timeout cancels it at N seconds so the caller isn't stuck waiting forever.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Silence ≠ safe — cap the wait or it's indefinite.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b91c1c">
+          <div class="uc-sit"><span class="uc-flag">3</span> The same dependency has already failed N times in a row and is clearly down</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#b91c1c"/>
+                </marker>
+              </defs>
+              <rect x="10" y="13" width="190" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+              <text x="105" y="31" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">Breaker: OPEN</text>
+              <text x="105" y="45" text-anchor="middle" font-size="9.5" fill="#b91c1c">call skipped instantly</text>
+              <path d="M203,33 H272" fill="none" stroke="#b91c1c" stroke-width="1.8" marker-end="url(#arUc3)"/>
+              <rect x="280" y="13" width="190" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="375" y="31" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">Fallback</text>
+              <text x="375" y="45" text-anchor="middle" font-size="9.5" fill="#166534">safe default returned ✅</text>
+            </svg>
+          </div>
+          <p class="uc-what">Retrying here is pointless — the dependency is clearly down, not blipping. The breaker has already opened and skips the call instantly, and fallback hands back a safe default in its place, so the caller never even feels the outage.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Consecutive failures → breaker skips the call, fallback covers the gap.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

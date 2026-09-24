@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Checks whether you understand who's actually authenticating — the caller, not just "the app has permissions."</li>
-        <li>Comes up any time a design touches how a service reaches Key Vault, storage, or a database without a secret sitting in config.</li>
-        <li>A common follow-up once a candidate says "we use Managed Identity" — the interviewer wants to know you also know when that answer doesn't apply.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔑 Managed Identity</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>An App Service, Function, or VM needs to call Key Vault, storage, or a database — but putting a secret in config or a pipeline vault is one more credential that can leak and has to be rotated by hand.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Managed Identity binds the credential to that one Azure resource and lets Azure create and rotate it automatically — <code>DefaultAzureCredential</code> in code never touches a stored secret at all.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Azure resource calling Azure → Managed Identity, no secret to manage.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🔐 Service Principal</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A caller that isn't an Azure resource — a CI/CD pipeline, an on-prem app, another cloud — has no Azure resource for a Managed Identity to bind to, so Azure has nothing to auto-rotate a credential for.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Service Principal is a standalone Entra ID identity with a secret or certificate you create yourself (<code>az ad sp create-for-rbac</code>), so it can authenticate from anywhere that credential is safely stored.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Caller outside Azure → Service Principal, you own the secret.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -107,7 +120,8 @@
 
       <path d="M175,124 V144" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
       <path d="M465,124 V144" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
-      <path d="M175,144 H465" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M175,144 H320" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M320,144 H465" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
       <path d="M320,144 V164" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#midArrow)"/>
 
       <g filter="url(#midShadow)"><rect x="210" y="164" width="220" height="80" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
@@ -183,6 +197,75 @@
       </div>
       <p class="cx-note">This command hands back a real secret — someone (or a pipeline vault) now owns storing and rotating it.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your App Service, Function, or VM needs to call Key Vault, storage, or a database</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">☁️ App Service</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <text x="240" y="35" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">no secret</text>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🔑 Key Vault</text>
+            </svg>
+          </div>
+          <p class="uc-what">The caller is itself an Azure resource, so <code>DefaultAzureCredential</code>
+          resolves straight to its own Managed Identity — nothing to store, nothing to rotate.
+          <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Azure calling Azure → Managed Identity, no secret.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your CI/CD pipeline runs outside Azure and needs to deploy or manage resources</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="10" y="24" width="180" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="100" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🖥️ GitHub Actions</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <text x="240" y="35" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">SP secret</text>
+              <rect x="290" y="24" width="180" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="380" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">☁️ Azure subscription</text>
+            </svg>
+          </div>
+          <p class="uc-what">GitHub's runners aren't Azure resources, so there's no Azure resource
+          for a Managed Identity to bind to — the pipeline authenticates with a Service
+          Principal's own secret instead, exactly what <code>az ad sp create-for-rbac</code>
+          hands back.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No Azure resource to bind to → Service Principal.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You're about to create a Service Principal secret for a call that's actually Azure-to-Azure</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="24" width="150" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="95" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">☁️ Azure VM</text>
+              <path d="M170,43 H310" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUc3)"/>
+              <text x="240" y="35" text-anchor="middle" font-size="9.5" font-weight="700" fill="#b91c1c">❌ SP secret</text>
+              <rect x="310" y="24" width="150" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="385" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b91c1c">☁️ Azure SQL</text>
+            </svg>
+          </div>
+          <p class="uc-what">If the caller is itself an Azure resource, Managed Identity already
+          removes the whole rotation problem — reaching for a Service Principal here just adds a
+          credential that has to be stored and rotated for no reason, the exact trap called out
+          earlier on this page. <b>A great interview trap</b> — candidates who've only used
+          Service Principal before default to it even when it isn't needed.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Caller is an Azure resource → skip the secret, use Managed Identity.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

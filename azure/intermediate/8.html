@@ -64,11 +64,40 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Checks whether you can cleanly separate four services that all get pitched as "load balancing," but actually solve different problems.</li>
-        <li>Comes up any time a design discussion touches global routing, a WAF, or picking the right entry point for a multi-region app.</li>
-        <li>A common architecture-interview opener before deeper questions on failover or latency.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🖥️ Load Balancer</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Raw TCP/UDP traffic across a set of VMs in one region needs to be spread out fast, without paying for HTTP-level inspection it doesn't need.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It works at L4, hashing on IP/port to forward packets straight to a healthy VM — regional only, no WAF, no path routing.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">L4, regional — never looks inside the request.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🚪 App Gateway</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>HTTP traffic in one region needs path-based routing, SSL termination, and a WAF — none of which Load Balancer can do since it never looks past the IP and port.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It reads the request at L7, terminating TLS and routing by URL path with a WAF available — still scoped to one region.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">L7, regional — one layer up from Load Balancer.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+          <div class="wc-head">🧭 Traffic Manager</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Candidates often assume Traffic Manager load-balances HTTP traffic globally, just like Front Door — but it never sees or proxies the actual request.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It only answers at the DNS level, pointing the client at the best region, then steps out of the conversation for good.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">DNS answer only — global, but never touches the traffic.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#15803d; --why-bg:#dcfce7">
+          <div class="wc-head">🌐 Front Door</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A global app still needs one entry point that actually receives and proxies HTTP requests — with a WAF and caching — not just a DNS pointer to a region.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It runs at Microsoft's edge, receiving the request itself, checking cache, running the WAF, and forwarding only a cache miss to origin.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">The one that's both global AND actually proxies.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -341,6 +370,114 @@
           <tr><th>WAF available?</th><td class="no">❌ no</td><td>✅ yes</td><td class="no">❌ no</td><td>✅ yes</td></tr>
         </tbody>
       </table>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your backend is a handful of VMs in one Azure region, taking raw TCP/UDP connections</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 110" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="195" y="8" width="90" height="26" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+              <text x="240" y="25" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">💻 Client</text>
+
+              <path d="M240,34 V44" fill="none" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#arUc1)"/>
+
+              <rect x="170" y="44" width="140" height="28" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="240" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">🖥️ Load Balancer</text>
+
+              <path d="M240,72 V80" fill="none" stroke="#1d4ed8" stroke-width="1.5"/>
+              <path d="M150,80 H330" fill="none" stroke="#1d4ed8" stroke-width="1.5"/>
+              <path d="M150,80 V84" fill="none" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#arUc1)"/>
+              <path d="M330,80 V84" fill="none" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#arUc1)"/>
+
+              <rect x="95" y="84" width="110" height="24" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+              <text x="150" y="100" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">🖥️ VM 1</text>
+
+              <rect x="275" y="84" width="110" height="24" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+              <text x="330" y="100" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">🖥️ VM 2</text>
+            </svg>
+          </div>
+          <p class="uc-what">Load Balancer is the pick — it hashes on IP and port and forwards packets straight to a healthy VM, all inside one region, with no WAF or path-routing overhead. This is the #1 scenario you'll actually run into for a simple VM-backed service.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One region, no HTTP awareness needed → Load Balancer.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your HTTP app is still in one region, but now needs TLS termination, a WAF, and different backend pools per URL path</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 110" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#b45309"/>
+                </marker>
+              </defs>
+              <rect x="195" y="8" width="90" height="26" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+              <text x="240" y="25" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">💻 Client</text>
+
+              <path d="M240,34 V44" fill="none" stroke="#b45309" stroke-width="1.5" marker-end="url(#arUc2)"/>
+
+              <rect x="155" y="44" width="170" height="28" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="240" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🚪 App Gateway · TLS+WAF</text>
+
+              <path d="M240,72 V80" fill="none" stroke="#b45309" stroke-width="1.5"/>
+              <path d="M150,80 H330" fill="none" stroke="#b45309" stroke-width="1.5"/>
+              <path d="M150,80 V84" fill="none" stroke="#b45309" stroke-width="1.5" marker-end="url(#arUc2)"/>
+              <path d="M330,80 V84" fill="none" stroke="#b45309" stroke-width="1.5" marker-end="url(#arUc2)"/>
+
+              <rect x="95" y="84" width="110" height="24" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+              <text x="150" y="100" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">📦 Pool A · /api/*</text>
+
+              <rect x="275" y="84" width="110" height="24" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+              <text x="330" y="100" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">📦 Pool B · /img/*</text>
+            </svg>
+          </div>
+          <p class="uc-what">Application Gateway is the pick — it's L7-aware, so it can terminate TLS, run a WAF, and route <code>/api/*</code> and <code>/images/*</code> to different pools, all while staying inside one region.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Needs a WAF or path routing, but stays in one region → Application Gateway.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#15803d">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your app now spans multiple regions, and it needs one global entry point that also runs a WAF and caches responses at the edge</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 110" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#15803d"/>
+                </marker>
+              </defs>
+              <rect x="195" y="8" width="90" height="26" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+              <text x="240" y="25" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">💻 Client</text>
+
+              <path d="M240,34 V44" fill="none" stroke="#15803d" stroke-width="1.5" marker-end="url(#arUc3)"/>
+
+              <rect x="150" y="44" width="180" height="28" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="240" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🌐 Front Door · WAF+cache</text>
+
+              <path d="M240,72 V80" fill="none" stroke="#15803d" stroke-width="1.5"/>
+              <path d="M150,80 H330" fill="none" stroke="#15803d" stroke-width="1.5"/>
+              <path d="M150,80 V84" fill="none" stroke="#15803d" stroke-width="1.5" marker-end="url(#arUc3)"/>
+              <path d="M330,80 V84" fill="none" stroke="#15803d" stroke-width="1.5" marker-end="url(#arUc3)"/>
+
+              <rect x="95" y="84" width="110" height="24" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+              <text x="150" y="100" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">🌍 Region A</text>
+
+              <rect x="275" y="84" width="110" height="24" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+              <text x="330" y="100" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">🌍 Region B</text>
+            </svg>
+          </div>
+          <p class="uc-what">Front Door is the pick — unlike Traffic Manager, it actually receives and proxies the HTTP request itself at Microsoft's edge, so caching and a WAF are both possible; Traffic Manager could only ever hand back a DNS answer here.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Global AND needs a WAF or caching → Front Door, not Traffic Manager.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

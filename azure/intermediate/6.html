@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Checks whether you know the actual axis these three differ on — reliability vs. reactivity vs. throughput — not just three unrelated product names.</li>
-        <li>Comes up any time an integration or event-driven architecture question turns into "which service would you actually pick here."</li>
-        <li>A very common follow-up after any Azure messaging, eventing, or microservices question.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔒 Service Bus</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A payment or order message that silently disappears, arrives twice, or gets processed out of order can leave a transaction half-done — and by then there's no queue left holding the original message to recover from it.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Service Bus holds the message under peek-lock until a consumer explicitly completes it, keeps related messages in order via sessions, and dead-letters anything that can't be processed — so it's only ever completed or explicitly failed, never silently lost.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Service Bus = peek-lock + sessions — nothing's gone until it's completed.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">⚡ Event Grid</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>When a blob lands or a resource changes, whatever needs to react can't just poll a queue every few seconds and call that "real-time" — and it shouldn't have to manage its own retry logic either.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Event Grid pushes the "this happened" notification straight to the subscriber — usually a Function — the moment it happens, retrying with backoff on its own if the subscriber's briefly unreachable.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Event Grid = push, not pull — it reacts the instant something happens.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🚀 Event Hubs</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Millions of sensor readings or clickstream events a second would overwhelm a queue built for individual business messages, and forcing every consumer to read at the same speed would slow the whole pipeline down to its slowest reader.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Event Hubs is a partitioned log built to absorb that volume — each consumer just tracks its own checkpoint and reads independently, at its own pace, with replay still possible.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Event Hubs = partitioned log — every consumer reads at its own pace.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -305,6 +326,81 @@
       </div>
       <p class="cx-note">"Send" is the same word in both SDKs — the guarantee sitting behind it isn't.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're sending an order or payment message that absolutely cannot go missing or arrive out of order</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto"><path d="M0,0 L5.5,2.5 L0,5 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="12" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8" letter-spacing=".02em">NOTHING'S LOST UNTIL IT'S COMPLETED</text>
+              <rect x="8" y="24" width="110" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="63" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">🛒 Order Placed</text>
+              <path d="M120,43 H140" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="142" y="24" width="150" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="217" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">🔒 Peek-Locked Queue</text>
+              <path d="M294,43 H314" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="316" y="24" width="148" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="390" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">✅ Completed, in order</text>
+            </svg>
+          </div>
+          <p class="uc-what">Service Bus keeps the message under peek-lock until a consumer explicitly completes it — nothing disappears until that happens — and sessions keep related messages in order. <b>This is the #1 reason to reach for Service Bus over the other two.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Peek-lock + sessions → nothing's lost, order holds.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#92400e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A blob just landed in storage and something needs to react to it immediately, without polling</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto"><path d="M0,0 L5.5,2.5 L0,5 Z" fill="#92400e"/></marker></defs>
+              <text x="240" y="12" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e" letter-spacing=".02em">PUSHED THE INSTANT IT HAPPENS</text>
+              <rect x="8" y="24" width="145" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="80" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">📸 Blob Created</text>
+              <path d="M155,43 H176" stroke="#92400e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="178" y="24" width="145" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="250" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">📡 Event Grid Topic</text>
+              <path d="M325,43 H346" stroke="#92400e" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="348" y="24" width="124" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="410" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">⚡ Function Runs</text>
+            </svg>
+          </div>
+          <p class="uc-what">Event Grid pushes the notification straight to the subscriber the moment the blob is created — usually straight to a Function — retrying with backoff on its own if the subscriber's briefly unreachable. Nothing sits in a queue waiting to be pulled.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Push, not pull → Event Grid reacts the instant it happens.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> Thousands of IoT devices are streaming sensor readings every second, and each consumer needs to read at its own pace</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 118" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto"><path d="M0,0 L5.5,2.5 L0,5 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="12" text-anchor="middle" font-size="10" font-weight="700" fill="#0f766e" letter-spacing=".02em">ONE LOG, EACH READER AT ITS OWN PACE</text>
+              <rect x="8" y="22" width="102" height="28" rx="8" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.6"/>
+              <text x="59" y="40" text-anchor="middle" font-size="10" font-weight="700" fill="#0f766e">📶 Producers</text>
+              <path d="M112,36 H138" stroke="#0d9488" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="140" y="26" width="332" height="20" rx="6" fill="#f0fdfa" stroke="#0d9488" stroke-width="1.6"/>
+              <line x1="200" y1="26" x2="200" y2="46" stroke="#99f6e4" stroke-width="1"/>
+              <line x1="260" y1="26" x2="260" y2="46" stroke="#99f6e4" stroke-width="1"/>
+              <line x1="320" y1="26" x2="320" y2="46" stroke="#99f6e4" stroke-width="1"/>
+              <line x1="380" y1="26" x2="380" y2="46" stroke="#99f6e4" stroke-width="1"/>
+              <line x1="440" y1="26" x2="440" y2="46" stroke="#99f6e4" stroke-width="1"/>
+              <text x="306" y="40" text-anchor="middle" font-size="9" font-weight="700" fill="#0f766e">📜 log</text>
+              <path d="M230,90 V50" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <text x="230" y="103" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0f766e">🔁 A · offset 12</text>
+              <path d="M380,90 V50" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <text x="380" y="103" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0f766e">🔁 B · offset 47</text>
+            </svg>
+          </div>
+          <p class="uc-what">Event Hubs is a partitioned log that just keeps growing — each consumer tracks its own checkpoint and reads independently, so one slow consumer never blocks another, and a consumer can even replay from an earlier offset.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Partitioned log + checkpoints → every consumer reads at its own pace.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

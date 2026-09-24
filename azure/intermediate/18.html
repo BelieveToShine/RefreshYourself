@@ -64,11 +64,48 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Checks whether you understand the real CAP-theorem tradeoff Cosmos DB exposes as a dial, not just that "5 levels exist."</li>
-        <li>Comes up any time someone asks "why not just use Strong everywhere" on a multi-region Cosmos DB design.</li>
-        <li>A common way interviewers separate a memorized list of names from someone who's actually reasoned about the latency/availability cost.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔒 Strong</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>In a multi-region account, a read right after a write could return a stale value if nothing forces every region to agree first — a real bug for something like a double-spend guard, not just an inconvenience.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Strong holds the write's acknowledgment back until it's durably confirmed across enough regions, so every read after that is guaranteed the latest committed value — at the cost of real cross-region latency and reduced write availability during a partition.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Strong = always the latest write, but you pay full cross-region latency for it.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">⏳ Bounded Staleness</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Eventual's "no ordering guarantee at all" is too loose when an app can tolerate some lag but still needs a known ceiling on how stale a read can ever get.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Bounded Staleness caps the lag by a fixed time window or version count, so reads can trail Strong but never past the agreed cap.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Bounded Staleness = lag allowed, but only up to a cap you set.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#166534; --why-bg:#dcfce7">
+          <div class="wc-head">👤 Session</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Paying Strong's full cross-region latency on every write is overkill when the only thing a user actually notices is whether they immediately see their own new post or edit.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Session tracks consistency for just the client that made the write, so that client always sees its own writes cheaply — exactly why it's the account default.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Session = you always see your own writes, cheaply — the default for a reason.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+          <div class="wc-head">📶 Consistent Prefix</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>If writes could ever be replayed out of order, a reader could see an effect before its cause — even while otherwise tolerating some staleness.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Consistent Prefix guarantees writes are never seen out of order, even though the read may still be behind — a low cost tradeoff close to Eventual's latency.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Consistent Prefix = order is safe, freshness isn't guaranteed.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#991b1b; --why-bg:#fee2e2">
+          <div class="wc-head">🌊 Eventual</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Some workloads care about raw throughput and availability far more than any ordering or freshness guarantee — even Consistent Prefix's ordering check is cost they don't need.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Eventual drops every guarantee — no ordering, no freshness — for the lowest possible latency and highest availability, accepting that two reads can briefly disagree.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Eventual = fastest and most available, with zero ordering or freshness guarantee.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -308,6 +345,86 @@
       </div>
       <p class="cx-note">Setting <code>ConsistencyLevel</code> here picks the level per request — it doesn't change what the account itself defaults to.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your app just needs a user to reliably see their own new post or edit right after making it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+                </marker>
+              </defs>
+              <rect x="8" y="8" width="200" height="50" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="108" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">✍️ Client Writes</text>
+              <text x="108" y="46" text-anchor="middle" font-size="9" fill="#5b6472">its own new value</text>
+              <path d="M208,33 H236" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arUc1)"/>
+              <rect x="236" y="8" width="236" height="50" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="354" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">👤 Sees It Immediately</text>
+              <text x="354" y="46" text-anchor="middle" font-size="9" fill="#5b6472">others may lag a moment</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into. Session is the account default,
+          so without changing anything, the client that wrote the value always sees it — while another client
+          might briefly still see the old one.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Session already covers this for free — it's the default, not something you opt into.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're tempted to set every request to Strong "just to be safe" on a multi-region account</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="8" y="8" width="190" height="50" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="103" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🔒 Write Sent</text>
+              <text x="103" y="46" text-anchor="middle" font-size="9" fill="#5b6472">to every region</text>
+              <path d="M198,33 H224" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arUc2)"/>
+              <rect x="224" y="8" width="248" height="50" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="348" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">⏳ Waits On Every Region</text>
+              <text x="348" y="46" text-anchor="middle" font-size="9" fill="#5b6472">before it's even acknowledged</text>
+            </svg>
+          </div>
+          <p class="uc-what">In a multi-region account, Strong forces the write to wait on cross-region
+          confirmation before it's acknowledged, and can lose write availability if too many regions become
+          unreachable during a partition — a cost almost no app actually needs to pay everywhere.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Strong everywhere isn't "safe" by default — it's a real latency and availability tradeoff most apps don't need.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">3</span> Someone asks for a guarantee that reads will never fall more than a known amount behind</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+                </marker>
+              </defs>
+              <rect x="8" y="8" width="180" height="50" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="98" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">✍️ Write Happens</text>
+              <text x="98" y="46" text-anchor="middle" font-size="9" fill="#5b6472">value updates</text>
+              <path d="M188,33 H214" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arUc3)"/>
+              <rect x="214" y="8" width="258" height="50" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="343" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">⏳ Lag Capped At Limit</text>
+              <text x="343" y="46" text-anchor="middle" font-size="9" fill="#5b6472">time window or version count</text>
+            </svg>
+          </div>
+          <p class="uc-what">Bounded Staleness caps the lag by a fixed time window or version count, so you
+          can promise a concrete limit on staleness without paying Strong's full cross-region cost.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Bounded Staleness = staleness allowed, but never past the cap you set.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

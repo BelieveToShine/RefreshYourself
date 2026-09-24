@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up any time an interview touches asynchronous or decoupled service-to-service communication.</li>
-        <li>Explains a real production pattern: a slow or temporarily-down worker doesn't take the front-end down with it.</li>
-        <li>A common opener before comparing Service Bus to Event Hubs or Queue Storage.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+        <div class="wc-head">📬 Service Bus</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>If a checkout API calls an order-processing worker directly, the checkout API is now stuck waiting on that worker's speed and uptime — a slow or temporarily-down worker takes the front-end down with it.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Service Bus sits in between: the sender drops a message on a queue or topic and moves on immediately, while a separate consumer processes it whenever it's ready, with at-least-once delivery guaranteed and repeatedly-failing messages pulled into a dead-letter queue instead of retrying forever.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Service Bus = sender never waits on the receiver — a durable queue holds the message safely in between.</span></div>
+      </div>
     </div>
   </details>
 
@@ -180,6 +183,79 @@
       </div>
       <p class="cx-note">The checkout API's job ends at <code>SendMessageAsync</code> — it never waits for the order to actually be processed.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your order-placed message only needs to be handled once</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcSb1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">ONE MESSAGE, ONE CONSUMER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">📬 Queue</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcSb1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">📥 Consumer</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is a queue — point-to-point. Once one consumer picks the
+          message up, it's off the queue and no other consumer gets a copy. <b>This is the
+          #1 shape you'll reach for</b> for straightforward background work like order
+          processing.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Queue → one consumer per message.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">2</span> Order-placed also needs to reach inventory, billing, and email — independently</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 130" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcSb2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#6d28d9"/></marker></defs>
+              <rect x="20" y="34" width="160" height="60" rx="12" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.8"/>
+              <text x="100" y="59" text-anchor="middle" font-size="12" font-weight="700" fill="#4c1d95">📢 Topic</text>
+              <text x="100" y="76" text-anchor="middle" font-size="9.5" fill="#4c1d95">one message published</text>
+              <path d="M180,50 L310,26" stroke="#6d28d9" stroke-width="1.5" fill="none" marker-end="url(#arUcSb2)"/>
+              <path d="M180,64 H310" stroke="#6d28d9" stroke-width="1.5" fill="none" marker-end="url(#arUcSb2)"/>
+              <path d="M180,78 L310,102" stroke="#6d28d9" stroke-width="1.5" fill="none" marker-end="url(#arUcSb2)"/>
+              <rect x="310" y="12" width="150" height="28" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <text x="385" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4c1d95">📥 Subscription A</text>
+              <rect x="310" y="50" width="150" height="28" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <text x="385" y="68" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4c1d95">📥 Subscription B</text>
+              <rect x="310" y="88" width="150" height="28" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <text x="385" y="106" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4c1d95">📥 Subscription C</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is a topic with subscriptions — pub/sub. Every subscription
+          gets its own independent copy of the message, so inventory, billing, and email each
+          process it without competing with each other for the same copy.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Topic/Subscription → every subscriber gets its own copy.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A message keeps throwing an exception every time a consumer tries to process it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcSb3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">MAX DELIVERY COUNT EXCEEDED</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">📨 Message</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcSb3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">☠️ Dead-letter</text>
+            </svg>
+          </div>
+          <p class="uc-what">After hitting its max delivery count, Service Bus stops retrying
+          and moves the message into the dead-letter sub-queue instead of looping forever — so
+          one poison message can't block the rest of the queue behind it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Repeated failure → dead-lettered, not retried forever.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 
