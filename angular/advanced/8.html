@@ -66,15 +66,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A senior/architect interview almost always probes whether a candidate treats the
-        <b>frontend as the security boundary</b> — a mistake that produces real vulnerabilities in
-        production.</li>
-        <li>Every app that renders user-generated content (comments, profiles, rich text) is one
-        careless <code>bypassSecurityTrustHtml</code> call away from an actual XSS hole.</li>
-        <li>A very common opener before a deeper trade-off question about where a token should
-        live, or how authorization should really be enforced.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+        <div class="wc-head">🛡️ Angular Security</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A hidden button, a disabled route, or a deliberate <code>bypassSecurityTrustHtml</code> call all look like they're enforcing something — but none of them actually blocks a request, so treating any of them as real security ships an app with an actual XSS hole or an authorization check that only ever existed in the UI.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Angular already sanitizes every default template binding for you, <code>DomSanitizer</code>'s bypass methods only turn that off for one value on purpose, and real authorization gets re-checked on the server on every single request — the frontend can shape what a user sees, but it's never the thing deciding what's actually allowed.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Sanitization is on by default, a bypass turns it off on purpose, and only the server — never the browser — decides what's allowed.</span></div>
+      </div>
     </div>
   </details>
 
@@ -250,6 +249,80 @@ renderComment(userComment: <span class="ty">string</span>) {
       <p class="cx-note">This check decides whether a button is <b>visible</b> — it decides nothing
       about whether the delete request the button sends is actually <b>allowed</b>.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You render user-typed content — a comment, a bio, a rich-text field</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arA8Uc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">SANITIZED BEFORE IT RENDERS</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">💬 User comment</text>
+              <path d="M210,43 H270" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arA8Uc1)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🧼 Sanitized output</text>
+            </svg>
+          </div>
+          <p class="uc-what">Angular's default binding already strips or escapes anything
+          dangerous in that comment before it ever touches the DOM — you don't have to write your
+          own sanitization call. <b>This is the #1 scenario you'll actually run into</b>, and
+          reaching for <code>bypassSecurityTrustHtml</code> on it would remove the exact
+          protection you need.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">User-typed content → default binding, never a bypass.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> You have to decide where the auth token lives after login</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="40" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">📦 localStorage</text>
+              <text x="115" y="53" text-anchor="middle" font-size="9.5" fill="#5b6472">readable by any script</text>
+              <circle cx="240" cy="43" r="14" fill="#ffffff" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="240" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#64748b">vs</text>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="365" y="40" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🍪 HttpOnly cookie</text>
+              <text x="365" y="53" text-anchor="middle" font-size="9.5" fill="#5b6472">sent automatically</text>
+            </svg>
+          </div>
+          <p class="uc-what">Neither option is free of trade-offs. <code>localStorage</code> is
+          readable by any script on the page, so an XSS hole anywhere can steal the token; an
+          HttpOnly cookie can't be read by JavaScript at all, but the browser sends it
+          automatically, which is exactly what makes CSRF a concern for it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">localStorage risks XSS theft; HttpOnly cookies risk CSRF.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You hide a delete button or guard a route so only admins see it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arA8Uc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">HIDING ≠ BLOCKING</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">🖥️ Hidden button</text>
+              <path d="M210,43 H270" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="5 4" fill="none" marker-end="url(#arA8Uc3)">
+                <animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/>
+              </path>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🌐 API still reachable</text>
+            </svg>
+          </div>
+          <p class="uc-what">Hiding the button only changes what's rendered — anyone who calls the
+          same endpoint directly (dev tools, a script, curl) skips the frontend entirely, so
+          unless the server independently re-checks permission on that request, the action still
+          goes through. <b>A great interview trap</b> — candidates often assume a route guard is
+          itself a security control, and it isn't.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Hidden button / route guard → UX only; the server must re-check every request.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

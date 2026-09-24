@@ -64,14 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Hydration-mismatch warnings spiking right after an SSR rollout is one of the most
-        common real production alerts on an Angular app — not a rare edge case.</li>
-        <li>Interviewers use this to hear an actual ordered investigation, not just the
-        definition of hydration.</li>
-        <li>A common trap: blaming SSR itself for a slowness problem that was already there
-        before SSR ever existed, just less visible.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔬 Hydration Mismatch</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A hydration-mismatch warning alone doesn't say which of several unrelated causes produced it — a non-deterministic value, an unguarded browser-only API, and a data race can all trigger the exact same generic warning, so guessing at the cause wastes time or ends with someone just disabling SSR.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Check the same three causes in the same order every time — non-deterministic value, then browser-only API, then a data race — because each one has its own distinct, reliable fix once it's actually identified.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">One warning, three ordered checks — the fix is always computing the value once and sharing it, never disabling SSR.</span></div>
+      </div>
     </div>
   </details>
 
@@ -228,6 +228,66 @@ greeting: <span class="kw">this</span>.pageData.greeting, <span class="cx-ok">//
       <p class="cx-note">Guard the specific unsafe line, not the whole component's SSR — that
       keeps the fast first paint for everything around it.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> The mismatch is on a label showing the current time, a random value, or anything timezone-dependent</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc16a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">⏰ server → "2h ago"</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">computed twice →</text>
+              <path d="M170,33 H310" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc16a)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">⏰ client → "3h ago"</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: the server computes the value once at request time, and the client independently recomputes the same thing a moment later during hydration — close enough in time to usually match, but not guaranteed to, exactly like the "2 hours ago" vs. "3 hours ago" relative-time example above.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Non-deterministic value → compute it once, pass it through, never compute it twice.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> SSR throws, or the mismatch traces back to code that touches window, document, or localStorage</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc16b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🌐 reads localStorage</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">no window here →</text>
+              <path d="M170,33 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc16b)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">⚠️ throws on server</text>
+            </svg>
+          </div>
+          <p class="uc-what">The server has no <code>window</code>, <code>document</code>, or <code>localStorage</code> — any code that touches one of these unconditionally either throws during SSR or ends up rendering a different value than the client will. The fix is a platform guard around the specific unsafe line, not disabling SSR for the whole component.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Browser-only API → guard it, don't disable SSR to avoid it.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> Nothing is non-deterministic and no browser-only API is touched, but the values still briefly disagree</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc16c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🖥️ server → data v1</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">a race, not a bug →</text>
+              <path d="M170,33 H310" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc16c)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">💻 client → data v2</text>
+            </svg>
+          </div>
+          <p class="uc-what">By elimination, that's the third check: a race between when the server rendered and when the client's own data became available or changed. It isn't a rendering mistake at all — the fix is sharing the same already-resolved data on both sides instead of letting the client independently re-fetch.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Different data → a timing race, not a broken render.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

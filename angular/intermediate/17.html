@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use this to see whether you test real, user-facing behavior or just chase 100% coverage on things nobody will ever notice break.</li>
-        <li>Comes up on any code review where a "small refactor" breaks a pile of unrelated tests — a sign the suite is testing the wrong layer.</li>
-        <li>A natural follow-up into <code>TestBed</code>, mocking a dependency, and testing code that calls <code>HttpClient</code>.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🧪 Unit test</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A bug hidden inside one component or service's own logic can slip through unnoticed, and finding it only by running the whole app makes every failure slow and expensive to track down.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A unit test isolates that one piece with <code>TestBed</code>, mocks everything it depends on, and asserts directly on it — fast enough to run on every save, catching the bug at the exact layer it lives in.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Unit test = one thing, isolated, dependencies mocked, fastest.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🔗 Integration test</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Every piece can pass its own unit tests in isolation while the wiring between them is still wrong — a parent passing the wrong data to a child, a service returning something the component doesn't actually handle — and unit tests never catch that, because they mock away the very seam that's broken.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An integration test renders the real child components with real DI wiring, no mocks between them, and asserts on the combined behavior — exactly the seam a unit test skips.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Integration test = real pieces wired together, checking the seam.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🌐 End-to-end test</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Routing, real HTTP timing, and actual rendering can each work fine on their own in isolated or partially-wired tests, yet the full user flow — click, navigate, load a real page — can still be broken in a way none of those tests would ever exercise.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An end-to-end test drives the real running app in a real browser (Cypress/Playwright) — nothing mocked, nothing isolated — so it's the only test that proves the actual user flow works.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">End-to-end test = a real browser drives the real app, fewest but most realistic.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -290,6 +311,72 @@ expect(fixture.nativeElement.textContent).toContain(<span class="str">'1'</span>
       </div>
       <p class="cx-note">Same click, two assertions — only the second one <b>survives a harmless refactor</b> of how the count is stored.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You just changed one component's internal calculation and want fast feedback before anything else runs</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1T" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="10" y="18" width="130" height="30" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="75" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">🧪 component</text>
+              <path d="M140,33 H185" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1T)"/>
+              <rect x="187" y="18" width="130" height="30" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="252" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">🎭 deps mocked</text>
+              <path d="M317,33 H362" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1T)"/>
+              <rect x="364" y="18" width="106" height="30" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="417" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">✅ assert</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>TestBed</code> creates just this one component, every dependency is mocked, and the test asserts directly on it — fast enough to run on every save. <b>This is the #1 scenario you'll actually run into</b>, since most of a suite is unit tests.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One component, everything else mocked → unit test, fastest feedback.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> A parent component passes data down to a real child, and you want to know if they still work together correctly</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2T" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <rect x="10" y="18" width="120" height="30" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="70" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">🧩 parent</text>
+              <path d="M130,33 H185" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc2T)"/>
+              <rect x="187" y="18" width="130" height="30" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="252" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">🧩 real child</text>
+              <path d="M317,33 H362" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc2T)"/>
+              <rect x="364" y="18" width="106" height="30" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="417" y="37" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">✅ combined</text>
+            </svg>
+          </div>
+          <p class="uc-what">An integration test renders the parent with its real child components and real DI wiring, no mocks between them, so it actually exercises the seam where the two pieces meet.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Real pieces wired together, no mocks between them → integration test.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> You need to know if clicking "Add to cart" actually completes the purchase in the real running app</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3T" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="10" y="18" width="130" height="30" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="75" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">🌐 real browser</text>
+              <path d="M140,33 H185" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3T)"/>
+              <rect x="187" y="18" width="130" height="30" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="252" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">🖱️ clicks/navigates</text>
+              <path d="M317,33 H362" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3T)"/>
+              <rect x="364" y="18" width="106" height="30" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="417" y="37" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">✅ real UI</text>
+            </svg>
+          </div>
+          <p class="uc-what">Only an end-to-end test launches a real browser (Cypress/Playwright) and drives the actual running app — nothing mocked, nothing isolated — so it's the only test that proves the full user flow genuinely works.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Real browser drives the real app → end-to-end test, fewest but most realistic.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

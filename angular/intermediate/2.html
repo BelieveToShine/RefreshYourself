@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>RxJS underlies almost everything async in Angular — HTTP, forms, router events, reactive state — so misunderstanding when a stream actually runs causes silent bugs everywhere.</li>
-        <li>A very common early interview question, used to check whether you've actually built with Observables or only skimmed the syntax.</li>
-        <li>Explains a real bug pattern: an HTTP call that looks fine in code but never fires because nothing ever subscribed to it.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🍽️ Promise</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A one-off async value needs to be guaranteed to actually happen — no step that could be forgotten, and no way it silently never fires.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A Promise starts running the instant it's created, with no subscribe step required, and resolves to exactly one value — but that also means it can't be cancelled once started.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Promise = starts immediately, exactly one value, never cancellable.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📡 Observable</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Angular's HTTP calls, forms, and router events are ongoing streams of many values, not one — an eager source that starts the moment it's created (like a Promise) can't be held back until something's actually ready to use it, and can't be stopped once running.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An Observable stays lazy — it does nothing until something calls <code>.subscribe()</code> — can emit zero, one, or many values over time, and <code>unsubscribe()</code> can genuinely cancel work still in progress.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Observable = lazy until subscribed, many values over time, cancellable via unsubscribe().</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -223,6 +236,70 @@ request$.subscribe();                     <span class="cx-ok">// ✅ NOW the HTT
       </div>
       <p class="cx-note">The <code>async</code> pipe subscribes when the template renders and unsubscribes automatically when the component is destroyed — <b>never needs a manual unsubscribe</b>.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You store an HTTP call in a variable but never subscribe to it or use it with the async pipe</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📡 http.get(url)</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">no subscriber →</text>
+              <path d="M170,33 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">❌ nothing happens</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: an Observable is lazy, so just creating one does nothing at all. Without a <code>.subscribe()</code> call — or the <code>async</code> pipe unwrapping it in a template — the HTTP request never fires. No error is thrown either; the code just silently does nothing.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Creating an Observable isn't running it — only subscribing starts the work.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You await a Promise-based call and the user navigates away before it resolves</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">⏳ await promise</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">already running →</text>
+              <path d="M170,33 H310" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🚫 can't be stopped</text>
+            </svg>
+          </div>
+          <p class="uc-what">The Promise started the instant it was created, before you ever <code>await</code>ed it — there's no built-in way to cancel it once it's in flight. Navigating away doesn't stop the underlying work; at best you can ignore its eventual result, which is very different from an Observable's <code>unsubscribe()</code> genuinely cancelling work still in progress.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A Promise can't be cancelled — only ignored after the fact.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Two components each subscribe to the same cold HTTP Observable, expecting to share one request</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 96" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="10" width="140" height="24" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="90" y="26" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">compA.subscribe()</text>
+              <path d="M160,22 H260" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="260" y="10" width="200" height="24" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="360" y="26" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">🌐 HTTP request #1</text>
+              <rect x="20" y="62" width="140" height="24" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="90" y="78" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">compB.subscribe()</text>
+              <path d="M160,74 H260" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="260" y="62" width="200" height="24" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="360" y="78" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">🌐 HTTP request #2</text>
+            </svg>
+          </div>
+          <p class="uc-what">A cold Observable re-runs its producer for every subscriber — it doesn't share one execution. Two independent <code>.subscribe()</code> calls on the same Observable trigger two separate, independent HTTP requests, not one shared response. Sharing one execution across subscribers takes deliberately making it hot (e.g. <code>shareReplay</code>).</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Cold Observable + two subscribers = two independent runs, not one shared result.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

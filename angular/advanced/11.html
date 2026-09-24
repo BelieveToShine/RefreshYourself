@@ -64,16 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>"The app is slow" is one of the most common performance interviews openers — and it's
-        deliberately vague, because a real senior candidate has to ask what's actually happening
-        before reaching for a fix.</li>
-        <li>Interviewers use this to check whether a candidate profiles first or jumps straight to
-        a favorite fix (OnPush, virtual scrolling, code-splitting) without confirming it's the
-        right one.</li>
-        <li>A wrong-cause fix doesn't just waste time — it can make the real bug harder to find
-        later, which is exactly the trap this scenario is built to expose.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔬 Profile First</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>"The app is slow" has several different real causes — change-detection overhead, a bloated bundle, or too many DOM nodes — and reaching for a favorite fix (OnPush, lazy loading, virtual scrolling) without knowing which one is real risks fixing nothing, or quietly breaking a binding that was relying on the checking behavior you just removed.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Profiling with Angular DevTools first shows what's checked, how often, and how long, so the fix chosen is matched to the actual cause found — not a guess.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">"Slow" has several causes = profile first, then match the fix to the actual cause.</span></div>
+      </div>
     </div>
   </details>
 
@@ -254,6 +252,66 @@ this.widgets = [...<span class="kw">this</span>.widgets, newWidget]; <span class
       <code>OnPush</code> without fixing an in-place mutation like the first line quietly breaks
       the update, not the framework.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your dashboard feels laggy, and the profiler shows components checked far more often than their data actually changes</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc11a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">⏱️ checked every tick</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">profiler confirms →</text>
+              <path d="M170,33 H310" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc11a)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">→ OnPush / Signals</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is change-detection overhead — the Profiler shows these components checked far more often than their underlying data actually changes. That points to missing <code>OnPush</code> or fine-grained Signal updates, but only after confirming nothing is still feeding the inputs through an in-place mutation, since <code>OnPush</code> skips checks that were quietly relying on <code>Default</code>'s unconditional checking.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Checked more than data changes → OnPush / Signals, after ruling out in-place mutation.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> The app feels slow specifically on first load, and the bundle keeps growing release over release</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc11b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📦 bundle too large</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">check scope →</text>
+              <path d="M170,33 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc11b)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">→ lazy / @defer / SSR</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is a slow <em>initial</em> load — a separate question from change detection entirely. Check the build's bundle size, what isn't lazy-loaded yet that could be, and whether the app is client-side-only when server-side rendering would make first paint visible sooner. Lazy loading fits a whole route/feature, <code>@defer</code> fits a heavy piece within an already-loaded page, and SSR fits first paint itself — a real app often combines more than one.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Slow first load → lazy loading / @defer / SSR, chosen by scope.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> A big list or table freezes the UI while scrolling, but the profiler's change-detection checks look fine</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc11c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">📜 too many DOM nodes</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">not a CD problem →</text>
+              <path d="M170,33 H310" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc11c)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">→ virtual scrolling</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is simply too many real DOM nodes on screen at once — a large, unvirtualized list or table — which change detection overhead alone doesn't explain. Virtual scrolling keeps the actual node count roughly constant regardless of list size, and a correct <code>track</code> (or legacy <code>trackBy</code>) stops reorders from destroying and recreating rows that didn't actually change.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">UI freezes on a big list → virtual scrolling, plus a correct track.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

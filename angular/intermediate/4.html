@@ -64,11 +64,40 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Reciting four definitions isn't enough — the interview is really testing whether you can say which one fits a given scenario, on the spot.</li>
-        <li>Comes up any time a stream of user actions (typing, clicking, navigating) triggers an HTTP call — search boxes, submit buttons, and parallel or sequential API calls each lean on a different one of these four.</li>
-        <li>The most common wrong answer is treating <code>switchMap</code> as the universal default for "any Observable that maps to an HTTP call" — see the Common Trap below.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🔄 switchMap</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Letting an older, slower inner request finish after a newer one could let a stale result overwrite the newest one — e.g. an outdated search response landing last.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It cancels whatever inner request is still in flight the instant a new value arrives, so only the latest one ever survives.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">switchMap = cancel the old, keep only the newest.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔀 mergeMap</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Some inner requests are genuinely independent of each other, and cancelling or delaying any of them would lose or hold up work that has nothing to do with the others.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It never cancels or queues — every inner request runs concurrently, and results land in whatever order they actually finish.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">mergeMap = run everything in parallel, nothing waits.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#15803d; --why-bg:#dcfce7">
+          <div class="wc-head">📥 concatMap</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Order-dependent requests would come back out of sequence, or overlap, if every one of them were allowed to start right away.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It queues each new inner request strictly behind the current one — the next one doesn't even start until the previous one completes.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">concatMap = queue one at a time, in order.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+          <div class="wc-head">🚫 exhaustMap</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A fast double-click on something like a submit button could start a second, competing request before the first one is even done.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It drops any new value that arrives while an inner request is still running — a new one only starts once the current request finishes.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">exhaustMap = ignore new arrivals until the current one's done.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -353,6 +382,80 @@
       </div>
       <p class="cx-note"><code>switchMap</code> here would have <b>cancelled</b> the first, real submission on every extra click — <code>exhaustMap</code> instead lets it finish and just <b>drops</b> the extra clicks.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your search box fires off a new API call on every keystroke</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">NEW KEYSTROKE MID-SEARCH</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔎 older search, in flight</text>
+              <path d="M210,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcA1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">❌ cancelled, switches</text>
+            </svg>
+          </div>
+          <p class="uc-what">Every keystroke maps to a new inner search request. If an older
+          request outraced a newer one, its response could arrive last and overwrite the more
+          relevant result. <b>switchMap</b> cancels whatever search request is still in flight the
+          moment a newer keystroke arrives, so only the latest query's response is ever kept.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Search-as-you-type → cancel the old, keep only the latest.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> A submit button gets clicked twice before the first request finishes</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">2ND CLICK MID-SUBMIT</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🖱️ 1st click, submitting</text>
+              <path d="M210,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcA2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🚫 2nd click dropped</text>
+            </svg>
+          </div>
+          <p class="uc-what">A fast double-click could start a second, competing submit request
+          before the first one is even done. Reaching for <b>switchMap</b> here is the common
+          trap: it would cancel the first, real submission on the second click, risking the form
+          never actually finishing. <b>exhaustMap</b> instead lets that first submission finish
+          undisturbed and simply drops the extra click that arrived while it was still running.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Submit button → exhaustMap, never switchMap — don't cancel a real in-flight submission.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You need to fire off several API calls, and every one of them actually has to complete</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 116" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="10" y="40" width="130" height="34" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="75" y="62" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🎯 outer values</text>
+              <path d="M140,57 H180" stroke="#0f766e" stroke-width="1.6" fill="none"/>
+              <path d="M180,57 V23 H220" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUcA3)"/>
+              <path d="M180,57 V87 H220" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUcA3)"/>
+              <rect x="220" y="6" width="250" height="34" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="345" y="28" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🔀 independent → mergeMap</text>
+              <rect x="220" y="70" width="250" height="34" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="345" y="92" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">📥 order matters → concatMap</text>
+            </svg>
+          </div>
+          <p class="uc-what">If those calls are genuinely independent of each other,
+          <b>mergeMap</b> runs every inner request concurrently and lets each one land whenever
+          it actually finishes — nothing is ever cancelled or delayed. If instead the calls are
+          order-dependent and must happen in a specific sequence, <b>concatMap</b> queues them
+          strictly instead — the next one doesn't start until the current one completes.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Independent, all must finish → mergeMap. Order matters → concatMap.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

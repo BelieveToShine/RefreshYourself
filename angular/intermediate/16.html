@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use this to catch the "it's a modern framework, so it must handle accessibility" assumption before it ships in real code.</li>
-        <li>Comes up any time a dialog, a routed page, or a live-updating list is on the table — keyboard-only and screen-reader users hit these gaps immediately.</li>
-        <li>The CDK-without-Material distinction is a common follow-up the moment someone mentions using accessibility helpers at all.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+        <div class="wc-head">♿ Accessibility</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Angular's <code>@if</code>/<code>@for</code> control flow and component model compile down to the exact same plain DOM a hand-written page would — no role, no keyboard support, no focus move, and no screen-reader announcement ships with any of it, so a modal, a routed page, or a live-updating list can silently strand a keyboard-only or screen-reader user the moment a team assumes the framework handles this.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Every one of those behaviors — semantic HTML, <code>aria-*</code> attributes, focus trapping/return, <code>aria-live</code> announcements — has to be built by hand, the same as plain HTML/JS; the Angular CDK ships ready-made primitives for it (<code>LiveAnnouncer</code>, <code>FocusTrap</code>, <code>FocusMonitor</code>) independently of Material's UI components.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Accessibility = 100% the developer's job — Angular's templates guarantee none of it.</span></div>
+      </div>
     </div>
   </details>
 
@@ -217,6 +220,66 @@ closeModal() {
       </div>
       <p class="cx-note"><code>"polite"</code> waits for a natural pause instead of interrupting immediately — <b>the right choice</b> for anything that isn't urgent.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your app opens a modal/dialog on top of the page</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🪟 Modal opens</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">trap focus →</text>
+              <path d="M170,33 H310" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🔒 Tab stays inside</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: Angular doesn't trap focus for you automatically, so <code>Tab</code> can leave the modal and reach the page behind it unless the CDK's <code>FocusTrap</code> (or hand-rolled keydown handling) is wired up. Closing the modal then has to send focus back to whatever element opened it, not leave it wherever it happened to be.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Opening a modal → trap focus in. Closing it → return focus to the trigger.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your app navigates to a new route</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🧭 Route changes</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">focus stays put ⚠</text>
+              <path d="M170,33 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🎯 Focus new heading</text>
+            </svg>
+          </div>
+          <p class="uc-what">A route change doesn't move keyboard focus anywhere by default — a keyboard or screen-reader user can be left stranded on the link they just clicked while the page behind it has already changed underneath them. The fix is programmatically focusing the new page's main heading (or a skip-to-content target) once navigation finishes.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Route change → focus doesn't move itself, send it to the new heading yourself.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your CI accessibility scan comes back green and the team calls the component done</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">✅ Automated scan</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">≠ proof ⚠</text>
+              <path d="M170,33 H310" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🎤 Needs manual testing</text>
+            </svg>
+          </div>
+          <p class="uc-what">Automated tooling only catches a limited set of issues — missing labels, contrast ratios, some ARIA misuse — it can't confirm a modal's focus trap actually works or that <code>aria-live</code> announces a change correctly. Only actually tabbing through the UI and testing with a real screen reader proves the component genuinely works.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A green automated scan is a floor, not proof it's actually accessible.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

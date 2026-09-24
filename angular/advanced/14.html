@@ -64,15 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>This is the architecture-level version of the "when do you need <code>NgRx</code>"
-        question — interviewers use it to see whether you'd redesign a real mess, not just
-        recite the vocabulary.</li>
-        <li>Comes up whenever a growing app's services have quietly turned into a dumping ground
-        for anything that "needs to be shared."</li>
-        <li>The classic wrong move is reaching for <code>NgRx</code> as the fix before anyone has
-        actually sorted out what kind of mess it is.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🧩 UI state</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A dropdown's open/closed flag or similar view state getting promoted into a shared service "because it's convenient" makes it harder to find, not more correct — this is one of the two things that actually make state feel scattered.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Keep UI state local to the component that actually owns it — it's synchronous view state that never needed a shared home in the first place.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">UI state stays local — never promoted to a shared service.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📡 Server state</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without a consistent fetching pattern, every feature hand-rolls its own loading/error flags for API data, so no two consumers agree on the same shape.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Give server state a small number of <code>resource()</code>/<code>httpResource()</code>-backed stores with consistent caching, so every consumer gets the same loading/error/value shape for free.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Server state = one consistent resource() pattern, not one per feature.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🔀 Truly shared state</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Genuinely cross-cutting state — session, feature flags, cart — with no clear owner is exactly what makes a codebase feel like "state is everywhere," and reaching for <code>NgRx</code> before sorting it out just adds structure on top of an unsorted problem.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Consolidate whatever's genuinely left after categorizing into a few clearly-named services — and only bring in <code>NgRx</code> if that remaining slice is still large and hard to trace.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Consolidate what's left — a few services, NgRx only if it's still genuinely complex.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -246,6 +263,75 @@
       sync — <code>httpResource()</code> gives every consumer the <b>same</b> consistent shape for
       free, instead of each feature inventing its own.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A dropdown or tab's open/closed flag lives in a shared service, "just because it was easy to inject there"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc14a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">VIEW STATE, WRONG HOME</text>
+              <rect x="15" y="24" width="200" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🗄️ isMenuOpen in a service</text>
+              <path d="M215,43 H265" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc14a)"/>
+              <rect x="265" y="24" width="200" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🧩 move back to component</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into — nothing about this
+          flag needed sharing, it was just convenient to inject a service that happened to be
+          around. Moving it back into the component that owns it removes one more thing from the
+          "scattered state" pile, for free.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Convenient to inject ≠ needs to be shared.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> Three different features each hand-roll their own loading/error flags for basically the same kind of API call</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc14b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing=".03em">INCONSISTENT FETCH PATTERN</text>
+              <rect x="15" y="24" width="200" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🔁 3 hand-rolled flag sets</text>
+              <path d="M215,43 H265" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc14b)"/>
+              <rect x="265" y="24" width="200" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">📡 one httpResource()</text>
+            </svg>
+          </div>
+          <p class="uc-what">Each feature reinvented the same loading/error shape slightly
+          differently, which is exactly the kind of "no consistent pattern" mess that makes server
+          state feel scattered even though it's all doing the same job. Replacing the hand-rolled
+          flags with <code>httpResource()</code> gives every one of them the same shape at once.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same kind of data deserves one fetch pattern, not three.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">3</span> Session info, feature flags, and cart data are spread across a dozen services with no clear owner</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc14c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">CROSS-CUTTING, NO OWNER</text>
+              <rect x="15" y="24" width="200" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔀 12 services, unclear owner</text>
+              <path d="M215,43 H265" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc14c)"/>
+              <rect x="265" y="24" width="200" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🎯 3-4 named services</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the slice that's actually genuinely cross-cutting, so it's
+          the one worth deliberately consolidating — into a few clearly-named services first, and
+          only reaching for <code>NgRx</code> on top of that if what's left is still large and hard
+          to trace on its own.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Consolidate the genuinely-shared slice — NgRx is a last step, not a first one.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

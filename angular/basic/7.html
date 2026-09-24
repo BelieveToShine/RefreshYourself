@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>DI is the backbone of almost every Angular service question — name <code>providedIn: 'root'</code> and <code>NullInjectorError</code> without hesitating.</li>
-        <li>Assuming a service is <i>always</i> a single app-wide singleton is a very common source of confusing, hard-to-track bugs.</li>
-        <li><code>inject()</code> shows up constantly in modern standalone Angular — guards, interceptors, and factory functions have no constructor to hook into at all.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🏗️ useClass</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Tests (or a different feature) need a different implementation behind the same dependency token.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>useClass tells the injector to construct a different class for that token instead.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">useClass = same token, a different class gets constructed.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">📦 useValue</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A constant, like an API URL, has nothing to construct — building it via a class would be pointless.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>useValue hands the injector an already-built value directly, no construction step.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">useValue = no construction, just hand over the ready-made value.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">⚙️ useFactory</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Some values can only be produced at runtime, depending on another injected service.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>useFactory calls a function you provide at resolve time, and its return value is handed back.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">useFactory = a function call at resolve-time, not a fixed class or value.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -219,6 +240,70 @@ providers: [
       </div>
       <p class="cx-note"><code>InjectionToken</code> gives a plain value a unique, typed identity to inject by — a TypeScript interface or primitive type doesn't exist at runtime, so it can't be a DI key on its own.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your unit test needs a fake AuthService instead of the real one</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="14" width="190" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🧩 AuthService token</text>
+              <path d="M210,33 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="14" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🏗️ useClass → Mock</text>
+            </svg>
+          </div>
+          <p class="uc-what">The test's own <code>providers</code> array sets
+          <code>{ provide: AuthService, useClass: MockAuthService }</code> — the injector constructs
+          the mock class instead, and every consumer still asking for the AuthService token gets it
+          automatically.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">useClass → same token, a different class gets constructed.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your app needs a constant, like an API base URL, injected everywhere</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <rect x="20" y="14" width="190" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🔑 API_URL token</text>
+              <path d="M210,33 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="14" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">📦 useValue: as-is</text>
+            </svg>
+          </div>
+          <p class="uc-what">There's nothing to construct — <code>useValue</code> hands the injector
+          the already-built string (or config object) directly, and every injection of that token
+          receives that exact value as-is.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">useValue → no construction, just hand over the ready-made value.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> A provider's value can only be produced at runtime, from another injected service</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="20" y="14" width="190" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">🏭 Depends on runtime</text>
+              <path d="M210,33 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="14" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">⚙️ Factory fn runs</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>useFactory</code> calls the function you provide at the moment
+          the token is resolved — inside it you can ask the injector for whatever other service that
+          value depends on, then return the built result.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">useFactory → a function call at resolve-time, can depend on other services.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

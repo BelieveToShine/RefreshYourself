@@ -64,14 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A page that's fast on the server but visibly "flashes" or re-lays-out right after
-        load is almost always a hydration mismatch, not a real SSR bug.</li>
-        <li>Interviewers use this to check whether you understand hydration as reusing the
-        server's DOM, not just "SSR = faster page."</li>
-        <li>A common trap for anyone assuming code runs the same way on the server as it does in
-        a browser — the server has no <code>window</code> or <code>document</code> at all.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🖥️ SSR (first paint)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Shipping a mostly-empty shell means the browser has nothing real to show until it downloads, parses, and executes the whole JS bundle — a blank page, and crawlers see no finished content for SEO.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>SSR runs Angular in Node.js and produces the real HTML on the server, so the browser can show that real content immediately, before any client JS has run.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">SSR = real HTML on first paint, straight from Node.js.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">⚙️ Hydration (right after)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>If the client just re-rendered everything from scratch on top of that server HTML, it would throw the real DOM away and rebuild it — a visible flash as content briefly vanishes and comes back.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Hydration wakes that existing HTML up non-destructively — attaching event listeners and wiring bindings onto the DOM that's already there — reusing it unless a mismatch forces a rebuild.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Hydration = client Angular reuses the server's DOM, no rebuild unless it has to.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -270,6 +280,66 @@ render: <span class="kw">this</span>.pageData.generatedAt;</code></pre>
       client computes it again during hydration — even a tiny clock/timezone difference makes
       Angular see two different DOMs for the same page.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You reach for window, document, or localStorage directly in a component, with no platform check first</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🖥️ runs during SSR</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">no platform guard →</text>
+              <path d="M170,33 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🐛 window is undefined</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: the server has no <code>window</code>, <code>document</code>, or <code>localStorage</code> at all, so a component that touches one of these directly breaks (or silently misbehaves) during SSR itself — before hydration ever gets a chance to run. Guarding with <code>isPlatformBrowser</code> first is what makes the same code safe in both places.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No platform check before a browser-only API means it breaks on the server, not just at runtime.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You read Date.now(), Math.random(), or a timezone-dependent value directly while rendering</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🕐 computed twice</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">server ≠ client →</text>
+              <path d="M170,33 H310" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">❌ mismatch → rebuild</text>
+            </svg>
+          </div>
+          <p class="uc-what">This isn't a coding mistake so much as a value computed twice: the server evaluates <code>Date.now()</code> (or <code>Math.random()</code>, or a timezone-dependent value) once when it renders, and the client evaluates the same expression again during hydration — even a tiny difference makes Angular see two different DOMs for the same page, so it discards and rebuilds that part instead of reusing it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Compute a non-deterministic value once and pass it through — never let server and client each compute their own.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> The app is fast on the server but feels slow right after — and it isn't a mismatch at all</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">⚡ SSR: fast first paint</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#0f766e">not an SSR bug →</text>
+              <path d="M170,33 H310" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🐢 hydration itself is heavy</text>
+            </svg>
+          </div>
+          <p class="uc-what">SSR already solved first paint, so a slow moment right after almost always means hydration itself is heavy — a lot of component init work or a large bundle running synchronously — a bundle-size/initialization cost that was always there, just showing up at a different moment. No DOM disagreement is involved here at all.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Slow right after load usually means heavy hydration, not a hydration mismatch.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

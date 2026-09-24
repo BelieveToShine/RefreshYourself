@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Signals are the reactivity model every newer Angular feature builds on — including zoneless change detection, covered later in this track.</li>
-        <li>Interviewers use this to check you understand the actual problem Signals solve, not just the new syntax.</li>
-        <li>Mixing up <code>computed()</code> with a plain cached function is one of the most common wrong answers candidates give.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔵 signal()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A plain component field can hold a value, but nothing about it tracks who's reading it — change it, and nothing downstream automatically knows to react.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>signal() wraps a value so every read is tracked automatically, and it can only be written through <code>.set()</code>/<code>.update()</code>, never a direct assignment — that's what makes notifying readers possible.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">signal() = the writable source everything else derives from or reacts to.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🟠 computed()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A plain memoized function keeps returning its old, stale result until something explicitly invalidates the cache — mistaking computed() for exactly that is one of the most common wrong answers candidates give.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>computed() automatically re-runs and updates its own value the instant a Signal it read last time changes — no manual invalidation, and no <code>.set()</code> exists on it at all.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">computed() = read-only, reruns itself — never a plain cache.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🟢 effect()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A side effect like logging or syncing to storage needs to happen every time specific state changes, but wiring that by hand means calling the same code at every place that state could change.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>effect() tracks whichever Signals it reads and reruns itself automatically on their change, so the side effect just fires wherever the state actually changes.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">effect() = side effect that reruns itself, never used to compute a value.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -190,6 +211,75 @@ count.set(count() + <span class="num">1</span>);        <span class="cx-cmt">// 
       </div>
       <p class="cx-note"><code>.update()</code> exists specifically for "new value depends on the old one" — <code>.set()</code> can do it too, it's just more verbose.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> Two different spots on screen both need the same derived number, always in sync</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 90" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <rect x="10" y="30" width="110" height="30" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="65" y="49" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">🔵 signal</text>
+              <path d="M120,45 H170" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="172" y="30" width="118" height="30" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="231" y="49" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🟠 computed()</text>
+              <path d="M290,45 H315 V21 H340" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <path d="M290,45 H315 V69 H340" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="342" y="6" width="118" height="30" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="401" y="25" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">🖥️ UI A</text>
+              <rect x="342" y="54" width="118" height="30" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="401" y="73" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">🖥️ UI B</text>
+            </svg>
+          </div>
+          <p class="uc-what">Both spots just read the same computed() — Angular reruns it once when the Signal changes, and every reader sees the updated value with nothing manually syncing them. <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One computed() read from many places → always one shared, always-fresh value.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> Something needs to happen automatically the moment state changes — not a new value to display</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="10" y="18" width="120" height="30" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="70" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">🔵 signal</text>
+              <path d="M130,33 H185" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="187" y="18" width="120" height="30" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="247" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🟢 effect()</text>
+              <path d="M307,33 H362" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="364" y="18" width="106" height="30" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="417" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">💾 storage</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is exactly what effect() is for — it returns nothing, it just reruns automatically whenever a Signal it reads changes, so the save just happens on its own every time.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Automatic reaction, no return value → effect(), not computed().</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You're deciding whether this is a Signal problem or still an RxJS problem</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="10" y="18" width="130" height="30" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="75" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#134e4a">⌨️ search input</text>
+              <path d="M140,33 H185" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="187" y="18" width="140" height="30" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="257" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#134e4a">⏱️ debounce (RxJS)</text>
+              <path d="M327,33 H382" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="384" y="18" width="86" height="30" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="427" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">🌐 HTTP</text>
+            </svg>
+          </div>
+          <p class="uc-what">Debouncing input and cancelling an in-flight request is a stream-over-time problem with operators Signals don't have a vocabulary for — RxJS is still the right tool here, with <code>toSignal()</code> only bridging the final result back into a Signal.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Async stream with operators (debounce, cancel) → still RxJS, not Signals.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

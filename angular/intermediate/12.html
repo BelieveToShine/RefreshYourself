@@ -64,11 +64,40 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Any time you build a shared event bus for your own app code — logout clicks, a toolbar action several unrelated components care about — you're reaching for one of these four types.</li>
-        <li>The late-subscriber behavior is the single most common source of a real bug: "why didn't my component get the value that was already there?"</li>
-        <li>A near-guaranteed follow-up once you mention <code>Subject</code> — interviewers want the exact late-subscriber answer for each of the four, not just "they're all Subjects."</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#475569; --why-bg:#f1f5f9">
+          <div class="wc-head">📡 Subject</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Several unrelated components need to react to the same one-off event the moment it happens — like a logout click — but a plain Observable only replays its own predefined values, it can't be pushed into from outside.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A <code>Subject</code> is both an Observable and an Observer at once — any code can call <code>.next()</code> on it, and every subscriber listening right then receives that value live.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>Subject</code> = a live push-and-subscribe event bus; a late joiner gets nothing from before.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">💾 BehaviorSubject</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A component that mounts after some state already changed still needs "what's the current value right now," synchronously, not just whatever updates happen to arrive after it subscribes.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>BehaviorSubject</code> requires a starting value at construction and always hands a brand-new subscriber the current value immediately, readable synchronously via <code>.value</code>.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>BehaviorSubject</code> = always has a "current value" a late joiner gets right away.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🔁 ReplaySubject</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A single current value isn't enough when a late joiner actually needs the recent history that led up to now — not just where things stand this instant.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>ReplaySubject</code> buffers a configurable number of past values (or a time window) and replays exactly those to a new subscriber before continuing live.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>ReplaySubject</code> = replays the last N values to whoever joins late.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#991b1b; --why-bg:#fee2e2">
+          <div class="wc-head">🏁 AsyncSubject</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Sometimes every intermediate value would just be noise — only the final outcome of an operation actually matters, and delivering each step along the way adds clutter no one needs.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>AsyncSubject</code> withholds everything until <code>.complete()</code> is called, then emits exactly one value — the last one pushed.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>AsyncSubject</code> = withholds everything until <code>complete()</code>, then emits just the final value.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -377,6 +406,66 @@ save() {
       </div>
       <p class="cx-note"><code>EventEmitter</code> is a <code>Subject</code> subclass under the hood — but <code>.emit()</code>/template binding, not manual <code>.subscribe()</code>, is the idiomatic way to use it.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your app has an action several unrelated components need to react to right when it happens — a logout click, a toolbar action</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcS1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">ONE EVENT → EVERY LISTENER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">🔘 logout click</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcS1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📡 subj.next() → all</text>
+            </svg>
+          </div>
+          <p class="uc-what">Any code holding a reference can call <code>.next()</code> to broadcast that moment to whoever's subscribed right then — a plain <code>Subject</code> is built exactly for this simple event-bus role, not for storing state. <b>This is the #1 reason most apps reach for a <code>Subject</code> at all.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Simple one-off app event → reach for a plain <code>Subject</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> A component mounts after the state already changed, and you assumed a plain Subject would still hand it "the current value"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcS2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">SUBJECT HAS NO MEMORY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">📡 subj.next() ran</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcS2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🙋 late → ❌ nothing</text>
+            </svg>
+          </div>
+          <p class="uc-what">A plain <code>Subject</code> has no memory — a subscriber that joins after <code>.next()</code> already ran gets nothing from before that moment. Candidates often assume it still exposes "whatever the last value was," but that's specifically what a <code>BehaviorSubject</code> is for.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need "the current value" on a late joiner → <code>BehaviorSubject</code>, not <code>Subject</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#92400e">
+          <div class="uc-sit"><span class="uc-flag">3</span> A dropdown or toast list needs to show the last few things that happened, not just the single latest one</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcS3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">BUFFER REPLAYS ON JOIN</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔁 buffer: last 3</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUcS3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🆕 new sub → gets all 3</text>
+            </svg>
+          </div>
+          <p class="uc-what">A <code>ReplaySubject</code> configured with a small buffer (e.g. the last 3) hands a newly-mounted component exactly that recent history immediately, then keeps it live for anything after — a single <code>BehaviorSubject</code> can't do this, since it only ever remembers one value.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need recent history, not just the latest value → <code>ReplaySubject</code>.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

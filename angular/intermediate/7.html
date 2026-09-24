@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Change detection is the mechanism that ties together everything else in this tier — Signals, RxJS, and rendering performance all sit on top of it.</li>
-        <li>Comes up any time a component "just isn't updating" — the real cause is almost always a missed <code>OnPush</code> trigger, not a broken binding.</li>
-        <li>A near-guaranteed interview follow-up once you mention <code>OnPush</code> — interviewers probe for the exact list of what triggers it, not just the definition.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔵 Default</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without some check running regularly, Angular has no way to know your data changed elsewhere, so the UI could silently drift out of sync with the real state.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Default re-checks every component's bindings on every Zone.js-detected async event, so nothing needs to be manually flagged — at the cost of walking the entire tree every single run.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Default = every component, every run, no exceptions.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🟡 OnPush</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Re-checking every component on every run wastes real work once a tree grows large, since most components' inputs and events change far less often than Zone.js fires.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>OnPush skips a component's check entirely unless one of five specific triggers fires — a new <code>@Input</code> reference, its own template's event, <code>markForCheck()</code>, an <code>async</code> pipe emission, or a changed Signal.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">OnPush = skipped unless one of five exact triggers says otherwise.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -207,6 +220,74 @@
       </div>
       <p class="cx-note">A callback from outside Angular's Zone.js-patched APIs never triggers a run on its own — <code>markForCheck()</code> is what makes the change visible next cycle.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your OnPush component's array input is mutated in place instead of replaced</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">📥 items.push(x)</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">same reference →</text>
+              <path d="M170,33 H310" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 not checked</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the actual trap behind "my OnPush component just isn't updating":
+          <code>items.push(newItem)</code> changes the array's contents but keeps the exact same
+          reference, and OnPush's <code>@Input</code> check only compares references — so the
+          component gets skipped entirely, even though the data really did change.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Mutating in place keeps the same reference — OnPush never sees it.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">2</span> A callback from a library outside Angular's Zone.js-patched APIs changes your component's state</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#6d28d9"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#5b21b6">🔌 3rd-party callback</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#5b21b6">outside Zone.js →</text>
+              <path d="M170,33 H310" stroke="#6d28d9" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#5b21b6">✅ markForCheck()</text>
+            </svg>
+          </div>
+          <p class="uc-what">A third-party widget's own callback isn't one of the async APIs Zone.js
+          patches, so firing it never triggers a change-detection run on its own — calling
+          <code>markForCheck()</code> inside that callback is what flags the component so the next
+          run actually picks the change up.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Outside Zone.js's reach → call markForCheck() yourself.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> A parent is Default and a child is OnPush — you assume the parent's check also forces the child to update</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🔵 Parent checked</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">doesn't force child →</text>
+              <path d="M170,33 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🟡 child still gated</text>
+            </svg>
+          </div>
+          <p class="uc-what">Being checked because the parent is Default doesn't override the child's
+          own OnPush gate — the child still only updates if one of its own five triggers fires, no
+          matter how often the parent gets walked.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A Default parent's check never overrides a child's own OnPush gate.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

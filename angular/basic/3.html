@@ -65,11 +65,40 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Mixing up interpolation and property binding is a real, early bug — binding a boolean into text instead of setting the real property.</li>
-        <li><code>[(x)]</code> looking like its own special mechanism is one of the most common "what does this weird syntax actually mean" follow-ups.</li>
-        <li>Calling a method straight inside a binding is an easy way to quietly hurt performance without a single error being thrown.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🔤 Interpolation</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Dropping a value straight into a template needs it turned into text first — done wrong, a boolean or object meant to control something real just prints as the literal word "true" instead.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>{{ }}</code> evaluates the expression and always converts the result to a string, then inserts it as text content — it's really property binding aimed at text.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>{{ }}</code> = text only, always a string.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📥 Property binding</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Some values need to reach the element as their real type — a genuine boolean, not the string "true" — or the DOM/component won't behave the way it should.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>[prop]="expr"</code> sets the actual DOM or component property directly, keeping its real type — <code>[disabled]="isLoading"</code> sets a genuine boolean, not text.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>[prop]</code> = the real property, real type, no string conversion.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">📤 Event binding</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A template needs to run code the moment something happens in the view — a click, an <code>@Output</code> firing — not just display a value.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>(event)="handler($event)"</code> wires the event to a method call, passing <code>$event</code> as the payload, then Angular runs a change-detection pass.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>(event)</code> = runs code when it fires, <code>$event</code> carries the payload.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#166534; --why-bg:#dcfce7">
+          <div class="wc-head">🔗 Two-way binding [()]</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span><code>[(x)]</code> looks like its own special mechanism, leaving it unclear what a component actually needs to implement for it to work.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>[(x)]="y"</code> is shorthand that expands to exactly one property binding in (<code>[x]="y"</code>) plus one event binding out (<code>(xChange)="y=$event"</code>).</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>[(x)]</code> = <code>[x]</code> + <code>(xChange)</code>, not a 4th mechanism.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -226,6 +255,75 @@
       </div>
       <p class="cx-note"><code>[(ngModel)]</code> is shorthand, not a separate mechanism — it's <code>[ngModel]</code> plus <code>(ngModelChange)</code>, written as one thing.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You need a value to actually disable, hide, or toggle something — but you interpolate it as text instead of binding the real property</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="15" y="14" width="185" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="107" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">{{ isDisabled }} in text</text>
+              <path d="M200,33 H278" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arUc1)"/>
+              <rect x="280" y="14" width="185" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="372" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">🐛 shows "true", stays enabled</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 early mistake — <code>{{ }}</code> always produces text, so a boolean dropped in this way just renders as the literal word "true" or "false"; the element itself never actually becomes disabled, hidden, or whatever the real property was supposed to do.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need the real type acted on → bind the property with <code>[prop]</code>, don't interpolate it as text.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You call a method directly inside a template expression, like a filtered-list getter or a condition check</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#b45309"/>
+                </marker>
+              </defs>
+              <rect x="15" y="14" width="185" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="107" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">{{ getFilteredItems() }}</text>
+              <path d="M200,33 H278" fill="none" stroke="#b45309" stroke-width="1.8" marker-end="url(#arUc2)"/>
+              <rect x="280" y="14" width="185" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="372" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🐛 reruns every check</text>
+            </svg>
+          </div>
+          <p class="uc-what">No error gets thrown, but with the default change detection every template expression re-runs on every check — so that method (and any array or object it allocates) runs again and again, quietly degrading performance.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Method called inside a binding → reruns every check; precompute the value instead.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You write two-way binding on your own custom component, expecting it to just work the way it does on a native input</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="15" y="14" width="185" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="107" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">[(x)], no @Input/@Output</text>
+              <path d="M200,33 H278" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arUc3)"/>
+              <rect x="280" y="14" width="185" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="372" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🚫 binding fails outright</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>[(x)]</code> isn't magic — it only works if the component actually implements both halves it expands to: an <code>@Input() x</code> property and a matching <code>@Output() xChange</code>. Miss either one and the binding fails outright, not silently.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>[(x)]</code> on a custom component → needs both <code>@Input() x</code> and <code>@Output() xChange</code>, or it doesn't work at all.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

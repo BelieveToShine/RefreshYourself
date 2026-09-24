@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use this to check you understand what an "unhandled error" actually does to an Observable — not just that "something went wrong."</li>
-        <li>Comes up constantly in real code: a type-ahead search, a polling stream, any long-lived subscription that has to survive one bad request.</li>
-        <li>Subscription leaks are a favorite senior-level follow-up — they don't crash anything, they just quietly waste memory and keep firing after a component is gone.</li>
-      </ul>
+      <div class="why-grid" style="grid-template-columns:1fr;">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔗 takeUntil(destroy$)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A subscription that never completes on its own has no built-in signal for when its component is gone — left alone, it keeps running after that component is destroyed.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A <code>destroy$</code> Subject you create and <code>.next()</code> inside <code>ngOnDestroy</code>, piped in via <code>takeUntil</code>, tells the subscription exactly when to stop.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">takeUntil(destroy$) → you own the Subject, and you own remembering to fire it.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🧹 takeUntilDestroyed()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>The <code>takeUntil(destroy$)</code> pattern only works if every component remembers to create the Subject and call <code>.next()</code> in <code>ngOnDestroy</code> — miss one and that subscription leaks silently.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>takeUntilDestroyed()</code> reads Angular's own <code>DestroyRef</code> directly, so the same cleanup fires automatically with no Subject to create.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">takeUntilDestroyed() → same cleanup as takeUntil(destroy$), no Subject to forget.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">📺 async pipe</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Even <code>takeUntilDestroyed()</code> still needs a manual <code>.subscribe()</code> call whose only job is copying a value onto a property so the template can show it.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The <code>async</code> pipe subscribes — and unsubscribes — for you straight in the template, whenever the goal is only to display the latest value.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">async pipe → nothing to subscribe to, and nothing to clean up.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -229,6 +250,66 @@
       </div>
       <p class="cx-note"><code>takeUntilDestroyed()</code> completes the stream automatically when this component's <code>DestroyRef</code> fires — no manual <code>destroy$</code> Subject needed.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're maintaining an older component that predates DestroyRef</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc51" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">ALREADY HAS destroy$</text>
+              <rect x="15" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="100" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🧱 Legacy component</text>
+              <path d="M185,43 H245" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc51)"/>
+              <rect x="245" y="24" width="215" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="352" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🔗 takeUntil(destroy$)</text>
+            </svg>
+          </div>
+          <p class="uc-what">This file already has its own <code>destroy$</code> Subject wired up and calls <code>.next()</code> inside <code>ngOnDestroy</code> — keep using <code>takeUntil(destroy$)</code> here so the whole file follows one consistent cleanup pattern instead of mixing two.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Older code already using destroy$ → keep takeUntil(destroy$), don't mix patterns.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're writing a brand-new component or directive from scratch</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc52" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">NO LEGACY SUBJECT</text>
+              <rect x="15" y="24" width="160" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="95" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🆕 New component</text>
+              <path d="M175,43 H235" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc52)"/>
+              <rect x="235" y="24" width="230" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="350" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🧹 takeUntilDestroyed()</text>
+            </svg>
+          </div>
+          <p class="uc-what">New code has no legacy Subject to match, so <code>takeUntilDestroyed()</code> gets the exact same guaranteed cleanup with no Subject to create and no <code>.next()</code> call to remember.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">New code, no legacy Subject → takeUntilDestroyed().</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> You're only binding a value straight into the template — no side-effect logic runs on it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc53" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">DISPLAY ONLY, NO SIDE EFFECT</text>
+              <rect x="15" y="24" width="180" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">📄 Template binding</text>
+              <path d="M195,43 H260" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc53)"/>
+              <rect x="260" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="345" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">📺 async pipe</text>
+            </svg>
+          </div>
+          <p class="uc-what">If the only thing that happens with the emitted value is displaying it, the <code>async</code> pipe subscribes and unsubscribes automatically — there's no manual <code>.subscribe()</code> call to write or clean up in the first place.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Just displaying a value → async pipe, no manual subscribe at all.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,14 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>The natural follow-up once someone says "Zone.js triggers change detection" —
-        interviewers push for the actual mechanism, not the one-line summary.</li>
-        <li>Explains the real cause behind "why does my whole app re-check on one keystroke" and
-        "why won't this OnPush component update," not just the trigger list from Intermediate.</li>
-        <li>Sets up zoneless Angular directly — reasoning about removing Zone.js only makes sense
-        once you know exactly what it was doing underneath.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🔔 markForCheck()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Something changed outside Zone.js's reach — a raw <code>WebSocket</code> callback, say — so <code>tick()</code>'s next walk will reach that <code>OnPush</code> component's slot but skip its own update instructions, since nothing flagged it dirty.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Call <code>markForCheck()</code> to walk up and flag its ancestors dirty for the next scheduled tick — it only sets that flag, it doesn't run any check itself right now.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">markForCheck() = flags dirty for next tick, checks nothing now.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#15803d; --why-bg:#dcfce7">
+          <div class="wc-head">⚡ detectChanges()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A flagged component still has to wait for whatever schedules the next <code>tick()</code> — but sometimes the update has to be on screen right now, not after that wait.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>detectChanges()</code> runs that component's check immediately, synchronously, with no dependence on a scheduled tick at all.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">detectChanges() = runs right now, no waiting for tick().</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+          <div class="wc-head">🔌 detach()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Even a <code>Default</code> component's own update instructions still run on every unconditional <code>tick()</code> walk — but sometimes you want a component fully out of that automatic cycle.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>detach()</code> removes it from <code>tick()</code>'s walk entirely — it's never checked automatically again until <code>reattach()</code>, or a direct <code>detectChanges()</code> call, brings it back.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">detach() = pulled out of the walk, until reattach().</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -256,6 +274,75 @@
       <p class="cx-note"><code>markForCheck()</code> only sets a flag for the next scheduled
       tick; <code>detectChanges()</code> runs the check immediately, without waiting for one.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your OnPush component's data changes inside a callback Zone.js never patched</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">OUTSIDE ZONE.JS'S REACH</text>
+              <rect x="15" y="24" width="200" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">📡 Raw WebSocket callback</text>
+              <path d="M215,43 H265" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc2a)"/>
+              <rect x="265" y="24" width="200" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔔 markForCheck() needed</text>
+            </svg>
+          </div>
+          <p class="uc-what">Just like the WebSocket example on this page: <code>tick()</code>
+          still walks past this component on schedule, but its own update instructions get
+          skipped because nothing flagged it dirty. Calling <code>markForCheck()</code> yourself
+          is the only way the view catches up to data that's already correct in memory.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Zone.js never saw it happen → markForCheck() has to say so.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#15803d">
+          <div class="uc-sit"><span class="uc-flag">2</span> An update has to be reflected in the DOM before the current line of code moves on</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#15803d"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">NEEDS TO RENDER RIGHT NOW</text>
+              <rect x="15" y="24" width="200" height="38" rx="10" fill="#dcfce7" stroke="#15803d" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">⏱️ Inside a sync code block</text>
+              <path d="M215,43 H265" stroke="#15803d" stroke-width="1.6" fill="none" marker-end="url(#arUc2b)"/>
+              <rect x="265" y="24" width="200" height="38" rx="10" fill="#dcfce7" stroke="#15803d" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ detectChanges() runs now</text>
+            </svg>
+          </div>
+          <p class="uc-what">Waiting for whatever schedules the next <code>tick()</code> isn't
+          good enough here — the update needs to be visible immediately. Calling
+          <code>detectChanges()</code> runs that component's check synchronously, on the spot,
+          with no dependence on a scheduled tick at all.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">detectChanges() = don't wait for a tick, check now.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">3</span> You want a component fully out of the automatic walk, updating only when you say so</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#6d28d9"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4c1d95" letter-spacing=".03em">OPTED OUT OF THE WALK</text>
+              <rect x="15" y="24" width="200" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#4c1d95">🧩 A component you'll control</text>
+              <path d="M215,43 H265" stroke="#6d28d9" stroke-width="1.6" fill="none" marker-end="url(#arUc2c)"/>
+              <rect x="265" y="24" width="200" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#4c1d95">🔌 Removed from tick()'s walk</text>
+            </svg>
+          </div>
+          <p class="uc-what">Even though it's a <code>Default</code> component, calling
+          <code>detach()</code> pulls it out of <code>tick()</code>'s walk entirely — it stops
+          being checked automatically until you call <code>reattach()</code>, or run
+          <code>detectChanges()</code> on it directly yourself.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">detach() = opted out, until you opt it back in.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

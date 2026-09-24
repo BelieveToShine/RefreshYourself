@@ -64,14 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Separates "I know Angular syntax" from "I know how Angular actually renders" — a
-        common senior/architect probe once the basics are out of the way.</li>
-        <li>Explains why a broken binding shows up as a build-time error, not a runtime surprise —
-        the template is real compiled code, checked like any other.</li>
-        <li>It's the foundation the Change Detection Internals page builds on — "what a check
-        does" only makes sense once you know there's compiled instruction code doing the work.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🏛️ View Engine (older)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without any ahead-of-time step, Angular would have to re-parse and interpret each template's bindings live, on every render, instead of running already-checked code.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>View Engine already solved that by compiling templates ahead of time at build time — through one shared metadata format applied across the whole app, which is also why its output stayed larger and less tree-shakable than what came later.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">View Engine = AOT too, just through one shared, less flexible metadata format.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">⚙️ Ivy (current)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>View Engine's single shared metadata format meant components weren't compiled with much independence from each other, so unused features didn't reliably drop out and bundles stayed larger than they needed to be.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Ivy compiles each component with more locality (closer to independently), so tree-shaking actually removes unused features — smaller bundles, generated code closer to normal and easier to read, and the same locality that made standalone components practical.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Ivy = per-component compilation → real tree-shaking, smaller bundles.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -229,6 +239,75 @@
       <p class="cx-note">This one binding — <code>{{ name }}</code> — is the source the sketch
       above conceptually compiles into: one interpolation, one generated update check.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your template has a typo in a binding, like "nam" instead of "name"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">TYPO CAUGHT AT BUILD TIME</text>
+              <rect x="20" y="24" width="200" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="120" y="47" text-anchor="middle" font-size="11" font-family="'Fira Code', monospace" font-weight="700" fill="#1e3a8a">{{ nam }} ❓</text>
+              <path d="M220,43 H320" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="320" y="24" width="140" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="390" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🐛 build fails</text>
+            </svg>
+          </div>
+          <p class="uc-what">Because the template is compiled into real instruction code ahead of
+          time, that typo gets checked the same way any other compiled code is — Angular's build
+          fails on it, instead of the app silently rendering nothing at runtime.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Compiled template = checked like real code, at build time.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> Only one part of the page updates after a change, and the rest doesn't re-render at all</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">ONE BINDING CHANGED</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🔁 name changed</text>
+              <path d="M210,43 H310" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="310" y="24" width="150" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="385" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">✅ 1 DOM write</text>
+            </svg>
+          </div>
+          <p class="uc-what">That's expected — each update instruction only re-checks and writes to
+          the one DOM node its own binding was mapped to at compile time, so a change-detection
+          pass never touches bindings that didn't change.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No whole-tree diff — each binding writes only its own node.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> The exact same component code produces a noticeably smaller bundle after an app moves off View Engine</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 100" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="20" y="31" width="150" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="95" y="54" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">📄 same source</text>
+              <path d="M170,42 L300,18" stroke="#0f766e" stroke-width="1.5" fill="none" marker-end="url(#arUc3)"/>
+              <path d="M170,58 L300,82" stroke="#0f766e" stroke-width="1.5" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="300" y="4" width="160" height="32" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.5"/>
+              <text x="380" y="24" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0f766e">📦 View Engine — larger</text>
+              <rect x="300" y="64" width="160" height="32" rx="9" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.5"/>
+              <text x="380" y="84" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0f766e">📦 Ivy — smaller</text>
+            </svg>
+          </div>
+          <p class="uc-what">That's the tree-shaking difference the two compilers actually have:
+          Ivy compiles each component with more locality, so unused features genuinely drop out,
+          where View Engine's shared metadata format didn't tree-shake as cleanly on the same
+          source.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same source, smaller bundle — Ivy tree-shakes per component.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

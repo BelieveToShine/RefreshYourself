@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use this to check whether you understand <b>when</b> to reach for <code>NgRx</code> — not just whether you can name Store/Actions/Reducers.</li>
-        <li>Comes up any time a team is debating adding a state-management library to a growing Angular app.</li>
-        <li>Reaching for <code>NgRx</code> just because "that's what serious Angular apps use" is a classic over-engineering red flag interviewers listen for.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📶 Signals + service</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Local state disappears with its component, so unrelated components that all need the same piece of data (a cart badge, a checkout page) would each have to hold a separate copy — with nothing keeping those copies in sync.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A singleton, <code>providedIn: 'root'</code> service holds the state as Signals, so every component that injects it shares those exact same Signal instances — genuinely shared and reactive, no library needed, though it can still be mutated from anywhere it's injected.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Signals + service = one shared singleton — simple, but mutable from anywhere.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🏛️ NgRx</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Once a large team can each mutate a plain service's state directly from wherever it's injected, tracing what actually caused a given state change becomes untraceable at scale — team discipline alone doesn't reliably hold up.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>NgRx</code> forces every change through one fixed path — action → reducer → store → selector — so only a reducer can ever compute the next state, making every change dispatched, logged, and traceable in DevTools, at the cost of more boilerplate.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">NgRx = every change forced through one traceable pipeline — more structure, more boilerplate.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -320,6 +333,66 @@
       </div>
       <p class="cx-note">Same "add an item" idea as the card above — but here <b>only a reducer</b> may compute the next state; the first snippet's service could be mutated from anywhere it's injected, this one enforces the path.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your app has one shopping cart that a badge and a couple other components just need to read</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📶 cart.set(...)</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">signal notifies readers →</text>
+              <path d="M170,33 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc9a)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">CartBadge updates</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: state is simple and shared by only a few consumers, with no cross-cutting complexity. A Signals-backed service is enough — injecting the service gives every consumer the exact same shared Signal, with zero <code>NgRx</code> boilerplate.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Simple, few-consumer state → Signals + a service, no library needed.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your app has grown to where many different features across a large team all read and write the same state</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🏛️ dispatch(action)</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">forces one pipeline →</text>
+              <path d="M170,33 H310" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc9b)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">logged &amp; traceable</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is where <code>NgRx</code> earns its overhead: it forces every change through action → reducer → store → selector, so a large team gets a consistent pattern and DevTools time-travel debugging — tracing "what caused this" stays possible even as more people touch the same state.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Complex, cross-cutting state, large team → NgRx's enforced pipeline pays for itself.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> In an interview, you're asked when to use NgRx and reach straight for reciting Store/Actions/Reducers/Selectors/Effects</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🎤 recites the parts</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">sounds right, but…</text>
+              <path d="M170,33 H310" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc9c)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">❌ never says WHEN</text>
+            </svg>
+          </div>
+          <p class="uc-what">Naming the parts isn't the same as answering the question. Interviewers are listening for the actual judgment call — that Signals plus a service is genuinely enough when state is simple with few consumers, and <code>NgRx</code> here would be pure overhead — not just whether you know the vocabulary.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Reciting NgRx's parts isn't the answer — the judgment call about when to use them is.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 
