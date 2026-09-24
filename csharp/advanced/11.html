@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Attributes are everywhere under the hood — <code>[JsonPropertyName]</code>, <code>[Required]</code>, <code>[HttpGet]</code> — every framework that "just knows what to do" is really just reflection reading them.</li>
-        <li>A quick tell in an interview: someone who's only ever applied an attribute, never queried one, tends to assume the attribute itself does something.</li>
-        <li>Separating "declarative metadata" from "code that runs" is a distinction that pays off well beyond attributes.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+        <div class="wc-head">🏷️ Attributes</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without a way to attach metadata directly to the exact type, member, or parameter it describes, a framework would have to track "which property renames to what JSON key" or "which property is required" some other way — a separate config file or naming convention that lives apart from the code and silently drifts out of sync as the code changes.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An attribute lets that metadata sit right on the member it describes, compiled straight into the assembly — any code that cares (<code>JsonSerializer</code>, a validator, ASP.NET's routing) queries for it later via reflection and acts only on what it finds, no separate config file to keep in sync.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Attribute = metadata glued to the code it describes; reflection is the only thing that ever reads it.</span></div>
+      </div>
     </div>
   </details>
 
@@ -204,6 +207,89 @@
       </div>
       <p class="cx-note">Reflection is what turns the stored metadata into something a program can actually act on.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your model property needs a different name in the JSON than in C#</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 70" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="6" y="14" width="200" height="42" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="106" y="32" text-anchor="middle" font-family="Fira Code, monospace" font-size="9.5" fill="#1d4ed8">[JsonPropertyName]</text>
+              <text x="106" y="48" text-anchor="middle" font-size="9.5" fill="#334155">on Name — pure metadata</text>
+              <path d="M206,35 H268" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#arUc1)"/>
+              <rect x="270" y="14" width="204" height="42" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="372" y="32" text-anchor="middle" font-family="Fira Code, monospace" font-size="9.5" fill="#1d4ed8">JsonSerializer.Serialize()</text>
+              <text x="372" y="48" text-anchor="middle" font-size="9.5" fill="#334155">reflection finds it → writes "full_name"</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: <code>[JsonPropertyName]</code> sits on
+          the property as pure metadata, and <code>JsonSerializer</code> only renames the JSON key because it
+          specifically goes looking for that exact attribute via reflection while it's serializing — nothing
+          renames anything up front.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same attribute, same object — JsonSerializer only acts because it deliberately looked.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A property on your model must never be left empty</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 70" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#0f766e"/>
+                </marker>
+              </defs>
+              <rect x="6" y="14" width="200" height="42" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="106" y="32" text-anchor="middle" font-family="Fira Code, monospace" font-size="9.5" fill="#0f766e">[Required]</text>
+              <text x="106" y="48" text-anchor="middle" font-size="9.5" fill="#334155">on Email — pure metadata</text>
+              <path d="M206,35 H268" fill="none" stroke="#0f766e" stroke-width="1.6" marker-end="url(#arUc2)"/>
+              <rect x="270" y="14" width="204" height="42" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="372" y="32" text-anchor="middle" font-size="9.5" fill="#0f766e">a validator scans the model</text>
+              <text x="372" y="48" text-anchor="middle" font-size="9.5" fill="#334155">reflection finds it → rejects a null Email</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>[Required]</code> works the same way from a different consumer: the attribute
+          itself does no checking at all — a validator walks the model's properties, uses reflection to find any
+          validation attribute like this one attached to them, and only then decides the value is invalid.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">[Required] doesn't validate anything — the validator that reads it does.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">3</span> You want your own custom label to trigger behavior when reflection finds it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 70" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#6d28d9"/>
+                </marker>
+              </defs>
+              <rect x="6" y="14" width="200" height="42" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="106" y="32" text-anchor="middle" font-family="Fira Code, monospace" font-size="9.5" fill="#6d28d9">[LogCall] : Attribute</text>
+              <text x="106" y="48" text-anchor="middle" font-size="9.5" fill="#334155">your class — holds data only</text>
+              <path d="M206,35 H268" fill="none" stroke="#6d28d9" stroke-width="1.6" marker-end="url(#arUc3)"/>
+              <rect x="270" y="14" width="204" height="42" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="372" y="32" text-anchor="middle" font-family="Fira Code, monospace" font-size="9.5" fill="#6d28d9">GetCustomAttribute&lt;T&gt;()</text>
+              <text x="372" y="48" text-anchor="middle" font-size="9.5" fill="#334155">your own code finds it → runs the logging</text>
+            </svg>
+          </div>
+          <p class="uc-what">Once you write your own attribute, you own both halves: the attribute class
+          (inheriting from <code>Attribute</code>) only ever holds data, and a completely separate piece of your
+          own code has to call reflection deliberately to find it on a member and decide what to do — skip
+          writing that reader, and the attribute sits there just as inert as any built-in one would.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Write the attribute AND the reader — one holds data, the other supplies the behavior.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

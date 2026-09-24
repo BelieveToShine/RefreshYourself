@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up any time you're deciding what type to put in a method signature — the interface you pick is a promise to every caller.</li>
-        <li>A quick check for whether you actually understand these three or just recognize the names.</li>
-        <li>Mixing them up (expecting an indexer on the wrong one) is a real, easy mistake in day-to-day code.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔁 IEnumerable&lt;T&gt;</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Declare a return type wider than it needs to be and every caller can now add, remove, or index into it — capabilities the method never actually promised, and ones that lock the implementation in place.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>IEnumerable&lt;T&gt; promises only one thing — you can iterate this once, forward, with <code>foreach</code> — so the implementation stays free to change without breaking any caller.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">IEnumerable&lt;T&gt; = the narrowest promise: just foreach.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">📦 ICollection&lt;T&gt;</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>IEnumerable&lt;T&gt; alone can't answer "how many items are there" or let a caller add or remove one — there's no <code>Count</code> and no <code>Add</code>/<code>Remove</code> on that contract.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>ICollection&lt;T&gt; extends IEnumerable&lt;T&gt; with <code>Count</code>, <code>Add</code>, <code>Remove</code>, and <code>Contains</code> — enough to manage size and membership, still with no idea of position.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">ICollection&lt;T&gt; = iterate + count + add/remove, still no this[int].</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🔢 IList&lt;T&gt;</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Even with ICollection&lt;T&gt;, there's still no "item #3" — a caller that needs to read or overwrite a specific position has no way to do it; <code>this[int]</code> simply doesn't exist on that contract.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>IList&lt;T&gt; extends ICollection&lt;T&gt; with <code>this[int]</code> plus <code>Insert</code>/<code>RemoveAt</code> — direct read/write access by position, for when order and position actually matter.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">IList&lt;T&gt; = everything ICollection&lt;T&gt; has, plus this[int].</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -218,6 +239,73 @@ ordered.Insert(1, 50);          <span class="cx-ok">// ✅ position-aware insert
       </div>
       <p class="cx-note"><code>IList&lt;T&gt;</code> is the only one of the three where "give me item 7" compiles.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're writing a method signature and the caller only ever loops over the result</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">RETURN TYPE: IENUMERABLE&lt;T&gt;</text>
+              <rect x="10" y="24" width="210" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🔁 IEnumerable&lt;T&gt;</text>
+              <path d="M220,43 H260" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="260" y="24" width="210" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Caller: foreach ✅ · bag[0] ❌</text>
+            </svg>
+          </div>
+          <p class="uc-what">IEnumerable&lt;T&gt; is the narrowest promise — "you can iterate this" — so
+          the method stays free to swap its actual implementation later without breaking any caller
+          who only ever wrote a <code>foreach</code>. <b>This is the #1 scenario you'll actually run
+          into</b> when choosing a return type.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Caller only loops → return IEnumerable&lt;T&gt;.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> A caller needs to check the count or add/remove items, but never asks for "item #3"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">RETURN TYPE: ICOLLECTION&lt;T&gt;</text>
+              <rect x="10" y="24" width="210" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">📦 ICollection&lt;T&gt;</text>
+              <path d="M220,43 H260" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="260" y="24" width="210" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Count/Add/Remove ✅ · this[int] ❌</text>
+            </svg>
+          </div>
+          <p class="uc-what">ICollection&lt;T&gt; adds <code>Count</code>, <code>Add</code>, <code>Remove</code>,
+          and <code>Contains</code> on top of iteration — enough to manage membership — but it still
+          has no concept of position, so <code>bag[0]</code> won't compile even though <code>Add</code>
+          and <code>Count</code> do.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Caller mutates/counts but never indexes → ICollection&lt;T&gt;.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">3</span> A caller needs to read or replace a specific item, like "give me item #7"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">RETURN TYPE: ILIST&lt;T&gt;</text>
+              <rect x="10" y="24" width="210" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🔢 IList&lt;T&gt;</text>
+              <path d="M220,43 H260" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="260" y="24" width="210" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">this[int] ✅ read &amp; write by position</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>this[int]</code> only exists once you're holding an IList&lt;T&gt; — it's
+          the only one of the three where reading or writing a specific position actually compiles.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need position access → IList&lt;T&gt;, not ICollection&lt;T&gt;.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

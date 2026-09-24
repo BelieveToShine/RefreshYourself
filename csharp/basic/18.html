@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Shows up any time a type is really a wrapper around a dictionary, array, or list — a config object, a custom collection, a matrix/grid class.</li>
-        <li>A quiet code smell: a class with <code>GetAt(i)</code>/<code>SetAt(i, v)</code> instead of an indexer is hiding a collection behind extra method names.</li>
-        <li>Rarely opens an interview on its own — more likely to surface while reading or designing a wrapper type, or as a quick "how would you expose this" question.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+        <div class="wc-head">🗂️ Indexers</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A type that's really a wrapper around an array, list, or dictionary can only offer <code>GetAt(i)</code>/<code>SetAt(i, v)</code> methods, forcing every caller to learn extra method names instead of the <code>[]</code> syntax they already use on every built-in collection.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An indexer — <code>this[int i] { get; set; }</code> — is a specially-named property the compiler exposes as <code>get_Item</code>/<code>set_Item</code>, so callers write <code>list[i]</code> directly, with no extra method names to remember.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Indexer = <code>this[]</code> property that lets your type support <code>obj[i]</code> like a built-in collection.</span></div>
+      </div>
     </div>
   </details>
 
@@ -208,6 +211,82 @@ Console.WriteLine(list[0]);   <span class="cx-ok">// calls the get accessor — 
       </div>
       <p class="cx-note">Indexers can be overloaded like methods — a type can expose both <code>this[int]</code> and <code>this[string]</code> side by side.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're wrapping a <code>List</code>, array, or custom collection inside your own type</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">WRAPPING A COLLECTION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="10.5" font-family="Fira Code, Consolas, monospace" fill="#166534">list[0] = "cat";</text>
+              <text x="105" y="55" text-anchor="middle" font-size="9.5" fill="#166534">you write</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc18a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="10.5" font-family="Fira Code, Consolas, monospace" fill="#166534">this[int i] { set; }</text>
+              <text x="375" y="55" text-anchor="middle" font-size="9.5" fill="#166534">forwards to _items[i]</text>
+            </svg>
+          </div>
+          <p class="uc-what">A wrapper type like <code>WordList</code> declares one
+          <code>this[int i]</code> indexer that forwards to its internal list, so callers write
+          <code>list[i]</code> and <code>list[i] = value</code> instead of learning
+          <code>GetAt(i)</code>/<code>SetAt(i, v)</code>. <b>This is the #1 scenario you'll
+          actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Wrapping a collection → give it <code>this[int i]</code>, not <code>GetAt</code>/<code>SetAt</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your type does key-based lookup, like a dictionary or config store</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">KEY-BASED LOOKUP</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="10.5" font-family="Fira Code, Consolas, monospace" fill="#1e3a8a">config["Key"]</text>
+              <text x="105" y="55" text-anchor="middle" font-size="9.5" fill="#1e3a8a">you write</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc18b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="10.5" font-family="Fira Code, Consolas, monospace" fill="#1e3a8a">this[string key]</text>
+              <text x="375" y="55" text-anchor="middle" font-size="9.5" fill="#1e3a8a">forwards to _lookup[key]</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>Dictionary&lt;TKey,TValue&gt;</code>'s own
+          <code>config["ConnectionString"]</code> syntax is exactly this — an indexer keyed by
+          <code>string</code> instead of <code>int</code>, since the index parameter is just an
+          ordinary parameter, not restricted to array-style integers.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Key-based lookup → <code>this[string key]</code>, not <code>this[int]</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your type needs to be indexed by more than one value, like a grid or matrix</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">MULTIPLE INDEX PARAMETERS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="10.5" font-family="Fira Code, Consolas, monospace" fill="#92400e">grid[row, col]</text>
+              <text x="105" y="55" text-anchor="middle" font-size="9.5" fill="#92400e">you write</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc18c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="9.5" font-family="Fira Code, Consolas, monospace" fill="#92400e">this[int row, int col]</text>
+              <text x="375" y="55" text-anchor="middle" font-size="9.5" fill="#92400e">one overloaded indexer</text>
+            </svg>
+          </div>
+          <p class="uc-what">A <code>Grid</code> type declares <code>this[int row, int col]</code>
+          so callers write <code>grid[row, col]</code> instead of <code>grid.GetCell(row,
+          col)</code> — the index is just a parameter list, so it can take as many parameters as
+          the concept needs, and a class can declare several such indexers side by side.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Multiple values → <code>this[row, col]</code> is still one property call.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

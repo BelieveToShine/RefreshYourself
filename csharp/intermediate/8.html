@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use this to check you know what <code>record</code> actually buys you — not just "it's a newer keyword."</li>
-        <li>Comes up any time you're modelling a DTO, a value object, or a dictionary key that needs to compare by content.</li>
-        <li>The immutability pitfall is a favorite follow-up trap — a lot of candidates state it backwards.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🧾 Records</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Two DTOs or value objects holding the exact same data (a test's expected vs. actual, a coordinate used as a dictionary key) need a hand-written <code>Equals</code>/<code>GetHashCode</code> override before they'll ever compare or hash as "the same," even though the data genuinely matches.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A <code>record</code> generates <code>Equals</code>, <code>GetHashCode</code>, and <code>ToString()</code> from its properties automatically, so two records with matching values are equal, hash alike, and print readably with zero code written.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">record = same values → equal, generated for you.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🆔 Classes</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>An identity-driven object (a bank account, a logged-in session) shouldn't stop being "itself" just because its data changed, and it shouldn't suddenly equal some other instance just because the numbers happen to match right now.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A <code>class</code> defaults to reference equality — two instances are equal only if they're literally the same object in memory, so identity survives changing data, and you only get value equality if you write it yourself.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">class = same object in memory → equal; matching data alone isn't enough.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -284,6 +297,80 @@ p.X = <span class="num">99</span>;                  <span class="cx-err">// ❌ 
       </div>
       <p class="cx-note"><code>record</code> alone guarantees nothing about mutability — <b>only <code>init</code></b> does.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A value is used as a <code>Dictionary</code> key or stored in a <code>HashSet</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">VALUE USED AS A KEY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🧾 record (1, 2)</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc8a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🗂️ same set bucket</text>
+            </svg>
+          </div>
+          <p class="uc-what">A record's generated <code>Equals</code>/<code>GetHashCode</code> are
+          based on its properties, so two records with the same values land in the same bucket and
+          are treated as the same key automatically. A <code>class</code> with identical properties
+          needs a hand-written <code>Equals</code>/<code>GetHashCode</code> override first, or the
+          collection treats two matching-value instances as two different entries.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same-value key → reach for <code>record</code>, not <code>class</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're modeling something with a real identity that changes over time</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">SAME REFERENCE, DIFFERENT DATA</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🏦 Account</text>
+              <text x="240" y="38" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">💰 deposit</text>
+              <text x="240" y="50" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">changes balance</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc8b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🏦 same Account</text>
+            </svg>
+          </div>
+          <p class="uc-what">A bank account or a logged-in session needs to stay "the same one"
+          even after its data changes. A <code>class</code>'s reference equality does exactly that
+          — two instances are equal only if they're the literal same object in memory, no matter
+          how the data inside changes. A <code>record</code>'s value equality would instead say the
+          account "changed" the moment its balance did, or say two unrelated accounts are equal
+          just because their balances currently match.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Identity that outlives changing data → <code>class</code>'s reference equality is what you want.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You wrote a <code>record</code> and assume it's automatically immutable</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">record + set ≠ LOCKED</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">📦 record (set)</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc8c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">✅ p.X = 99 mutated</text>
+            </svg>
+          </div>
+          <p class="uc-what">Only <code>init</code>-only or positional properties lock a record.
+          Write it with plain <code>get; set;</code> properties instead, and the same
+          <code>record</code> compiles and mutates exactly like a class — no error, no warning that
+          anything changed.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>record</code> ≠ immutable — <code>init</code>/positional params are what actually lock it.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Shows up any time EF Core is in the stack — one of the most common "do you actually understand LINQ" questions.</li>
-        <li>Get it wrong in real code and a query that looked fine pulls an entire table into memory instead of filtering it in SQL.</li>
-        <li>Separates someone who's memorized LINQ syntax from someone who knows where each part of the query actually executes.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🗄️ IEnumerable&lt;T&gt;</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Some LINQ logic — a custom C# method, string formatting — can't be turned into SQL at all, and data that's already local (a <code>List&lt;T&gt;</code>, an array) has no database left to send anything to.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>IEnumerable&lt;T&gt;</code> is just "something you can loop over," so its LINQ methods run as ordinary .NET code in memory — the only option once logic EF Core can't translate shows up, or the data's already loaded.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">IEnumerable&lt;T&gt; = already objects, filtered in .NET memory.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🧩 IQueryable&lt;T&gt;</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Composing a query across a repository and a service layer only works if something can keep adding filters without pulling the whole table into memory first.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>IQueryable&lt;T&gt;</code> holds an expression tree instead of data, so LINQ operators keep building the query until something enumerates it — only then does EF Core translate it into SQL and run it in the database.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">IQueryable&lt;T&gt; = still a plan, translated to SQL when enumerated.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -111,7 +124,7 @@
       <text x="397.5" y="96" text-anchor="middle" font-size="10" fill="#5b6472">sent to database</text>
 
       <g filter="url(#shA4)"><rect x="489" y="54" width="127" height="56" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
-      <text x="552.5" y="78" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">Rows → .NET objects</text>
+      <text x="552.5" y="78" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Rows → .NET objects</text>
       <text x="552.5" y="96" text-anchor="middle" font-size="10" fill="#5b6472">materialized</text>
 
       <path d="M151,82 H179" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA4)"/>
@@ -227,6 +240,75 @@
       </div>
       <p class="cx-note">Keep every filter inside the <code>IQueryable&lt;T&gt;</code> chain and materialize (<code>.ToList()</code>) once, at the end.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You chain every <code>.Where()</code>/<code>.OrderBy()</code> and call <code>.ToList()</code> only at the end</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcQ1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">CHAIN FIRST, MATERIALIZE ONCE</text>
+              <rect x="20" y="24" width="200" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="120" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🔗 IQueryable&lt;T&gt; chain</text>
+              <path d="M220,43 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcQ1)"/>
+              <rect x="310" y="24" width="150" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">✅ .ToList() once</text>
+            </svg>
+          </div>
+          <p class="uc-what">Every operator before <code>.ToList()</code> is still building the same
+          expression tree, so EF Core folds the whole chain into one SQL query and only pulls back
+          the rows that survive it. <b>This is the pattern to aim for.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Chain first, materialize once — every filter lands in SQL.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> A method inside your <code>.Where()</code> that EF Core's SQL translator can't understand</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcQ2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">TRANSLATOR CAN'T READ THIS METHOD</text>
+              <rect x="20" y="24" width="220" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🔗 .Where(x =&gt; Custom(x))</text>
+              <path d="M240,43 H320" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcQ2)"/>
+              <rect x="320" y="24" width="140" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="390" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">⚠️ silent switch</text>
+            </svg>
+          </div>
+          <p class="uc-what">A custom C# method, string formatting, or anything else the translator
+          can't turn into SQL forces an implicit switch to <code>IEnumerable&lt;T&gt;</code> — with
+          no <code>.AsEnumerable()</code> written anywhere. The query still compiles and runs; it
+          just quietly stops filtering in the database from that point on. <b>A real trap</b> —
+          candidates often assume the switch only happens when someone explicitly writes
+          <code>.AsEnumerable()</code> or an early <code>.ToList()</code>, but it doesn't.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">An untranslatable method switches you over silently — no <code>.AsEnumerable()</code> required.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> You're handed data that's already local — a <code>List&lt;T&gt;</code> or array already loaded</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcQ3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">NO DATABASE LEFT TO QUERY</text>
+              <rect x="20" y="24" width="220" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">📦 List&lt;T&gt; in memory</text>
+              <path d="M240,43 H320" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcQ3)"/>
+              <rect x="320" y="24" width="140" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="390" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ IEnumerable&lt;T&gt;</text>
+            </svg>
+          </div>
+          <p class="uc-what">There's no database left to send anything to, so <code>IQueryable&lt;T&gt;</code>
+          isn't even an option here — looping over it as <code>IEnumerable&lt;T&gt;</code> is correct,
+          not a mistake to avoid.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Already in memory → IEnumerable&lt;T&gt; is the right, only choice.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

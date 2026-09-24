@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>An <code>object</code>-based collection makes every read a cast — get the cast wrong and it's a runtime crash, not a compile error.</li>
-        <li>Any reusable method or class that should work across many types without copy-pasting one version per type needs this.</li>
-        <li>One of the first questions once an interview moves past syntax basics into "how do you write reusable code."</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🧩 Generics</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>An <code>object</code>-based collection only checks the real type at runtime — a wrong cast throws <code>InvalidCastException</code> in production, and every value type stored gets silently boxed into an <code>object</code>.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A generic type or method captures the real type at compile time — <code>List&lt;T&gt;</code> needs no cast and stores value types directly, so a type mismatch is caught before the code ever ships, not after.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Generics = the compiler checks the real type before it ships — no casts, no boxing.</span></div>
+      </div>
     </div>
   </details>
 
@@ -220,6 +223,76 @@ nums.Add(<span class="num">42</span>);                  <span class="cx-ok">// �
       </div>
       <p class="cx-note"><code>where T : IEntity</code> is what lets <code>item.Id</code> compile — remove it and the compiler rejects the call.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You read an item back out of a collection to use it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">READING AN ELEMENT BACK</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">📦 List&lt;int&gt;[0]</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">🔢 int — no cast</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>List&lt;T&gt;</code> already knows the element type, so reading an
+          item back out just gives you that type directly. An <code>object</code>-based collection
+          instead forces a cast on every read, and a mismatched cast throws
+          <code>InvalidCastException</code> at runtime instead of being caught earlier. <b>This is
+          the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">List&lt;T&gt; read → already the real type, no cast.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're storing a large collection of value types, like <code>int</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">STORING VALUE TYPES AT SCALE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🔢 List&lt;int&gt;.Add(42)</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">✅ real int, never boxed</text>
+            </svg>
+          </div>
+          <p class="uc-what">Storing many value types in an <code>object</code>-based collection
+          boxes every single one — a wrapper <code>object</code> allocated per item, which adds
+          real overhead at scale. <code>List&lt;int&gt;</code> stores the actual <code>int</code>
+          values directly, so nothing gets boxed.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Value types in List&lt;T&gt; → stored directly, never boxed.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> You're writing a generic method or repository that needs to call a member on <code>T</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">UNLOCKING A MEMBER ON T</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🚫 T — no constraint</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🔓 where T : IEntity</text>
+            </svg>
+          </div>
+          <p class="uc-what">Without a constraint, the compiler only allows calls to members every
+          possible type shares — basically nothing, so <code>item.Id</code> won't even compile.
+          Add <code>where T : IEntity</code>, and the compiler knows every <code>T</code> has an
+          <code>Id</code>, so the call is allowed.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need to call a member on T → add the constraint that guarantees it.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

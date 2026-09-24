@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Any resource that isn't managed memory — a file handle, a database connection, a network socket — has to be released explicitly; the garbage collector doesn't know how.</li>
-        <li>Comes up the moment code opens a file, a <code>SqlConnection</code>, or a stream — which is most real backend code.</li>
-        <li>A near-guaranteed interview opener because it sounds simple but is easy to get subtly wrong — forgetting cleanup on an early return or a thrown exception.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+        <div class="wc-head">🧹 IDisposable &amp; using</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A file handle, database connection, or network socket isn't managed memory the garbage collector can reclaim — if an exception fires or a method returns early before a manual close call, that resource never gets released and leaks.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>using</code> expands into a compiler-written <code>try</code>/<code>finally</code> that calls <code>Dispose()</code> inside the <code>finally</code>, so release happens no matter how the block exits — and only types that implement <code>IDisposable</code> are allowed inside one.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">using = compiler-guaranteed cleanup — Dispose() runs in a finally, exception or not.</span></div>
+      </div>
     </div>
   </details>
 
@@ -215,6 +218,78 @@ c.Dispose();                <span class="cx-cmt">// never reached — connection
       </div>
       <p class="cx-note">This is the exact code the compiler generates — <code>using</code> is just this, written for you.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your code opens a resource and something throws mid-block</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">EXCEPTION MID-BLOCK</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">💥 c.Query() throws</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc18a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🔧 finally → Dispose()</text>
+            </svg>
+          </div>
+          <p class="uc-what">The compiler-generated <code>finally</code> block still runs —
+          <code>Dispose()</code> releases the resource before the exception continues propagating
+          up. <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">using still cleans up on the way out, even when it doesn't catch anything.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your method needs to dispose more than one resource</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="10" y="14" width="140" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="80" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#0f5e57">using var a</text>
+              <path d="M150,33 H160" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc18b)"/>
+              <rect x="160" y="14" width="140" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="230" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#0f5e57">using var b</text>
+              <path d="M300,33 H320" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc18b)"/>
+              <rect x="320" y="14" width="150" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="395" y="31" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0f5e57">block ends →</text>
+              <text x="395" y="44" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0f5e57">b, then a disposed</text>
+            </svg>
+          </div>
+          <p class="uc-what">Stack multiple <code>using</code> statements in a row (they implicitly
+          nest), or use a C# 8 <code>using</code> declaration (<code>using var c = Open();</code>),
+          which disposes automatically at the end of the enclosing block.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Multiple resources → stack usings or use a using declaration, not one Dispose trying to cover both.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You assume using also catches the exception for you</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="10" y="14" width="130" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="75" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">💥 exception thrown</text>
+              <path d="M140,33 H150" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc18c)"/>
+              <rect x="150" y="14" width="150" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="225" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">🔧 Dispose() runs</text>
+              <path d="M300,33 H310" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc18c)"/>
+              <rect x="310" y="14" width="160" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="390" y="31" text-anchor="middle" font-size="9.5" font-weight="700" fill="#b91c1c">❌ not caught —</text>
+              <text x="390" y="44" text-anchor="middle" font-size="9.5" font-weight="700" fill="#b91c1c">propagates up</text>
+            </svg>
+          </div>
+          <p class="uc-what">It doesn't — <code>using</code> only guarantees <code>Dispose()</code>
+          runs in a <code>finally</code>. The exception itself still propagates up after cleanup,
+          exactly like a plain <code>try</code>/<code>finally</code> would.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">using = guaranteed cleanup, not a try/catch.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>It's the actual mechanism behind serializers, DI containers, and ORMs — none of those libraries could hand-write code for every type you'll ever define.</li>
-        <li>Comes up as "how does a JSON serializer know about my class without me telling it anything?" — reflection is the real answer.</li>
-        <li>Knowing it's too slow for a hot path is what separates "used it once" from actually understanding the cost.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🪞 Reflection</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A serializer, DI container, or ORM can't hand-write code for every type you'll ever define — it needs a way to discover a type's members and call them without knowing that type at compile time.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Reflection reads a type's own metadata at runtime (<code>typeof</code>/<code>GetType()</code>) and calls what it finds (<code>MethodInfo.Invoke()</code>) — the library works with types it has never seen written down.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Reflection = how library code handles types it never hard-coded.</span></div>
+      </div>
     </div>
   </details>
 
@@ -209,6 +212,73 @@ Console.WriteLine(t.Name);      <span class="cx-cmt">// "Foo"</span></code></pre
       </div>
       <p class="cx-note"><code>Invoke()</code> calls the method it found — the calling code never had to know it was a <code>Foo</code>.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're scanning an assembly once, at startup, to wire up a DI container</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">RUNS ONCE, AT STARTUP</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">📦 Your assembly</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🧩 DI Container</text>
+            </svg>
+          </div>
+          <p class="uc-what">Reflection's per-call cost only gets paid once here — the container
+          scans every type at startup and builds itself, and nothing in this step runs again on a
+          later request. This is exactly the "one-time setup" case the trap above calls fine.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One-time startup scan → the reflection cost doesn't matter.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're calling into a type your code never referenced at compile time</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">NO COMPILE-TIME REFERENCE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">🔌 object plugin</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">⚡ Foo.DoWork()</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>GetType()</code> finds the runtime type, <code>GetMethod()</code>
+          finds the member by name, and <code>Invoke()</code> calls it — the exact sequence a
+          plugin loader or serializer runs to work with a class it was never written against.
+          <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No compile-time reference → <code>GetType()</code> + <code>Invoke()</code> replace it.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You reflect on the same member again inside a loop that runs on every request</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">REPEATS EVERY REQUEST</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🔁 Every request</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)" stroke-dasharray="5 4"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🐢 Looked up again</text>
+            </svg>
+          </div>
+          <p class="uc-what">Each reflected lookup pays its extra cost again, every single call —
+          the exact mistake the trap above warns about. Caching the <code>MethodInfo</code>/<code>PropertyInfo</code>
+          once, or compiling it into a delegate, removes the repeated lookup.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Reflect once, cache it — don't repeat the lookup on every call.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

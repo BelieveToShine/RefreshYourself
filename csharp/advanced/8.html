@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up the moment a service needs a shared, frequently-updated in-memory cache under real concurrent load.</li>
-        <li>A natural follow-up after <code>lock</code>/<code>volatile</code>/<code>Interlocked</code> questions — checks whether you reach for the built-in collection instead of hand-rolling more locking.</li>
-        <li>Tests whether you know what "thread-safe" actually promises — and where that promise stops.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔐 ConcurrentDictionary</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A plain <code>Dictionary</code> wrapped in one <code>lock</code> has a single lock guarding the whole structure — a thread updating <code>"orders"</code> still queues up behind a thread updating a completely unrelated key like <code>"users"</code>.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>ConcurrentDictionary</code> replaces that one big lock with internal striped locks plus lock-free reads, so operations on different keys run without waiting on each other — while each individual call stays atomic on its own.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">One lock queues every key. <code>ConcurrentDictionary</code> only queues the key actually being touched.</span></div>
+      </div>
     </div>
   </details>
 
@@ -263,6 +266,89 @@ _counts.AddOrUpdate(<span class="str">"orders"</span>, <span class="num">1</span
       </div>
       <p class="cx-note">Reading and writing as two separate calls leaves a gap another thread can use — <code>AddOrUpdate</code> closes that gap by retrying instead of trusting a stale read.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Several threads update completely different keys in the same dictionary</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="16" y="14" width="148" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="90" y="37" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🧵 Threads A, B, C</text>
+              <path d="M164,16 L266,13" stroke="#16a34a" stroke-width="1.4" fill="none" marker-end="url(#arUc8a)"/>
+              <path d="M164,33 L266,36" stroke="#16a34a" stroke-width="1.4" fill="none" marker-end="url(#arUc8a)"/>
+              <path d="M164,50 L266,59" stroke="#16a34a" stroke-width="1.4" fill="none" marker-end="url(#arUc8a)"/>
+              <rect x="266" y="4" width="70" height="18" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+              <text x="301" y="17" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">key X</text>
+              <rect x="266" y="27" width="70" height="18" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+              <text x="301" y="40" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">key Y</text>
+              <rect x="266" y="50" width="70" height="18" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+              <text x="301" y="63" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">key Z</text>
+              <text x="410" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">✅ none wait</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the core reason to reach for <code>ConcurrentDictionary</code>
+          over <code>lock</code> + <code>Dictionary</code>: because locking is striped internally
+          per key, threads touching <code>X</code>, <code>Y</code>, and <code>Z</code> all proceed
+          at once instead of taking turns behind one shared lock.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Different keys, same dictionary → no waiting on each other.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You read a value, then write an updated value back, as two separate calls</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 92" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc8b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker>
+                <marker id="arUc8bGray" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#94a3b8"/></marker>
+              </defs>
+              <rect x="10" y="10" width="150" height="32" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="85" y="30" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">A: get → 10</text>
+              <path d="M160,26 H310" stroke="#dc2626" stroke-width="1.6" fill="none" stroke-dasharray="4 3" marker-end="url(#arUc8b)"/>
+              <text x="235" y="18" text-anchor="middle" font-size="9.5" fill="#991b1b">⏳ B slips in</text>
+              <rect x="310" y="10" width="160" height="32" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="390" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">B: update → 11 ✅</text>
+              <path d="M85,42 V66" stroke="#94a3b8" stroke-width="1.6" fill="none" marker-end="url(#arUc8bGray)"/>
+              <rect x="10" y="66" width="230" height="22" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="125" y="81" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">A: update(11,10) fails ❌</text>
+            </svg>
+          </div>
+          <p class="uc-what">Each call is atomic on its own, but the gap between the get and the
+          update isn't — another thread can update the same key in that gap, so a naive
+          read-modify-write can silently lose an update.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Read-then-write across two calls → not atomic, even on <code>ConcurrentDictionary</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> You need to safely bump a counter under contention</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 80" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="10" y="22" width="190" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">A &amp; B: AddOrUpdate</text>
+              <text x="105" y="50" text-anchor="middle" font-size="9.5" fill="#1e3a8a">same key, same call</text>
+              <path d="M200,39 L250,20" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc8c)"/>
+              <path d="M200,39 L250,60" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc8c)"/>
+              <rect x="250" y="6" width="220" height="28" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="360" y="24" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🔁 delegate retried on contention</text>
+              <rect x="250" y="46" width="220" height="28" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="360" y="64" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">✅ both succeed, nothing lost</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>AddOrUpdate</code>/<code>GetOrAdd</code> fold the read and the
+          write into one call that retries its delegate internally on contention, so you never
+          coordinate the gap yourself — but the delegate still has to be safe to run more than
+          once, since it can get invoked several times.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need a safe increment? → <code>AddOrUpdate</code>/<code>GetOrAdd</code>, not a manual get-then-set.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

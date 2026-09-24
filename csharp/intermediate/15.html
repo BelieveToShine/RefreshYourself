@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>The most-asked question after OOP basics — a wrong mental model here is hard to recover from mid-interview.</li>
-        <li>The moment your code makes any network or database call, this is exactly what you're relying on.</li>
-        <li>A very common opener specifically because so many candidates confuse it with multithreading.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">⚡ async/await</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A thread that blocks on a network or database call just sits there doing nothing for the entire round-trip — under real load, that ties up threads that could be serving other requests.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>async</code>/<code>await</code> lets the method hand the calling thread back the instant it hits <code>await</code>, then resume later — often on a different thread-pool thread — so no thread ever sits idle waiting on I/O.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">async/await frees the thread during the wait and resumes later — it never blocks, and it never means parallel.</span></div>
+      </div>
     </div>
   </details>
 
@@ -99,6 +102,7 @@
       <text x="320" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.4">AWAIT — WHAT HAPPENS TO THE THREAD, OVER TIME</text>
 
       <text x="45" y="34" font-size="10.5" fill="#5b6472">⏱ time passing</text>
+      <text x="595" y="34" text-anchor="end" font-size="9.5" fill="#5b6472">later</text>
       <path d="M45,42 H595" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arI15)"/>
 
       <text x="45" y="54" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.3">🧵 CALLING THREAD</text>
@@ -198,6 +202,85 @@ Console.WriteLine(<span class="str">"This runs immediately, before GetDataAsync 
       </div>
       <p class="cx-note">Not awaiting doesn't stop the call — it just means you've lost the ability to know when it finishes, or to see any exception it throws.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You <code>await</code> one external call — an HTTP request, a DB query</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+                </marker>
+              </defs>
+              <rect x="10" y="16" width="140" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="80" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">await GetStringAsync</text>
+              <path d="M150,33 H215" fill="none" stroke="#16a34a" stroke-width="1.6" marker-end="url(#arUc1)"/>
+              <rect x="220" y="16" width="100" height="34" rx="10" fill="#ffffff" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="270" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">thread freed</text>
+              <path d="M320,33 H385" fill="none" stroke="#16a34a" stroke-width="1.6" marker-end="url(#arUc1)"/>
+              <rect x="390" y="16" width="80" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="430" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">resumes</text>
+            </svg>
+          </div>
+          <p class="uc-what">The calling thread hits <code>await</code> and returns to whoever called it right away — it never sits there waiting on <code>httpClient.GetStringAsync</code>. It simply picks the method back up once that <code>Task</code> completes, often on a different thread-pool thread. This is the #1 scenario you'll actually run into.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">await frees the thread the instant it's hit — resumption happens later, not necessarily on the same thread.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You call an async method but never <code>await</code> it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="10" y="8" width="160" height="34" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="90" y="29" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">call, not awaited</text>
+              <path d="M170,25 H235" fill="none" stroke="#dc2626" stroke-width="1.6" marker-end="url(#arUc2)"/>
+              <rect x="240" y="8" width="160" height="34" rx="10" fill="#ffffff" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="320" y="29" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">next line runs now</text>
+              <text x="10" y="58" text-anchor="start" font-size="9.5" fill="#b91c1c">⚠ any exception it throws is silently lost</text>
+            </svg>
+          </div>
+          <p class="uc-what">The call still starts running right away — but execution moves on to the next line immediately instead of waiting for it. If that call throws, nothing observed the <code>Task</code>, so the exception is silently lost.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Not awaited ≠ not running — it just means you've lost the result and any exception.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You need results from several independent calls before responding</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 90" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#0f766e"/>
+                </marker>
+              </defs>
+              <rect x="10" y="4" width="140" height="24" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.4"/>
+              <text x="80" y="20" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f5c54">pricing call</text>
+              <rect x="10" y="33" width="140" height="24" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.4"/>
+              <text x="80" y="49" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f5c54">inventory call</text>
+              <rect x="10" y="62" width="140" height="24" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.4"/>
+              <text x="80" y="78" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f5c54">shipping call</text>
+              <path d="M150,16 L305,45" fill="none" stroke="#0f766e" stroke-width="1.4" marker-end="url(#arUc3)"/>
+              <path d="M150,45 H305" fill="none" stroke="#0f766e" stroke-width="1.4" marker-end="url(#arUc3)"/>
+              <path d="M150,74 L305,45" fill="none" stroke="#0f766e" stroke-width="1.4" marker-end="url(#arUc3)"/>
+              <rect x="310" y="33" width="150" height="24" rx="8" fill="#0f766e"/>
+              <text x="385" y="49" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">Task.WhenAll</text>
+            </svg>
+          </div>
+          <p class="uc-what">Awaiting three independent calls one at a time turns three round-trips into one long serial wait. Starting all three first, then awaiting them together with <code>Task.WhenAll</code>, keeps all three pending at once — no thread is blocked on any single one of them while they're in flight.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Independent calls → start them all, then await together — don't await one at a time.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

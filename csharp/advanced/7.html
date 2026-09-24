@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li><code>volatile</code> shows up in double-checked lazy-initialization and cancellation-flag questions — and just as often gets misapplied to "fix" a race it can't fix.</li>
-        <li><code>Interlocked</code> is the answer interviewers actually want when a <code>lock</code> feels too heavy for a single counter increment.</li>
-        <li>Confusing what each one actually protects is a fast way to ship a real, hard-to-reproduce race condition.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔓 volatile</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without it, the compiler and CPU can cache a shared field per thread or reorder instructions around it, so one thread's write may never become visible to another thread reading it in a loop.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>volatile</code> turns off that caching and reordering for the field, so every thread always reads the latest value — visibility only, not atomicity, so <code>x++</code> can still race.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">volatile = visibility only, never atomicity.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">⚡ Interlocked</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span><code>counter++</code> is still three separate steps — read, add, write — so two threads can interleave them and lose an update, yet wrapping just that one increment in a full <code>lock</code> pays a real blocking cost it doesn't need.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Interlocked</code> makes one operation — an increment, decrement, or compare-and-swap — a single atomic CPU instruction, so it's safe with no blocking at all.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Interlocked = one atomic op, no blocking, no lock needed.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -264,6 +277,74 @@
       </div>
       <p class="cx-note">One CPU instruction does the read, add, and write <b>together</b> — no blocking, no lock object.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your worker thread needs to see a stop signal set from another thread, right away</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">ONE FLAG, ONE WRITER</text>
+              <rect x="10" y="24" width="205" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="112" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🧵 sets _stopRequested = true</text>
+              <path d="M215,43 H280" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc7a)"/>
+              <rect x="280" y="24" width="190" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🧵 worker reads the flag</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is exactly the case <code>volatile</code> was built for — one
+          value, one thread writing it, other threads only ever reading it, no math involved.
+          Marking the field <code>volatile</code> guarantees the worker's loop never gets stuck
+          on a stale cached value.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One flag, no math → volatile is enough.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> You need to bump a shared counter and nothing else</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">ONE OPERATION, NO LOCK</text>
+              <rect x="30" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🧵 Increment()</text>
+              <path d="M200,43 H280" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc7b)"/>
+              <rect x="280" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">⚡ read+add+write, atomic</text>
+            </svg>
+          </div>
+          <p class="uc-what">A single counter with no other logic attached is exactly what
+          <code>Interlocked.Increment</code>/<code>Decrement</code> was built for — one atomic
+          CPU instruction does the read, add, and write together, with no thread ever blocked
+          waiting on a lock.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One counter, one op → reach for Interlocked before lock.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">3</span> Two or more values need to change together, as a single unit</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">MULTIPLE STEPS, ONE LOCK</text>
+              <rect x="20" y="24" width="180" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="110" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔒 lock (_gate) { ... }</text>
+              <path d="M200,43 H280" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc7c)"/>
+              <rect x="280" y="24" width="180" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="370" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">_total += amount; _count++;</text>
+            </svg>
+          </div>
+          <p class="uc-what">Neither <code>volatile</code> nor <code>Interlocked</code> can group
+          more than one statement into a single atomic step — only <code>lock</code> makes a
+          whole block run as an uninterruptible unit, at the cost of a real blocking wait.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">2+ steps together → only lock groups them.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

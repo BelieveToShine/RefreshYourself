@@ -64,10 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A systems-programming question, not an everyday-code one — it checks that you know the CLR's safety net exists at all, and what it actually covers.</li>
-        <li>Most C# developers never write an <code>unsafe</code> block outside interop or genuine perf-critical buffer work — knowing the boundary matters more than the syntax.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+        <div class="wc-head">🔓 unsafe</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>The CLR's bounds and type checks protect every normal C# access, but in a proven, tight hot loop — a pixel buffer, a byte-buffer parser — that same checking is real, measurable overhead ordinary code has no way to opt out of.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>unsafe</code> opens one narrow gap in that fence for a single block: inside it you get a raw pointer and direct pointer arithmetic, skipping the check for real speed — at the cost of owning every bounds guarantee yourself.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">unsafe = one block, raw pointer, no CLR check — you trade the fence for speed and now own the bounds yourself.</span></div>
+      </div>
     </div>
   </details>
 
@@ -227,6 +231,75 @@
       </div>
       <p class="cx-note">Same out-of-range index, but nothing stops it — <code>p + 5</code> is just an address now, not a checked position in an array.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're writing everyday application code — arrays, lists, object references</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">EVERYDAY C# ACCESS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🔢 numbers[i]</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc9a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ CLR checks it</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the default for virtually all C# code — normal array and
+          object access always goes through the CLR's bounds and type checks, so a bad index
+          throws <code>IndexOutOfRangeException</code> instead of touching memory it shouldn't.
+          <b>This is the #1 scenario you'll actually be in.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Everyday code → stay safe, no pointer needed.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You've profiled a byte-buffer or pixel-manipulation loop and proven the bounds check is the bottleneck</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">PROFILED HOT PATH</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">📷 pixel/byte buffer</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc9b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">⚡ *(p+i) no check</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the one legitimate case: <code>fixed</code> pins the buffer,
+          and once profiling has already shown the managed, checked version is genuinely the slow
+          part, pointer arithmetic inside <code>unsafe</code> skips the check for a real, measured
+          speedup.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Hot path + profiled proof → unsafe can be the right call.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You spot <code>unsafe</code> in a code review and assume it means the code is broken</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#475569"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155" letter-spacing=".03em">SEEN IN A CODE REVIEW</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">🧑‍💻 unsafe in the diff</text>
+              <path d="M190,43 H290" stroke="#475569" stroke-width="1.6" fill="none" marker-end="url(#arUc9c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ valid, verifiable</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>unsafe</code> is fully valid, verifiable C# — it switches off
+          exactly one guarantee (bounds and type checks on raw memory), not every safety net at
+          once. <b>A common interview trap</b> — candidates often assume the keyword itself
+          signals something is wrong.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">unsafe compiles fine — it just means you now own the bounds check.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

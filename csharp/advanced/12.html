@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>The exact mechanism that lets <code>db.People.Where(x =&gt; x.Age &gt; 18)</code> turn into a SQL <code>WHERE</code> clause instead of loading the whole table.</li>
-        <li>A reliable way to separate "has used LINQ" from "understands how EF Core actually works" in an interview.</li>
-        <li>Comes up any time a generic method needs to inspect the logic it's handed, not just run it — LINQ providers, rules engines, dynamic filters.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+        <div class="wc-head">🌳 Expression Trees</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A generic method like EF Core's <code>Where</code> has no way to look inside a compiled <code>Func&lt;T,bool&gt;</code> — by the time you're holding that delegate, its logic is already flattened into IL, so there's nothing left to translate into SQL.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Assign the same lambda to an <code>Expression&lt;Func&lt;T,bool&gt;&gt;</code> instead, and the compiler builds a tree of <code>Expression</code> nodes describing the logic — EF Core walks that tree and emits <code>WHERE Age &gt; 18</code> instead of ever running it.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Expression tree = code kept as data, so it can be read and translated instead of just run.</span></div>
+      </div>
     </div>
   </details>
 
@@ -253,6 +256,75 @@ Console.WriteLine(body.NodeType);   <span class="cx-ok">// ✅ prints "GreaterTh
       </div>
       <p class="cx-note">This is the shape of what EF Core actually does — walk the tree node by node and emit the matching SQL fragment for each one.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your predicate goes into an EF Core <code>IQueryable&lt;T&gt;</code> query</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcET1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="10" y="17" width="140" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="80" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🧩 .Where(predicate)</text>
+              <path d="M150,34 H170" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcET1)"/>
+              <rect x="170" y="17" width="140" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="240" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🌳 Expression tree</text>
+              <path d="M310,34 H330" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcET1)"/>
+              <rect x="330" y="17" width="140" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="400" y="32" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">🗄️ WHERE</text>
+              <text x="400" y="44" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">Age &gt; 18</text>
+            </svg>
+          </div>
+          <p class="uc-what">EF Core receives the predicate as an <code>Expression</code> tree, walks its nodes, and emits <code>WHERE Age &gt; 18</code> — only the matching rows ever leave the database. <b>This is the #1 reason <code>Expression&lt;Func&lt;T,bool&gt;&gt;</code> exists.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>IQueryable</code> + <code>Expression</code> → translated into SQL.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> That same predicate lands on an in-memory <code>IEnumerable&lt;T&gt;</code> instead</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcET2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="10" y="17" width="140" height="34" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="80" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">📋 List&lt;Person&gt;</text>
+              <path d="M150,34 H170" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcET2)"/>
+              <rect x="170" y="17" width="140" height="34" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="240" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">⚙️ Func&lt;T,bool&gt;</text>
+              <path d="M310,34 H330" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcET2)"/>
+              <rect x="330" y="17" width="140" height="34" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="400" y="32" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">🧠 filtered</text>
+              <text x="400" y="44" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">in memory</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>IEnumerable&lt;T&gt;</code>'s <code>Where</code> takes a plain <code>Func&lt;T,bool&gt;</code> — it's already compiled to IL by the time anything could look at it, so every row has to be loaded into memory before the filter can run.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>IEnumerable</code> + <code>Func</code> → filtered in memory, nothing to inspect.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> You're writing code that must inspect a predicate's logic, not just run it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcET3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="10" y="17" width="150" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="85" y="38" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1e3a8a">🌳 Expression&lt;Func&lt;T,bool&gt;&gt;</text>
+              <path d="M160,34 H180" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcET3)"/>
+              <rect x="180" y="17" width="120" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="240" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">🔍 walk nodes</text>
+              <path d="M300,34 H320" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcET3)"/>
+              <rect x="320" y="17" width="150" height="34" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="395" y="32" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1e3a8a">🛠️ custom output</text>
+              <text x="395" y="44" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1e3a8a">(SQL, a rule, …)</text>
+            </svg>
+          </div>
+          <p class="uc-what">Taking an <code>Expression&lt;T&gt;</code> parameter instead of a <code>Func&lt;T&gt;</code> is what lets your own code walk <code>BinaryExpression</code>, <code>MemberExpression</code>, and <code>ConstantExpression</code> nodes and build whatever it needs — a custom LINQ provider, a rules engine, a dynamic filter. It's the same trick EF Core itself uses.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need to read the logic, not just run it → take an <code>Expression&lt;T&gt;</code>.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

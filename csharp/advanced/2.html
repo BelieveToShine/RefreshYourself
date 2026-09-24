@@ -64,14 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A lost update is one of the most common real production bugs — a counter, balance,
-        or cache that's silently wrong under load, with no exception pointing at it.</li>
-        <li>Interviewers ask this specifically to test whether you know <code>lock</code> is just
-        <code>Monitor.Enter</code>/<code>Monitor.Exit</code> under a try/finally, not magic.</li>
-        <li>Shows up the moment two requests touch the same in-memory state at once — a shared
-        dictionary, a counter, a cache.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+        <div class="wc-head">🔒 lock</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Two threads doing a read-modify-write on the same shared state (like <code>counter++</code>) can interleave between the read and the write, so one thread's update gets silently overwritten — a lost update, with no exception pointing at it.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>lock</code> compiles to <code>Monitor.Enter</code>/<code>Monitor.Exit</code> wrapped in a try/finally, so only one thread is ever inside the protected block at a time — the second thread's read can't land in the middle of the first thread's update.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">lock = one thread inside the block at a time, guaranteed by Monitor.Enter/Exit in a try/finally.</span></div>
+      </div>
     </div>
   </details>
 
@@ -280,6 +280,86 @@ Monitor.Enter(_gate);
       <p class="cx-note">The <code>try</code>/<code>finally</code> is the important part — it
       guarantees <code>Monitor.Exit</code> runs even if the block throws.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">1</span> Two threads both increment the same shared counter, no lock in sight</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">TWO THREADS, NO LOCK</text>
+              <rect x="20" y="24" width="130" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="85" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🧵 Thread A</text>
+              <path d="M150,43 H175" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="175" y="24" width="130" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="240" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🔢 counter</text>
+              <path d="M330,43 H305" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="330" y="24" width="130" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="395" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🧵 Thread B</text>
+            </svg>
+          </div>
+          <p class="uc-what">Both threads read the same value, both add one, both write back — one
+          write overwrites the other. <b>This is the #1 scenario you'll actually run into</b>: a
+          shared dictionary, balance, or in-memory cache that's quietly wrong under load.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Shared read-modify-write, no lock → lost update.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> Code already holding a lock calls into another method that takes the same lock again</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">SAME THREAD, SAME LOCK, AGAIN</text>
+              <rect x="20" y="24" width="130" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="85" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">🧵 Thread A</text>
+              <path d="M150,43 H175" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="175" y="24" width="130" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="240" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">Enter(obj) #1</text>
+              <path d="M305,43 H330" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="330" y="24" width="130" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="395" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">Enter(obj) #2 ✅</text>
+            </svg>
+          </div>
+          <p class="uc-what">Because <code>Monitor</code> is reentrant, the same thread taking the
+          same lock a second time doesn't block itself — it just has to call
+          <code>Monitor.Exit</code> (or leave that many nested <code>lock</code> blocks) the same
+          number of times it entered, or the object never actually unlocks.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same thread, same lock → re-enters, doesn't block itself.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You reach for <code>lock (this)</code> to "make the object thread-safe"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">TWO UNRELATED LOCKS, SAME OBJECT</text>
+              <rect x="20" y="24" width="150" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="95" y="41" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">Your code</text>
+              <text x="95" y="55" text-anchor="middle" font-size="10" fill="#334155">lock (this)</text>
+              <path d="M170,43 H210" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="210" y="24" width="60" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="240" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">this</text>
+              <path d="M310,43 H270" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="310" y="24" width="150" height="38" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="385" y="41" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">Unrelated code</text>
+              <text x="385" y="55" text-anchor="middle" font-size="10" fill="#334155">lock (this)</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>this</code> is a public reference, so any other code that can
+          see the object can lock on it too — now you've got contention (or a deadlock) between
+          two blocks that were never meant to coordinate with each other. <b>A classic interview
+          trap</b>: candidates assume <code>lock (this)</code> protects the object; it only
+          protects against other code locking that exact same reference.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">lock (this) is public — lock on a private, dedicated object instead.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

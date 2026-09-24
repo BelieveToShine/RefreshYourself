@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A real bug pattern: a LINQ query sitting inside a loop, silently re-filtering the whole collection on every single iteration.</li>
-        <li>Matters the moment you cache a query in a variable and expect it to behave like a frozen snapshot.</li>
-        <li>A near-guaranteed follow-up once basic LINQ syntax is out of the way.</li>
-      </ul>
+      <div class="why-grid cols-2">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">⏳ Deferred execution</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Assuming <code>Where</code>/<code>Select</code> already filtered the data lets the same query silently rebuild and re-run against the whole source on every single enumeration — inside a loop, that turns one cheap check into a repeated full scan on every iteration.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Deferred operators (<code>Where</code>, <code>Select</code>, <code>OrderBy</code>, <code>GroupBy</code>) just wrap the source in a plan that remembers how to filter — nothing touches the source until something actually enumerates it, and each enumeration walks it fresh.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Deferred = builds a plan now, runs it later, every time it's enumerated.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">▶️ Immediate execution</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A deferred query re-runs on every enumeration, so on its own it can never serve as a stable, fixed snapshot — anything that needs a result set that won't shift under it later needs more than <code>Where</code>/<code>Select</code> alone.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>.ToList()</code>, <code>.ToArray()</code>, and <code>.Count()</code> force that walk to happen right away and hand back a real, fixed collection — call one once, right where a stable snapshot is actually needed.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Immediate = runs the moment the call executes, and freezes the result.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -236,6 +249,74 @@ list.Add(<span class="kw">new</span> Product { InStock = <span class="kw">true</
       </div>
       <p class="cx-note">Pulling <code>.ToList()</code> out of the loop, once, is the fix — the query stops re-running the expensive filter on every pass.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You store a LINQ query in a variable and treat it like it's already the filtered results</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc13a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">ASSIGNING ≠ RUNNING</text>
+              <rect x="15" y="24" width="220" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="125" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">var query = list.Where(...)</text>
+              <path d="M235,43 H320" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc13a)"/>
+              <rect x="320" y="24" width="145" height="38" rx="10" fill="#eff6ff" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 3"/>
+              <text x="392.5" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">0 items touched</text>
+            </svg>
+          </div>
+          <p class="uc-what">Nothing has touched the source yet — <code>query</code> is only a plan.
+          The filter doesn't run until something actually enumerates it, like a <code>foreach</code>
+          or a <code>.ToList()</code> later in the method.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Assigning a query ≠ running it — only enumeration runs it.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You build a LINQ query fresh inside a loop that runs many times</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc13b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing=".03em">REBUILT EVERY ITERATION</text>
+              <rect x="15" y="24" width="200" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="41" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">🔁 loop runs 1,000×</text>
+              <text x="115" y="55" text-anchor="middle" font-size="9.5" fill="#7f1d1d">data.Where(SlowCheck)</text>
+              <path d="M215,43 H305" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc13b)"/>
+              <rect x="305" y="24" width="160" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="385" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">re-runs — every pass</text>
+            </svg>
+          </div>
+          <p class="uc-what">It's easy to assume a query only really "runs" once, the way a normal
+          method call would — but a deferred query re-executes in full on every enumeration,
+          loop iteration included. Rebuilding it inside a 1,000-iteration loop reruns the filter
+          1,000 times, turning a cheap check into a full O(n × iterations) scan.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Query inside a loop → pull <code>.ToList()</code> out before the loop runs.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You need to hand a stable, fixed result set off to something else</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc13c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">FREEZE IT ONCE</text>
+              <rect x="30" y="24" width="180" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="120" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">query.ToList()</text>
+              <path d="M210,43 H300" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc13c)"/>
+              <rect x="300" y="24" width="160" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="380" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e">fixed snapshot</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>.ToList()</code> forces the walk to happen right there and hands
+          back a real, fixed collection — pass that along instead of the raw query, and whatever
+          receives it reads from that frozen snapshot, not the live, still-changing source.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need a stable result → materialize once with <code>.ToList()</code>/<code>.ToArray()</code>.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

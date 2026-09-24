@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Comes up the moment a domain type — money, vectors, coordinates — needs to be added, compared, or sorted like a built-in number.</li>
-        <li>A realistic way to introduce a real bug: overloading <code>==</code> and forgetting to keep <code>Equals()</code>/<code>GetHashCode()</code> in sync with it.</li>
-        <li>Interviewers use it to check you know operators are just specially named methods, not compiler magic.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+        <div class="wc-head">➕ Operator Overloading</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without it, a custom type like <code>Money</code> has no way to use <code>+</code>, <code>-</code>, or <code>==</code> the way a built-in number does — every operation would need an awkward method call like <code>money1.Add(money2)</code> instead of reading like normal math.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Operator overloading defines <code>operator +</code> (or <code>-</code>, <code>==</code>, …) as a specially named <code>public static</code> method, so the compiler rewrites <code>m1 + m2</code> into a call to it — the one catch is that overloading <code>==</code> has to come with matching <code>Equals()</code>/<code>GetHashCode()</code> overrides, or hash-based collections stop agreeing with it.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Operator overloading = a specially named static method that tells the compiler what an operator does for your type.</span></div>
+      </div>
     </div>
   </details>
 
@@ -234,6 +237,75 @@ seen.Contains(<span class="kw">new</span> <span class="ty">Money</span>(<span cl
       </div>
       <p class="cx-note"><code>HashSet</code> checks <code>GetHashCode()</code> before it ever calls <code>==</code>, so the overloaded <code>==</code> never even runs here.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your domain type (money, vectors, coordinates) needs to add like a built-in number</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arOc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">READS LIKE NORMAL MATH</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">💰 m1 + m2</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arOc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">➕ operator + runs</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 reason to reach for operator overloading at all —
+          <code>operator +</code> lets <code>total = subtotal + tax</code> read exactly the way
+          the math already looks on paper, instead of a chain of <code>.Add()</code> calls.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Natural arithmetic syntax is what operator overloading buys you.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're deciding whether to also overload <code>&lt;</code> and <code>&gt;</code> for that same type</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arOc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">ONE CLEAR ORDERING?</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🪙 Money.Amount</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arOc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">&lt; / &gt; compares it</text>
+            </svg>
+          </div>
+          <p class="uc-what">Only do it when the type has one genuine, unambiguous ordering —
+          <code>Money</code> comparing <code>Amount</code> is fine, but forcing <code>&lt;</code>
+          onto a type with no natural order just confuses callers who assume it means the obvious
+          thing.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One clear ordering → fine to overload. No natural order → don't.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You overload <code>==</code> and leave <code>Equals()</code>/<code>GetHashCode()</code> untouched</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arOc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">== CHANGED, HASH DIDN'T</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">operator ==</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arOc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">GetHashCode() untouched</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>Dictionary</code>/<code>HashSet</code> check
+          <code>GetHashCode()</code> before they ever call <code>==</code> — leave it at the
+          default identity hash and a lookup can silently miss an entry that <code>==</code> calls
+          equal. The compiler only warns (<code>CS0660</code>/<code>CS0661</code>); it still
+          builds. <b>A classic interview trap.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Overload <code>==</code> → always update <code>Equals()</code>/<code>GetHashCode()</code> too, or lookups lie.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

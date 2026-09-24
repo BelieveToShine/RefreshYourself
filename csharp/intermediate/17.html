@@ -64,11 +64,14 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Shows up whenever you need to stop a long-running task, a timeout, or a user-cancelled operation cleanly.</li>
-        <li>The "token passed but never checked" pitfall is a real bug pattern, not just trivia — it comes up in real code review.</li>
-        <li>A common opener whenever async/await, background jobs, or responsive UI work is on the table.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🛑 Cooperative Cancellation</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Forcibly killing a running thread from outside — what the now-obsolete <code>Thread.Abort</code> tried to do — can leave shared state, open resources, or a half-finished write in an unknown, unsafe condition.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A <code>CancellationToken</code> only carries a request — <code>.Cancel()</code> sets a flag, and the running code itself checks that flag and decides when it's safe to stop.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Cancellation = a flag the operation has to check for itself, not a switch that stops it.</span></div>
+      </div>
     </div>
   </details>
 
@@ -227,6 +230,80 @@ cts.Cancel();   <span class="cx-cmt">// just sets a flag — nothing is running 
       </div>
       <p class="cx-note">Accepting a token isn't enough — a method that never checks it can't actually be cancelled.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A loop checks the flag on every pass</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc17a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+                </marker>
+              </defs>
+              <rect x="20" y="15" width="190" height="36" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🔍 check flag → false</text>
+              <rect x="270" y="15" width="190" height="36" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="365" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">▶ keep looping</text>
+              <path d="M210,33 H270" fill="none" stroke="#16a34a" stroke-width="1.6" marker-end="url(#arUc17a)"/>
+              <path d="M365,51 C365,64 115,64 115,51" fill="none" stroke="#16a34a" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#arUc17a)"/>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: the loop calls <code>IsCancellationRequested</code> on every iteration, so <code>.Cancel()</code> is noticed on the very next pass and the method returns cleanly on its own terms.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Checking every iteration is what makes cancellation feel almost immediate.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> A deep call chain uses <code>ThrowIfCancellationRequested()</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc17b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="8" y="15" width="140" height="36" rx="8" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="78" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">📞 deep call chain</text>
+              <rect x="168" y="15" width="150" height="36" rx="8" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="243" y="37" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">🚫 throws exception</text>
+              <rect x="338" y="15" width="134" height="36" rx="8" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="405" y="37" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">🧑 caller: cancelled</text>
+              <path d="M148,33 H168" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#arUc17b)"/>
+              <path d="M318,33 H338" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#arUc17b)"/>
+            </svg>
+          </div>
+          <p class="uc-what">The code is nested several calls deep, so returning cleanly from every level would be clunky. <code>ThrowIfCancellationRequested()</code> throws an <code>OperationCanceledException</code> instead, which unwinds the whole chain automatically and tells the caller "cancelled," not "failed."</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Throwing beats manual returns once cancellation has to unwind several call levels.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A method accepts the token but never checks it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc17c" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+                </marker>
+              </defs>
+              <rect x="30" y="15" width="190" height="36" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="125" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#b91c1c">📥 method holds token</text>
+              <rect x="270" y="15" width="190" height="36" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="365" y="30" text-anchor="middle" font-size="9.5" font-weight="700" fill="#b91c1c">❌ token never checked</text>
+              <text x="365" y="44" text-anchor="middle" font-size="9" font-weight="700" fill="#b91c1c">Cancel() is ignored</text>
+              <path d="M220,33 H270" fill="none" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arUc17c)"/>
+            </svg>
+          </div>
+          <p class="uc-what">Candidates often assume passing a <code>CancellationToken</code> into a method is enough on its own. It isn't — if that method never reads <code>IsCancellationRequested</code> (or calls <code>ThrowIfCancellationRequested()</code>), <code>.Cancel()</code> has nothing to notice, and the method runs to completion anyway.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Accepting a token is not the same as being cancellable.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 
