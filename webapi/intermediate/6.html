@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use this to check whether you understand what your controller signature actually promises to tooling, not just which keyword compiles.</li>
-        <li>Comes up any time you're picking a return type for a new endpoint, especially once Swagger/OpenAPI generation and typed client SDKs are part of the pipeline.</li>
-        <li>A common follow-up checks whether you think <code>ActionResult&lt;T&gt;</code> changes the actual HTTP response — a good chance to show you know it's compile-time only.</li>
-      </ul>
+      <div class="why-grid cols-2">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📦 IActionResult</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A controller action often needs to return several different outcomes from one method — <code>Ok()</code>, <code>NotFound()</code>, <code>BadRequest()</code>, <code>Created()</code> — but a method signature can only declare one return type.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>IActionResult is the base interface every one of those result types implements, so a single signature can return any mix of them — at the cost of the signature not saying what a successful response actually contains.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">IActionResult = any result, success type hidden.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🏷️ ActionResult&lt;T&gt;</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Returning plain IActionResult hides the real success type, so Swagger/OpenAPI generates only a generic schema and client-SDK generators produce an untyped response object.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>ActionResult&lt;T&gt; keeps that exact same flexibility — it implicitly converts from either a plain <code>T</code> or any IActionResult — while also declaring the real success type <code>T</code> in the signature, so Swagger and client generators read it automatically.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">ActionResult&lt;T&gt; = same flexibility, success type declared.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -222,6 +235,78 @@
       </div>
       <p class="cx-note">No success payload exists here, so <code>ActionResult&lt;T&gt;</code> would add nothing — <code>IActionResult</code> is still the right call.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> An action can genuinely return different result types depending on the outcome</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc1" markerWidth="7" markerHeight="7" refX="5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5,2.5 L0,5 Z" fill="#16a34a"/>
+                </marker>
+              </defs>
+              <rect x="10" y="20" width="150" height="26" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="85" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">GetOrder(id)</text>
+              <path d="M164,25 L200,15" stroke="#16a34a" stroke-width="1.5" fill="none" marker-end="url(#arUc1)"/>
+              <path d="M164,41 L200,51" stroke="#16a34a" stroke-width="1.5" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="205" y="4" width="130" height="22" rx="7" fill="#ffffff" stroke="#16a34a" stroke-width="1.3"/>
+              <text x="270" y="19" text-anchor="middle" font-size="10.5" fill="#166534">Ok(order)</text>
+              <rect x="205" y="40" width="130" height="22" rx="7" fill="#ffffff" stroke="#16a34a" stroke-width="1.3"/>
+              <text x="270" y="55" text-anchor="middle" font-size="10.5" fill="#166534">NotFound()</text>
+            </svg>
+          </div>
+          <p class="uc-what">Both IActionResult and ActionResult&lt;T&gt; can return any mix of outcomes from the same method — ActionResult&lt;T&gt; keeps that identical flexibility because it converts implicitly from any IActionResult. Recognizing this shape just means either type can handle it; the choice comes down to whether there's a real payload type worth declaring.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Multiple outcomes, one method → both types support it.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You want Swagger/OpenAPI to generate an accurate schema for the success case</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc2" markerWidth="7" markerHeight="7" refX="5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5,2.5 L0,5 Z" fill="#b45309"/>
+                </marker>
+              </defs>
+              <rect x="10" y="20" width="180" height="26" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="1.5"/>
+              <text x="100" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">ActionResult&lt;Order&gt;</text>
+              <path d="M194,33 H230" stroke="#b45309" stroke-width="1.5" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="235" y="20" width="235" height="26" rx="8" fill="#ffffff" stroke="#b45309" stroke-width="1.3"/>
+              <text x="352" y="37" text-anchor="middle" font-size="10.5" fill="#92400e">Swagger schema: Order ✅</text>
+            </svg>
+          </div>
+          <p class="uc-what">Returning plain IActionResult leaves Swagger seeing only "some action result," so it generates a generic schema unless you hand-annotate with <code>[ProducesResponseType]</code>. Returning ActionResult&lt;T&gt; instead puts the real success type in the signature, so Swagger reads it and generates the schema automatically.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Accurate schema, no annotations → declare T with ActionResult&lt;T&gt;.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">3</span> A typed client SDK needs to know the exact success response shape at compile time</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc3" markerWidth="7" markerHeight="7" refX="5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5,2.5 L0,5 Z" fill="#6d28d9"/>
+                </marker>
+              </defs>
+              <rect x="10" y="20" width="180" height="26" rx="8" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <text x="100" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#5b21b6">ActionResult&lt;Order&gt;</text>
+              <path d="M194,33 H230" stroke="#6d28d9" stroke-width="1.5" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="235" y="20" width="235" height="26" rx="8" fill="#ffffff" stroke="#6d28d9" stroke-width="1.3"/>
+              <text x="352" y="37" text-anchor="middle" font-size="10.5" fill="#5b21b6">Generated client: typed Order</text>
+            </svg>
+          </div>
+          <p class="uc-what">Tools like NSwag or Swashbuckle build a generated client's methods from the declared schema. An action returning IActionResult produces an untyped response in that client; the same action returning ActionResult&lt;T&gt; gives the generated client a properly typed method, with no change to the logic inside.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Typed client SDK → needs ActionResult&lt;T&gt;'s declared T.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

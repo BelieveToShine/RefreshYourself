@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers ask this to check you know a JWT is <code>signed</code>, not encrypted — a real source of security bugs when secrets end up in the payload.</li>
-        <li>Comes up the moment an API design conversation moves past "just use JWT" into how access actually gets renewed and revoked.</li>
-        <li>A common lead-in to a revocation/security follow-up — see below.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔑 Access Token</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A JWT can't be individually cancelled once it's issued, so a leaked one that stayed valid for days would keep working for its entire lifetime.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Access tokens are kept short-lived (minutes to a few hours) so a leak only has a small window before it expires on its own.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Access token = short-lived, signature-only, never directly revocable.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🔄 Refresh Token</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>If every token were that short-lived, the user would have to log back in every few minutes just to keep working.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A longer-lived refresh token, checked against a stored server record, gets exchanged for a new access token — the session persists, and the server can still say no.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Refresh token = long-lived, checked against server state — the real revocation point.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -260,6 +273,76 @@ Console.WriteLine(payloadJson);
       </div>
       <p class="cx-note">The access token itself is <b>never</b> looked up in a database — only the refresh token is, and that's exactly where revocation becomes possible.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> An access token expires mid-session and the app needs to keep going</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc91" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">SILENT REFRESH, MID-SESSION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">⏳ Access token expires</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc91)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🔄 New one issued quietly</text>
+            </svg>
+          </div>
+          <p class="uc-what">The app calls the refresh endpoint in the background using the
+          still-valid refresh token, gets a new access token back, and retries the call — the
+          user never sees a login screen. <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Access token expiring → silent refresh, not a forced login.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> A refresh token needs to be revoked immediately — logout, or suspected compromise</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc92" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">THE ACTUAL REVOCATION POINT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🚪 Logout / compromise</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc92)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🗑️ Stored record revoked</text>
+            </svg>
+          </div>
+          <p class="uc-what">Because the refresh token is looked up against a stored server
+          record, deleting or flagging that record rejects the very next refresh attempt. The
+          access token itself can't be revoked this way — it's the refresh token's server-side
+          record that makes revocation possible at all.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Logout / compromise → revoke the refresh token's record, not the access token.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> The refresh token is stored in browser <code>localStorage</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc93" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">READABLE BY ANY SCRIPT ON THE PAGE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">💾 localStorage</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc93)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">⚠️ Any XSS can read it</text>
+            </svg>
+          </div>
+          <p class="uc-what">Anything stored in <code>localStorage</code> is plain JavaScript-readable —
+          including by an attacker's script, if the page has an XSS bug. <b>Candidates often stop at
+          "just use JWT" and never get to where the tokens actually live</b>; a leaked long-lived
+          refresh token is worse than a leaked access token, since it can keep minting fresh access
+          tokens until someone notices and revokes it. An <code>httpOnly</code> cookie — never
+          reachable by page JavaScript at all — is the safer place to keep it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Refresh token in <code>localStorage</code> + XSS → attacker can keep minting access tokens.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

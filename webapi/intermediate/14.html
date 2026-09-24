@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use this to check you design for the consumer, not just "it returns the right rows."</li>
-        <li>Comes up on any collection endpoint — <code>/orders</code>, <code>/customers</code>, <code>/products</code> all eventually need sorting and filtering.</li>
-        <li>A sibling page covers <a href="13.html">Pagination</a> (<code>?page=</code>/<code>?cursor=</code>) — that's the "how many, which chunk" question. This page is the different question of "which fields, in what order" — the two live in the same query string but are separate conventions to get right.</li>
-      </ul>
+      <div class="why-grid cols-2">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">↕️ Sort convention</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without one agreed shape, one endpoint might expect <code>?sortBy=name&amp;direction=desc</code> while another invents its own params — a client can't write one generic sort helper across the API, and asking for "newest first, then by name" has nowhere obvious to go.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>?sort=-createdAt,name</code> — a comma list where a leading <code>-</code> means descending — expresses direction and multiple fields in one small, reusable syntax used the same way on every endpoint.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Sort = comma list, leading "-" = descending, no prefix = ascending.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🔍 Filter convention</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without a documented allow-list, a client can query on any field it likes — including one with no index — and a filter that's fine with 50 rows in dev can lock the table once real data lands.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>One query parameter per filterable field (<code>?status=shipped</code>), checked against an allow-list matched to real indexes, keeps filtering both discoverable and safe to run at scale.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Filter = one param per field, gated by an allow-list.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -227,6 +240,81 @@
       </div>
       <p class="cx-note">Each filterable field is its own parameter — a consumer can guess the shape <b>without reading extra docs</b>.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A client wants multi-field sort — newest first, then by name</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc14SortA" markerWidth="7" markerHeight="7" refX="5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5,2.5 L0,5 Z" fill="#1d4ed8"/>
+                </marker>
+              </defs>
+              <rect x="10" y="14" width="190" height="38" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
+              <text x="105" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">1st: createdAt ↓</text>
+              <text x="105" y="44" text-anchor="middle" font-size="9.5" fill="#5b6472">newest first</text>
+              <path d="M204,33 H230" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#arUc14SortA)"/>
+              <rect x="234" y="14" width="190" height="38" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
+              <text x="329" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">2nd: name ↑</text>
+              <text x="329" y="44" text-anchor="middle" font-size="9.5" fill="#5b6472">tie-breaker only</text>
+            </svg>
+          </div>
+          <p class="uc-what">The comma list applies left-to-right: the first field is the primary sort key, and every field after it only breaks ties where the previous field was equal. <code>?sort=-createdAt,name</code> puts the newest orders first, and only falls back to alphabetical <code>name</code> when two orders share the exact same <code>createdAt</code>.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Comma order = sort priority order — leftmost field wins first.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> A client wants to filter a collection down to one field's value</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arUc14FilterA" markerWidth="7" markerHeight="7" refX="5" refY="2.5" orient="auto">
+                  <path d="M0,0 L5,2.5 L0,5 Z" fill="#b45309"/>
+                </marker>
+              </defs>
+              <rect x="8" y="14" width="130" height="38" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.5"/>
+              <text x="73" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">All orders</text>
+              <text x="73" y="44" text-anchor="middle" font-size="9.5" fill="#5b6472">every status</text>
+              <path d="M142,33 H172" stroke="#b45309" stroke-width="1.6" marker-end="url(#arUc14FilterA)"/>
+              <rect x="176" y="14" width="150" height="38" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.5"/>
+              <text x="251" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">?status=active</text>
+              <text x="251" y="44" text-anchor="middle" font-size="9.5" fill="#5b6472">one param, one field</text>
+              <path d="M330,33 H360" stroke="#b45309" stroke-width="1.6" marker-end="url(#arUc14FilterA)"/>
+              <rect x="364" y="14" width="108" height="38" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.5"/>
+              <text x="418" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">active only</text>
+              <text x="418" y="44" text-anchor="middle" font-size="9.5" fill="#5b6472">rest excluded</text>
+            </svg>
+          </div>
+          <p class="uc-what">Adding <code>?status=active</code> doesn't change which resource is being asked for — it narrows the same <code>/orders</code> collection down to rows where that one field matches, the same rule as any other filterable field like <code>minTotal</code>.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One param, one field, exact match — nothing extra to parse.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">3</span> Sort, filter, and pagination all show up on the same request</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <rect x="8" y="8" width="464" height="26" rx="8" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <text x="240" y="25" text-anchor="middle" font-family="'Fira Code', monospace" font-size="10.5" font-weight="700" fill="#5b21b6">?status=active&amp;sort=-createdAt&amp;page=2&amp;pageSize=20</text>
+              <text x="80" y="52" text-anchor="middle" font-size="10" font-weight="700" fill="#6d28d9">filter</text>
+              <text x="240" y="52" text-anchor="middle" font-size="10" font-weight="700" fill="#6d28d9">sort</text>
+              <text x="400" y="52" text-anchor="middle" font-size="10" font-weight="700" fill="#6d28d9">paginate</text>
+              <path d="M80,36 V44" stroke="#6d28d9" stroke-width="1.4"/>
+              <path d="M240,36 V44" stroke="#6d28d9" stroke-width="1.4"/>
+              <path d="M400,36 V44" stroke="#6d28d9" stroke-width="1.4"/>
+            </svg>
+          </div>
+          <p class="uc-what">These three are independent concerns that never conflict: the API filters the collection down first, orders whatever's left, then hands back just one page of it — so <code>?status=active&amp;sort=-createdAt&amp;page=2&amp;pageSize=20</code> reads as filter + sort + paginate, each doing its own job in the same query string. See <a href="13.html">Pagination</a> for the <code>page=</code>/<code>pageSize=</code> half of that.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Filter narrows, sort orders, paginate slices — same query string, three separate jobs.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

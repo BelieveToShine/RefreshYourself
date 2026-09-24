@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use this to check you treat status codes as real signals, not decoration sitting on top of a JSON body.</li>
-        <li>Comes up any time you design or review an API's response contract — getting <code>401</code> vs <code>403</code> wrong is exactly what a careful reviewer catches.</li>
-        <li><code>400</code> vs <code>422</code> is a classic tell: plenty of candidates have never had to reach for <code>422</code> at all.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">📦 200 vs. 201 vs. 204</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>All three mean "it worked," so it's tempting to treat them as interchangeable — but that throws away whether something new got created and whether there's even a body to read.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>201</code> pairs with a <code>Location</code> header for a newly created resource, <code>204</code> is success with deliberately no body, <code>200</code> is the default success that does return data.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">201 = created + Location. 204 = success, no body.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🧩 400 vs. 422</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Returning <code>400</code> for a value that fails a business rule (like an email that's already registered) makes it sound like the request itself was malformed, when the server actually understood it fine.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>400</code> means the server couldn't even parse the request; <code>422</code> means it parsed fine but the values fail validation once business rules are applied.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">400 = can't read it. 422 = read it, rejected it.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+          <div class="wc-head">🔐 401 vs. 403</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Returning <code>401</code> to a user who's already logged in but lacks permission tells them to log in again — the wrong fix, since their credentials are already valid.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>401</code> means there's no valid credential at all; <code>403</code> means the caller is authenticated but not permitted for this specific resource.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">401 = who are you? 403 = you, but not here.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -291,6 +312,86 @@
       </div>
       <p class="cx-note">Same shape, different question: <b>401 asks "who are you," 403 asks "are you allowed here."</b></p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">1</span> A caller sends no credentials at all, vs. a caller who's logged in but forbidden here</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 108" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#6d28d9"/></marker></defs>
+              <rect x="20" y="8" width="190" height="36" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="115" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#5b21b6">🙅 No credentials sent</text>
+              <path d="M210,26 H280" stroke="#6d28d9" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="280" y="8" width="180" height="36" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="370" y="30" text-anchor="middle" font-size="12" font-weight="800" fill="#5b21b6">401 Unauthorized</text>
+
+              <rect x="20" y="64" width="190" height="36" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="115" y="86" text-anchor="middle" font-size="11" font-weight="700" fill="#5b21b6">🔒 Logged in, wrong workspace</text>
+              <path d="M210,82 H280" stroke="#6d28d9" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="280" y="64" width="180" height="36" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="370" y="86" text-anchor="middle" font-size="12" font-weight="800" fill="#5b21b6">403 Forbidden</text>
+            </svg>
+          </div>
+          <p class="uc-what">No credentials at all means the server doesn't know who's asking — that's
+          <code>401</code>, and the fix is to log in. A valid, logged-in caller asking for something
+          they're not permitted to touch is a different problem — the server knows exactly who they
+          are, so it's <code>403</code>, and logging in again changes nothing. <b>This is the #1 auth
+          mix-up interviewers listen for.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No identity → 401. Known identity, no permission → 403.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> A well-formed, valid-JSON request that still fails once it reaches business-rule validation</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="15" y="24" width="215" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="122" y="43" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">📨 Valid JSON — email already taken</text>
+              <path d="M230,43 H310" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="310" y="24" width="155" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="387" y="47" text-anchor="middle" font-size="11.5" font-weight="800" fill="#92400e">422</text>
+            </svg>
+          </div>
+          <p class="uc-what">The request parses perfectly — valid JSON, every required field present
+          — but a business rule rejects the values once the server actually evaluates them, like an
+          email that's already registered. That's exactly the case <code>422</code> exists for,
+          separate from <code>400</code>'s "can't even read this."</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Parses fine, rules say no → 422, not 400.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> Creating a new resource that returns a body, vs. updating one with nothing new to send back</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 108" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="8" width="190" height="36" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">➕ POST creates it</text>
+              <path d="M210,26 H280" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="280" y="8" width="180" height="36" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="370" y="30" text-anchor="middle" font-size="11.5" font-weight="800" fill="#166534">201 + Location</text>
+
+              <rect x="20" y="64" width="190" height="36" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="86" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✏️ PUT/DELETE, nothing new</text>
+              <path d="M210,82 H280" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="280" y="64" width="180" height="36" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="370" y="86" text-anchor="middle" font-size="11.5" font-weight="800" fill="#166534">204 No Content</text>
+            </svg>
+          </div>
+          <p class="uc-what">Creating something new gives the caller a reason to get something back
+          — the created resource itself, plus a <code>Location</code> header pointing at it, which is
+          exactly what <code>201</code> carries. Once the resource already exists and the update (or
+          delete) doesn't produce anything new to return, <code>204</code>'s empty body is the honest
+          response — there's genuinely nothing new to send.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">New thing to hand back → 201. Nothing new to hand back → 204.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

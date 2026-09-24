@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use the async question to check you know the difference between "non-blocking code" and a genuinely async <b>API contract</b> — a lot of candidates conflate the two.</li>
-        <li>Comes up any time a feature involves a report, export, bulk import, or anything that can outlast a normal request timeout.</li>
-        <li>The security half is a near-automatic follow-up the moment you say "we use JWT" — it's how an interviewer checks whether you stop at authentication or actually think about the whole request.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔵 Sync request/response</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span><code>async</code>/<code>await</code> frees the server's thread, but the client's single HTTP call is still open the whole time, waiting on that same response.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>That's the right shape for normal request/response work: one call in, the full result out, as soon as it's ready.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>async</code>/<code>await</code> → same request, thread just freed.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🟢 Async (202 + polling)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A report or bulk import can run for minutes — long enough to blow past any request timeout, no matter how much thread-freeing <code>async</code>/<code>await</code> does.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The endpoint returns <code>202 Accepted</code> with a status URL immediately, the real work runs out-of-band, and the client polls (or gets a webhook) for the result.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>202</code> + polling → new request, work decoupled.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🚫 Async ≠ Security-solved</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Teams that switch an endpoint to async sometimes assume that change also made it more secure.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It didn't — going async only changes the threading and request contract; authentication, authorization, and input validation are still a completely separate, still-required concern.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Async is a threading/contract choice — security is a separate job entirely.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -297,6 +318,66 @@
       </div>
       <p class="cx-note">A secure API's error responses stay <b>generic</b> — the real detail goes to the log, never the client.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A report or bulk-import job that would time out as a normal synchronous request</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc12r1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">TOO LONG FOR ONE CALL</text>
+              <rect x="20" y="24" width="200" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="120" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">📊 Bulk import / report</text>
+              <path d="M220,43 H270" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc12r1)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">202 + poll for result</text>
+            </svg>
+          </div>
+          <p class="uc-what">The job itself can run for minutes — longer than any request timeout allows. Returning <code>202 Accepted</code> immediately and letting a background worker do the real work is exactly the pattern this page's diagram shows: one fast call now, the actual result found later by polling.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Job runs longer than a request should wait → <code>202</code> + polling.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> A webhook notifies the caller once background work finishes, instead of the caller polling forever</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc12r2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">PUSH, NOT POLL</text>
+              <rect x="20" y="24" width="220" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">⚙️ Background job finishes</text>
+              <path d="M240,43 H280" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc12r2)"/>
+              <rect x="280" y="24" width="180" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="370" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🔔 Webhook → caller</text>
+            </svg>
+          </div>
+          <p class="uc-what">Polling still means the client keeps asking "done yet?" on a timer. A webhook flips that around — the server calls the client back the moment the job actually finishes, so nobody has to poll at all.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Don't want to poll → let the server call back instead (webhook).</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A team assumes that because an endpoint went async, it's also more secure</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc12r3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">ASYNC ≠ SECURE</text>
+              <rect x="20" y="24" width="220" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🔁 Endpoint went async</text>
+              <path d="M240,43 H280" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc12r3)"/>
+              <rect x="280" y="24" width="180" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="370" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🔓 Auth unchanged</text>
+            </svg>
+          </div>
+          <p class="uc-what">Switching to <code>202</code> + polling only changed the threading and the request contract — it says nothing about who's calling or what they're allowed to send. Authentication, authorization, and input validation are a completely separate concern that still has to be built, async or not. <b>A classic interview trap</b> — candidates sometimes imply going async somehow "hardens" an endpoint.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Async is a contract change, not a security upgrade.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

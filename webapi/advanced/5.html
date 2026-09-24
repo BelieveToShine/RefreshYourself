@@ -64,14 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>A marketing blast, a cold cache after a deploy, or a bot crawl can genuinely 10x
-        traffic in minutes — this is a real operational question, not a trivia one.</li>
-        <li>Interviewers use it to check whether you diagnose before you act — reaching straight
-        for "add more servers" is the single most common wrong turn on this question.</li>
-        <li>A common opener before the interviewer pushes into rate limiting, retries, or
-        distributed-systems follow-ups on the same scenario.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">📈 Real growth</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Demand genuinely went up and it's sticking around — treat it like a fluke and real users start hitting rate limits or errors during a spike you should be capturing, not blocking.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Scale out (or autoscale) and invest in caching and capacity planning — this is the one cause where adding capacity is actually the right fix.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Real growth → scale for it, it's not going away.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🔁 Retry storm</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A downstream dependency has a bad patch, callers with no backoff retry the same failed call over and over, and the retries alone multiply into a spike that looks identical to real growth.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Throttle at the edge to survive the moment, then fix backoff and circuit breaking on the caller — scaling out only gives the storm more to retry against.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Retry storm → fix the caller's backoff, don't just add servers.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">🚨 Attack</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Malicious or abusive traffic floods the API on purpose — scaling out just hands the attacker more capacity to hit, and nothing about the actual problem improves.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Rate-limit and block at the edge — WAF rules and abuse detection stop bad traffic before it ever reaches the backend.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Attack → block at the edge, scaling doesn't help.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -267,6 +285,77 @@
       <p class="cx-note">Throttling at the edge is the fast, safe mitigation while you diagnose —
       it protects the backend from total collapse instead of letting every request fail.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Traffic is up, but it's coming from many different users and IPs, hitting the normal mix of endpoints</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">MANY DISTINCT CALLERS, NORMAL SPREAD</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🌍 1,000s of unique IPs</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🔌 usual mix of endpoints</text>
+            </svg>
+          </div>
+          <p class="uc-what">Look at unique client counts, not just total requests — when the
+          extra volume is spread across a broad, varied set of callers and lands on the same mix
+          of endpoints your API normally serves, that spread is the signature of real growth,
+          not a malfunction. <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Many distinct IPs, normal spread → real growth.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> Traffic is up, but it's the same handful of endpoints getting hit with duplicate-looking calls, right around a recent partial outage</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">OUTAGE TIMING + DUPLICATE CALLS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">💥 outage a few min ago</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔁 duplicate retries</text>
+            </svg>
+          </div>
+          <p class="uc-what">Check your own logs and incident history first — if the spike lines
+          up right after a downstream dependency was returning errors, and the extra volume is
+          concentrated on the same few endpoints as duplicate retries of the same failed calls
+          rather than spread across your normal traffic, that combination is a retry storm, not
+          new demand.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Duplicate calls + recent outage timing → retry storm.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Traffic is up with patterns that don't look like real usage — one endpoint way out of proportion, a narrow set of IPs, or oddly-shaped requests</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">CONCENTRATED + SUSPICIOUS SHAPE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🎯 narrow set of IPs</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🚨 one endpoint spike</text>
+            </svg>
+          </div>
+          <p class="uc-what">Look for traffic that doesn't behave like a real client would —
+          near-total concentration on a single endpoint, a small number of source IPs generating
+          a huge share of volume, or requests with malformed or scripted-looking payloads and
+          headers. That combination is the signal to rate-limit and block at the edge, not to
+          provision more capacity for it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Concentrated + narrow IPs + malformed requests → attack, not demand.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

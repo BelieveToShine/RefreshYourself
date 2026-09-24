@@ -64,11 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Interviewers use this to check you understand HTTP as a protocol, not just "JSON goes in, JSON comes out."</li>
-        <li>Comes up any time you're designing a request shape — where does the auth token go, where does an idempotency key go, where does the actual order data go.</li>
-        <li>A common interview opener when the role touches API design or code review, since it's an easy mistake to spot in a pull request.</li>
-      </ul>
+      <div class="why-grid cols-2">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📦 Body</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Cram an order's line items into a custom header instead and you hit real header size limits, and tools like Swagger and request loggers never find the payload where they expect it.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The body carries the resource's actual field values — the fields your model-binding code reads directly, with no practical size ceiling the way headers have.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Body = the payload — read by your model-binding code.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">📋 Headers</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Hide the auth token or a content-negotiation hint inside the JSON body and the framework's own middleware never sees it — nothing reads a custom <code>{"token": "..."}</code> field without bespoke code.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Headers carry metadata about the request itself — identity, format, and cross-cutting concerns — exactly where framework middleware like auth and content negotiation already looks.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Headers = metadata — read automatically by middleware.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -212,6 +225,68 @@ request.Headers.Add(<span class="str">"X-Order-Items"</span>, jsonLineItems);  <
       </div>
       <p class="cx-note">Both directions of the mistake compile fine — the bug only shows up when a proxy truncates the header, or auth middleware silently finds <b>no</b> <code>Authorization</code> header to check.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You need to send an auth token with every request</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="8" width="460" height="22" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.2"/>
+              <text x="20" y="23" font-size="10" fill="#15803d">Authorization: Bearer &lt;token&gt;</text>
+              <rect x="10" y="36" width="460" height="22" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2"/>
+              <text x="20" y="51" font-size="10" fill="#64748b">body: { productId, quantity }</text>
+            </svg>
+          </div>
+          <p class="uc-what">The token authenticates the request itself, not the resource being
+          created or read — and the framework's auth middleware is already built to read it
+          straight off the <code>Authorization</code> header. Put it in the JSON body instead and
+          that middleware never sees it; you'd need bespoke code just to pull it back out.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Auth token → <code>Authorization</code> header, never the body.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Your <code>POST</code> creates a resource and the client might retry it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="8" width="460" height="22" rx="6" fill="#fef3c7" stroke="#b45309" stroke-width="1.2"/>
+              <text x="20" y="23" font-size="10" fill="#92400e">Idempotency-Key: 7c1a2e9b-...</text>
+              <rect x="10" y="36" width="460" height="22" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2"/>
+              <text x="20" y="51" font-size="10" fill="#64748b">body: { productId, quantity }</text>
+            </svg>
+          </div>
+          <p class="uc-what">The idempotency key tells the server how to handle a duplicate retry
+          — it's an instruction about processing the request, not one of the order's own fields.
+          It rides in the <code>Idempotency-Key</code> header while the actual order data
+          (<code>productId</code>, <code>quantity</code>) stays in the body.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Idempotency-Key → header; the resource fields still go in the body.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">3</span> You need to say what format you're sending and what format you want back</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 92" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="6" width="460" height="22" rx="6" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.2"/>
+              <text x="20" y="21" font-size="10" fill="#5b21b6">Content-Type: application/json</text>
+              <rect x="10" y="32" width="460" height="22" rx="6" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.2"/>
+              <text x="20" y="47" font-size="10" fill="#5b21b6">Accept: application/json</text>
+              <rect x="10" y="58" width="460" height="22" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2"/>
+              <text x="20" y="73" font-size="10" fill="#64748b">body: { ...payload... }</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>Content-Type</code> describes the format of the body you're
+          sending; <code>Accept</code> tells the server what format you want the response back in.
+          Both are instructions about format, not the payload itself, so both live in headers —
+          the body never states its own format.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Format in/out → <code>Content-Type</code> and <code>Accept</code> headers, not body fields.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

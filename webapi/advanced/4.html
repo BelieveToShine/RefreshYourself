@@ -64,15 +64,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>An API that works fine in testing can still fall over in production the moment a few
-        large uploads land at the same time — the failure is about concurrent memory pressure,
-        not any single request being "too big."</li>
-        <li>Interviewers use this to check whether you reach for streaming and limits by design,
-        not "increase the timeout" as a first reflex.</li>
-        <li>A common opener before the interviewer pushes into what you'd do if the client itself
-        can't be changed.</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">📦 Buffer whole body</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Reading the whole request or response into one in-memory object before doing anything with it makes memory use grow directly with payload size, so a few large payloads landing together can exhaust server memory or trigger timeouts.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Stop waiting for the entire body before touching it — process it in pieces instead, which is exactly what streaming (next card) does.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Buffer whole body → memory grows with payload size, thread often held the whole time.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🧩 Stream in chunks</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Buffering the whole payload before processing it ties up memory — and, if done synchronously, a thread — for the entire transfer, so resource use scales with payload size instead of staying flat.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Read or write the payload piece by piece with a <code>Stream</code> or <code>IAsyncEnumerable&lt;T&gt;</code> — memory stays roughly constant regardless of payload size, and async I/O releases the thread between chunks instead of holding it the whole time.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Stream in chunks → memory stays flat, thread released between chunks.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -277,6 +286,76 @@
       <p class="cx-note"><code>IAsyncEnumerable&lt;T&gt;</code> writes each row to the response as
       it's produced — the server never assembles the full result set in memory first.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A user uploads a large file from a client</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc4a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">STREAM STRAIGHT THROUGH</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">👤 Client upload</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc4a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">💾 Disk / blob storage</text>
+            </svg>
+          </div>
+          <p class="uc-what">The file arrives on <code>Request.Body</code> as a stream — piping it
+          straight to disk or blob storage as it arrives, instead of buffering it into a
+          <code>byte[]</code> first, keeps memory flat no matter how large the file is. A request
+          size limit still caps the worst case.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Large upload → stream straight through, never buffer to a <code>byte[]</code> first.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> A bulk data export or import job</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc4b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing=".03em">ROW BY ROW, NOT ALL AT ONCE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🗄️ Data source</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc4b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">📤 One row at a time</text>
+            </svg>
+          </div>
+          <p class="uc-what">Building the full result set as one <code>List&lt;T&gt;</code> before
+          returning it, or reading an entire import file into memory before validating it, both
+          scale memory with row count. Streaming rows with <code>IAsyncEnumerable&lt;T&gt;</code>
+          (export) or processing an import file in chunks keeps memory bounded no matter how many
+          rows there are.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Bulk export/import → stream rows, never load the whole batch at once.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> Streaming media or a large JSON response without holding it all in memory</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc4c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">WRITE AS IT'S PRODUCED</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🎞️ Media / JSON source</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc4c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">📡 Response, in flight</text>
+            </svg>
+          </div>
+          <p class="uc-what">Returning <code>IAsyncEnumerable&lt;T&gt;</code> writes each item to the
+          response as it's produced instead of materializing the full list first, and serving media
+          the same way — piping bytes through as they're read — means the response is never fully
+          assembled in memory on the server.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Large response → stream it out as it's produced, don't materialize it first.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

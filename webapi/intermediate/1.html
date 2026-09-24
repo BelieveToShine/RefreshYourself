@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Separates "memorized the terms" from "understands what actually breaks in production" — a very common filter question.</li>
-        <li>Comes up any time a browser, a proxy, a CDN, or an HTTP client library has to decide whether it's allowed to automatically retry a failed request.</li>
-        <li>Almost always followed by "so why does that actually matter?" — see the follow-up below.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🛡️ Safe methods</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Infrastructure that knows nothing about your app — a browser, a proxy, a CDN — needs a way to tell whether calling a method again is harmless, without asking your server first.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>GET</code>, <code>HEAD</code>, and <code>OPTIONS</code> all promise never to change server state, so that infrastructure is free to retry, prefetch, or cache them.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Safe = never changes state — <code>GET</code>, <code>HEAD</code>, <code>OPTIONS</code>.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🔁 Idempotent methods</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A client whose <code>PUT</code> or <code>DELETE</code> call times out needs to know whether it's safe to just resend the exact same request.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>PUT</code> and <code>DELETE</code> do change state, so neither is safe — but repeating the exact same one still lands in the same end state, so a retry is fine.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>PUT</code>/<code>DELETE</code> change state (not safe) — repeat = same result (idempotent).</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+          <div class="wc-head">⚖️ Safety ≠ Idempotency</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>People treat these as the same property — and wrongly call <code>DELETE</code> "safe" just because a retry is harmless, skipping the caution a real state change deserves.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>They're independent axes: safe asks whether it ever changes state; idempotent asks whether repeating it changes the outcome further. <code>DELETE</code> proves a method can be idempotent without being safe.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Independent axes — idempotent doesn't mean safe (see <code>DELETE</code>).</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -153,6 +174,70 @@
     </svg>
     <figcaption><code>GET</code> is the only verb that's both. <code>PUT</code>/<code>DELETE</code> aren't safe but are still idempotent. <code>PATCH</code>'s idempotency isn't fixed by the verb — it's fixed by what the patch does.</figcaption>
   </figure>
+
+  <div class="viz-label">🧠 Don't mix these up <span class="viz-sub">— safe and idempotent are two separate questions</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 420" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shMx1" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arMxUp" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.5">SAFE × IDEMPOTENT — TWO SEPARATE QUESTIONS</text>
+
+      <g filter="url(#shMx1)"><rect x="30" y="44" width="130" height="44" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="95" y="62" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">⬇ SAFE?</text>
+      <text x="95" y="78" text-anchor="middle" font-size="9" font-weight="700" fill="#475569">➡ IDEMPOTENT?</text>
+
+      <g filter="url(#shMx1)"><rect x="170" y="44" width="215" height="44" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="277" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">❌ NOT IDEMPOTENT</text>
+      <text x="277" y="78" text-anchor="middle" font-size="8.5" fill="#5b6472">repeat = extra effect</text>
+
+      <g filter="url(#shMx1)"><rect x="395" y="44" width="215" height="44" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="502" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">✅ IDEMPOTENT</text>
+      <text x="502" y="78" text-anchor="middle" font-size="8.5" fill="#5b6472">repeat = same end state</text>
+
+      <g filter="url(#shMx1)"><rect x="30" y="98" width="130" height="90" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="95" y="138" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">✅ SAFE</text>
+      <text x="95" y="158" text-anchor="middle" font-size="9.5" fill="#5b6472">no state change</text>
+
+      <g filter="url(#shMx1)"><rect x="30" y="198" width="130" height="90" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="95" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">❌ NOT SAFE</text>
+      <text x="95" y="258" text-anchor="middle" font-size="9.5" fill="#5b6472">changes state</text>
+
+      <g filter="url(#shMx1)"><rect x="170" y="98" width="215" height="90" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="6 4"/></g>
+      <text x="277" y="138" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">— none —</text>
+      <text x="277" y="158" text-anchor="middle" font-size="9.5" fill="#5b6472">safe ⇒ always idempotent</text>
+
+      <g filter="url(#shMx1)"><rect x="395" y="98" width="215" height="90" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="502" y="138" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">GET · HEAD</text>
+      <text x="502" y="158" text-anchor="middle" font-size="9.5" fill="#5b6472">read-only — no repeat effect</text>
+
+      <g filter="url(#shMx1)"><rect x="170" y="198" width="215" height="90" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="277" y="238" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">POST</text>
+      <text x="277" y="258" text-anchor="middle" font-size="9.5" fill="#5b6472">creates — retry duplicates</text>
+
+      <g filter="url(#shMx1)"><rect x="395" y="198" width="215" height="90" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="502" y="238" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">PUT · DELETE</text>
+      <text x="502" y="258" text-anchor="middle" font-size="9.5" fill="#5b6472">repeat lands in same state</text>
+
+      <path d="M390,340 V320" fill="none" stroke="#d97706" stroke-width="1.6"/>
+      <path d="M390,320 H277" fill="none" stroke="#d97706" stroke-width="1.6"/>
+      <path d="M390,320 H502" fill="none" stroke="#d97706" stroke-width="1.6"/>
+      <path d="M277,320 V288" fill="none" stroke="#d97706" stroke-width="1.6" marker-end="url(#arMxUp)"/>
+      <path d="M502,320 V288" fill="none" stroke="#d97706" stroke-width="1.6" marker-end="url(#arMxUp)"/>
+
+      <g filter="url(#shMx1)"><rect x="260" y="340" width="260" height="54" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="390" y="364" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🔀 PATCH — depends</text>
+      <text x="390" y="382" text-anchor="middle" font-size="10" fill="#5b6472">lands in either bottom cell</text>
+    </svg>
+    <figcaption>Same idea, plotted on two independent axes — <code>PUT</code>/<code>DELETE</code> sit in "not safe, but idempotent," and no verb can ever land top-left: a method that never touches state can't fail to repeat safely.</figcaption>
+  </figure>
+  <div class="trio-tagline">⚖️ <span class="hl hl-hot">Idempotent</span> does <span class="hl hl-hot">not</span> mean <span class="hl hl-hot">safe</span> — they're two separate promises.</div>
 
   <div class="viz-label">🔍 What each one actually does <span class="viz-sub">— send it 3 times, watch what happens</span></div>
   <p style="margin:-4px 0 18px; font-size:14.5px; color:var(--ink-soft); max-width:640px;">The table above tells you the yes/no answer per verb. These small diagrams show WHY — the same request, sent three times in a row, and what state the server actually ends up in.</p>
@@ -474,6 +559,69 @@
       </div>
       <p class="cx-note">Same verb, same route shape — but an "increment" <code>PATCH</code> is <b>not idempotent</b>. The verb never guarantees it; the operation's own semantics do.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> An HTTP client library decides whether to auto-retry a failed call</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="24" width="200" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="120" y="48" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">⏱️ PUT/DELETE call times out</text>
+              <path d="M220,43 H280" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="280" y="24" width="180" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="370" y="48" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">🔁 Safe to resend</text>
+            </svg>
+          </div>
+          <p class="uc-what">A retry wrapper firing again after a timeout has no idea what your endpoint does — it can only look at the verb. Because <code>GET</code>, <code>HEAD</code>, <code>PUT</code>, and <code>DELETE</code> are all idempotent, resending the exact same one after a failure can't make things worse. <code>POST</code> gets no such free pass — the library can't tell whether the first attempt already succeeded, so retrying it risks a duplicate create.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Idempotent → safe to auto-retry. <code>POST</code> isn't, even if it already ran.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're choosing <code>PUT</code> vs. <code>POST</code> for an "update" endpoint</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 145" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="155" y="14" width="170" height="34" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="240" y="36" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🔄 PUT or POST?</text>
+              <path d="M240,48 V64" fill="none" stroke="#b45309" stroke-width="1.6"/>
+              <path d="M240,64 H130 V82" fill="none" stroke="#b45309" stroke-width="1.6" marker-end="url(#arUc2)"/>
+              <path d="M240,64 H350 V82" fill="none" stroke="#b45309" stroke-width="1.6" marker-end="url(#arUc2)"/>
+              <rect x="30" y="82" width="200" height="46" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="130" y="102" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">PUT</text>
+              <text x="130" y="118" text-anchor="middle" font-size="9.5" fill="#5b6472">replace resource — idempotent</text>
+              <rect x="250" y="82" width="200" height="46" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="350" y="102" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">POST</text>
+              <text x="350" y="118" text-anchor="middle" font-size="9.5" fill="#5b6472">create/append — not idempotent</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>PUT</code> expects the client to send the resource's full new state at a known URL and promises repeats land in the same place — pick it for "replace/update this exact resource." <code>POST</code> expects the server to decide what gets created, so a retry can't promise the same outcome — pick it when the server, not the client, decides the new resource's identity.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Client knows the full state and the URL → <code>PUT</code>. Server decides what's created → <code>POST</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> A caching proxy or CDN decides what it may store or safely replay</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="24" width="200" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="120" y="48" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">📦 GET's response</text>
+              <path d="M220,43 H280" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="280" y="24" width="180" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="370" y="48" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ Cached &amp; reused</text>
+            </svg>
+          </div>
+          <p class="uc-what">Both questions collapse into one from the cache's point of view: <code>GET</code> and <code>HEAD</code> are safe, so a cache can store their responses and reuse them, and can also safely resend one automatically after a dropped connection. A CDN generally won't cache or blindly replay <code>POST</code>, <code>PUT</code>, <code>PATCH</code>, or <code>DELETE</code> — those change (or might change) server state, so replaying one without the origin's knowledge risks an unintended effect.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Safe → OK to cache. Not idempotent → never auto-replay.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

@@ -64,11 +64,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Almost every endpoint that accepts input gets asked about this — validation attributes are the first sign an interviewer checks whether you see the contract, not just the checks.</li>
-        <li>Comes up any time you're integrating with another team or generating a client SDK — knowing what Swagger/OpenAPI actually generates from separates "I clicked around Swagger UI" from "I understand the contract."</li>
-        <li>A common opener follow-up: "walk me through what happens when a request fails validation" — the expected answer is a structured error, not just "it returns 400."</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📋 Validation attributes</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without any rule on the DTO, a missing field or a malformed value — like an email with no <code>@</code> — binds successfully and reaches your action method with nothing having checked it.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>[Required]</code>, <code>[EmailAddress]</code>, and friends declare those rules on the DTO itself, and <code>[ApiController]</code> auto-validates them, returning a structured 400 before the action method ever runs.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Validation attributes = the contract, checked automatically before your code runs.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">📄 OpenAPI document</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without one generated description of the whole API, another team integrating with it has to read prose docs or guess at the real request/response shape.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>AddSwaggerGen()</code> generates the OpenAPI document straight from your controllers and DTOs — including those same validation attributes — so the contract is one always-current, machine-readable file.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">OpenAPI document = the contract, made machine-readable.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🖥️ Swagger UI / SDK</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without a generated artifact, every consuming team hand-writes its own client code or docs from whatever it was told, and that hand-written code silently drifts the moment the API changes.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Swagger UI renders that same OpenAPI document as a browsable page, and client generators read it to produce a typed SDK — both generated from one source, never hand-written.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Swagger UI &amp; SDK = both generated from the same document, never hand-written.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -237,6 +258,74 @@ app.UseSwaggerUI();   <span class="cx-ok">// renders the same document as a page
       </div>
       <p class="cx-note">Nobody wrote <code>openapi.json</code> by hand — <b><code>AddSwaggerGen</code></b> generates it from your controllers and DTOs.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A caller sends a request with a missing field or a malformed value</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc71" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="15" y="24" width="150" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="90" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">📨 Malformed payload</text>
+              <path d="M165,43 H295" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc71)"/>
+              <text x="230" y="37" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">binds, then checked</text>
+              <rect x="295" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="380" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b91c1c">🛑 auto-400, no save</text>
+            </svg>
+          </div>
+          <p class="uc-what">Model binding still populates the DTO, but <code>[ApiController]</code>
+          sees <code>ModelState.IsValid</code> is false and short-circuits with a structured 400 —
+          your action method's own code, including any database save, never runs.
+          <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Invalid model → auto-400 before your code executes.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> A frontend team needs a typed client for your API, without hand-writing request/response types</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc72" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="10" y="24" width="135" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="77" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">📄 openapi.json</text>
+              <path d="M145,43 H175" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc72)"/>
+              <rect x="175" y="24" width="130" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="240" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">⚙️ generator</text>
+              <path d="M305,43 H335" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc72)"/>
+              <rect x="335" y="24" width="135" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="402" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">📦 Typed SDK</text>
+            </svg>
+          </div>
+          <p class="uc-what">The frontend team points a client generator at the same OpenAPI
+          document your API already produces, and gets back typed request/response classes —
+          including which fields are required — with nobody on either side hand-writing them.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same OpenAPI document → typed SDK, generated not hand-written.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> The published spec quietly stops matching the real validation rules</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <rect x="15" y="24" width="200" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🧩 DTO: now [Required]</text>
+              <text x="240" y="47" text-anchor="middle" font-size="15" font-weight="700" fill="#dc2626">≠</text>
+              <rect x="265" y="24" width="200" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">📄 spec: still optional</text>
+            </svg>
+          </div>
+          <p class="uc-what">If the spec doesn't get regenerated after a validation rule changes
+          in code, it goes on describing a contract that no longer exists — a generated client
+          keeps sending data the real API now rejects, and the failure shows up as a confusing
+          runtime error far from the actual cause.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Stale spec → generated clients break against a contract that no longer exists.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 
