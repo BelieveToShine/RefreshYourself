@@ -22,26 +22,7 @@
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
@@ -154,7 +135,7 @@
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b>A retry can run a non-idempotent call twice.</b> Retrying a <code>POST</code> that
     charges a card may charge it twice — only retry calls that are safe to repeat (or send an
-    idempotency key), and check what your handler's defaults do for unsafe methods.</p>
+    idempotency key), and know that the standard handler retries <b>every</b> HTTP method by default, <code>POST</code> included — turn that off for unsafe methods with <code>DisableForUnsafeHttpMethods()</code>.</p>
   </div>
 
   <div class="followup">
@@ -190,9 +171,12 @@
 
       <p>The quick route is the <b>standard resilience handler</b>: one call on the client builder
       gives you a ready-made stack of rate limiting, an overall timeout, retry, a circuit breaker,
-      and a per-attempt timeout. There is also a hedging handler for slow idempotent calls. Check
-      the current docs for the exact defaults and option names before you quote numbers. When you
-      need something custom, build your own pipeline with Polly directly.</p>
+      and a per-attempt timeout. There is also a hedging handler for slow idempotent calls. The documented defaults are: total
+      timeout 30 seconds; retry up to 3 times with exponential backoff, jitter and a 2-second base
+      delay; circuit breaker opening at a 10% failure ratio (minimum 100 calls in a 30-second window)
+      for 5 seconds; and 10 seconds per attempt. Retries cover 5xx, 408, 429 and network or timeout
+      exceptions. When you need something custom, use <code>AddResilienceHandler</code> or build a pipeline with
+      Polly directly.</p>
 
       <p>Three habits make it safe. <b>Configure once</b> on the client, not around each call.
       <b>Mind the order</b> — the first strategy added is the outermost, so retry wraps the
@@ -221,10 +205,10 @@
         </div>
         <pre><code>builder.Services.AddHttpClient&lt;<span class="ty">RatesClient</span>&gt;(c =&gt;
         c.BaseAddress = <span class="kw">new</span> <span class="ty">Uri</span>(<span class="str">"https://rates.example"</span>))
-    .AddStandardResilienceHandler();   <span class="cx-ok">// ✅ retry + breaker + timeouts, once</span></code></pre>
+    .AddStandardResilienceHandler(o =&gt; o.Retry.DisableForUnsafeHttpMethods());   <span class="cx-ok">// ✅ retry + breaker + timeouts, once</span></code></pre>
       </div>
       <p class="cx-note">One line on the client builder protects every call that <code>RatesClient</code>
-      makes (package <code>Microsoft.Extensions.Http.Resilience</code>).</p>
+      makes (package <code>Microsoft.Extensions.Http.Resilience</code>). The option shown stops retries of <code>POST</code>, <code>PATCH</code>, <code>PUT</code>, <code>DELETE</code> and <code>CONNECT</code>.</p>
 
       <div class="code-card">
         <div class="cc-head">
@@ -244,8 +228,7 @@
 
 <span class="kw">await</span> pipeline.ExecuteAsync(<span class="kw">async</span> token =&gt; { <span class="kw">await</span> CallAsync(token); }, ct);</code></pre>
       </div>
-      <p class="cx-note">The same ideas built by hand with Polly v8 (package <code>Polly.Core</code>) —
-      check the current docs for the exact option names in your version.</p>
+      <p class="cx-note">The same ideas built by hand with Polly v8 (package <code>Polly.Core</code>).</p>
 
     </div>
   </details>

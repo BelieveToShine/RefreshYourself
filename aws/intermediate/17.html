@@ -22,26 +22,7 @@
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
@@ -237,7 +218,7 @@
     <summary>📖 Explanation <span class="chev">▾</span></summary>
     <div class="toggle-body">
       <p><b>Blue/green</b> deploys the new version alongside the fully-running old one, then flips
-      traffic to it all at once — because the old environment is still sitting there untouched,
+      traffic to it (all at once, or in steps if you pick a canary or linear setting) — because the old environment is still sitting there untouched,
       rollback is just flipping traffic back. <b>Canary</b> instead shifts a small slice of real
       traffic to the new version first, watching it stay healthy before gradually sending it
       more — if something's wrong, only that small slice is affected, and until the shift
@@ -248,18 +229,17 @@
       the old and new versions are genuinely live together for a window, so they have to speak
       the same contract. <b>Immutable</b> deployment never patches a running instance in place —
       it always builds a brand-new one from the new version and swaps it in, which is what makes
-      blue/green (and canary, underneath) safe to reason about: nothing already running ever
-      silently changes. On AWS, <code>CodePipeline</code> is the orchestrator stitching the stages
+      a deployment safe to reason about: nothing already running ever silently changes. On AWS, <code>CodePipeline</code> is the orchestrator stitching the stages
       together, <code>CodeBuild</code> does the compile/test/package step, and
       <code>CodeDeploy</code> executes the deployment itself — including blue/green swaps for
-      EC2, ECS, and Lambda.</p>
+      EC2, ECS, and Lambda. For Lambda and ECS, CodeDeploy has built-in <b>canary</b>, <b>linear</b> and <b>all-at-once</b> traffic-shifting settings (for example, <code>CodeDeployDefault.LambdaCanary10Percent5Minutes</code> sends 10 percent first, then the rest five minutes later), and it can roll back automatically if a CloudWatch alarm fires.</p>
 
       <table class="cmp-table">
         <thead><tr><th></th><th>Blue/Green</th><th>Canary</th><th>Rolling</th><th>Immutable</th></tr></thead>
         <tbody>
           <tr><th>Rollback speed</th><td>fastest — switch traffic back</td><td>fast — stop shifting traffic</td><td>slower — redeploy the old build</td><td>slower — rebuild the old instances</td></tr>
           <tr><th>Traffic during deploy</th><td>all-or-nothing switch</td><td>small % → gradually more</td><td>old + new mixed, briefly</td><td>old removed once new is healthy</td></tr>
-          <tr><th>Needs backward compatibility?</th><td>no — only one version live at a time</td><td>yes — both versions serve traffic together</td><td>yes — both versions serve traffic together</td><td>no — old instance is fully replaced</td></tr>
+          <tr><th>Needs backward compatibility?</th><td>less — after the switch one version serves, but shared data must work for both</td><td>yes — both versions serve traffic together</td><td>yes — both versions serve traffic together</td><td>no — old instance is fully replaced</td></tr>
           <tr><th>Extra infra cost</th><td>double capacity, briefly</td><td>small extra capacity</td><td>little to none — within existing capacity</td><td>double capacity, briefly</td></tr>
         </tbody>
       </table>

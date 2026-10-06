@@ -22,26 +22,7 @@
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
@@ -176,7 +157,7 @@
 
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
-    <p class="tline"><b>"HPA scales the cluster."</b> HPA only changes the number of pod replicas. If there is no room left on the nodes, the new pods sit Pending until the cluster autoscaler adds a node — or forever, if it is not enabled or has hit its maximum. Also, with a classic Azure CNI setup every pod takes a VNet IP, so a small subnet can run out of addresses before you run out of CPU.</p>
+    <p class="tline"><b>"HPA scales the cluster."</b> HPA only changes the number of pod replicas. If there is no room left on the nodes, the new pods sit Pending until the cluster autoscaler adds a node — or forever, if it is not enabled or has hit its maximum. Also, with a flat Azure CNI setup (Node Subnet or Pod Subnet) every pod takes a VNet IP, so a small subnet can run out of addresses before you run out of CPU.</p>
   </div>
 
   <div class="followup">
@@ -186,10 +167,10 @@
 
   <div class="keypoints">
     <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
-    <p class="kp-primary">"I would use a small system node pool and separate user pools sized per workload, an Azure CNI-style pod network planned for IP space, an ingress controller or Application Gateway in front, the HPA for pods and the cluster autoscaler for nodes, spread across availability zones."</p>
+    <p class="kp-primary">"I would use a small system node pool and separate user pools sized per workload, Azure CNI Overlay (or Pod Subnet) planned for IP space, an ingress controller or Application Gateway in front, the HPA for pods and the cluster autoscaler for nodes, spread across availability zones."</p>
     <ul>
       <li>System pool <span class="hl hl-basic">→ the cluster's own pods</span>; user pools run your apps.</li>
-      <li>Pod networking <span class="hl hl-blue">→ plan IP space</span>; CNI Overlay saves addresses, check current docs.</li>
+      <li>Pod networking <span class="hl hl-blue">→ plan IP space</span>; CNI Overlay saves VNet addresses; kubenet ends 31 March 2028.</li>
       <li>Ingress <span class="hl hl-hot">→ one front door</span>, routing by host and path.</li>
       <li>HPA <span class="hl hl-inter">→ pods</span>; cluster autoscaler <span class="hl hl-teal">→ nodes</span>.</li>
       <li>Production <span class="hl hl-adv">→ spread across zones</span>, use managed identity.</li>
@@ -201,7 +182,7 @@
     <div class="toggle-body">
       <p>An AKS cluster has a <b>control plane</b> that Azure manages and <b>node pools</b> you own. Keep a <b>system node pool</b> for the cluster's own components and add <b>user node pools</b> for your apps, so you can pick different VM sizes, scale each separately, and keep apps off the system nodes. For production, spread nodes across availability zones.</p>
 
-      <p>For <b>pod networking</b>, <b>kubenet</b> is the simpler older model, while <b>Azure CNI</b> gives pods real VNet addresses and <b>CNI Overlay</b> gives pods addresses from a separate range to save VNet space. The key point is to plan IP space early. Check current docs, since recommendations and kubenet's future have been changing. For <b>ingress</b>, an in-cluster ingress controller (for example NGINX) routes by host and path behind a load balancer; Application Gateway can play that role with a web application firewall; Front Door sits in front for global traffic.</p>
+      <p>For <b>pod networking</b>, <b>Azure CNI Overlay</b> gives only the nodes VNet addresses and gives pods addresses from a separate private range, which avoids running out of VNet space. <b>Azure CNI Pod Subnet</b> gives pods real VNet addresses from a dedicated subnet, and Microsoft recommends these two for most cases. The older <b>Azure CNI Node Subnet</b> also uses VNet addresses for pods, and <b>kubenet</b> is legacy: AKS stops supporting it on 31 March 2028. Either way, plan IP space early. For <b>ingress</b>, an in-cluster ingress controller (for example NGINX) routes by host and path behind a load balancer; Application Gateway can play that role with a web application firewall; Front Door sits in front for global traffic.</p>
 
       <p>Two autoscalers work at two levels. The <b>Horizontal Pod Autoscaler</b> changes how many pod replicas run, usually based on CPU or custom metrics. The <b>cluster autoscaler</b> watches for pods that cannot be placed and adds nodes, then removes underused ones later. Use both: HPA decides the pod count, and the cluster autoscaler makes sure there is room for them.</p>
     </div>
@@ -222,7 +203,7 @@
 <span class="cx-cmt"># HPA: keep 2 to 10 replicas of "web" around 70% CPU</span>
 <span class="kw">kubectl autoscale deployment</span> web --cpu-percent=70 --min=2 --max=10</code></pre>
       </div>
-      <p class="cx-note">The first command lets nodes scale, the second lets pods scale. Names and counts are examples only; the pods also need CPU requests set for CPU-based HPA to work.</p>
+      <p class="cx-note">The first command lets that node pool scale between 1 and 5 nodes, the second lets pods scale. Names and counts are examples only; the pods also need CPU requests set for CPU-based HPA to work.</p>
 
     </div>
   </details>

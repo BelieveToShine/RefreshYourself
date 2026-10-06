@@ -22,26 +22,7 @@
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
@@ -177,6 +158,7 @@
       <li><code>string</code> is <span class="hl hl-hot">immutable</span> — every change creates a new object.</li>
       <li>Call <code>.ToString()</code> once at the end to get the <span class="hl hl-inter">final string</span> from a <code>StringBuilder</code>.</li>
       <li>Interpolation and <code>+</code> are fine for <span class="hl hl-blue">a few known pieces</span>.</li>
+      <li>Literals are <span class="hl hl-inter">interned</span> (shared); <code>==</code> compares characters, not references.</li>
     </ul>
   </div>
 
@@ -194,6 +176,8 @@
 
       <p>For a handful of concatenations, plain <code>string</code> is simpler and perfectly
       fine — <code>StringBuilder</code> earns its keep specifically inside loops or long chains.</p>
+
+      <p><b>String interning:</b> identical string <em>literals</em> in your code are stored once, in a shared pool, so two variables set to <code>"hi"</code> point at the same object. Strings built at run time (by <code>+=</code>, <code>new string(...)</code> or <code>StringBuilder</code>) are not pooled automatically; <code>string.Intern(s)</code> returns the pooled copy. This is why <code>==</code> on strings still works: it compares the <b>characters</b>, not the references, so the answer is the same whether or not the two strings are interned.</p>
 
       <table class="cmp-table">
         <thead><tr><th></th><th><code>string</code></th><th><code>StringBuilder</code></th></tr></thead>
@@ -231,7 +215,20 @@
     sb.Append(i);   <span class="cx-ok">// ✅ one growing buffer, no throwaway strings</span>
 <span class="ty">string</span> result = sb.ToString();</code></pre>
       </div>
-      <p class="cx-note">Same 1000 iterations, <b>one allocation instead of a thousand</b>.</p>
+      <p class="cx-note">Same 1000 iterations, but <b>far fewer allocations</b> — the buffer grows in chunks instead of making a new string per pass.</p>
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">string</span> a = <span class="str">"hi"</span>, b = <span class="str">"hi"</span>;
+<span class="ty">string</span> c = <span class="kw">new</span> <span class="ty">string</span>(<span class="kw">new</span>[] { <span class="str">'h'</span>, <span class="str">'i'</span> });   <span class="cx-cmt">// built at run time</span>
+<span class="ty">Console</span>.WriteLine(<span class="ty">ReferenceEquals</span>(a, b));                 <span class="cx-cmt">// True  — literals are interned</span>
+<span class="ty">Console</span>.WriteLine(<span class="ty">ReferenceEquals</span>(a, c));                 <span class="cx-cmt">// False — c is a separate object</span>
+<span class="ty">Console</span>.WriteLine(a == c);                                <span class="cx-cmt">// True  — == compares the characters</span>
+<span class="ty">Console</span>.WriteLine(<span class="ty">ReferenceEquals</span>(a, <span class="ty">string</span>.Intern(c)));   <span class="cx-cmt">// True  — Intern returns the pooled copy</span></code></pre>
+      </div>
+      <p class="cx-note">Literals share one pooled object; <code>string.Intern</code> opts a run-time string in. <code>==</code> works by value either way.</p>
 
     </div>
   </details>
@@ -285,7 +282,7 @@
           <div class="uc-mini">
             <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
               <defs><marker id="arUc9c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
-              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing=".03em">STILL COMPILES TO +=</text>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing=".03em">STILL A NEW STRING</text>
               <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
               <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">🔤 $"Hi {name}"</text>
               <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc9c)"/>

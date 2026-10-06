@@ -51,7 +51,7 @@ keeping it in sync with the live pages.
 | 13 | Pagination | 🔥 | ✅ |
 | 14 | Sorting & Filtering Conventions | ⭐ | ✅ |
 | 15 | API Security Beyond Authentication | 🔥 | ✅ |
-| 16 | ProblemDetails (RFC 7807) | 🔥 | ✅ |
+| 16 | ProblemDetails (RFC 9457) | 🔥 | ✅ |
 | 17 | Content Negotiation & Formatters | ⭐ | ✅ |
 | 18 | ETag & If-Match — Optimistic Concurrency | ⭐ | ✅ |
 | 19 | Richardson Maturity Model & HATEOAS | ⭐ | ✅ |
@@ -95,4 +95,4 @@ one scenario question was added beyond the source list (mirroring the user's own
 None — this is the first pass through the full 7-phase pipeline for this track, built and
 verified in one sitting. Expect a review/feedback pass once the user goes through it.
 
-- **2026-10-06 addendum — written and wired 2026-10-07:** 11 new pages (7 intermediate, 4 advanced; 25 -> 36) from splitting intermediate/12 plus a gap hunt - see the Addendum in [roadmap.md](roadmap.md). Intermediate 15 API Security Beyond Authentication (split out of intermediate/12), 16 ProblemDetails (RFC 7807), 17 Content Negotiation & Formatters, 18 ETag & If-Match — Optimistic Concurrency, 19 Richardson Maturity Model & HATEOAS, 20 Token Storage — HttpOnly Cookie vs. localStorage, 21 gRPC vs. REST; Advanced 7 API Gateway & BFF, 8 Resilience in .NET — Polly & Http.Resilience, 9 Webhooks, 10 Cancellation, Timeouts & Client Disconnects. Retitle: intermediate/12 is now "Async APIs — 202 Accepted & Polling". Counts: Basic 5, Intermediate 21, Advanced 10.
+- **2026-10-06 addendum — written and wired 2026-10-07:** 11 new pages (7 intermediate, 4 advanced; 25 -> 36) from splitting intermediate/12 plus a gap hunt - see the Addendum in [roadmap.md](roadmap.md). Intermediate 15 API Security Beyond Authentication (split out of intermediate/12), 16 ProblemDetails (RFC 9457), 17 Content Negotiation & Formatters, 18 ETag & If-Match — Optimistic Concurrency, 19 Richardson Maturity Model & HATEOAS, 20 Token Storage — HttpOnly Cookie vs. localStorage, 21 gRPC vs. REST; Advanced 7 API Gateway & BFF, 8 Resilience in .NET — Polly & Http.Resilience, 9 Webhooks, 10 Cancellation, Timeouts & Client Disconnects. Retitle: intermediate/12 is now "Async APIs — 202 Accepted & Polling". Counts: Basic 5, Intermediate 21, Advanced 10.

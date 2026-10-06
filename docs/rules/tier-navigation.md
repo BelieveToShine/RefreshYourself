@@ -13,8 +13,11 @@ every topic in the current track+tier, in order, grouped the same way the tier i
 them ("Questions 1–10" / "11–14" / …), with the current page highlighted. Requested so a reader
 can jump topic-to-topic without going back to the index every time.
 
-- **Desktop only.** Below `960px` it's hidden entirely (`style.css`, `@media (max-width:960px)`
-  under the `.tier-nav` rules) — the existing sticky bottom `.fixed-pager` (see
+- **Rail on desktop, toggle panel on narrow screens (changed 2026-10-07).** Above `960px` it is the
+  sticky left rail. At or below `960px` the rail is hidden and `site.js` instead renders a full-width
+  **"☰ Topics in this tier"** button (`.tn-toggle`, `aria-expanded`/`aria-controls`) above the topic;
+  tapping it adds `body.tn-open`, which shows the same list as a normal block (max 60vh, scrollable).
+  Before this, tablets/phones had only the pager. The existing sticky bottom `.fixed-pager` (see
   [content-structure.md](content-structure.md)) is the mobile equivalent. They are two
   independent mechanisms reading two different sources (`.fixed-pager` reads the page's own
   `.pager` block; `.tier-nav` reads `assets/nav-index.js`) — not a fallback of one another, so

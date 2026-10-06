@@ -349,6 +349,20 @@ function esc(s) {
   var topicBody = document.createElement("div");
   topicBody.className = "tn-topicbody";
   while (main.firstChild) topicBody.appendChild(main.firstChild);
+  // Narrow screens (<=960px): the rail is hidden by CSS, so offer the same list behind a
+  // "Topics in this tier" toggle button instead of leaving tablets/phones with only the pager.
+  aside.id = "tier-nav-panel";
+  var toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "tn-toggle";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", "tier-nav-panel");
+  toggle.innerHTML = "☰ Topics in this tier <span class=\"tn-toggle-sub\">" + esc(data.track + " · " + data.tier) + "</span>";
+  toggle.addEventListener("click", function () {
+    var open = document.body.classList.toggle("tn-open");
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  main.appendChild(toggle);
   main.appendChild(aside);
   main.appendChild(topicBody);
 

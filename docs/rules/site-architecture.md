@@ -52,7 +52,7 @@ Tracks (folder slug → name): `csharp` C#, `oops` OOP, `dotnet` .NET/ASP.NET Co
 **Head/a11y boilerplate on every page** (added by `node scripts/add-head-meta.js`, idempotent, and enforced by
 `check-site.js`): font `<link>`s, `<meta name="description">` (from the page's interview question / hero text),
 Open Graph basics, `theme-color`, an inline SVG favicon, a `Skip to content` link (`.skip-link`) before the header
-with `id="main"` on `<main>`, and `aria-hidden` on the decorative search glyphs. **After creating any new page,
+with `id="main"` on `<main>`, the brand logo as `<img class="brand-mark" src="…/assets/images/brand-mark.svg">` (it used to be ~1.5 KB of inline SVG copied into every page — changed 2026-10-07), and `aria-hidden` on the decorative search glyphs. **After creating any new page,
 run `node scripts/add-head-meta.js`** — or copy an existing page's head — otherwise `check-site.js` fails.
 
 Body attributes: `data-root="../../"` (path back to repo root) and `data-tier-key="<track>/<tier>"`

@@ -130,3 +130,7 @@ should say.
 - `style.css` ends with a `@media (prefers-reduced-motion: reduce)` block that turns off smooth
   scrolling and shortens transitions/animations; `site.js` also uses instant scrolling in that mode.
   New animations need no extra work, but never rely on motion alone to convey state.
+
+## Brand logo (changed 2026-10-07)
+
+The header logo is the external file `assets/images/brand-mark.svg`, referenced as `<img class="brand-mark" width="24" height="24" alt="">` on every page (`scripts/add-head-meta.js` swaps old inline copies). Edit the logo once in that file. `.brand .brand-mark` in `style.css` still sizes it.

@@ -2,7 +2,7 @@
 /* RefreshYourself — idempotent head/meta/accessibility pass over every .html page.
    Adds (only where missing): font <link>s (replacing the render-blocking CSS @import), <meta
    description>, Open Graph basics, theme-color, an inline SVG favicon, a "Skip to content" link +
-   id="main" on <main>, and aria-hidden on the decorative search glyphs. See docs/rules/site-architecture.md.
+   id="main" on <main>, and the brand logo as an <img> (assets/images/brand-mark.svg), and aria-hidden on the decorative search glyphs. See docs/rules/site-architecture.md.
    Usage: node scripts/add-head-meta.js [--dry]   (safe to re-run; new pages get covered too) */
 const fs = require("fs"), path = require("path");
 const ROOT = path.resolve(__dirname, "..");
@@ -17,6 +17,7 @@ const FAVICON = "data:image/svg+xml," + encodeURIComponent(
 function walk(d, out = []) {
   for (const f of fs.readdirSync(d)) {
     if (f === ".git" || f === "node_modules") continue;
+    if (d === ROOT && (process.env.SKIP_DIRS || "").split(",").includes(f)) continue; // e.g. SKIP_DIRS=angular while another editor is working there
     const p = path.join(d, f);
     fs.statSync(p).isDirectory() ? walk(p, out) : /\.html$/.test(f) && out.push(p);
   }
@@ -69,6 +70,11 @@ for (const file of walk(ROOT)) {
   if (!html.includes('class="skip-link"')) {
     html = html.replace(/(<body[^>]*>)/, `$1${eol}<a class="skip-link" href="#main">Skip to content</a>`);
     html = html.replace('<main class="wrap">', '<main class="wrap" id="main">');
+  }
+  // 3b) the brand logo: an external image instead of ~1.5 KB of inline SVG copied into every page
+  if (html.includes('<svg class="brand-mark"')) {
+    const root = (html.match(/<body[^>]*data-root="([^"]*)"/) || [, ""])[1];
+    html = html.replace(new RegExp('<svg class="brand-mark"[^]*?</svg>'), `<img class="brand-mark" src="${root}assets/images/brand-mark.svg" alt="" width="24" height="24">`);
   }
   // 4) decorative search glyphs
   html = html.replace('<span class="gicon">', '<span class="gicon" aria-hidden="true">')

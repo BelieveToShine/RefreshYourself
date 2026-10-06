@@ -68,7 +68,7 @@ for (const t of TRACKS) {
 for (const e of SEARCH) if (!exists(e.path)) err(`search-index.js: dead path ${e.path}`);
 
 // every html page must carry the head/a11y boilerplate (run: node scripts/add-head-meta.js)
-(function walk(d){for(const f of fs.readdirSync(path.join(ROOT,d))){if(f===".git"||f==="node_modules")continue;const rel=d?d+"/"+f:f;const st=fs.statSync(path.join(ROOT,rel));if(st.isDirectory()){walk(rel);continue;}if(!f.endsWith(".html"))continue;const h=read(rel);const miss=[];if(!h.includes("name=\"description\""))miss.push("meta description");if(!h.includes("rel=\"icon\""))miss.push("favicon");if(!h.includes("fonts.googleapis.com"))miss.push("font links");if(!h.includes("class=\"skip-link\""))miss.push("skip link");if(miss.length)err(rel+": missing "+miss.join(", ")+" — run node scripts/add-head-meta.js");}})("");
+(function walk(d){for(const f of fs.readdirSync(path.join(ROOT,d))){if(f===".git"||f==="node_modules")continue;const rel=d?d+"/"+f:f;const st=fs.statSync(path.join(ROOT,rel));if(st.isDirectory()){walk(rel);continue;}if(!f.endsWith(".html"))continue;const h=read(rel);const miss=[];if(!h.includes("name=\"description\""))miss.push("meta description");if(!h.includes("rel=\"icon\""))miss.push("favicon");if(!h.includes("fonts.googleapis.com"))miss.push("font links");if(!h.includes("class=\"skip-link\""))miss.push("skip link");if(h.includes("<svg class=\"brand-mark\""))miss.push("brand logo as <img>");if(miss.length)err(rel+": missing "+miss.join(", ")+" — run node scripts/add-head-meta.js");}})("");
 
 // docs: page counts mentioned in overview vs reality
 const overview = read("docs/refreshyourself-overview.md");

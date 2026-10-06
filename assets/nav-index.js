@@ -340,7 +340,7 @@ window.NAV_INDEX = {
           { n: 13, file: "13.html", short: "Pagination",              title: "Pagination", tail: "offset vs. cursor-based.", priority: "🔥" },
           { n: 14, file: "14.html", short: "Sorting & Filtering",     title: "Sorting & Filtering Conventions", tail: "what makes an API predictable to consume.", priority: "⭐" },
           { n: 15, file: "15.html", short: "Security Beyond Auth", title: "API Security Beyond Authentication", tail: "BOLA, input, limits, and 404 vs 403 — beyond the JWT", priority: "🔥" },
-          { n: 16, file: "16.html", short: "ProblemDetails", title: "ProblemDetails (RFC 7807)", tail: "one standard error body — application/problem+json", priority: "🔥" },
+          { n: 16, file: "16.html", short: "ProblemDetails", title: "ProblemDetails (RFC 9457)", tail: "one standard error body — application/problem+json", priority: "🔥" },
           { n: 17, file: "17.html", short: "Content Negotiation", title: "Content Negotiation & Formatters", tail: "Accept vs Content-Type, 406 vs 415, custom formatters", priority: "⭐" },
           { n: 18, file: "18.html", short: "ETag & If-Match", title: "ETag & If-Match — Optimistic Concurrency", tail: "stop lost updates with a version — 412 and 428", priority: "⭐" },
           { n: 19, file: "19.html", short: "Richardson & HATEOAS", title: "Richardson Maturity Model & HATEOAS", tail: "Levels 0–3, what each adds, and whether HATEOAS is worth it", priority: "⭐" },
@@ -479,15 +479,10 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–11",
-        items: [
-          { n: 11, file: "11.html", short: "Views", title: "Views", tail: "how it differs from just saving a query as text.", priority: "⭐" }
-        ]
-      },
-      {
-        label: "Questions 12–18",
+        label: "Questions 11–18",
         hot: 3,
         items: [
+          { n: 11, file: "11.html", short: "Views", title: "Views", tail: "how it differs from just saving a query as text.", priority: "⭐" },
           { n: 12, file: "12.html", short: "UNION vs UNION ALL", title: "UNION vs. UNION ALL", tail: "and why one of them is slower.", priority: "🔥" },
           { n: 13, file: "13.html", short: "Logical Query Order", title: "Logical Query Execution Order", tail: "the order clauses actually run in, not the order you type them.", priority: "🔥" },
           { n: 14, file: "14.html", short: "FK Referential Actions", title: "Foreign Key Referential Actions", tail: "CASCADE, SET NULL, and RESTRICT.", priority: "⭐" },

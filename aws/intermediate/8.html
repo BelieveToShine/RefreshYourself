@@ -22,26 +22,7 @@
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
@@ -88,7 +69,7 @@
           <div class="wc-head">🔗 Aurora</div>
           <div class="wc-ps">
             <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Standard RDS read replicas each keep their own copy and catch up asynchronously, which caps how many replicas you can add before lag and failover time both get worse.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Aurora puts one shared, self-healing storage layer under the primary and every replica, so up to 15 replicas all read the same live data — lag typically stays in the low milliseconds, and failover just repoints traffic instead of waiting on a separate copy.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Aurora puts one shared, self-healing storage layer under the primary and every replica, so up to 15 replicas all read the same live data — lag is usually much less than 100 milliseconds, and failover just repoints traffic instead of waiting on a separate copy.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Aurora = one shared storage layer under many computes.</span></div>
         </div>
@@ -183,7 +164,7 @@
 
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
-    <p class="tline"><b>"Aurora replicas lag the same way RDS read replicas do."</b> They don't — Aurora replicas read from the same shared storage layer as the primary, so lag is typically in the millisecond range, while standard RDS read replicas copy over the network asynchronously, so their lag is real and meaningfully higher.</p>
+    <p class="tline"><b>"Aurora replicas lag the same way RDS read replicas do."</b> They don't — Aurora replicas read from the same shared storage layer as the primary, so lag is usually much less than 100 milliseconds, while standard RDS read replicas copy over the network asynchronously, so their lag depends on the replication and can be higher.</p>
   </div>
 
   <div class="followup">
@@ -206,13 +187,13 @@
   <details class="explain toggle">
     <summary>📖 Explanation <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <p>Aurora <b>decouples compute from storage</b>. Underneath the primary and every read replica sits one distributed, self-healing storage layer, automatically replicated across 6 copies in 3 Availability Zones. Because replicas read that same shared layer instead of keeping their own copy, replication lag is typically in the millisecond range (AWS documents it as usually well under 100 ms), and Aurora supports up to 15 read replicas without each one duplicating the primary's data.</p>
-      <p><b>Aurora Serverless</b> auto-scales compute capacity up and down — even close to zero — based on load, which fits unpredictable or intermittent workloads well. Failover is typically faster than standard RDS Multi-AZ because the storage layer is already shared: promoting a replica means pointing traffic at data it already reads, with no replication to catch up.</p>
+      <p>Aurora <b>decouples compute from storage</b>. Underneath the primary and every read replica sits one distributed, self-healing storage layer, automatically replicated across 6 copies in 3 Availability Zones. Because replicas read that same shared layer instead of keeping their own copy, replication lag is usually much less than 100 milliseconds (it can rise during heavy writes), and Aurora supports up to 15 read replicas without each one duplicating the primary's data.</p>
+      <p><b>Aurora Serverless</b> auto-scales compute capacity up and down — even close to zero — based on load, which fits unpredictable or intermittent workloads well. Failover is quick because the storage layer is already shared: promoting a replica means pointing traffic at data it already reads, with no replication to catch up.</p>
       <table class="cmp-table">
         <thead><tr><th></th><th>RDS</th><th>Aurora</th><th>DynamoDB</th></tr></thead>
         <tbody>
           <tr><th>Storage model</th><td>each replica keeps its own copy, replicated over the network</td><td>one shared, distributed storage layer under the primary and every replica</td><td>key-value/document storage, not the same relational "replica" model</td></tr>
-          <tr><th>Read scaling</th><td>a handful of replicas, each copying asynchronously</td><td>up to 15 replicas, all reading the same live storage</td><td>scales reads by partitioning, not by adding relational replicas</td></tr>
+          <tr><th>Read scaling</th><td>separate read replicas, each copying asynchronously</td><td>up to 15 replicas, all reading the same live storage</td><td>scales reads by partitioning, not by adding relational replicas</td></tr>
           <tr><th>Failover speed</th><td>fails over to a standby that holds its own synchronously replicated copy of the data</td><td>promotes a replica that already reads the same shared storage</td><td>no single primary to fail over the same way — requests hit a different partition/node</td></tr>
           <tr><th>Best fit</th><td>a standard relational workload without Aurora's premium</td><td>relational workloads that need read scaling, fast failover, or serverless elasticity</td><td>massive scale, simple access patterns, no cross-table joins/transactions</td></tr>
         </tbody>

@@ -22,26 +22,7 @@
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
@@ -158,12 +139,12 @@
 
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
-    <p class="tline"><b>"Geo-replication means zero data loss."</b> The copy to the other region is asynchronous, so a failover after a real outage can lose the most recent writes — your recovery point is not zero. Quote RPO and RTO as targets you would check in the current docs, not as promises.</p>
+    <p class="tline"><b>"Geo-replication means zero data loss."</b> The copy to the other region is asynchronous, so a failover after a real outage can lose the most recent writes — your recovery point is not zero. Never promise zero data loss for a forced failover.</p>
   </div>
 
   <div class="followup">
     <div class="fhead">🔄 Likely Follow-up</div>
-    <p class="ftline"><b>"Automatic or manual failover?"</b> A failover group can be set to automatic, with a grace period before it fires, or to manual. Automatic is faster to recover, but a short blip could trigger a failover you did not want, so many teams keep control and test the failover regularly.</p>
+    <p class="ftline"><b>"Automatic or manual failover?"</b> Microsoft recommends the customer-managed policy (<code>Manual</code> in the CLI, and the CLI default), so you decide when to fail over. The <code>Automatic</code> value means Microsoft-managed: Microsoft fails over only in a widespread regional outage, after a grace period that cannot be set below one hour, and may act only in extreme cases. Do not rely on it; test your own failover regularly.</p>
   </div>
 
   <div class="keypoints">
@@ -183,7 +164,7 @@
     <div class="toggle-body">
       <p>Azure SQL already keeps your database highly available <b>inside a region</b>, and some tiers can spread copies across availability zones. That does not help if the whole region is lost, so you add a second region on purpose. <b>Active geo-replication</b> keeps a readable secondary copy of a database in another region; you fail it over yourself when you need to.</p>
 
-      <p>A <b>failover group</b> builds on that for a set of databases on a pair of servers. It fails them over together and exposes <b>listener endpoints</b> (read-write, and optionally read-only) that keep the same name after a failover, so the app's connection string does not change. Because replication is <b>asynchronous</b>, a forced failover can lose the latest writes; check the current docs for the RPO and RTO to expect.</p>
+      <p>A <b>failover group</b> builds on that for a set of databases on a pair of servers. It fails them over together and exposes <b>listener endpoints</b> that keep the same name after a failover: <code>&lt;name&gt;.database.windows.net</code> for read-write and <code>&lt;name&gt;.secondary.database.windows.net</code> for read-only. The app's connection string does not change. The secondary server must be in a different region. Because replication is <b>asynchronous</b>, a forced failover can lose the latest writes.</p>
 
       <p>An <b>elastic pool</b> is about cost, not resilience: many small databases with busy times at different hours share one pool of resources instead of each being sized for its own peak. It suits many tenants with uneven load, not one big steady database.</p>
     </div>
@@ -198,10 +179,11 @@
           <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Azure CLI</span>
           <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
         </div>
-        <pre><code><span class="cx-cmt"># group two servers so the listener name survives a failover</span>
-<span class="kw">az sql failover-group create</span> --name orders-fg --resource-group rg-data --server sql-eastus --partner-server sql-westus --add-db ordersdb --failover-policy Automatic</code></pre>
+        <pre><code><span class="cx-cmt"># group two servers in different regions so the listener name survives a failover</span>
+<span class="cx-cmt"># Manual = customer-managed policy (recommended, and the default)</span>
+<span class="kw">az sql failover-group create</span> --name orders-fg --resource-group rg-data --server sql-eastus --partner-server sql-westus --add-db ordersdb --failover-policy Manual</code></pre>
       </div>
-      <p class="cx-note">Apps connect to the failover group's listener name, not to either server, so the connection string stays the same after a failover. Server names here are made up for the example.</p>
+      <p class="cx-note">Apps connect to <code>orders-fg.database.windows.net</code>, not to either server, so the connection string stays the same after a failover. The group name must be globally unique under <code>.database.windows.net</code>; server names here are made up. To fail over yourself, run <code>az sql failover-group set-primary</code> against the secondary server.</p>
 
     </div>
   </details>

@@ -369,6 +369,8 @@ genuinely floating endpoint doesn't) — and, for every marked path, whether its
 long enough not to distort under its own arrowhead (see `markerReach` below; this check was added
 2026-09-16, one revision after the checks above — see the follow-up incident right below this).
 
+**Known false positive (accepted, 2026-10-07):** a small numbered badge — a white `<circle>` with a 1-character `<text>` — deliberately overlaid on a box edge makes the script report `TEXT OVERFLOW` for that digit (e.g. `python/advanced/3`, the MRO badges). That is the intended design, not a defect; every other finding must still be fixed. A full sweep of all 649 pages / 952 diagrams on 2026-10-07 reported only that one accepted case.
+
 **Three known limitations, already worked around in the script above — don't remove any of them:**
 - Elements inside `<marker>`/`<defs>` are arrowhead *templates*, not real diagram connectors —
   both the `<rect>` and `<path>` selectors exclude anything under `.closest('defs')`.
