@@ -2,6 +2,11 @@
    Reads window.SEARCH_INDEX (set by assets/search-index.js, loaded via <script src> before this
    file) — NOT fetch(), so it works whether the page is opened from disk (file://) or hosted. */
 
+/* Shared HTML escaper — every string that goes into innerHTML (titles, labels) passes through it. */
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 (function () {
   var root = document.body.getAttribute("data-root") || "";
   var input = document.querySelector(".gsearch input");
@@ -11,6 +16,15 @@
 
   var activeIndex = -1;
   var currentItems = [];
+  var blurTimer = null;
+
+  // Combobox ARIA — the markup only ships a plain <input> + role="listbox" div, so wire the rest here.
+  if (!resultsBox.id) resultsBox.id = "gsearch-results";
+  input.setAttribute("role", "combobox");
+  input.setAttribute("aria-autocomplete", "list");
+  input.setAttribute("aria-expanded", "false");
+  input.setAttribute("aria-controls", resultsBox.id);
+  input.setAttribute("aria-haspopup", "listbox");
 
   function getIndex() {
     return window.SEARCH_INDEX || [];
@@ -31,21 +45,29 @@
   }
 
   function iconFor(item) {
-    var icons = { "C#": "🔷", "OOP": "🧩", ".NET": "🧱", "Web API": "🔌", "EF Core": "🗃️", "SQL": "🗄️", "Azure": "☁️", "AI": "🤖", "React": "⚛️", "DSA": "🧠" };
+    var icons = { "C#": "🔷", "OOP": "🧩", ".NET": "🧱", "Web API": "🔌", "EF Core": "🗃️", "SQL": "🗄️", "Azure": "☁️", "AWS": "☁️", "AI": "🤖", "React": "⚛️", "Angular": "🅰️", "DSA": "🧠", "Python": "🐍", "JavaScript": "⚡", "HTML & CSS": "🎨" };
     return icons[item.track] || "📄";
   }
 
   function highlight(title, q) {
     var i = title.toLowerCase().indexOf(q);
-    if (i === -1) return title;
-    return title.slice(0, i) + "<mark>" + title.slice(i, i + q.length) + "</mark>" + title.slice(i + q.length);
+    if (i === -1) return esc(title);
+    return esc(title.slice(0, i)) + "<mark>" + esc(title.slice(i, i + q.length)) + "</mark>" + esc(title.slice(i + q.length));
+  }
+
+  function clearResults() {
+    resultsBox.innerHTML = "";
+    activeIndex = -1;
+    currentItems = [];
+    input.setAttribute("aria-expanded", "false");
+    input.removeAttribute("aria-activedescendant");
   }
 
   function render(items, q) {
-    resultsBox.innerHTML = "";
-    activeIndex = -1;
+    clearResults();
     currentItems = items;
     if (!q) return;
+    input.setAttribute("aria-expanded", "true");
     if (items.length === 0) {
       var empty = document.createElement("div");
       empty.className = "gsearch-empty";
@@ -58,12 +80,13 @@
       row.className = "gsearch-item";
       row.setAttribute("role", "option");
       row.dataset.index = i;
+      row.id = "gsearch-opt-" + i;
       var crumb = [item.track, item.tier].filter(Boolean).join(" · ");
       row.innerHTML =
         '<span class="gi-icon">' + iconFor(item) + '</span>' +
         '<span class="gi-text">' +
           '<span class="gi-title">' + highlight(item.title, q) + '</span>' +
-          '<span class="gi-path">' + (crumb || "RefreshYourself") + '</span>' +
+          '<span class="gi-path">' + esc(crumb || "RefreshYourself") + '</span>' +
         '</span>';
       row.addEventListener("mousedown", function (e) {
         e.preventDefault();
@@ -83,11 +106,14 @@
     if (rows[i]) {
       rows[i].classList.add("active");
       rows[i].scrollIntoView({ block: "nearest" });
+      input.setAttribute("aria-activedescendant", rows[i].id);
+    } else {
+      input.removeAttribute("aria-activedescendant");
     }
     activeIndex = i;
   }
 
-  input.addEventListener("input", function () {
+  function runQuery() {
     var q = input.value.trim().toLowerCase();
     if (!q) { render([], ""); return; }
     var scored = getIndex()
@@ -97,7 +123,9 @@
       .slice(0, 8)
       .map(function (s) { return s.item; });
     render(scored, q);
-  });
+  }
+
+  input.addEventListener("input", runQuery);
 
   input.addEventListener("keydown", function (e) {
     var rows = resultsBox.querySelectorAll(".gsearch-item");
@@ -119,24 +147,78 @@
     }
   });
 
-  input.addEventListener("focus", function () { wrap.classList.add("has-focus"); });
+  input.addEventListener("focus", function () {
+    wrap.classList.add("has-focus");
+    clearTimeout(blurTimer);
+    if (input.value.trim()) runQuery();   // refocus with text still there -> show results again
+  });
   input.addEventListener("blur", function () {
     wrap.classList.remove("has-focus");
-    setTimeout(function () { resultsBox.innerHTML = ""; }, 150);
+    // Drop the items immediately so Enter can never act on stale rows; the DOM clear is delayed
+    // so a click on a result still lands (its mousedown also preventDefaults the blur).
+    currentItems = [];
+    activeIndex = -1;
+    clearTimeout(blurTimer);
+    blurTimer = setTimeout(function () {
+      if (document.activeElement !== input) clearResults();
+    }, 150);
+  });
+
+  // "/" focuses search (the badge in the input advertises it) — ignored while typing elsewhere.
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+    var t = e.target;
+    var tag = t && t.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (t && t.isContentEditable)) return;
+    e.preventDefault();
+    input.focus();
   });
 })();
 
 /* "See the code" copy buttons — copies that .code-card's <pre> text, briefly swaps the icon
    for a checkmark. See docs/rules/content-writing.md. */
 (function () {
+  // Fallback for http:// and file:// pages, where navigator.clipboard is unavailable.
+  function legacyCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.top = "-1000px";
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(
+        function () { return true; },
+        function () { return legacyCopy(text); }
+      );
+    }
+    return Promise.resolve(legacyCopy(text));
+  }
+
   document.querySelectorAll(".code-card .cc-copy").forEach(function (btn) {
+    var originalHtml = btn.innerHTML;
+    var originalLabel = btn.getAttribute("aria-label");
+    var timer = null;
     btn.addEventListener("click", function () {
       var pre = btn.closest(".code-card").querySelector("pre");
-      if (!pre || !navigator.clipboard) return;
-      navigator.clipboard.writeText(pre.textContent).then(function () {
-        var original = btn.innerHTML;
-        btn.innerHTML = "✅";
-        setTimeout(function () { btn.innerHTML = original; }, 1200);
+      if (!pre) return;
+      copyText(pre.textContent).then(function (ok) {
+        clearTimeout(timer);
+        btn.innerHTML = ok ? "✅" : "⚠️";
+        btn.setAttribute("aria-label", ok ? "Copied" : "Copy failed");
+        timer = setTimeout(function () {
+          btn.innerHTML = originalHtml;
+          if (originalLabel === null) btn.removeAttribute("aria-label");
+          else btn.setAttribute("aria-label", originalLabel);
+        }, 1200);
       });
     });
   });
@@ -225,16 +307,12 @@
   var stored = {};
   try { stored = JSON.parse(sessionStorage.getItem(storeKey) || "{}"); } catch (e) { stored = {}; }
 
-  function esc(s) {
-    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-
   function itemHtml(item) {
     var active = isCurrent(item.file);
     var dot = item.priority ? '<span class="tn-dot">' + item.priority + "</span>" : "";
     return (
       '<li class="tn-item">' +
-      '<a href="' + item.file + '"' + (active ? ' class="active"' : "") + '>' +
+      '<a href="' + esc(item.file) + '"' + (active ? ' class="active" aria-current="page"' : "") + '>' +
       '<span class="tn-row"><span class="tn-num">' + item.n + '</span>' +
       '<span class="tn-label">' + esc(item.short) + "</span>" + dot + "</span>" +
       '<span class="tn-detail"><b>' + esc(item.title) + "</b> — " + esc(item.tail) + "</span>" +
@@ -261,6 +339,7 @@
 
   var aside = document.createElement("aside");
   aside.className = "tier-nav";
+  aside.setAttribute("role", "navigation");
   aside.setAttribute("aria-label", data.track + " " + data.tier + " topics");
   aside.innerHTML =
     '<div class="tn-head"><span class="tn-pill tn-track">' + esc(data.trackIcon + " " + data.track) +
@@ -310,6 +389,19 @@
     return pathSplit[0] + (qs ? "?" + qs : "") + hash;
   }
 
+  // Append key=value to a URL's query string, BEFORE any #hash (a param after the hash is never
+  // sent to the page and would corrupt the anchor).
+  function addParam(url, kv) {
+    var h = url.indexOf("#");
+    var base = h > -1 ? url.slice(0, h) : url;
+    var hash = h > -1 ? url.slice(h) : "";
+    return base + (base.indexOf("?") > -1 ? "&" : "?") + kv + hash;
+  }
+
+  function reducedMotion() {
+    return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+
   function shortLabel() {
     var first = (document.title || "").split(" — ")[0].trim();
     return first || "";
@@ -336,11 +428,12 @@
   var openIdx = incoming.get(BOPEN);
   if (openIdx !== null) {
     var groups = document.querySelectorAll(GROUP_SELECTOR);
-    var target = groups[parseInt(openIdx, 10)];
+    var n = parseInt(openIdx, 10);
+    var target = isNaN(n) ? null : groups[n];
     if (target) {
       target.open = true;
       setTimeout(function () {
-        target.scrollIntoView({ block: "center", behavior: "smooth" });
+        target.scrollIntoView({ block: "center", behavior: reducedMotion() ? "auto" : "smooth" });
       }, 50);
     }
   }
@@ -355,6 +448,7 @@
   document.addEventListener(
     "click",
     function (e) {
+      if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;  // new tab/window clicks: leave alone
       var a = e.target.closest && e.target.closest("a[href]");
       if (!a || a.classList.contains("crumb-back") || a.closest(".gsearch-results")) return;
       var href = a.getAttribute("href");
@@ -365,16 +459,17 @@
       if (group) {
         var groups = Array.prototype.slice.call(document.querySelectorAll(GROUP_SELECTOR));
         var idx = groups.indexOf(group);
-        if (idx > -1) {
-          returnPath += (returnPath.indexOf("?") > -1 ? "&" : "?") + BOPEN + "=" + idx;
-        }
+        if (idx > -1) returnPath = addParam(returnPath, BOPEN + "=" + idx);
       }
 
-      var sep = href.indexOf("?") > -1 ? "&" : "?";
-      a.setAttribute(
-        "href",
-        href + sep + BFROM + "=" + encodeURIComponent(returnPath) + "&" + BLABEL + "=" + encodeURIComponent(shortLabel())
+      // Tag only for the navigation this click starts, then put the original href back so the
+      // link never keeps a stale tag (copy-link, later middle-click, bfcache restore).
+      var tagged = addParam(
+        addParam(href, BFROM + "=" + encodeURIComponent(returnPath)),
+        BLABEL + "=" + encodeURIComponent(shortLabel())
       );
+      a.setAttribute("href", tagged);
+      setTimeout(function () { a.setAttribute("href", href); }, 0);
     },
     true
   );

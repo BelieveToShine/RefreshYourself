@@ -3,7 +3,7 @@
 **Phases 2–6 of the 7-phase pipeline** (see [`docs/superpowers/specs/README.md`](../README.md)).
 Builds on [`question-taxonomy.md`](question-taxonomy.md) — read that first for the underlying
 questions; this file is where they get grouped into pages, tiered, and prioritized. Phase 7
-(writing the pages) has not started as of this file being written.
+(writing the pages) was completed later — all pages in this plan are written (see `overview.md`).
 
 ## Phase 2 — review, dedupe, gap-hunt
 

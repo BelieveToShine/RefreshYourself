@@ -3,7 +3,7 @@
 Builds on [`question-taxonomy.md`](question-taxonomy.md) (Phase 1). This document is Phases
 2–6 of the pipeline (see [`specs/README.md`](../README.md)): reviewed/expanded, grouped into
 actual pages, tiered by **interview depth** (not difficulty), and given an interview-priority
-tag. Phase 7 (writing the final diagram-rich HTML pages) hasn't started — this is the complete,
+tag. Phase 7 (writing the final diagram-rich HTML pages) is now complete (all 49 pages written) — this is the complete,
 reviewable plan for what those pages will be and what each should say.
 
 **Goal driving every call below:** someone who reads this track end-to-end should be able to

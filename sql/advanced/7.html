@@ -258,16 +258,16 @@
 <span class="kw">FROM</span> Orders
 <span class="kw">WHERE</span> OrderDate &lt; <span class="str">'2020-01-01'</span>; <span class="cx-ok">-- ✅ candidate for minimal logging (bulk extent allocation only)</span>
 
-<span class="cx-cmt">-- An ordinary row-by-row INSERT ... SELECT is logged in full detail regardless</span>
-<span class="cx-cmt">-- of recovery model — there's no bulk extent shortcut for it.</span>
+<span class="cx-cmt">-- A plain INSERT ... SELECT is normally fully logged. It can also be minimally</span>
+<span class="cx-cmt">-- logged (e.g. with a TABLOCK hint) when the table and recovery model allow it.</span>
 <span class="kw">INSERT</span> <span class="kw">INTO</span> Orders_Archive (OrderId, OrderDate, Total)
 <span class="kw">SELECT</span> OrderId, OrderDate, Total
 <span class="kw">FROM</span> Orders
-<span class="kw">WHERE</span> OrderDate &lt; <span class="str">'2020-01-01'</span>; <span class="cx-err">-- ❌ full logging: one detailed entry written per row</span></code></pre>
+<span class="kw">WHERE</span> OrderDate &lt; <span class="str">'2020-01-01'</span>; <span class="cx-err">-- ❌ usually full logging: one detailed entry written per row</span></code></pre>
       </div>
       <p class="cx-note">Minimal logging doesn't skip logging — it logs enough to know a bulk
       extent was allocated, not a full row-by-row trail. Exact eligibility (recovery model,
-      table/index state) varies by engine and version.</p>
+      table/index state) varies by engine and version. SQL Server's plain <code>INSERT ... SELECT</code> can qualify too, for example with <code>TABLOCK</code> — so "fully logged" is the usual case, not a rule.</p>
 
       <div class="code-card">
         <div class="cc-head">
@@ -289,13 +289,13 @@
     <span class="kw">INSERT</span> <span class="kw">INTO</span> Orders_Archive
     <span class="kw">SELECT</span> <span class="kw">TOP</span> (<span class="num">50000</span>) * <span class="kw">FROM</span> Orders
     <span class="kw">WHERE</span> OrderDate &lt; <span class="str">'2020-01-01'</span>
-      <span class="kw">AND</span> OrderId <span class="kw">NOT</span> <span class="kw">IN</span> (<span class="kw">SELECT</span> OrderId <span class="kw">FROM</span> Orders_Archive);
+      <span class="kw">AND</span> <span class="kw">NOT EXISTS</span> (<span class="kw">SELECT</span> <span class="num">1</span> <span class="kw">FROM</span> Orders_Archive a <span class="kw">WHERE</span> a.OrderId = Orders.OrderId);
     <span class="kw">SET</span> @Rows = @@ROWCOUNT; <span class="cx-ok">-- ✅ each batch is its own short, bounded commit</span>
 <span class="kw">END</span>;</code></pre>
       </div>
       <p class="cx-note">The one-giant-transaction version holds every lock and every byte of log
       space for the whole load. The batched loop trades a bit of loop overhead for a bounded,
-      predictable footprint per commit.</p>
+      predictable footprint per commit. The loop uses <code>NOT EXISTS</code> rather than <code>NOT IN</code> — <code>NOT IN</code> returns nothing if the subquery ever contains a NULL, and it can plan worse.</p>
 
       <div class="code-card">
         <div class="cc-head">

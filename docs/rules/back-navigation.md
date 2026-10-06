@@ -29,12 +29,15 @@ Same pattern as the fixed bottom pager and the tier-nav sidebar (see
 last IIFE in `assets/site.js`, reading/writing nothing but the current URL's query string. No
 sessionStorage, no per-page data file.
 
-1. **On every internal `<a>` click** (delegated on `document`, capture phase — so the href is
-   rewritten before the browser reads it for navigation), the outgoing link's `href` gets two
-   query params appended: `bfrom` (this page's own clean URL, for Back to return to) and `bt` (a
+1. **On every plain left-click of an internal `<a>`** (delegated on `document`, capture phase — so
+   the href is rewritten before the browser reads it for navigation; Ctrl/Cmd/Shift/Alt-clicks and
+   non-primary buttons are ignored so open-in-new-tab is untouched), the outgoing link's `href`
+   gets two query params appended **before any existing `#hash`** (via `addParam()`), and is put
+   back to its original value in a `setTimeout(0)` so the link never keeps a stale tag: `bfrom` (this page's own clean URL, for Back to return to) and `bt` (a
    short label, taken from `document.title` split on `" — "`). If the clicked link lives inside
    a `.roadmap-tier` or `.qgroup` accordion, a third param `bopen` (that group's 0-based index
-   among all matching elements on the page) is appended to the `bfrom` value itself.
+   among all matching elements on the page) is appended to the `bfrom` value itself (also before any hash). A non-numeric `bopen` is ignored, and
+   the scroll-to-group uses `behavior:"auto"` when `prefers-reduced-motion: reduce` is set.
 2. **Excluded from step 1, on purpose:** clicks on the Back button itself (`.crumb-back`) and
    clicks inside `.gsearch-results` (the search dropdown navigates via `location.href =`, not a
    real `<a>`, so it's already naturally excluded — the explicit check is defensive). This is

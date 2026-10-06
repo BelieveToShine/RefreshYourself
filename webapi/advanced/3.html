@@ -76,7 +76,7 @@
         <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
           <div class="wc-head">🔀 Request ordering</div>
           <div class="wc-ps">
-            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>On one instance, requests were handled essentially one at a time, so code could safely assume a create always finished before the update that followed it.</span></div>
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>On one instance, a client that waited for each response could safely assume its create had finished before the update that followed it.</span></div>
             <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Two requests from the same client can land on two different instances at once — never rely on arrival order; use a sequence number or version check wherever order actually matters.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">More than one instance → order across requests is not guaranteed.</span></div>
@@ -241,7 +241,7 @@
         <thead><tr><th></th><th>Single instance</th><th>Behind a load balancer</th></tr></thead>
         <tbody>
           <tr><th>In-memory state</th><td>one process, one memory space</td><td>❌ each instance has its own — a second request may miss it</td></tr>
-          <tr><th>Request ordering</th><td>effectively sequential</td><td>❌ two concurrent requests can be handled out of order</td></tr>
+          <tr><th>Request ordering</th><td>one process — easier to reason about, though requests still run concurrently</td><td>❌ two concurrent requests can be handled out of order</td></tr>
           <tr><th>Clock comparisons</th><td>one clock, always consistent</td><td>⚠️ each instance's clock can drift slightly</td></tr>
           <tr><th>Retry after timeout</th><td>safe — same process still running</td><td>❌ may hit a different instance — needs an idempotency key</td></tr>
         </tbody>
@@ -301,7 +301,7 @@
           <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
         </div>
         <pre><code>[HttpPost(<span class="str">"orders"</span>)]
-<span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="ty">IActionResult</span>&gt; CreateOrder(<span class="ty">OrderDto</span> body, [FromHeader] <span class="kw">string</span> idempotencyKey)
+<span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="ty">IActionResult</span>&gt; CreateOrder(<span class="ty">OrderDto</span> body, [FromHeader(Name = <span class="str">"Idempotency-Key"</span>)] <span class="kw">string</span> idempotencyKey)
 {
     <span class="cx-ok">// ✅ checked against a shared table — a retry that lands on a</span>
     <span class="cx-ok">// DIFFERENT instance still sees the same key</span>

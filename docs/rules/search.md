@@ -24,6 +24,23 @@ not a per-page feature — read this before touching `assets/site.js` or adding 
   meant to be a full search engine.
 - Arrow keys move the highlighted suggestion, Enter goes to the highlighted (or first) result,
   clicking a result navigates there, Escape clears it.
+- **`/` focuses the search box** from anywhere on the page (the `/` badge inside the input
+  advertises it). Ignored while typing in an `<input>`, `<textarea>`, `<select>` or contenteditable
+  element, and with Ctrl/Cmd/Alt held; it `preventDefault`s so the slash isn't typed.
+- **Focus behaviour:** refocusing the input while it still has text re-runs the query, so results
+  reappear. On blur the result items are dropped immediately (Enter can never act on stale rows)
+  and the dropdown DOM is cleared after 150 ms unless focus has returned.
+- **Accessibility:** `site.js` adds combobox ARIA at runtime (page HTML only ships the plain
+  `<input>` and a `role="listbox"` div): `role="combobox"`, `aria-autocomplete="list"`,
+  `aria-expanded`, `aria-controls` (the listbox id), `aria-activedescendant` (the highlighted
+  option); each result row gets `role="option"` and an id (`gsearch-opt-N`). The input has a visible
+  `:focus-visible` ring (`style.css`).
+- **Escaping:** every title/crumb is passed through the shared top-level `esc()` in `site.js`
+  (and each piece inside `highlight()`) before going into `innerHTML`, because titles contain
+  literal `<`/`&` (e.g. `List<T>`). Never insert index text unescaped.
+- **Icons:** `iconFor()` maps `item.track` to an emoji; every track string in `search-index.js`
+  needs an entry (C#, OOP, .NET, Web API, EF Core, SQL, Azure, AWS, AI, React, Angular, DSA,
+  Python, JavaScript, HTML & CSS). A new track must be added there or its results show a generic 📄.
 
 ## The one rule that keeps this working
 

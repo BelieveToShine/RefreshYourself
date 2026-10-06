@@ -137,7 +137,7 @@
 
       <g filter="url(#shA4)"><rect x="24" y="190" width="220" height="56" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
       <text x="134" y="214" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🔀 Switch to IEnumerable&lt;T&gt;</text>
-      <text x="134" y="232" text-anchor="middle" font-size="10" fill="#5b6472">a method LINQ can't translate</text>
+      <text x="134" y="232" text-anchor="middle" font-size="10" fill="#5b6472">AsEnumerable() / ToList()</text>
 
       <g filter="url(#shA4)"><rect x="272" y="190" width="344" height="56" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
       <text x="444" y="214" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">Runs in-memory, in .NET</text>
@@ -157,12 +157,12 @@
 
   <div class="followup">
     <div class="fhead">🔄 Likely Follow-up</div>
-    <p class="ftline"><b>"So should everything just stay <code>IQueryable&lt;T&gt;</code> as long as possible?"</b> Not always — once the data's already in memory (a <code>List&lt;T&gt;</code>, an array) there's no database left to translate against, so <code>IEnumerable&lt;T&gt;</code> is the only option and the right one; the risk only shows up when a query that's supposed to run in the database quietly stops early.</p>
+    <p class="ftline"><b>"So should everything just stay <code>IQueryable&lt;T&gt;</code> as long as possible?"</b> Not always — once the data's already in memory (a <code>List&lt;T&gt;</code>, an array) there's no database left to translate against, so <code>IEnumerable&lt;T&gt;</code> is the only option and the right one; the risk only shows up when a query that's supposed to run in the database quietly runs in memory because of an early <code>.ToList()</code> or <code>.AsEnumerable()</code>.</p>
   </div>
 
   <div class="keypoints">
     <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
-    <p class="kp-primary">"<code>IQueryable&lt;T&gt;</code> builds an expression tree that EF Core translates into SQL and runs in the database. The moment you switch to <code>IEnumerable&lt;T&gt;</code> — directly, or through a method LINQ-to-SQL can't translate — everything from that point runs in .NET, in memory, against whatever rows have already been pulled back."</p>
+    <p class="kp-primary">"<code>IQueryable&lt;T&gt;</code> builds an expression tree that EF Core translates into SQL and runs in the database. The moment you switch to <code>IEnumerable&lt;T&gt;</code> — by calling <code>.AsEnumerable()</code> or <code>.ToList()</code>, or holding the query in an <code>IEnumerable&lt;T&gt;</code> variable — everything from that point runs in .NET, in memory, against whatever rows have already been pulled back."</p>
     <ul>
       <li><code>IQueryable&lt;T&gt;</code> → <span class="hl hl-adv">keep filtering in the database</span> for as long as possible — every <code>Where</code>/<code>Select</code> before materializing becomes part of the SQL.</li>
       <li><code>IEnumerable&lt;T&gt;</code> → <span class="hl hl-inter">use once the data's already local</span> — an in-memory list, or logic EF Core genuinely can't translate.</li>
@@ -185,10 +185,11 @@
       chained after that point compiles against <code>Enumerable</code>, not <code>Queryable</code> — there's no more
       expression tree left to translate.</p>
 
-      <p>Why this bites specifically with EF Core: a method the SQL translator doesn't understand (a custom C#
-      function, some string formatting) silently forces that switch. The query still compiles and still runs — it
-      just quietly stops being one database query and starts being "fetch everything so far, then filter it in
-      .NET."</p>
+      <p>Why this bites specifically with EF Core: an early <code>.ToList()</code> or <code>.AsEnumerable()</code> (or a
+      method that returns <code>IEnumerable&lt;T&gt;</code>) makes the switch. The query still compiles and still
+      runs — it just quietly stops being one database query and starts being "fetch everything so far, then filter
+      it in .NET." A method EF Core can't translate inside a <code>Where</code> on an <code>IQueryable&lt;T&gt;</code>
+      does <em>not</em> do this — since EF Core 3.0 it throws instead.</p>
 
       <table class="cmp-table">
         <thead><tr><th></th><th><code>IQueryable&lt;T&gt;</code></th><th><code>IEnumerable&lt;T&gt;</code></th></tr></thead>
@@ -277,16 +278,15 @@
               <text x="130" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🔗 .Where(x =&gt; Custom(x))</text>
               <path d="M240,43 H320" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcQ2)"/>
               <rect x="320" y="24" width="140" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
-              <text x="390" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">⚠️ silent switch</text>
+              <text x="390" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">💥 throws</text>
             </svg>
           </div>
           <p class="uc-what">A custom C# method, string formatting, or anything else the translator
-          can't turn into SQL forces an implicit switch to <code>IEnumerable&lt;T&gt;</code> — with
-          no <code>.AsEnumerable()</code> written anywhere. The query still compiles and runs; it
-          just quietly stops filtering in the database from that point on. <b>A real trap</b> —
-          candidates often assume the switch only happens when someone explicitly writes
-          <code>.AsEnumerable()</code> or an early <code>.ToList()</code>, but it doesn't.</p>
-          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">An untranslatable method switches you over silently — no <code>.AsEnumerable()</code> required.</span></div>
+          can't turn into SQL makes EF Core throw when the query runs (EF Core 3.0 and later) — it
+          does not quietly run that part in memory. <b>A real trap</b> — the "fix" people reach for,
+          an early <code>.AsEnumerable()</code> or <code>.ToList()</code>, compiles and works, but
+          now the whole table comes back first and the filter runs in .NET.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">An untranslatable method throws — adding <code>.AsEnumerable()</code> to silence it pulls the whole table into memory.</span></div>
         </div>
 
         <div class="uc-scenario" style="--uc-color:#16a34a">

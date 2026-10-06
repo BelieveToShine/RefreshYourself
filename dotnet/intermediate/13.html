@@ -69,9 +69,9 @@
           <div class="wc-head">🍪 Cookie</div>
           <div class="wc-ps">
             <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A server-rendered browser app needs to know who's calling on every request, without asking client code to manually attach that identity each time.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The server issues an encrypted cookie holding the identity on login, the browser resends it automatically on every request, and the server checks it with a session lookup — which is also why killing that session revokes access instantly.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The server issues an encrypted cookie holding the identity on login, the browser resends it automatically on every request, and the server decrypts it to know who's calling — and if the app also keeps a server-side session store, killing that session can revoke access.</span></div>
           </div>
-          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Cookie = server-issued identity, browser auto-resends, kill the session to revoke.</span></div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Cookie = server-issued identity, browser auto-resends; revoke early only with a server-side store.</span></div>
         </div>
         <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
           <div class="wc-head">🎫 JWT (Bearer)</div>
@@ -91,7 +91,7 @@
       <p class="rrow"><code>Cookie</code> <span class="rarrow">→</span> <b>server</b> remembers you</p>
       <p class="rrow"><code>JWT</code> <span class="rarrow">→</span> <b>you</b> carry the proof</p>
     </div>
-    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Cookie</code></b> is stateful — the browser resends it for you. <b><code>JWT</code></b> is stateless — the client has to attach it itself.</p>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Cookie</code></b> is resent by the browser for you. <b><code>JWT</code></b> is stateless — the client has to attach it itself.</p>
   </div>
 
   <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
@@ -135,7 +135,7 @@
 
       <g filter="url(#shI13)"><rect x="30" y="212" width="260" height="44" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
       <text x="160" y="231" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🔓 Server decrypts cookie</text>
-      <text x="160" y="246" text-anchor="middle" font-size="10.5" fill="#5b6472">session state lives server-side</text>
+      <text x="160" y="246" text-anchor="middle" font-size="10.5" fill="#5b6472">server decrypts it, no client code</text>
 
       <text x="160" y="284" text-anchor="middle" font-size="11" fill="#5b6472">Browser and server keep bouncing the</text>
       <text x="160" y="299" text-anchor="middle" font-size="11" fill="#5b6472">same cookie back and forth</text>
@@ -168,7 +168,7 @@
       <text x="480" y="284" text-anchor="middle" font-size="11" fill="#5b6472">Token carries its own proof — the</text>
       <text x="480" y="299" text-anchor="middle" font-size="11" fill="#5b6472">server never stores a session for it</text>
     </svg>
-    <figcaption>Same shape, opposite ownership — the server keeps the cookie's session, the client keeps the token's proof.</figcaption>
+    <figcaption>Same shape, opposite ownership — the server issues the cookie, the client keeps the token's proof.</figcaption>
   </figure>
 
   <div class="trap">
@@ -185,7 +185,7 @@
     <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
     <p class="kp-primary">"Cookie auth has the server create an encrypted cookie holding the user's identity on login, and the browser resends it automatically on every request. Token-based (JWT) auth has the server issue a signed token that the client stores and attaches itself as a Bearer header, with no server-side session lookup. <code>[Authorize]</code> just checks whether <code>HttpContext.User</code> — populated by the authentication middleware — is an authenticated identity, and that check happens in the authorization stage, right after authentication already ran."</p>
     <ul>
-      <li><code>Cookie</code> <span class="hl hl-blue">→ server-managed session</span>, the browser resends it for you.</li>
+      <li><code>Cookie</code> <span class="hl hl-blue">→ server-issued encrypted cookie</span>, the browser resends it for you.</li>
       <li><code>JWT</code> <span class="hl hl-inter">→ client-managed, self-contained</span>, no server lookup needed.</li>
       <li>Multiple schemes can run together → <span class="hl hl-teal">cookies + bearer, side by side</span>, chosen per endpoint.</li>
       <li><code>[Authorize]</code> checks <span class="hl hl-hot">HttpContext.User</span>, after authentication middleware already ran.</li>
@@ -199,7 +199,7 @@
       <p><span class="hl hl-blue">Cookie-based auth</span> has the server create an encrypted
       authentication cookie containing the user's claims on a successful login, and send it to the
       browser. The browser automatically re-sends that cookie on every later request, and the
-      server decrypts it each time to know who's calling — a server-managed session. That's an
+      server decrypts it each time to know who's calling — a server-issued login. That's an
       easy fit for a traditional browser-rendered app, but cookies don't travel naturally to
       non-browser clients — a mobile app, or a SPA calling an API on a different origin — without
       extra work.</p>
@@ -211,8 +211,8 @@
       needed, because the token is self-contained. That statelessness is exactly why JWT fits
       APIs, mobile apps, SPAs, and service-to-service calls so well, at the cost of harder
       revocation: a JWT stays valid until it expires, with no simple "log this session out right
-      now" the way killing a server-side cookie session provides, unless extra infrastructure is
-      built for it.</p>
+      now" — unlike a cookie, if the app keeps a server-side session store to kill, unless extra
+      infrastructure is built for it.</p>
 
       <p><code>[Authorize]</code> checks whether <code>HttpContext.User</code> — populated by
       whichever authentication middleware actually ran, cookie or JWT bearer or both — represents
@@ -229,9 +229,9 @@
         <tbody>
           <tr><th>Where identity lives</th><td>encrypted cookie, issued by server</td><td>signed token, held by client</td></tr>
           <tr><th>Who resends it</th><td>browser, automatically</td><td>client code, manually</td></tr>
-          <tr><th>Server-side check</th><td>decrypts cookie, session lookup</td><td>verifies signature, no lookup</td></tr>
+          <tr><th>Server-side check</th><td>decrypts cookie (no lookup by default)</td><td>verifies signature, no lookup</td></tr>
           <tr><th>Best fit</th><td>server-rendered browser apps</td><td>APIs, mobile, SPAs, cross-service</td></tr>
-          <tr><th>Revocation</th><td>kill the server session instantly</td><td class="no">❌ valid until expiry, unless denylisted</td></tr>
+          <tr><th>Revocation</th><td>instant only with a server-side session store</td><td class="no">❌ valid until expiry, unless denylisted</td></tr>
         </tbody>
       </table>
     </div>
@@ -343,18 +343,18 @@
               <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">REVOKE RIGHT NOW</text>
               <rect x="20" y="22" width="185" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
               <text x="112" y="40" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🍪 Cookie</text>
-              <text x="112" y="54" text-anchor="middle" font-size="9" fill="#166534">kill session now ✅</text>
+              <text x="112" y="54" text-anchor="middle" font-size="9" fill="#166534">with a session store ✅</text>
               <path d="M240,20 V64" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="3 3" fill="none"/>
               <rect x="275" y="22" width="185" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
               <text x="368" y="40" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🎫 JWT</text>
               <text x="368" y="54" text-anchor="middle" font-size="9" fill="#991b1b">valid until expiry ❌</text>
             </svg>
           </div>
-          <p class="uc-what">A cookie session can be killed server-side instantly. A JWT can't — it
+          <p class="uc-what">A cookie can be revoked right away only if the app keeps a server-side session store to kill; by default it is self-contained and lasts until it expires. A JWT has no such store — it
           stays valid until it naturally expires unless a denylist has been built, which
           reintroduces the server-side state JWT was meant to avoid. <b>Candidates often assume
-          revoking a JWT is as easy as revoking a cookie session — it isn't.</b></p>
-          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Cookie revokes instantly; JWT needs a denylist or a short expiry.</span></div>
+          revoking a JWT is as easy as killing a server-side cookie session — it isn't.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Cookie revokes instantly only with a session store; JWT needs a denylist or a short expiry.</span></div>
         </div>
 
       </div>
@@ -365,8 +365,8 @@
     <summary>🌍 Real-world example <span class="chev">▾</span></summary>
     <div class="toggle-body">
       <p><b>A cookie is a coat-check ticket; a JWT is a stamped wristband.</b> Hand the coat-check
-      ticket back and the venue (the server) looks up what's yours — it's the one keeping the
-      record. A stamped wristband you carry yourself — anyone can check the stamp is genuine
+      ticket back and the venue (the server) can look up what's yours if it keeps
+      a record. A stamped wristband you carry yourself — anyone can check the stamp is genuine
       without ever calling the venue.</p>
       <p><b>Scenario:</b> your team ships a browser-rendered admin dashboard and a public mobile
       app against the same ASP.NET Core backend. The dashboard uses the cookie scheme because the

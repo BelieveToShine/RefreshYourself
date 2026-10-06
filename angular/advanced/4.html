@@ -145,7 +145,7 @@
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b>Nested <code>.subscribe()</code> calls are not just messy — they're
     broken.</b> Subscribing inside another subscription's callback loses the outer stream's
-    ability to cancel/clean up the inner one and silently swallows the inner stream's errors —
+    ability to cancel/clean up the inner one, so old requests can pile up or arrive out of order, and an outer <code>catchError</code> cannot catch the inner stream's errors —
     always compose the two with <code>switchMap</code>/<code>mergeMap</code>/<code>concatMap</code>/<code>exhaustMap</code> instead.</p>
   </div>
 
@@ -236,7 +236,7 @@
           <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
         </div>
         <pre><code>user$.subscribe(user => {
-  orders$(user.id).subscribe(orders => { <span class="cx-err">// ❌ nested — no cancel, swallows errors</span>
+  orders$(user.id).subscribe(orders => { <span class="cx-err">// ❌ nested — no cancel, outer catchError can't see its errors</span>
     this.orders = orders;
   });
 });
@@ -246,7 +246,7 @@ user$.pipe(
 ).subscribe(orders => this.orders = orders);</code></pre>
       </div>
       <p class="cx-note">The nested version loses <code>user$</code>'s ability to cancel the
-      inner <code>orders$</code> call and never propagates its errors — <code>switchMap</code>
+      inner <code>orders$</code> call and the outer pipe's <code>catchError</code> never sees its errors — <code>switchMap</code>
       fixes both by composing the two streams into one.</p>
 
       <div class="code-card">

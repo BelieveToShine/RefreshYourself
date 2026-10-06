@@ -166,7 +166,7 @@
         <animate attributeName="stroke-dashoffset" values="18;0" dur="1.1s" repeatCount="indefinite"/>
       </path>
     </svg>
-    <figcaption>The ALB only routes to instances already healthy inside its target group. Instance D failed its health check and was pulled from rotation — the ASG is the one launching replacement instance E so the pool stays the right size.</figcaption>
+    <figcaption>The ALB only routes to instances already healthy inside its target group. Instance D failed its health check and was pulled from rotation — the ASG launches replacement instance E (when ELB health checks are enabled on the ASG) so the pool stays the right size.</figcaption>
   </figure>
 
   <div class="viz-label">🧠 ALB vs NLB <span class="viz-sub">— same pairing, different layer</span></div>
@@ -226,15 +226,15 @@
       <li><span class="hl hl-blue">ALB</span> → Layer 7, understands HTTP/HTTPS, routes by path or host — the right choice for web apps and microservices.</li>
       <li><span class="hl hl-inter">NLB</span> → Layer 4, ultra-low latency and extreme throughput, static IPs — the right choice for non-HTTP TCP/UDP traffic.</li>
       <li><span class="hl hl-basic">Target group</span> → the set of instances, IPs, or Lambdas the load balancer health-checks and routes to.</li>
-      <li><span class="hl hl-hot">ASG</span> → target-tracking or step scaling policies decide when to add or remove instances, and replace ones that fail health checks.</li>
+      <li><span class="hl hl-hot">ASG</span> → target-tracking or step scaling policies decide when to add or remove instances, and replace unhealthy ones (ELB health checks must be enabled on the ASG for it to act on the load balancer's verdict).</li>
     </ul>
   </div>
 
   <details class="explain toggle">
     <summary>📖 Explanation <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <p><span class="hl hl-blue">An Application Load Balancer</span> operates at Layer 7, so it understands HTTP/HTTPS and can route by path, host, or headers — the natural fit for web apps and microservices. A <b>target group</b> is the set of instances, IPs, or Lambda functions it routes to, and each target is continuously checked with a <b>health check</b>; a target that fails it is pulled out of rotation immediately, no traffic sent its way until it passes again.</p>
-      <p>An <span class="hl hl-inter">Auto Scaling Group</span> is the separate piece that actually changes how many instances exist. A <b>target-tracking policy</b> (e.g. keep average CPU near 50%) or a <b>step scaling policy</b> watches a metric and launches or terminates instances to match it. The two work together: the ALB never adds capacity on its own, and the ASG doesn't route traffic — it just keeps the pool the right size, replacing any instance that fails its health check if that instance belongs to the ASG.</p>
+      <p><span class="hl hl-blue">An Application Load Balancer</span> operates at Layer 7, so it understands HTTP/HTTPS and can route by path, host, or headers — the natural fit for web apps and microservices. A <b>target group</b> is the set of instances, IPs, or Lambda functions it routes to, and each target is continuously checked with a <b>health check</b>; a target that fails it is pulled out of rotation immediately, no traffic sent its way until it passes again. For HTTPS, an HTTPS listener on the ALB terminates TLS using a certificate from <b>AWS Certificate Manager (ACM)</b>, which issues and auto-renews public certificates for use with integrated services like load balancers and CloudFront.</p>
+      <p>An <span class="hl hl-inter">Auto Scaling Group</span> is the separate piece that actually changes how many instances exist. A <b>target-tracking policy</b> (e.g. keep average CPU near 50%) or a <b>step scaling policy</b> watches a metric and launches or terminates instances to match it. The two work together: the ALB never adds capacity on its own, and the ASG doesn't route traffic — it just keeps the pool the right size, replacing an instance it finds unhealthy. By default the ASG judges health by the EC2 status checks; to replace instances the load balancer marks unhealthy, you must turn on ELB health checks for the ASG.</p>
       <table class="cmp-table">
         <thead><tr><th></th><th>ALB</th><th>NLB</th></tr></thead>
         <tbody>

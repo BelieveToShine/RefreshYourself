@@ -3,7 +3,10 @@
 Locked decisions from the working session. The site has to feel inviting, not like plain
 documentation — this is what makes that happen.
 
-## Fonts (all loaded once in `assets/style.css`, don't add more)
+## Fonts (all loaded by one Google Fonts `@import` at the top of `assets/style.css`, don't add more)
+
+The `@import` is render-blocking; it is the single place fonts are declared — never add `<link>`
+tags or a second `@import` per page.
 
 - **Baloo 2** (700/800) — big, playful, display font. Used for the brand logo and every `.hero
   h1` (site home title, track title, tier title, topic title). This is the font doing the "make
@@ -29,7 +32,8 @@ word — colour behind the text, not just bold.
 - `.hl-hot` (red) — hot topics, warnings, "this is the tricky part."
 - `.hl-basic` (green) — correct/kept/the right answer.
 - `.hl-teal` — used sparingly for a third contrasting idea when a topic needs more than two.
-- `.hl-adv` (purple) — reserved for Advanced-tier topics later.
+- `.hl-adv` (purple) — used on Advanced-tier topics (e.g. AI Advanced) for the "advanced/architecture"
+  idea; keep it to that role.
 
 **Tie the highlight colour to the diagram's colour**, when the topic page has a diagram — e.g. on
 "Value vs. Reference Types," the diagram's blue box and the text's `hl-blue` span both mean
@@ -115,3 +119,12 @@ touch more visual weight than plain body text: a soft gradient background on the
 white card per point with its own border, and the `.hl` highlight on the one keyword the bullet
 is actually testing. See [content-writing.md](content-writing.md) for what the bullet text itself
 should say.
+
+## Focus and motion
+
+- A global `:focus-visible` ring (`2px solid var(--accent)`) covers every interactive element; do not
+  add `outline:none` without a `:focus-visible` replacement (the search input keeps its own pill-shaped
+  ring).
+- `style.css` ends with a `@media (prefers-reduced-motion: reduce)` block that turns off smooth
+  scrolling and shortens transitions/animations; `site.js` also uses instant scrolling in that mode.
+  New animations need no extra work, but never rely on motion alone to convey state.

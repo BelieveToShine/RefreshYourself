@@ -68,32 +68,32 @@
         <div class="why-card" style="--why-color:#475569; --why-bg:#f1f5f9">
           <div class="wc-head">⚪ Unchanged</div>
           <div class="wc-ps">
-            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>How does <code>SaveChanges()</code> know an entity needs zero work?</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>No difference from the snapshot → nothing gets generated at all.</span></div>
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>If every save re-sent every loaded entity, untouched rows would still cost a round trip — so how does <code>SaveChanges()</code> know an entity needs zero work?</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The Change Tracker compares it with its snapshot, and no difference means no SQL gets generated for it at all.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Unchanged → <code>SaveChanges()</code> writes nothing for this entity.</span></div>
         </div>
         <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
           <div class="wc-head">🆕 Added</div>
           <div class="wc-ps">
-            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A brand-new object doesn't exist as a row yet.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Add()</code> marks it Added → INSERT of every mapped column.</span></div>
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A brand-new object has no row in the table yet, so there is nothing to update — the database has to be told to create one.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Add()</code> marks it Added, and <code>SaveChanges()</code> sends an INSERT of every mapped column, then reads back generated values like the new ID.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Added → one INSERT, then Unchanged with the new ID.</span></div>
         </div>
         <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
           <div class="wc-head">✏️ Modified</div>
           <div class="wc-ps">
-            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Rewriting every column on every save wastes bandwidth and locks.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A tracked property changes → UPDATE sets only what differs.</span></div>
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Rewriting every column on every save wastes bandwidth and can overwrite values someone else just changed.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>When a tracked property changes, the entity becomes Modified and the UPDATE sets only the columns that differ — unless you call <code>Update()</code> or <code>Attach()</code> on it, which marks all columns.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Modified → UPDATE, only the columns that actually changed.</span></div>
         </div>
         <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
           <div class="wc-head">🗑️ Deleted</div>
           <div class="wc-ps">
-            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A row still in the table needs to actually disappear.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Remove()</code> marks it Deleted → DELETE runs, then it's detached.</span></div>
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A row that is still in the table has to actually go away, not just vanish from your C# list.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Remove()</code> marks it Deleted, and <code>SaveChanges()</code> runs the DELETE and then detaches the entity.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Deleted → one DELETE, entity detached afterward.</span></div>
         </div>
@@ -219,7 +219,7 @@
 
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
-    <p class="tline"><b>A Modified entity's UPDATE does not set every mapped column.</b> EF Core's generated <code>SET</code> clause only lists the columns whose value actually differs from the tracked snapshot — not the whole row.</p>
+    <p class="tline"><b>A Modified entity's UPDATE does not set every mapped column.</b> When you change tracked properties, EF Core's generated <code>SET</code> clause only lists the columns whose value actually differs from the snapshot — not the whole row. (Calling <code>Update()</code> on a detached or newly attached entity is different: it marks every column, so all of them are written.)</p>
   </div>
 
   <div class="followup">
@@ -232,7 +232,7 @@
     <p class="kp-primary">"The Change Tracker keeps each tracked entity's current state — Added, Modified, Deleted, or Unchanged — plus a snapshot of its original values. <code>SaveChanges()</code> reads those states, diffs against the snapshot, and generates exactly the INSERT, UPDATE, or DELETE each entity needs, then flips it back to Unchanged."</p>
     <ul>
       <li><code>Added</code> <span class="hl hl-blue">→ becomes an INSERT</span> when <code>SaveChanges()</code> runs.</li>
-      <li><code>Modified</code> <span class="hl hl-inter">→ UPDATE, only the changed columns</span> in the SET clause.</li>
+      <li><code>Modified</code> <span class="hl hl-inter">→ UPDATE, only the changed columns</span> in the SET clause (not after <code>Update()</code>, which marks all).</li>
       <li><code>Deleted</code> <span class="hl hl-hot">→ becomes a DELETE</span>, then the entity is detached.</li>
       <li>Default tracking is <span class="hl hl-blue">snapshot-based</span> — current values diffed against the original snapshot.</li>
       <li>After a successful save, state flips back to <span class="hl hl-basic">Unchanged</span>, and database-generated values are written back.</li>
@@ -253,7 +253,7 @@
       <p><code>SaveChanges()</code> walks every tracked entity, reads its state, and turns that
       into SQL: an <b>INSERT</b> for each Added entity, a <b>DELETE</b> for each Deleted one, and
       for Modified entities an <b>UPDATE</b> whose <code>SET</code> clause is built from the
-      snapshot diff — only the columns that actually changed. Once the database confirms the
+      snapshot diff — only the columns that actually changed. (If you call <code>Update()</code> or <code>Attach()</code> on an untracked entity, EF Core has no snapshot to diff, so it marks every column as modified.) Once the database confirms the
       write, EF Core flips each entity's state back to Unchanged and copies back anything the
       database generated, such as a new identity value, so the C# object matches the row that's
       now actually in the table.</p>

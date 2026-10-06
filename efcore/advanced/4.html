@@ -85,9 +85,9 @@
           <div class="wc-head">🔍 Missing indexes</div>
           <div class="wc-ps">
             <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>An unindexed filtered/sorted column forces a full table scan.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Add a database index — EF Core can't fix this itself.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Add an index — declared with <code>HasIndex()</code> and created by a migration; EF Core can't detect the need for it.</span></div>
           </div>
-          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Missing indexes → EF Core can't see or fix them; that's the DBA's job.</span></div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Missing indexes → EF Core can't spot them; you add the index (<code>HasIndex()</code> + migration).</span></div>
         </div>
       </div>
     </div>
@@ -98,7 +98,7 @@
     <div class="rgrid">
       <p class="rrow">No <b>projection</b> <span class="rarrow">→</span> loading more than you need</p>
       <p class="rrow">No <b>AsNoTracking</b> <span class="rarrow">→</span> tracking rows you'll never save</p>
-      <p class="rrow">No <b>index</b> <span class="rarrow">→</span> a scan EF Core can't see or fix</p>
+      <p class="rrow">No <b>index</b> <span class="rarrow">→</span> a scan EF Core can't see — you add the index</p>
     </div>
     <p class="rthink"><b class="tc-label">Think:</b> fixing <b><code>N+1</code></b> kills the extra
     round trips. These three are about what happens on the <b>one</b> round trip that's left.</p>
@@ -181,7 +181,7 @@
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b>A clean LINQ query is not the same as a fast SQL query.</b> EF Core's job
     ends at generating correct, reasonably-shaped SQL — whether that SQL actually runs fast is a
-    database and indexing question EF Core has zero visibility into or control over.</p>
+    database and indexing question EF Core can't see into — it won't warn you about a missing index, though you can add one with <code>HasIndex()</code>.</p>
   </div>
 
   <div class="followup">
@@ -198,11 +198,11 @@
     <p class="kp-primary">"Past N+1, I check three things: projection — am I loading only the
     fields I need; tracking — should this be <code>AsNoTracking</code> since it's read-only; and
     indexing — are the <code>WHERE</code> and <code>ORDER BY</code> columns actually indexed,
-    because that last one is entirely outside EF Core's control."</p>
+    because EF Core can't see that one — I add the index myself, through a migration."</p>
     <ul>
       <li>Over-fetching → <span class="hl hl-blue">project into a DTO, don't load the whole entity</span>.</li>
       <li>Unneeded tracking → <span class="hl hl-basic">use AsNoTracking for read-only queries at scale</span>.</li>
-      <li>Missing indexes → <span class="hl hl-hot">EF Core can't see or fix the database's own indexing</span>.</li>
+      <li>Missing indexes → <span class="hl hl-hot">EF Core can't detect them</span> — you add the index (<code>HasIndex()</code> + migration).</li>
       <li>Clean LINQ ≠ fast SQL → <span class="hl hl-inter">always check the real execution plan under load</span>.</li>
       <li>At architect depth → <span class="hl hl-adv">ask for the execution plan before proposing a code change</span>.</li>
     </ul>
@@ -227,9 +227,9 @@
 
       <p>The third cause sits outside EF Core entirely. EF Core will generate a
       <code>WHERE</code> or <code>ORDER BY</code> against any column referenced in LINQ, but it
-      has no visibility into — and no control over — whether that column is actually indexed in
-      the database. An unindexed column still forces a full table scan no matter how clean the
-      generated SQL looks. That's a schema/DBA-side fix — the indexing mechanics themselves belong
+      has no visibility into whether that column is actually indexed in
+      the database, and it won't warn you. An unindexed column still forces a full table scan no matter how clean the
+      generated SQL looks. The fix is a schema change — you declare the index with <code>HasIndex()</code> and a migration creates it; the indexing mechanics themselves belong
       to the <a href="../../sql/roadmap.html">SQL track</a>, still early in its own build-out.</p>
 
       <table class="cmp-table">
@@ -237,8 +237,8 @@
         <tbody>
           <tr><th>What happens</th><td>every mapped column and included navigation comes back, used or not</td><td>a full snapshot of every tracked row, kept for changes that never happen</td><td>the database scans the whole table on the filtered/sorted column</td></tr>
           <tr><th>Cost</th><td>wasted bandwidth &amp; memory</td><td>memory and CPU for a comparison that never runs</td><td>query time grows with table size, not rows returned</td></tr>
-          <tr><th>Fixed by</th><td><code>Select()</code> into a DTO</td><td><code>AsNoTracking()</code></td><td>a database index — schema side</td></tr>
-          <tr><th>Who can fix it</th><td>the developer, in LINQ</td><td>the developer, in LINQ</td><td>❌ not EF Core — the DB schema/DBA</td></tr>
+          <tr><th>Fixed by</th><td><code>Select()</code> into a DTO</td><td><code>AsNoTracking()</code></td><td>an index — <code>HasIndex()</code> + migration</td></tr>
+          <tr><th>Who can fix it</th><td>the developer, in LINQ</td><td>the developer, in LINQ</td><td>⚠️ EF Core can't detect it — you add the index, with the DBA's help</td></tr>
         </tbody>
       </table>
     </div>

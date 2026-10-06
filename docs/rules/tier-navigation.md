@@ -1,6 +1,7 @@
 # Rule: Tier Side Navigation (topic-to-topic left menu)
 
-Shipped feature (not a prototype) — live on all 14 `csharp/basic` pages. Read this fully
+Shipped feature (not a prototype) — live on every tier of every track (every topic page that
+carries `data-tier-key`; `assets/nav-index.js` has an entry per tier). Read this fully
 before wiring it up for a new tier (e.g. Azure Basic) — it explains three real bugs that were
 found and fixed while building it, and the pattern that avoids them.
 
@@ -129,10 +130,17 @@ These three cost real iteration time. Do not re-introduce them.
    instead.
 
 There's a fourth thing worth knowing but not a bug: item text is inserted via `innerHTML`
-through an `esc()` helper (escapes `&`, `<`, `>`) because titles can contain literal
-angle brackets (`Array vs. List<T>`). `assets/search-index.js`'s own dropdown has this exact
-unescaped-title problem already (it inserts `item.title` raw) — don't copy that pattern here;
-always route new text through `esc()` before it goes into an HTML string.
+through the shared top-level `esc()` helper in `site.js` (escapes `&`, `<`, `>`, `"`) because
+titles can contain literal angle brackets (`Array vs. List<T>`). The search dropdown uses the same
+helper — always route new text through `esc()` before it goes into an HTML string.
+
+## Accessibility
+
+- The `<aside class="tier-nav">` carries `role="navigation"` and an `aria-label` ("<Track> <Tier>
+  topics"), so it is a landmark.
+- The current topic's link gets `aria-current="page"` (alongside the `.active` class).
+- Keyboard focus uses `:focus-visible` (a ring on the row, and the hover-detail expands on
+  `:focus-visible` too), not plain `:focus`, so mouse clicks don't leave a ring behind.
 
 ## Visual design (approved)
 

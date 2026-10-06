@@ -77,9 +77,9 @@
           <div class="wc-head">🟠 computed()</div>
           <div class="wc-ps">
             <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A plain memoized function keeps returning its old, stale result until something explicitly invalidates the cache — mistaking computed() for exactly that is one of the most common wrong answers candidates give.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>computed() automatically re-runs and updates its own value the instant a Signal it read last time changes — no manual invalidation, and no <code>.set()</code> exists on it at all.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>computed() is lazy and memoized: it caches its value, marks it stale when a Signal it read changes, and recalculates only the next time something reads it — no manual invalidation, and no <code>.set()</code> exists on it at all.</span></div>
           </div>
-          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">computed() = read-only, reruns itself — never a plain cache.</span></div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">computed() = read-only, lazy, auto-invalidating cache.</span></div>
         </div>
         <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
           <div class="wc-head">🟢 effect()</div>
@@ -97,7 +97,7 @@
     <div class="rhead">🔥 Easy interview recall</div>
     <div class="rgrid">
       <p class="rrow"><code>signal()</code> <span class="rarrow">→</span> <b>writable</b> source of truth</p>
-      <p class="rrow"><code>computed()</code> <span class="rarrow">→</span> <b>derived</b>, read-only, auto-updates</p>
+      <p class="rrow"><code>computed()</code> <span class="rarrow">→</span> <b>derived</b>, read-only, lazy + cached</p>
       <p class="rrow"><code>effect()</code> <span class="rarrow">→</span> <b>side effect</b>, runs on change</p>
     </div>
     <p class="rthink"><b class="tc-label">Think:</b> one <b><code>signal()</code></b> can feed a <b><code>computed()</code></b> and an <b><code>effect()</code></b> at the same time — nobody subscribes to anything, they just read it.</p>
@@ -141,7 +141,7 @@
 
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
-    <p class="tline"><b><code>computed()</code> is not just a cached function call.</b> It's genuinely reactive — it automatically re-runs and updates its own value the moment any Signal it depends on changes, with nobody calling it again; a plain memoized function would just keep returning a stale result until something explicitly invalidated the cache.</p>
+    <p class="tline"><b><code>computed()</code> is not just a cached function call.</b> It's genuinely reactive — it is lazy and memoized: it caches its value, goes stale automatically when any Signal it depends on changes, and recalculates only the next time it is read; a plain memoized function would just keep returning a stale result until something explicitly invalidated the cache.</p>
   </div>
 
   <div class="followup">
@@ -154,7 +154,7 @@
     <p class="kp-primary">"A Signal is a value that tracks who reads it and notifies those readers when it changes — you read it by calling it as a function, and you only ever write it through <code>.set()</code> or <code>.update()</code>, never by direct assignment."</p>
     <ul>
       <li><code>signal()</code> → <span class="hl hl-blue">writable source of truth</span> — call <code>.set()</code> to replace it, <code>.update()</code> to derive from the current value.</li>
-      <li><code>computed()</code> → <span class="hl hl-inter">read-only, derived value</span> — recalculates automatically, no <code>.set()</code> exists on it.</li>
+      <li><code>computed()</code> → <span class="hl hl-inter">read-only, derived value</span> — lazy and cached, recalculates when read after a change, no <code>.set()</code> exists on it.</li>
       <li><code>effect()</code> → runs a <span class="hl hl-hot">side effect</span> automatically whenever a Signal it reads changes — logging, syncing to storage, not computing a value.</li>
       <li>Still reach for RxJS when it's genuinely a <span class="hl hl-teal">stream over time</span> — HTTP calls, debouncing input, combining multiple async sources.</li>
       <li>Signals don't replace RxJS — Angular ships <code>toSignal()</code>/<code>toObservable()</code> specifically because <span class="hl hl-basic">both models are meant to coexist</span>.</li>
@@ -174,7 +174,7 @@
           <tr><th>Read</th><td>call it: <code>count()</code></td><td>call it: <code>doubled()</code></td><td>no return value</td></tr>
           <tr><th>Write</th><td><code>.set()</code> / <code>.update()</code></td><td class="no">❌ read-only</td><td class="no">❌ not for state</td></tr>
           <tr><th>Purpose</th><td>source of truth</td><td>derived value</td><td>side effect (logging, storage, DOM)</td></tr>
-          <tr><th>Re-runs automatically?</th><td>it <i>is</i> the change</td><td>✅ yes, on dependency change</td><td>✅ yes, on dependency change</td></tr>
+          <tr><th>Re-runs automatically?</th><td>it <i>is</i> the change</td><td>✅ lazily — recomputes when next read after a change</td><td>✅ yes, on dependency change</td></tr>
         </tbody>
       </table>
 
@@ -192,11 +192,11 @@
           <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
         </div>
         <pre><code><span class="kw">const</span> count = signal(<span class="num">0</span>);                                   <span class="cx-cmt">// writable — source of truth</span>
-<span class="kw">const</span> doubled = computed(() => count() * <span class="num">2</span>);          <span class="cx-cmt">// derived — recalculates automatically</span>
+<span class="kw">const</span> doubled = computed(() => count() * <span class="num">2</span>);          <span class="cx-cmt">// derived — lazy, cached</span>
 effect(() => console.log(<span class="str">'count is now'</span>, count()));  <span class="cx-cmt">// side effect — runs automatically</span>
 
 count.set(<span class="num">5</span>);
-<span class="cx-ok">// doubled is now 10 — nobody called computed() again, it just reran</span>
+<span class="cx-ok">// doubled() now gives 10 — recalculated on the next read</span>
 <span class="cx-ok">// effect logs "count is now 5" automatically</span></code></pre>
       </div>
       <p class="cx-note">One <code>.set()</code> call — the derived value and the side effect both update <b>without being told to</b>.</p>
@@ -237,7 +237,7 @@ count.set(count() + <span class="num">1</span>);        <span class="cx-cmt">// 
               <text x="401" y="73" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">🖥️ UI B</text>
             </svg>
           </div>
-          <p class="uc-what">Both spots just read the same computed() — Angular reruns it once when the Signal changes, and every reader sees the updated value with nothing manually syncing them. <b>This is the #1 scenario you'll actually run into.</b></p>
+          <p class="uc-what">Both spots just read the same computed() — Angular recalculates it once when it is next read after the Signal changes, and every reader sees the updated value with nothing manually syncing them. <b>This is the #1 scenario you'll actually run into.</b></p>
           <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One computed() read from many places → always one shared, always-fresh value.</span></div>
         </div>
 
@@ -286,7 +286,7 @@ count.set(count() + <span class="num">1</span>);        <span class="cx-cmt">// 
   <details class="realworld toggle">
     <summary>🌍 Real-world example <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <p><b>A writable Signal is a shared whiteboard number everyone can see.</b> A <code>computed()</code> is a second whiteboard that automatically rewrites itself — say, always showing double the first board's number — the instant the first one changes, with nobody manually updating it. An <code>effect()</code> is a person who takes an action, like sending an email, every time they notice either whiteboard change.</p>
+      <p><b>A writable Signal is a shared whiteboard number everyone can see.</b> A <code>computed()</code> is a second whiteboard that always shows the right derived value — say, double the first board's number. It marks itself out of date when the first board changes, and works out the new number only when someone looks at it. An <code>effect()</code> is a person who takes an action, like sending an email, every time they notice either whiteboard change.</p>
     </div>
   </details>
 

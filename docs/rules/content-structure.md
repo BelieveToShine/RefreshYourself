@@ -106,4 +106,4 @@ Locked decisions from the working session that set this project up. Don't re-der
 1. Add the tile to `/index.html`.
 2. Create `/<track>/index.html` with all three tier cards (stub the tiers not built yet).
 3. Create `/<track>/basic/index.html` (even if empty for now, list it as "coming soon").
-4. Update the status table in [`docs/README.md`](../README.md).
+4. Add the track to [`docs/superpowers/specs/README.md`](../superpowers/specs/README.md) (index table) and [`docs/refreshyourself-overview.md`](../refreshyourself-overview.md) (status line). See [`site-architecture.md`](site-architecture.md) for the full change → files map.

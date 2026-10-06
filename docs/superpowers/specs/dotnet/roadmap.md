@@ -44,8 +44,8 @@ grouped thin, definition-only sub-topics:
 
 | Tier | Count | Pages |
 |---|---|---|
-| Basic | 5 | .NET vs. .NET Framework; CLR, BCL & Managed Code; SDK vs. Runtime/.csproj/NuGet; What Is MVC; Filters, CORS, HTTPS & Logging |
-| Intermediate | 16 | What Happens When a .NET App Starts; The Built-in DI Container; Service Lifetimes; Middleware; Authentication vs. Authorization (Pipeline Stages); Routing; Model Binding & Validation; ViewBag vs. ViewData vs. TempData; Razor & Routing (MVC); MVC-Specific Filters; Views, Layouts & Organization; Configuration Sources; Authentication Schemes; Authorization Policies & Claims; Global Exception Handling; The Generic Host & Application Lifetime |
+| Basic | 5 (6 final, +1 testing page 2026-09-18) | .NET vs. .NET Framework; CLR, BCL & Managed Code; SDK vs. Runtime/.csproj/NuGet; What Is MVC; Filters, CORS, HTTPS & Logging |
+| Intermediate | 16 (17 final, +1 testing page 2026-09-18) | What Happens When a .NET App Starts; The Built-in DI Container; Service Lifetimes; Middleware; Authentication vs. Authorization (Pipeline Stages); Routing; Model Binding & Validation; ViewBag vs. ViewData vs. TempData; Razor & Routing (MVC); MVC-Specific Filters; Views, Layouts & Organization; Configuration Sources; Authentication Schemes; Authorization Policies & Claims; Global Exception Handling; The Generic Host & Application Lifetime |
 | Advanced | 2 | Kestrel & Reverse Proxies; Model Binding Internals & MVC vs. Web API vs. Razor Pages |
 
 Reasoning for the less-obvious calls:

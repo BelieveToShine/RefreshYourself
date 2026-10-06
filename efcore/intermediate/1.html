@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LINQ → SQL Translation — EF Core Intermediate — RefreshYourself</title>
+<title>LINQ → SQL Translation &amp; Inspecting Generated SQL — EF Core Intermediate — RefreshYourself</title>
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body data-root="../../" data-tier-key="efcore/intermediate">
@@ -175,10 +175,10 @@
 
   <div class="keypoints">
     <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
-    <p class="kp-primary">"My LINQ query builds an expression tree, and EF Core's relational provider walks that tree and translates the operators it recognizes into parameterized SQL. Anything it doesn't recognize throws by default from EF Core 3.0 onward — it doesn't silently fall back to running in memory. To see the actual SQL, I call <code>ToQueryString()</code> before running it, or turn on <code>LogTo()</code> to see it as it executes."</p>
+    <p class="kp-primary">"My LINQ query builds an expression tree, and EF Core's relational provider walks that tree and translates the operators it recognizes into parameterized SQL. Anything it doesn't recognize in a filter or sort throws by default from EF Core 3.0 onward — it doesn't silently fall back to running in memory (only the final <code>Select</code> can still run in memory). To see the actual SQL, I call <code>ToQueryString()</code> before running it, or turn on <code>LogTo()</code> to see it as it executes."</p>
     <ul>
       <li><code>ToQueryString()</code> <span class="hl hl-blue">→ prints the SQL without running it</span> (EF Core 5+).</li>
-      <li><code>LogTo(...)</code> <span class="hl hl-inter">→ shows the SQL as it actually executes</span>, parameters included.</li>
+      <li><code>LogTo(...)</code> <span class="hl hl-inter">→ shows the SQL as it actually executes</span>; parameter values show only with <code>EnableSensitiveDataLogging()</code>.</li>
       <li>Untranslatable code <span class="hl hl-hot">→ throws by default</span> since EF Core 3.0, no silent fallback.</li>
       <li>Genuinely need it client-side? <span class="hl hl-basic">→ materialize first</span> (<code>.ToList()</code>/<code>.AsEnumerable()</code>), then run it.</li>
     </ul>
@@ -200,7 +200,8 @@
       real performance problems — pulling far more rows than intended and filtering them client-
       side without anyone noticing. <span class="hl hl-inter">EF Core 3.0 changed that default</span>:
       a piece of the query it can't translate now throws at runtime instead, so a hidden fallback
-      never happens by accident.</p>
+      never happens by accident. One exception: a method call in the <em>final</em> <code>Select</code>
+      can still run in memory, because it only shapes rows that already came back.</p>
 
       <p>Seeing the generated SQL is a separate, everyday skill worth having on hand:</p>
 
@@ -208,7 +209,7 @@
         <thead><tr><th></th><th><code>ToQueryString()</code></th><th><code>LogTo()</code></th></tr></thead>
         <tbody>
           <tr><th>Runs the query?</th><td class="no">❌ no, just builds the string</td><td>✅ yes, logs real executions</td></tr>
-          <tr><th>Shows parameter values?</th><td>✅ yes, as a runnable snippet</td><td>✅ yes, inline in the log</td></tr>
+          <tr><th>Shows parameter values?</th><td>✅ yes, as a runnable snippet</td><td>✅ only with <code>EnableSensitiveDataLogging()</code></td></tr>
           <tr><th>Best for</th><td>checking a query while writing it</td><td>watching everything the app sends live</td></tr>
           <tr><th>Available since</th><td>EF Core 5.0</td><td>EF Core 5.0</td></tr>
         </tbody>
@@ -242,9 +243,9 @@ Console.WriteLine(sql);</code></pre>
     .LogTo(Console.WriteLine, LogLevel.Information);  <span class="cx-cmt">// logs real SQL as it runs</span>
 
 <span class="kw">var</span> orders = context.Orders.Where(o =&gt; o.Total &gt; <span class="num">100</span>).ToList();
-<span class="cx-ok">// ✅ console now shows the exact SQL, with parameter values, right when it executes</span></code></pre>
+<span class="cx-ok">// ✅ console now shows the exact SQL right when it executes (values need EnableSensitiveDataLogging)</span></code></pre>
       </div>
-      <p class="cx-note"><code>LogTo()</code> shows the SQL <b>as it actually executes</b> — including real parameter values.</p>
+      <p class="cx-note"><code>LogTo()</code> shows the SQL <b>as it actually executes</b>; real parameter values appear only if you also turn on <code>EnableSensitiveDataLogging()</code>.</p>
 
       <div class="code-card">
         <div class="cc-head">
@@ -316,8 +317,8 @@ Console.WriteLine(sql);</code></pre>
               <text x="385" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#134e4a">📜 LogTo() console</text>
             </svg>
           </div>
-          <p class="uc-what">Turning on <code>LogTo()</code> logs every real SQL statement, parameter values included, exactly as it executes — the way to watch everything the app actually sends while it runs.</p>
-          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Watching it run → <code>LogTo()</code> shows the SQL with real parameter values.</span></div>
+          <p class="uc-what">Turning on <code>LogTo()</code> logs every real SQL statement exactly as it executes — the way to watch everything the app actually sends while it runs.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Watching it run → <code>LogTo()</code> shows the SQL as it executes.</span></div>
         </div>
 
       </div>

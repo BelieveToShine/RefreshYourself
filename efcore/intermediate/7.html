@@ -77,7 +77,7 @@
           <div class="wc-head">🚀 database update</div>
           <div class="wc-ps">
             <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>That same reviewed change still has to run safely on dev, staging, and production without re-running something already applied or running blind against a schema someone edited by hand.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It (or <code>Database.Migrate()</code>) reads <code>__EFMigrationsHistory</code> in that specific database and runs only the migrations not yet recorded there, at deploy/startup time.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It (or <code>Database.Migrate()</code>) reads <code>__EFMigrationsHistory</code> in that specific database and runs only the migrations not yet recorded there, at deploy/startup time (for production, usually via a generated script or bundle run once).</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">database update = runs only what's missing, checked against history, at deploy time.</span></div>
         </div>
@@ -219,6 +219,8 @@
       already run there. Applying just reads that table, finds the migrations not yet listed, and
       runs their <code>Up()</code> methods in order — then records each one.</p>
 
+      <p>For production, many teams don't run <code>Migrate()</code> at startup, because several instances starting at once can race to apply the same migration, and the app's login needs schema-change rights. Instead they generate a SQL script (<code>dotnet ef migrations script</code>) or a migration bundle (<code>dotnet ef migrations bundle</code>) and run it once as a deploy step.</p>
+
       <p>Splitting the two steps this way is deliberate: a generated <code>Up()</code>/<code>Down()</code>
       file can be reviewed, edited, or held back in a pull request before it ever touches a database,
       and the exact same migration file can be applied later to dev, staging, and production without
@@ -275,7 +277,7 @@
 context.Database.Migrate();
 <span class="cx-ok">// ✅ runs only migrations missing from __EFMigrationsHistory, in order</span></code></pre>
       </div>
-      <p class="cx-note">Safe to call on every startup — <b>already-applied migrations are skipped</b>, never re-run.</p>
+      <p class="cx-note">Already-applied migrations are <b>skipped</b>, never re-run — but calling it at startup is a convenience for dev, not a safe production habit when several app instances start together.</p>
 
       <div class="code-card">
         <div class="cc-head">

@@ -211,7 +211,7 @@ In this exact order:
      prose read as dense and duller than what a good chat assistant produces off the same
      question — the fix is tighter sentences and more scannable structure (bold, short lines,
      tables), not more words.
-11. **"💻 See the code" — collapsed toggle, closed by default.** `<details class="codebox toggle">`
+11. **"💻 See the code" — collapsed toggle, closed by default. Optional: omit it entirely when a topic has no honest code to show (most AWS/Azure concept pages do — about 35 of 44 AWS pages have none); never invent filler. The language chip names the page's language (`C#`, `JavaScript`, `SQL`, `YAML`…), not always `C#`.** `<details class="codebox toggle">`
    with `<summary>💻 See the code</summary>`, containing one or more `.code-card` blocks (see
    `.code-card` in `assets/style.css` — a **light** card, never a dark console: a `C#` language
    chip, a copy button, `Fira Code`, syntax-colored spans `.kw`/`.ty`/`.str`/`.num` and comment

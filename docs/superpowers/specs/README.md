@@ -6,13 +6,13 @@ or OOP's. Following the same format everywhere is the entire point: a session th
 worked on a given track should be able to open its folder and know exactly what's built, what's
 planned, and why, without re-deriving any of it from the live pages.
 
-## The site is mid-rebuild — read this before starting a new track's roadmap
+## How the rebuild went — read this before starting a new track's roadmap
 
 Locked with the user on 2026-09-15 (audience/depth definition refined 2026-09-16): RefreshYourself
 is moving from a topic-tutorial site to an **interview question bank for experienced
 professionals — roughly 3+ years through senior, lead, architect, and principal** — across a new
-track pipeline (C# → OOP → .NET/ASP.NET Core → Web API → EF Core → SQL → Azure, plus React/DSA/AI
-unaffected). Every track now goes through 7 phases **before** any page gets built:
+track pipeline. **As of 2026-10-06 all 15 tracks have completed all 7 phases (541 pages)** — see
+[`../../refreshyourself-overview.md`](../../refreshyourself-overview.md). Every track, including any new one, goes through 7 phases **before** any page gets built:
 
 1. **Question taxonomy** — what could an interviewer ask, grouped by concept, no tier/priority yet
 2. Review — dedupe, **and actively hunt for gaps against outside domain knowledge, not just a
@@ -142,6 +142,6 @@ each track's spec. A track's `overview.md` is only what's specific to *that* tra
 ## When to create a new category
 
 The moment a track's full roadmap gets planned — even before the first topic page is written
-(Azure is the working example: roadmap-only, spec written, zero pages built). Don't wait until a
+(any future track starts this way: spec folder first, zero pages built). Don't wait until a
 track is finished to document it. This includes step 4 above — the live roadmap page and the
 root tile's badge link are part of "documenting it," not part of "building it."

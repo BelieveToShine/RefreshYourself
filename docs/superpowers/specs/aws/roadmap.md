@@ -4,7 +4,7 @@ Phase 1 output: [`question-taxonomy.md`](question-taxonomy.md) — 44 concept gr
 user's own source, 6 added by this file's own Phase 2 gap-hunt, one of which is a whole new
 group). This file is Phases 2–6: review, page grouping, tier, priority, and the final roadmap —
 see [`specs/README.md`](../README.md) for what each phase means. **Phase 7 (writing the actual
-pages) has not started** — see "Known gaps" at the bottom.
+pages) is complete** — all 44 pages are written; see `overview.md`.
 
 ## Phase 2 — Review & gap-hunt
 
@@ -226,9 +226,9 @@ roadmap doc vs. its live page.
 
 ## Known gaps
 
-**Phase 7 has not started — zero pages are written.** This file and `question-taxonomy.md` are
+**Status (updated 2026-10-06): Phase 7 is complete — all pages are written; see `overview.md` for the count. The text below is the Phase 6 plan as locked.** This file and `question-taxonomy.md` are
 Phases 1–6 only. `aws/roadmap.html`, the three tier `index.html` skeleton pages, and the root
 tile's roadmap-badge are wired per the Phase-1 mandate (see
 [`specs/README.md`](../README.md)), honestly labeled as draft/not-yet-written — the root tile
-stays in its "Coming soon" state and none of the 44 pages exist yet. Nothing here should be
-mistaken for a completed track.
+was "Coming soon" at the Phase 6 stage. (Historical note — all 44 pages have since been written
+and wired; this section is kept as the Phase 6 record.)

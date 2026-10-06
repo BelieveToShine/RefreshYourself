@@ -77,7 +77,7 @@
           <div class="wc-head">⚠️ Needs Explicit Configuration</div>
           <div class="wc-ps">
             <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Two navigation properties on the same entity pointing at the same target type — <code>Customer.BillingOrder</code> and <code>Customer.ShippingOrder</code>, both <code>Order</code> — give EF Core two equally-valid FK candidates with no shape-based way to tell which belongs to which.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Convention gives up rather than guess wrong, and the model throws at build time until Fluent API's <code>HasForeignKey(...)</code>, or a <code>[ForeignKey]</code>/<code>[InverseProperty]</code> pair, names each FK explicitly.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Convention can't pair them reliably — it either throws at model build (when <code>Order</code> has a navigation back) or invents shadow FKs you didn't choose — so Fluent API's <code>HasForeignKey(...)</code>, or a <code>[ForeignKey]</code>/<code>[InverseProperty]</code> pair, should name each FK explicitly.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Two navs, same target type → ambiguous → name each FK yourself.</span></div>
         </div>
@@ -188,7 +188,7 @@
 
       <p>The same idea drives relationships. When a navigation property (a reference to another entity) sits next to a property shaped <code>&lt;NavigationType&gt;Id</code>, EF Core reads that pairing as a foreign key and wires up the relationship. Whether it's one-to-many or one-to-one follows from the navigation's own shape: a single reference on one side and a collection on the other means many; a single reference on both sides means one.</p>
 
-      <p>That inference breaks down the moment two navigation properties on the same entity point at the same related type. EF Core has no way to know which FK-shaped property belongs to which navigation, so it throws when it builds the model instead of guessing wrong. The fix is explicit: Fluent API's <code>HasOne().HasForeignKey(...)</code>, or a <code>[ForeignKey]</code>/<code>[InverseProperty]</code> pair on the navigation properties, naming the match yourself.</p>
+      <p>That inference breaks down the moment two navigation properties on the same entity point at the same related type. EF Core has no way to know which FK-shaped property belongs to which navigation. If the other side has a navigation back, it throws "unable to determine the relationship" when it builds the model; if not, it quietly adds its own shadow FK columns, which may not be what you meant. The fix is explicit: Fluent API's <code>HasOne().HasForeignKey(...)</code>, or a <code>[ForeignKey]</code>/<code>[InverseProperty]</code> pair on the navigation properties, naming the match yourself.</p>
 
       <table class="cmp-table">
         <thead><tr><th></th><th>Detected by convention</th><th>Needs explicit configuration</th></tr></thead>
@@ -257,7 +257,7 @@ modelBuilder.Entity&lt;<span class="ty">Customer</span>&gt;()
     .WithMany()
     .HasForeignKey(<span class="str">"BillingOrderId"</span>);   <span class="cx-ok">// ✅ this FK belongs to BillingOrder</span></code></pre>
       </div>
-      <p class="cx-note">Two navigations, same target type — EF Core <b>throws building the model</b> until Fluent API says which FK is which.</p>
+      <p class="cx-note">Two navigations, same target type — EF Core <b>can't pair them reliably</b> (it throws if the other side has a navigation back); Fluent API says which FK is which.</p>
 
     </div>
   </details>
@@ -320,7 +320,7 @@ modelBuilder.Entity&lt;<span class="ty">Customer</span>&gt;()
             </svg>
           </div>
           <p class="uc-what">EF Core has no shape-based way to tell which FK belongs to which
-          navigation, so it throws when it builds the model instead of guessing wrong.
+          navigation, so it either throws when it builds the model (if the other side has a navigation back) or invents its own FK columns.
           <b>A common interview trap</b> — candidates often assume convention "just works" even
           here; it has to be configured explicitly with Fluent API or annotations instead.</p>
           <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Two navs, same type → convention gives up.</span></div>
@@ -333,7 +333,7 @@ modelBuilder.Entity&lt;<span class="ty">Customer</span>&gt;()
   <details class="realworld toggle">
     <summary>🌍 Real-world example <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <p><b>A shipping-address feature gets added next to billing.</b> <code>Customer</code> already had a <code>BillingOrder</code> navigation; someone adds a <code>ShippingOrder</code> pointing at the same <code>Order</code> type and migrates. The app throws the moment the model builds — two roads now lead to the same destination, and convention can't pick one. The fix is one Fluent API call naming each foreign key, not a redesign.</p>
+      <p><b>A shipping-address feature gets added next to billing.</b> <code>Customer</code> already had a <code>BillingOrder</code> navigation; someone adds a <code>ShippingOrder</code> pointing at the same <code>Order</code> type and migrates. The model now fails to build or gets FK columns nobody chose — two roads lead to the same destination, and convention can't pick one. The fix is one Fluent API call naming each foreign key, not a redesign.</p>
     </div>
   </details>
 

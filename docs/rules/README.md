@@ -10,6 +10,8 @@ override default behavior — read the relevant one before doing the thing, not 
 | About to… | Read |
 |---|---|
 | Anything at all on this site | [product-principle.md](product-principle.md) — read this one first |
+| Need the map: folders, page anatomy, run/deploy/branches, what else must change | [site-architecture.md](site-architecture.md) |
+| About to commit (docs must be updated in the same commit; hooks enforce it) | [pre-commit-docs-sync.md](pre-commit-docs-sync.md) |
 | Write or edit any topic page's content (words, ordering, template) | [content-writing.md](content-writing.md) |
 | Write a technical claim of any kind (diagram, explanation, code, key point) | [accuracy.md](accuracy.md) |
 | Draw or edit a diagram | [diagram-style.md](diagram-style.md) |

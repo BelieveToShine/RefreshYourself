@@ -153,7 +153,7 @@
 
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
-    <p class="tline"><b>A circular import does not throw an error by itself.</b> One of the two modules simply finishes importing before the other has finished running, so it gets a partially-initialized version of that module — usually showing up as "works fine" for one value and <code>undefined</code> for another, depending on import order.</p>
+    <p class="tline"><b>A circular import does not always fail — but it can.</b> One module runs before the other has finished, so it sees a half-initialized module. In CommonJS that usually means <code>undefined</code>; in ES modules, touching a <code>const</code>/<code>let</code>/<code>class</code> export too early throws a <code>ReferenceError</code>.</p>
   </div>
 
   <div class="followup">
@@ -169,7 +169,7 @@
       <li>Module scope <span class="hl hl-basic">→ nothing leaks to global</span> by default, unlike a plain <code>&lt;script&gt;</code> tag.</li>
       <li><code>import()</code> <span class="hl hl-teal">→ dynamic, returns a promise</span> — load a module on demand instead of upfront.</li>
       <li>CommonJS <span class="hl hl-inter">→ sync, runs the file to resolve exports</span>; ES modules <span class="hl hl-inter">→ can be async, resolved statically</span>.</li>
-      <li>Circular imports <span class="hl hl-hot">→ one side gets a partially-initialized module</span>, not an error.</li>
+      <li>Circular imports <span class="hl hl-hot">→ one side sees a half-initialized module</span> — <code>undefined</code> in CommonJS, <code>ReferenceError</code> for an early <code>const</code>/<code>let</code> export in ESM.</li>
     </ul>
   </div>
 
@@ -187,11 +187,11 @@
           <tr><th>Loading</th><td>synchronous — runs the file right there</td><td>can be async; browsers/Node load them separately from scripts</td></tr>
           <tr><th>Analyzed how</th><td>dynamically — a real function call, resolved at runtime</td><td>statically — a fixed shape read before execution</td></tr>
           <tr><th>Tree-shaking</th><td>hard — exports aren't knowable without running the code</td><td>the reason tree-shaking is possible at all</td></tr>
-          <tr><th>Where it's standard</th><td>Node's traditional module system</td><td>browsers, and the modern-Node/bundler default</td></tr>
+          <tr><th>Where it's standard</th><td>Node's traditional module system</td><td>browsers and bundlers; in Node, used for <code>.mjs</code> or <code>"type": "module"</code> (CommonJS is the default otherwise)</td></tr>
         </tbody>
       </table>
 
-      <p>A <b>circular dependency</b> (A imports B, B imports A) doesn't crash by itself. Whichever module finishes its import first receives whatever the other module had exported <i>up to that point</i> — often an incomplete or partially-initialized version — because the second module hasn't finished running yet. It's a real, occasionally-surprising bug: a value that's <code>undefined</code> only depending on which file happened to import first.</p>
+      <p>A <b>circular dependency</b> (A imports B, B imports A) isn't rejected up front — one module has to run first, so it sees the other only partly set up. In <b>CommonJS</b>, it gets whatever <code>module.exports</code> held at that moment — often missing values, so a stray <code>undefined</code>. In <b>ES modules</b>, imports are live bindings: a function declaration is already usable, but reading a <code>const</code>/<code>let</code>/<code>class</code> export before its module has run throws a <code>ReferenceError</code> (it's still in its temporal dead zone), and a <code>var</code> reads <code>undefined</code>. Which file imports first decides which one you hit.</p>
     </div>
   </details>
 
@@ -293,8 +293,8 @@ module.exports = { add };            <span class="cx-cmt">// exports resolved by
               <text x="240" y="58" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">🐛 one side gets a half-built module</text>
             </svg>
           </div>
-          <p class="uc-what">This is a circular dependency (A imports B, B imports A) — it doesn't throw an error by itself. Whichever module finishes importing first gets whatever the other module had exported <i>up to that point</i>, often a partially-initialized version, because the second module hasn't finished running yet. <b>A common trap</b> — candidates often assume this would crash outright, but it usually just shows up as a stray <code>undefined</code>.</p>
-          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Circular import → a partially-initialized module, not a crash.</span></div>
+          <p class="uc-what">This is a circular dependency (A imports B, B imports A) — one module has to run first, so it sees the other only half set up. In CommonJS that shows up as a stray <code>undefined</code> (the exports object isn't filled in yet). In ES modules, reading a <code>const</code>/<code>let</code>/<code>class</code> export too early throws a <code>ReferenceError</code>, while function declarations still work. <b>A common trap</b> — assuming it's harmless or that it always crashes; it depends on the module system and import order.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Circular import → a half-initialized module: <code>undefined</code> in CommonJS, <code>ReferenceError</code> for early <code>const</code>/<code>let</code> in ESM.</span></div>
         </div>
 
       </div>

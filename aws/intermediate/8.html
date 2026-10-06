@@ -77,7 +77,7 @@
           <div class="wc-head">🔗 Aurora</div>
           <div class="wc-ps">
             <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Standard RDS read replicas each keep their own copy and catch up asynchronously, which caps how many replicas you can add before lag and failover time both get worse.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Aurora puts one shared, self-healing storage layer under the primary and every replica, so up to 15 replicas all read the same live data — lag stays single-digit ms, and failover just repoints traffic instead of re-attaching storage.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Aurora puts one shared, self-healing storage layer under the primary and every replica, so up to 15 replicas all read the same live data — lag typically stays in the low milliseconds, and failover just repoints traffic instead of waiting on a separate copy.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Aurora = one shared storage layer under many computes.</span></div>
         </div>
@@ -138,7 +138,7 @@
       <text x="155" y="204" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">🗄️ Shared storage layer</text>
       <text x="155" y="222" text-anchor="middle" font-size="9.5" fill="#5b6472">6 copies · 3 AZs · auto-healing</text>
 
-      <text x="155" y="252" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">✅ replica lag: single-digit ms</text>
+      <text x="155" y="252" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">✅ replica lag: typically ms</text>
 
       <!-- Right: standard RDS — each replica, own copy -->
       <g filter="url(#shA)"><rect x="352" y="40" width="268" height="250" rx="16" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
@@ -172,7 +172,7 @@
 
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
-    <p class="tline"><b>"Aurora replicas lag the same way RDS read replicas do."</b> They don't — Aurora replicas read from the same shared storage layer as the primary, so lag is typically single-digit milliseconds, while standard RDS read replicas copy over the network asynchronously, so their lag is real and meaningfully higher.</p>
+    <p class="tline"><b>"Aurora replicas lag the same way RDS read replicas do."</b> They don't — Aurora replicas read from the same shared storage layer as the primary, so lag is typically in the millisecond range, while standard RDS read replicas copy over the network asynchronously, so their lag is real and meaningfully higher.</p>
   </div>
 
   <div class="followup">
@@ -195,14 +195,14 @@
   <details class="explain toggle">
     <summary>📖 Explanation <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <p>Aurora <b>decouples compute from storage</b>. Underneath the primary and every read replica sits one distributed, self-healing storage layer, automatically replicated across 6 copies in 3 Availability Zones. Because replicas read that same shared layer instead of keeping their own copy, replication lag is typically single-digit milliseconds, and Aurora supports up to 15 read replicas without each one duplicating the primary's data.</p>
-      <p><b>Aurora Serverless</b> auto-scales compute capacity up and down — even close to zero — based on load, which fits unpredictable or intermittent workloads well. Failover is faster than standard RDS Multi-AZ for the same reason replicas scale further: the storage layer is already shared, so promoting a replica means pointing traffic at data that's already current, not re-attaching storage first.</p>
+      <p>Aurora <b>decouples compute from storage</b>. Underneath the primary and every read replica sits one distributed, self-healing storage layer, automatically replicated across 6 copies in 3 Availability Zones. Because replicas read that same shared layer instead of keeping their own copy, replication lag is typically in the millisecond range (AWS documents it as usually well under 100 ms), and Aurora supports up to 15 read replicas without each one duplicating the primary's data.</p>
+      <p><b>Aurora Serverless</b> auto-scales compute capacity up and down — even close to zero — based on load, which fits unpredictable or intermittent workloads well. Failover is typically faster than standard RDS Multi-AZ because the storage layer is already shared: promoting a replica means pointing traffic at data it already reads, with no replication to catch up.</p>
       <table class="cmp-table">
         <thead><tr><th></th><th>RDS</th><th>Aurora</th><th>DynamoDB</th></tr></thead>
         <tbody>
           <tr><th>Storage model</th><td>each replica keeps its own copy, replicated over the network</td><td>one shared, distributed storage layer under the primary and every replica</td><td>key-value/document storage, not the same relational "replica" model</td></tr>
           <tr><th>Read scaling</th><td>a handful of replicas, each copying asynchronously</td><td>up to 15 replicas, all reading the same live storage</td><td>scales reads by partitioning, not by adding relational replicas</td></tr>
-          <tr><th>Failover speed</th><td>promotes a standby, has to re-attach storage</td><td>promotes a replica whose data is already current — no storage re-attach</td><td>no single primary to fail over the same way — requests hit a different partition/node</td></tr>
+          <tr><th>Failover speed</th><td>fails over to a standby that holds its own synchronously replicated copy of the data</td><td>promotes a replica that already reads the same shared storage</td><td>no single primary to fail over the same way — requests hit a different partition/node</td></tr>
           <tr><th>Best fit</th><td>a standard relational workload without Aurora's premium</td><td>relational workloads that need read scaling, fast failover, or serverless elasticity</td><td>massive scale, simple access patterns, no cross-table joins/transactions</td></tr>
         </tbody>
       </table>

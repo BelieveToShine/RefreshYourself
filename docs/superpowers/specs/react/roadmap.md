@@ -31,7 +31,7 @@ each such pair gets cross-linked rather than re-taught.
 specific third-party library's own API (Redux, TanStack Query, etc.) stay out — see the
 taxonomy's own "Scope boundary" section.
 
-## Phase 3 — Grouping into pages (41 pages)
+## Phase 3 — Grouping into pages (41 pages at this phase; 43 after the post-Phase-7 gap-hunt)
 
 Default is one taxonomy section → one page, same as every other track. Three sections were
 large or broad enough after Phase 1's additions to need a split, and one was split into five
@@ -81,7 +81,7 @@ scenario) during Phase 1 and already matches it; nothing needed to move tiers.
 | Tier | Count | Pages |
 |---|---|---|
 | Basic | 8 | What Is React; Components & JSX; Props; State; Events; Conditional Rendering; Lists & Keys; Hooks — Rules & Overview |
-| Intermediate | 15 | useEffect — Fundamentals & Cleanup; Effect Timing Variants & StrictMode; useRef & Ref Callbacks; useMemo, useCallback & React.memo; Custom Hooks; Context API; Component Communication & Composition; Forms; Data Fetching; Routing; Rendering Behaviour; Performance Optimization Basics; Error Handling & Error Boundaries; Testing React Components; Accessibility |
+| Intermediate | 15 (17 final — see overview.md) | useEffect — Fundamentals & Cleanup; Effect Timing Variants & StrictMode; useRef & Ref Callbacks; useMemo, useCallback & React.memo; Custom Hooks; Context API; Component Communication & Composition; Forms; Data Fetching; Routing; Rendering Behaviour; Performance Optimization Basics; Error Handling & Error Boundaries; Testing React Components; Accessibility |
 | Advanced | 18 | Reconciliation & Fiber; Concurrent Rendering; Suspense; Server-Side Rendering & Hydration; Server Components; Actions, useOptimistic & the use() Hook; State Management Architecture; React Architecture — Structure Within One App; React Architecture — Beyond One App; Design Patterns; Testing at Scale; Security; Production Performance; and the 5 Real-world Scenario pages |
 
 ## Phase 5 — Priority (🔥 Must Know / ⭐ Should Know / 🧠 Deep Dive — independent of tier)
@@ -105,7 +105,7 @@ and stays 🧠.
 | ⭐ Should Know | Events; Conditional Rendering; Effect Timing Variants & StrictMode; useRef & Ref Callbacks; useMemo, useCallback & React.memo; Component Communication & Composition; Forms; Routing; Testing React Components; Accessibility; Suspense; Design Patterns; Testing at Scale; Scenario: Codebase & Team Growing Pains; **Refs — Forwarding & Imperative APIs; Automatic Batching & flushSync** |
 | 🧠 Deep Dive | Reconciliation & Fiber; Concurrent Rendering; Server Components; Actions, useOptimistic & the use() Hook; React Architecture — Beyond One App |
 
-22 🔥 / 14 ⭐ / 5 🧠 across 41 pages — more 🔥-heavy than other tracks, proportionally, which
+22 🔥 / 14 ⭐ / 5 🧠 across the original 41 pages (43 final) — more 🔥-heavy than other tracks, proportionally, which
 tracks reality: a much larger share of experienced-level React interview content is genuinely
 "expect this," not a rare deep-cut, especially through Basic and Intermediate. The 2 gap-hunt
 additions are both ⭐ — real, commonly-asked practical topics, but neither is the kind of thing

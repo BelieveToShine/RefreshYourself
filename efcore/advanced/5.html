@@ -174,7 +174,7 @@
     <p class="tline"><b>Looping and calling <code>SaveChanges()</code> is not "the EF Core way" to
     bulk update.</b> It technically works, but it loads every matching row into memory and tracks
     it just to change one column — a single <code>ExecuteUpdate()</code> call performs the same
-    change directly inside the database with zero entities ever materialized.</p>
+    change directly inside the database with zero entities ever materialized — though it also bypasses the Change Tracker and <code>SaveChanges()</code> interceptors.</p>
   </div>
 
   <div class="followup">
@@ -199,6 +199,7 @@
       <li><code>ExecuteUpdate()</code> / <code>ExecuteDelete()</code> → <span class="hl hl-basic">one set-based SQL statement</span>, zero entities materialized.</li>
       <li>Before EF Core 7 → <span class="hl hl-inter">raw SQL or a third-party bulk-extensions library</span> was the only way to skip the load-and-track cycle.</li>
       <li>The trade-off → <span class="hl hl-adv">no per-row C# logic</span> — only what fits inside a SQL <code>SET</code>/<code>WHERE</code> clause.</li>
+      <li>They <span class="hl hl-hot">bypass the Change Tracker</span> — already-tracked entities go stale, and <code>SaveChanges()</code> interceptors, audit logic, and concurrency checks don't run for them.</li>
     </ul>
   </div>
 
@@ -230,9 +231,10 @@
           <tr><th>Rows loaded into memory</th><td>every matching row</td><td>none</td></tr>
           <tr><th>Change tracked?</th><td>yes, each entity</td><td>no tracking at all</td></tr>
           <tr><th>SQL generated</th><td>one statement per entity (fewer round trips on some providers)</td><td>one set-based statement for the whole filter</td></tr>
+          <tr><th>Tracker, interceptors, audit hooks?</th><td>yes — normal <code>SaveChanges()</code> pipeline</td><td>bypassed — tracked entities in memory go stale</td></tr>
           <tr><th>Per-row C# logic?</th><td>yes — any code inside the loop</td><td>no — only what fits a SQL <code>SET</code>/<code>WHERE</code> clause</td></tr>
           <tr><th>Available since</th><td>always</td><td>EF Core 7+</td></tr>
-          <tr><th>Scales to millions of rows?</th><td>❌ no — memory &amp; round trips grow with row count</td><td>✅ yes — cost stays close to constant</td></tr>
+          <tr><th>Scales to millions of rows?</th><td>❌ no — memory &amp; round trips grow with row count</td><td>✅ yes — nothing is loaded into app memory</td></tr>
         </tbody>
       </table>
     </div>
@@ -364,8 +366,9 @@
       <p><b>Your nightly job needs to mark 2 million stale orders as archived.</b> Looping over
       them and calling <code>SaveChanges()</code> tries to track 2 million entities in one
       process — memory climbs fast and the job can run for hours or crash outright. A single
-      <code>ExecuteUpdateAsync()</code> call does the same update as one statement, with cost that
-      stays close to constant no matter how many rows match.</p>
+      <code>ExecuteUpdateAsync()</code> call does the same update as one statement, with nothing
+      loaded into the app's memory, however many rows match. Just remember it skips the Change Tracker and any
+      <code>SaveChanges()</code> interceptors or audit logic, so don't use it where those must run.</p>
     </div>
   </details>
 

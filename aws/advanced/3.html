@@ -202,7 +202,7 @@
       <li><span class="hl hl-blue">Route 53 failover routing</span> directs traffic based on health checks between an active region and its standby.</li>
       <li><span class="hl hl-teal">Global Accelerator</span> optimizes the network path to your application — routing, not caching.</li>
       <li><span class="hl hl-teal">CloudFront</span> caches content at the edge, so many requests never reach either region's origin.</li>
-      <li><span class="hl hl-basic">Cross-region replication</span> — S3 replication, DynamoDB Global Tables, Aurora Global Database — keeps data available across regions.</li>
+      <li><span class="hl hl-basic">Cross-region replication</span> — S3, Aurora Global Database (one writer), DynamoDB Global Tables (multi-writer, last writer wins).</li>
       <li><span class="hl hl-hot">Split-brain</span> is both regions independently accepting conflicting writes with no way to reconcile which is correct.</li>
       <li>Going multi-region is <span class="hl hl-inter">roughly double the cost, plus permanent ongoing operational work</span> — not a one-time setup.</li>
     </ul>
@@ -224,8 +224,10 @@
       both regions independently accept writes that conflict, with no way to reconcile which one
       is "correct." Avoiding it takes one of two real answers: keep a single source of truth for
       writes (one region is the designated writer, and replication — S3 cross-region
-      replication, DynamoDB Global Tables, <b>Aurora Global Database</b> — only flows one way out
-      of it), or genuinely support multiple writers with a real conflict-resolution strategy.
+      replication, <b>Aurora Global Database</b> — flows one way out of it), or genuinely support
+      multiple writers with a real conflict-resolution strategy. <b>DynamoDB Global Tables</b> is
+      the multi-writer option: every replica accepts writes, and conflicting writes to the same
+      item are resolved automatically, last writer wins — so design around that.
       Most systems reach for the first option because it's simpler and avoids split-brain
       entirely.</p>
 
@@ -283,7 +285,7 @@
             </svg>
           </div>
           <p class="uc-what">CloudFront and Global Accelerator make reads fast from any region,
-          while cross-region replication (Aurora Global Database, DynamoDB Global Tables) keeps
+          while cross-region replication (Aurora Global Database, S3 replication) keeps
           replicas current — but only one region ever accepts writes, so there's still nothing to
           reconcile.</p>
           <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Reads active/active, writes single-writer → the safe hybrid.</span></div>

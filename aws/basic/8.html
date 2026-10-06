@@ -180,7 +180,7 @@
     <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
     <p class="kp-primary">"Multi-AZ is for automatic failover — a synchronously replicated standby in another AZ that RDS switches to on its own if the primary fails. A read replica is for scaling reads — an asynchronous copy that can lag, so a read replica alone is not high availability."</p>
     <ul>
-      <li><span class="hl hl-blue">Multi-AZ</span> → sync standby, automatic failover, not used for day-to-day reads/writes.</li>
+      <li><span class="hl hl-blue">Multi-AZ</span> → sync standby, automatic failover, not used for day-to-day reads (classic instance setup).</li>
       <li><span class="hl hl-inter">Read replica</span> → async copy, offloads read traffic, exists to scale reads, not primarily for HA.</li>
       <li><span class="hl hl-hot">Manual promotion</span> → a replica can be promoted to standalone during a disaster, but that's a manual step with replication-lag risk, not automatic protection.</li>
       <li><span class="hl hl-basic">Use both together</span> → Multi-AZ for failover protection, read replicas for read scaling — two different problems, two different features.</li>
@@ -190,14 +190,14 @@
   <details class="explain toggle">
     <summary>📖 Explanation <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <p><span class="hl hl-blue">Multi-AZ</span> creates a standby copy of the primary database in a different Availability Zone, kept in sync <b>synchronously</b> — every write to the primary is confirmed on the standby before it's considered done. The standby isn't used for reads or writes day to day; its only job is to be ready. If RDS detects the primary has failed, it automatically redirects the database's endpoint to the standby, typically within one to two minutes, with no action needed from anyone.</p>
+      <p><span class="hl hl-blue">Multi-AZ</span> creates a standby copy of the primary database in a different Availability Zone, kept in sync <b>synchronously</b> — every write to the primary is confirmed on the standby before it's considered done. The standby isn't used for reads or writes day to day; its only job is to be ready. If RDS detects the primary has failed, it automatically redirects the database's endpoint to the standby, typically within one to two minutes, with no action needed from anyone. (This describes the classic Multi-AZ <i>DB instance</i> deployment. The newer Multi-AZ <i>DB cluster</i> option has two readable standbys, so there the standbys can also serve reads.)</p>
       <p><span class="hl hl-inter">A read replica</span> is a separate copy built to take read traffic off the primary — reporting queries, analytics, a read-heavy service — and it's kept in sync <b>asynchronously</b>, so it can genuinely fall behind under load. A read replica can live in the same Region or a different one, and RDS lets you manually promote one to a standalone, writable instance. That promotion can work in a disaster, but it's a decision and an action someone has to take, and whatever lag existed at that moment becomes lost or delayed data — nothing like the automatic, zero-lag guarantee Multi-AZ gives.</p>
       <table class="cmp-table">
         <thead><tr><th></th><th>Multi-AZ</th><th>Read Replica</th></tr></thead>
         <tbody>
           <tr><th>Purpose</th><td>high availability / automatic failover</td><td>scale read traffic</td></tr>
           <tr><th>Replication</th><td>synchronous</td><td>asynchronous — can lag</td></tr>
-          <tr><th>Used for reads day-to-day?</th><td>no</td><td>yes — that's the point</td></tr>
+          <tr><th>Used for reads day-to-day?</th><td>no (classic Multi-AZ instance; Multi-AZ DB clusters have readable standbys)</td><td>yes — that's the point</td></tr>
           <tr><th>Failover</th><td>automatic, RDS-managed</td><td>manual promotion only</td></tr>
           <tr><th>Location</th><td>a different AZ, same Region</td><td>same Region or a different one</td></tr>
         </tbody>

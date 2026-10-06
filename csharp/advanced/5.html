@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Garbage Collection — C# Advanced — RefreshYourself</title>
+<title>Garbage Collection — Generations &amp; the Large Object Heap — C# Advanced — RefreshYourself</title>
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body data-root="../../" data-tier-key="csharp/advanced">
@@ -68,7 +68,7 @@
         <div class="wc-head">♻️ Generational GC</div>
         <div class="wc-ps">
           <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Scanning the whole heap on every collection would mean repeatedly re-checking long-lived objects — caches, singletons, static state — that almost never die, wasting CPU and turning into the multi-millisecond-to-second pause spikes that hurt high-throughput services.</span></div>
-          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The heap is split into generations so the cheap, high-payoff Gen 0 gets scanned constantly, survivors get promoted upward, and Gen 1/Gen 2 are scanned far less often — while large allocations skip straight to a separate LOH collected on its own schedule.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The heap is split into generations so the cheap, high-payoff Gen 0 gets scanned constantly, survivors get promoted upward, and Gen 1/Gen 2 are scanned far less often — while large allocations skip Gen 0 and go straight to a separate LOH, which is only collected along with Gen 2.</span></div>
         </div>
         <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Generational GC = scan young objects often (cheap, high payoff), old objects rarely (expensive, low payoff).</span></div>
       </div>
@@ -135,7 +135,7 @@
       <text x="320" y="288" text-anchor="middle" font-size="11" fill="#5b6472">🎓 Survive a collection → promoted upward (Gen 0 → Gen 1 → Gen 2)</text>
       <text x="320" y="304" text-anchor="middle" font-size="11" fill="#5b6472">🐘 Large objects skip straight to the LOH — bypassing Gen 0 entirely</text>
     </svg>
-    <figcaption>Gen 0 is scanned constantly because it's cheap; Gen 2 is scanned rarely because it's expensive. Large objects skip the generations entirely and land straight on the LOH.</figcaption>
+    <figcaption>Gen 0 is scanned constantly because it's cheap; Gen 2 is scanned rarely because it's expensive. Large objects skip Gen 0 and land straight on the LOH.</figcaption>
   </figure>
 
   <div class="trap">
@@ -145,16 +145,16 @@
 
   <div class="followup">
     <div class="fhead">🔄 Likely Follow-up</div>
-    <p class="ftline"><b>"What about really large objects — do they also start in Gen 0?"</b> No — allocations of roughly 85KB or more go straight to a separate heap, the Large Object Heap, skipping Gen 0 entirely; it's collected less often and, unlike the rest of the heap, historically isn't compacted by default, which can fragment it over time.</p>
+    <p class="ftline"><b>"What about really large objects — do they also start in Gen 0?"</b> No — allocations of roughly 85KB or more go straight to a separate heap, the Large Object Heap, skipping Gen 0 entirely; it's only collected along with Gen 2 and, unlike the rest of the heap, historically isn't compacted by default, which can fragment it over time.</p>
   </div>
 
   <div class="keypoints">
     <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
-    <p class="kp-primary">"Most objects die young, so the runtime organizes the heap into generations. Gen 0 is checked constantly because it's small and cheap to scan; Gen 2 is checked rarely because scanning long-lived survivors is expensive. Large allocations — roughly 85KB or more — skip the generations entirely and go straight to a separate Large Object Heap, which historically isn't compacted by default."</p>
+    <p class="kp-primary">"Most objects die young, so the runtime organizes the heap into generations. Gen 0 is checked constantly because it's small and cheap to scan; Gen 2 is checked rarely because scanning long-lived survivors is expensive. Large allocations — roughly 85KB or more — skip Gen 0 and go straight to a separate Large Object Heap, which historically isn't compacted by default."</p>
     <ul>
       <li><code>Gen 0</code> → <span class="hl hl-blue">checked on almost every collection</span> — small, cheap, most objects die here.</li>
       <li><code>Gen 2</code> → <span class="hl hl-teal">checked rarely</span> — only long-lived survivors end up there, and scanning it is expensive.</li>
-      <li><code>LOH</code> → <span class="hl hl-hot">separate heap for big allocations</span> (~85KB+), bypassing the generations entirely.</li>
+      <li><code>LOH</code> → <span class="hl hl-hot">separate heap for big allocations</span> (~85KB+), skipping Gen 0, and collected only with Gen 2.</li>
       <li>In a low-latency service, <span class="hl hl-basic">the real fix is allocating less</span> — pool buffers, avoid boxing/LINQ allocations — not tuning GC settings first.</li>
     </ul>
   </div>
@@ -175,7 +175,7 @@
 
       <p>The <span class="hl hl-hot">Large Object Heap</span> is a separate concern entirely: any
       allocation at or above roughly 85KB goes straight there, never touching Gen 0. It's
-      collected on its own schedule and, unlike the generational heap, historically isn't
+      collected only during Gen 2 collections and, unlike the generational heap, historically isn't
       compacted by default — repeated large allocations can leave it fragmented with unusable
       gaps even when there's technically enough free memory.</p>
 
@@ -183,7 +183,7 @@
         <thead><tr><th></th><th>Gen 0</th><th>Gen 1</th><th>Gen 2</th><th>LOH</th></tr></thead>
         <tbody>
           <tr><th>Holds</th><td>newest objects</td><td>recent survivors</td><td>long-lived survivors</td><td>large allocations (~85KB+)</td></tr>
-          <tr><th>Checked</th><td>constantly</td><td>occasionally</td><td>rarely</td><td>on its own schedule</td></tr>
+          <tr><th>Checked</th><td>constantly</td><td>occasionally</td><td>rarely</td><td>only with Gen 2</td></tr>
           <tr><th>Cost to scan</th><td>cheap</td><td>moderate</td><td>expensive</td><td>expensive (huge objects)</td></tr>
           <tr><th>Compacted?</th><td>✅ yes</td><td>✅ yes</td><td>✅ yes</td><td class="no">❌ not by default</td></tr>
         </tbody>
@@ -289,7 +289,7 @@ pool.Return(buffer);          <span class="cx-cmt">// back in the pool for next 
             </svg>
           </div>
           <p class="uc-what">That allocation skips Gen 0 entirely and lands straight on the Large
-          Object Heap, which is collected on its own schedule and, unlike the rest of the heap,
+          Object Heap, which is collected only with Gen 2 and, unlike the rest of the heap,
           historically isn't compacted by default — repeated large allocations can fragment it
           over time.</p>
           <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">~85KB+ → straight to the LOH, skipping Gen 0.</span></div>

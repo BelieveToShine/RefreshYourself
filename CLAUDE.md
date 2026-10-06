@@ -6,14 +6,41 @@ editing any page — details live in the linked files, read the relevant one for
 
 ## What this project is
 
-A set of "tracks" — as of 2026-09-17: C#, OOP, .NET/ASP.NET Core, Web API, EF Core, SQL, and
-React are through all 7 rebuild phases (see below); Azure has a Phase 1 taxonomy awaiting Phase
-2+; AI/DSA are untouched. More can be added later. Each track has three tiers — **Basic →
+A set of "tracks" — as of 2026-10-06 **all 15 tracks are through all 7 phases, 541 pages written**:
+C# (49), OOP (15), .NET/ASP.NET Core (25), Web API (25), EF Core (21), SQL (39), Azure (44), AWS
+(44), React (43), Angular (43), Python (43), AI (48), DSA (30), JavaScript (38), HTML & CSS (34).
+Per-track detail: [`docs/superpowers/specs/README.md`](docs/superpowers/specs/README.md). More
+tracks can be added later. (This line is machine-checked against the overview by
+`scripts/check-site.js` — keep it current.) Each track has three tiers — **Basic →
 Intermediate → Advanced** (question *type*, not difficulty or seniority — see
 [`docs/rules/interview-depth-and-priority.md`](docs/rules/interview-depth-and-priority.md)).
 Each topic is one page: a **diagram**, a **simple-words explanation**, and a **key points to
 remember** box. Built for quick brush-up before an interview, not for deep study — see
 [`docs/rules/content-writing.md`](docs/rules/content-writing.md) for exactly what that means.
+
+## New to the repo? Read in this order
+
+1. This file → 2. [`docs/rules/product-principle.md`](docs/rules/product-principle.md) (the lens
+for every rule — read first, always) → 3. [`docs/rules/site-architecture.md`](docs/rules/site-architecture.md)
+(folder map, page anatomy, "I changed X — what else must change?" table) → 4.
+[`docs/refreshyourself-overview.md`](docs/refreshyourself-overview.md) (what's built) → 5. the
+rule file for the action you're about to take ([`docs/rules/README.md`](docs/rules/README.md)).
+
+## Run, deploy, verify, commit
+
+- **Run locally:** `npx serve -l 5847 .` (the `refresh-yourself` entry in `.claude/launch.json`),
+  or open `index.html` directly — works over `file://` too. Use another port if a different
+  session is serving.
+- **Deploy:** GitHub Pages, automatically on every push to `main` (`.github/workflows/static.yml`
+  uploads the repo root). `main` is the only live branch; `v1` and the `claude/*` remote branches
+  are older snapshots/pipeline branches — don't build on them without checking.
+- **Verify before any commit:** `node scripts/check-site.js` (zero `ERROR`s) — checks page
+  wiring (search/nav indexes, tier index, roadmap), links, doc counts, rule-file indexing.
+  Diagrams still need the live-browser script in [`docs/rules/diagram-style.md`](docs/rules/diagram-style.md).
+- **Docs must be updated in the same commit as the change** — a git hook
+  (`node scripts/install-hooks.js`, once per clone) and a Claude Code hook in
+  `.claude/settings.json` block commits that skip it. See
+  [`docs/rules/pre-commit-docs-sync.md`](docs/rules/pre-commit-docs-sync.md).
 
 ## Mandatory workflow — the 7-phase pipeline
 
@@ -68,6 +95,13 @@ Full action → rule lookup table: [`docs/rules/README.md`](docs/rules/README.md
 - **"🧭 Use Cases" panel (optional, multi-scenario topics only):** [`docs/rules/use-cases.md`](docs/rules/use-cases.md)
 - **Tier/priority assignment (Phase 4/5):** [`docs/rules/interview-depth-and-priority.md`](docs/rules/interview-depth-and-priority.md)
 - **Running Phase 7 itself (subagents, safety, verification, wiring):** [`docs/rules/build-process.md`](docs/rules/build-process.md)
+- **Product lens (read first):** [`docs/rules/product-principle.md`](docs/rules/product-principle.md)
+- **Site map & change → files table:** [`docs/rules/site-architecture.md`](docs/rules/site-architecture.md)
+- **Docs-before-commit enforcement:** [`docs/rules/pre-commit-docs-sync.md`](docs/rules/pre-commit-docs-sync.md)
+- **"🔥 Easy interview recall" / "⚠️ Common Trap" boxes:** [`docs/rules/interview-recall.md`](docs/rules/interview-recall.md), [`docs/rules/common-trap.md`](docs/rules/common-trap.md)
+- **Link hover / chips / pills:** [`docs/rules/link-hover.md`](docs/rules/link-hover.md) · **Back button:** [`docs/rules/back-navigation.md`](docs/rules/back-navigation.md) · **Tier sidebar:** [`docs/rules/tier-navigation.md`](docs/rules/tier-navigation.md)
+- **Gap-hunting (Phase 2):** [`docs/rules/gap-hunting.md`](docs/rules/gap-hunting.md) · **Retrofitting Why/Use Cases:** [`docs/rules/retrofit-why-usecases.md`](docs/rules/retrofit-why-usecases.md)
+- **Reporting commits in chat (name branch + hash):** [`docs/rules/reporting.md`](docs/rules/reporting.md)
 
 ## Quick reminders
 
