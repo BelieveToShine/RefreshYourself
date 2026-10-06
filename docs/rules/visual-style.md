@@ -3,10 +3,12 @@
 Locked decisions from the working session. The site has to feel inviting, not like plain
 documentation — this is what makes that happen.
 
-## Fonts (all loaded by one Google Fonts `@import` at the top of `assets/style.css`, don't add more)
+## Fonts (one Google Fonts `<link>` set in every page's `<head>`, added by `scripts/add-head-meta.js`)
 
-The `@import` is render-blocking; it is the single place fonts are declared — never add `<link>`
-tags or a second `@import` per page.
+Every page head carries two `preconnect` links plus one `<link rel="stylesheet">` to the Google Fonts CSS,
+placed before `assets/style.css`. (Changed 2026-10-06 from a render-blocking CSS `@import`; `style.css` no longer
+imports fonts.) To change a font, edit the URL in `scripts/add-head-meta.js`'s `FONT_HREF` and the per-page links
+(re-run needs a replace — the script only inserts when no `fonts.googleapis.com` link exists).
 
 - **Baloo 2** (700/800) — big, playful, display font. Used for the brand logo and every `.hero
   h1` (site home title, track title, tier title, topic title). This is the font doing the "make

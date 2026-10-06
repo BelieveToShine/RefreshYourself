@@ -167,3 +167,15 @@ found and fixed along the way, not glossed over). The 29 files with at least one
 the one manual terminal-page pager fix, and the `assets/nav-index.js` tier entries added during
 site wiring are also documented above, not silently corrected. Expect a review/feedback pass once
 the user goes through it, same as every other completed track.
+
+## Code-language convention (decided with the user 2026-10-06)
+
+DSA pages use three code-card languages, deliberately:
+
+- **C#** — the default for *implementations* (matches the user's .NET stack); chip says `C#`.
+- **Pseudocode** — for *algorithm ideas* where the shape matters more than syntax (chip says `Pseudocode`).
+- **Python** — only where it is the clearest way to show the idea (e.g. short stable counting sort);
+  chip says `Python` and comments use `#`.
+
+Every code card's language chip must name its real language, and comments must use that language's
+comment syntax. New DSA pages follow this split; existing pages are not rewritten to match.

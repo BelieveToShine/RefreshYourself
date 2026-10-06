@@ -108,7 +108,7 @@ Full action → rule lookup table: [`docs/rules/README.md`](docs/rules/README.md
 - **Never write a technical claim you're not actually confident is true** — no invented specifics
   to sound authoritative. See [`docs/rules/accuracy.md`](docs/rules/accuracy.md). This outranks
   every other content rule.
-- **Hot topics before normal topics, in every tier, in every track.** No exceptions.
+- **Teaching order within a tier, most-asked (🔥) topics as early as dependencies allow; every row carries its 🔥/⭐/🧠 badge** (rule amended 2026-10-06 — see [`docs/rules/content-writing.md`](docs/rules/content-writing.md#ordering-priority-badge--teaching-order-amended-2026-10-06)). Numbering is permanent.
 - **List the full roadmap on the tier index before writing pages** — planned-but-unwritten rows
   are shown, muted, unlinked, tagged 📝. Numbering is permanent from the moment a topic is listed.
 - **Every topic page needs at least one diagram**, inline in that page's own HTML (never a

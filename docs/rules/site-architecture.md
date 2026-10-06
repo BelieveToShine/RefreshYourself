@@ -33,7 +33,7 @@ Node is used only for **maintenance scripts** in `scripts/` (below), never by th
 | `assets/nav-index.js` | `window.NAV_INDEX` — per-tier sidebar data, keyed `<track>/<tier>`. [`tier-navigation.md`](tier-navigation.md) |
 | `assets/images/` | Roadmap badge icons. |
 | `docs/` | All documentation (this tree). `docs/topics/` holds two **source/seed topic maps** (AI, Azure) the user supplied; they feed Phase 1 of those tracks and are not rendered on the site. |
-| `scripts/` | Maintenance scripts: `check-site.js`, `pre-commit-check.js`, hooks. [`pre-commit-docs-sync.md`](pre-commit-docs-sync.md) |
+| `scripts/` | Maintenance scripts: `check-site.js`, `add-head-meta.js`, `pre-commit-check.js`, hooks. [`pre-commit-docs-sync.md`](pre-commit-docs-sync.md) |
 | `.claude/` | `launch.json` (local preview server) and `settings.json` (commit guard hook). |
 | `.github/workflows/static.yml` | GitHub Pages deploy. |
 
@@ -48,6 +48,12 @@ Tracks (folder slug → name): `csharp` C#, `oops` OOP, `dotnet` .NET/ASP.NET Co
 `.recall` 🔥 Easy interview recall → `.viz-label` + `figure.diagram-card` (inline SVG
 `.topic-diagram`) → `.trap` ⚠️ Common Trap → `.followup` 🔄 → `.keypoints` 🎯 Say this →
 `details.explain` 📖 → `details.codebox` 💻 → optional `details.usecase` 🧭 Use Cases → prev/next.
+
+**Head/a11y boilerplate on every page** (added by `node scripts/add-head-meta.js`, idempotent, and enforced by
+`check-site.js`): font `<link>`s, `<meta name="description">` (from the page's interview question / hero text),
+Open Graph basics, `theme-color`, an inline SVG favicon, a `Skip to content` link (`.skip-link`) before the header
+with `id="main"` on `<main>`, and `aria-hidden` on the decorative search glyphs. **After creating any new page,
+run `node scripts/add-head-meta.js`** — or copy an existing page's head — otherwise `check-site.js` fails.
 
 Body attributes: `data-root="../../"` (path back to repo root) and `data-tier-key="<track>/<tier>"`
 (selects the sidebar data). **Code box is optional on conceptual cloud/architecture pages**

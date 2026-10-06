@@ -21,7 +21,7 @@ Locked decisions from the working session that set this project up. Don't re-der
 - `<track>` is a short lowercase slug: `csharp`, `oops`, `dotnet`, `sql`, `react`, `dsa`, etc.
 - **The tier index lists the full roadmap first — written and not-yet-written topics together**
   (see the workflow note in [content-writing.md](content-writing.md)). A topic's number is its
-  permanent slot in that hot-first roadmap from the moment it's *listed*, not from when it's
+  permanent slot in that roadmap from the moment it's *listed*, not from when it's
   *written* — so `7.html` is already "claimed" by whichever topic sits 7th on the index even
   before that file exists.
 - If a genuinely new topic needs inserting mid-list (not just filling a planned slot), renumber
