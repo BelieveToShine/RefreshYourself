@@ -59,25 +59,6 @@
     <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Python · Advanced · Must Know</div>
     <h1>A shared <span class="hl hl-blue">counter</span> without a <span class="hl hl-inter">lock</span> isn't
     wrong sometimes — it's wrong by a genuinely <span class="hl hl-hot">unpredictable amount</span>, every time</h1>
-
-    <div class="code-card">
-      <div class="cc-head">
-        <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
-        <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-      </div>
-      <pre><code>count = <span class="num">0</span>
-
-<span class="kw">def</span> increment():
-    <span class="kw">global</span> count
-    <span class="kw">for</span> _ <span class="kw">in</span> range(<span class="num">100_000</span>):
-        count += <span class="num">1</span>
-
-t1 = threading.Thread(target=increment)
-t2 = threading.Thread(target=increment)
-t1.start(); t2.start()
-t1.join(); t2.join()
-print(count)</code></pre>
-    </div>
     <p class="interview-q">"Two threads increment a shared counter without a lock, many times each — what does
     the final count actually end up being, and why isn't it simply 200,000?"</p>
   </section>
@@ -185,6 +166,32 @@ print(count)</code></pre>
     increment vanishes and the count lands on 6. Right: the lock forces Thread B to wait until
     Thread A finishes, so every increment counts and the total reaches the correct 7.</figcaption>
   </figure>
+
+  <div class="predict-box" style="background:linear-gradient(155deg, #dbeafe 0%, #ffffff 130%); border:1px solid rgba(59,130,246,.3); border-radius:16px; padding:16px 20px; margin:0 0 26px;">
+    <div style="font-family:'Poppins'; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:#1d4ed8; display:flex; align-items:center; gap:7px; margin-bottom:10px;">🔮 Predict the Output</div>
+
+    <div class="code-card" style="margin-bottom:12px;">
+      <div class="cc-head">
+        <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+        <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+      </div>
+      <pre><code>count = <span class="num">0</span>
+
+<span class="kw">def</span> increment():
+    <span class="kw">global</span> count
+    <span class="kw">for</span> _ <span class="kw">in</span> range(<span class="num">100_000</span>):
+        count += <span class="num">1</span>
+
+t1 = threading.Thread(target=increment)
+t2 = threading.Thread(target=increment)
+t1.start(); t2.start()
+t1.join(); t2.join()
+print(count)</code></pre>
+    </div>
+
+    <p style="margin:0 0 10px; font-size:15px; color:var(--ink); border-left:3px solid #3b82f6; padding-left:12px;"><b>What does this print, and why isn't it simply 200,000?</b></p>
+    <p style="margin:0; font-size:14.5px; color:var(--ink-soft); border-left:3px solid #3b82f6; padding-left:12px;"><b style="color:#1d4ed8;">Answer:</b> Some number <b>less than</b> <code>200000</code> — and exactly how much less is unpredictable, varying run to run. <code>count += 1</code> is a read-modify-write, not one atomic step; without a lock, the two threads can interleave between those steps, both reading the same old value and one of them overwriting the other's update. The GIL guarantees only one thread runs Python bytecode at a time — it does NOT make a multi-step operation like <code>count += 1</code> atomic.</p>
+  </div>
 
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>

@@ -357,16 +357,14 @@
   <details class="explain toggle">
     <summary>📖 Explanation <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <p><b>Azure Load Balancer</b> works at <b>Layer 4</b> (transport) — it balances raw TCP/UDP traffic across a set of VMs or instances purely by IP and port. It never looks inside the packet, which is what makes it fast, and it's <b>regional</b> — everything it balances lives in the same region.</p>
-      <p><b>Application Gateway</b> works at <b>Layer 7</b> (HTTP/HTTPS) — it understands URLs, paths, and headers, so it can do path-based routing, <b>SSL termination</b>, and run a <b>Web Application Firewall (WAF)</b>. It's still regional, just a layer higher than Load Balancer.</p>
-      <p><b>Traffic Manager</b> works at the <b>DNS level</b> — a client asks "where do I go?" and it answers with the address of whichever regional endpoint fits the configured routing method (priority, performance, geographic, …). It never sees the request after that; it directs the client, it doesn't proxy anything.</p>
-      <p><b>Front Door</b> is Application Gateway's counterpart at <b>global</b> scale — an <b>L7</b> service running at Microsoft's network edge, with a WAF and caching, that actually <b>receives and proxies</b> the HTTP traffic itself instead of just answering a DNS lookup.</p>
+      <p>The regional pair sits at two different layers but never leaves the region. <b>Azure Load Balancer</b> works at <b>Layer 4</b> (transport) — it balances raw TCP/UDP traffic across a set of VMs or instances purely by IP and port, hashing the connection and forwarding raw packets straight through without ever opening them; that's what makes it fast, and also why it's a pass-through, not a proxy. <b>Application Gateway</b> works one layer up, at <b>Layer 7</b> (HTTP/HTTPS) — it understands URLs, paths, and headers, so it can do path-based routing, <b>SSL termination</b>, and run a <b>Web Application Firewall (WAF)</b>, but it's still regional, just like Load Balancer.</p>
+      <p>The global pair both span regions, but only one of them actually touches the traffic. <b>Traffic Manager</b> works at the <b>DNS level</b> — a client asks "where do I go?" and it answers with the address of whichever regional endpoint fits the configured routing method (priority, performance, geographic, …), then steps out of the conversation entirely; it directs the client, it doesn't proxy anything. <b>Front Door</b> is Application Gateway's counterpart at <b>global</b> scale — an <b>L7</b> service running at Microsoft's network edge, with a WAF and caching, that actually <b>receives and proxies</b> the HTTP traffic itself instead of just answering a DNS lookup.</p>
       <table class="cmp-table">
         <thead><tr><th></th><th>Load Balancer</th><th>App Gateway</th><th>Traffic Manager</th><th>Front Door</th></tr></thead>
         <tbody>
           <tr><th>Layer</th><td>L4 (TCP/UDP)</td><td>L7 (HTTP/HTTPS)</td><td>DNS</td><td>L7 (HTTP/HTTPS)</td></tr>
           <tr><th>Scope</th><td>Regional</td><td>Regional</td><td>Global</td><td>Global</td></tr>
-          <tr><th>Actually proxies traffic?</th><td>✅ yes</td><td>✅ yes</td><td class="no">❌ no — DNS answer only</td><td>✅ yes</td></tr>
+          <tr><th>Actually proxies traffic?</th><td class="no">❌ no — pass-through, not a proxy</td><td>✅ yes</td><td class="no">❌ no — DNS answer only</td><td>✅ yes</td></tr>
           <tr><th>WAF available?</th><td class="no">❌ no</td><td>✅ yes</td><td class="no">❌ no</td><td>✅ yes</td></tr>
         </tbody>
       </table>

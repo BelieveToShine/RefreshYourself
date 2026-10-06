@@ -211,9 +211,13 @@
       from reading a response from a different origin — a restriction the browser enforces on its
       own, no server involved. <b>CORS</b> is the server's own explicit opt-in on top of that:
       response headers like <code>Access-Control-Allow-Origin</code> tell the browser which other
-      origins are allowed to actually read the response. Configure it too loosely — a wildcard
-      origin combined with credentials — and the same door the same-origin policy was closing gets
-      quietly reopened.</p>
+      origins are allowed to actually read the response. Configure it too loosely and the same
+      door the same-origin policy was closing gets quietly reopened — not via a wildcard origin
+      with credentials, since browsers flatly reject that exact combination per spec, but via a
+      server that dynamically <b>reflects</b> whatever <code>Origin</code> header the request sent
+      back as the allowed origin while still setting
+      <code>Access-Control-Allow-Credentials: true</code> — that lets any site read authenticated
+      responses, because the server effectively "allows" every origin one request at a time.</p>
 
       <p><b>Prototype pollution</b> stops being trivia about the
       <a href="../intermediate/3.html"><code>[[Prototype]]</code> chain</a> the moment
@@ -265,7 +269,7 @@ el.textContent = comment;</code></pre>
           <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
           <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
         </div>
-        <pre><code><span class="cx-cmt">// Server set: Set-Cookie: session=abc123; SameSite=Strict; HttpOnly</span>
+        <pre><code><span class="cx-cmt">// Server set: Set-Cookie: session=abc123; HttpOnly</span>
 
 <span class="cx-err">// ❌ An attacker's page can still trigger this — the browser attaches</span>
 <span class="cx-err">// the cookie automatically, no matter which site the request came from</span>
@@ -286,25 +290,38 @@ fetch(<span class="str">"https://bank.com/transfer"</span>, {
           <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
           <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
         </div>
-        <pre><code><span class="cx-err">// ❌ Unsanitized merge — a request body of {"__proto__":{"isAdmin":true}}</span>
-<span class="cx-err">// pollutes Object.prototype for every object in the app</span>
+        <pre><code><span class="cx-err">// ❌ Unsanitized RECURSIVE merge — a request body of {"__proto__":{"isAdmin":true}}</span>
+<span class="cx-err">// makes target["__proto__"] resolve to the real, shared Object.prototype, and the</span>
+<span class="cx-err">// recursive call then writes isAdmin onto it — pollutes every object in the app</span>
 <span class="kw">function</span> merge(target, src) {
-  <span class="kw">for</span> (<span class="kw">const</span> key <span class="kw">in</span> src) target[key] = src[key];
+  <span class="kw">for</span> (<span class="kw">const</span> key <span class="kw">in</span> src) {
+    <span class="kw">if</span> (<span class="kw">typeof</span> src[key] === <span class="str">"object"</span> && src[key] !== <span class="kw">null</span>) {
+      <span class="kw">if</span> (<span class="kw">typeof</span> target[key] !== <span class="str">"object"</span> || target[key] === <span class="kw">null</span>) target[key] = {};
+      merge(target[key], src[key]); <span class="cx-cmt">// 🐛 recurses into the resolved prototype</span>
+    } <span class="kw">else</span> {
+      target[key] = src[key];
+    }
+  }
   <span class="kw">return</span> target;
 }
 
-<span class="cx-ok">// ✅ Reject the dangerous keys before they ever get assigned</span>
+<span class="cx-ok">// ✅ Reject the dangerous keys before they ever get assigned, at every level</span>
 <span class="kw">const</span> UNSAFE_KEYS = [<span class="str">"__proto__"</span>, <span class="str">"constructor"</span>, <span class="str">"prototype"</span>];
 <span class="kw">function</span> safeMerge(target, src) {
   <span class="kw">for</span> (<span class="kw">const</span> key <span class="kw">in</span> src) {
     <span class="kw">if</span> (UNSAFE_KEYS.includes(key)) <span class="kw">continue</span>; <span class="cx-cmt">// 🐛 blocked</span>
-    target[key] = src[key];
+    <span class="kw">if</span> (<span class="kw">typeof</span> src[key] === <span class="str">"object"</span> && src[key] !== <span class="kw">null</span>) {
+      <span class="kw">if</span> (<span class="kw">typeof</span> target[key] !== <span class="str">"object"</span> || target[key] === <span class="kw">null</span>) target[key] = {};
+      safeMerge(target[key], src[key]);
+    } <span class="kw">else</span> {
+      target[key] = src[key];
+    }
   }
   <span class="kw">return</span> target;
 }</code></pre>
       </div>
-      <p class="cx-note">The attack needs nothing exotic — just a normal-looking merge function and
-      one attacker-chosen key it never checked for.</p>
+      <p class="cx-note">The attack needs nothing exotic — just a normal-looking recursive merge
+      function and one attacker-chosen key it never checked for.</p>
 
     </div>
   </details>

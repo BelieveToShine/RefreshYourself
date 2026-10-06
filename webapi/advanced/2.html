@@ -195,6 +195,24 @@
       <g filter="url(#shA2)"><rect x="416" y="220" width="126" height="56" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
       <text x="479" y="242" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🧯 Fallback</text>
       <text x="479" y="258" text-anchor="middle" font-size="10.5" fill="#5b6472">degrade gracefully</text>
+
+      <!-- half-open: breaker's trial state between open and closed -->
+      <path d="M549,188 H565 V215 H580" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA2Amber)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="2.5s" repeatCount="indefinite"/>
+      </path>
+      <text x="562" y="179" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">cooldown ends</text>
+
+      <g filter="url(#shA2)"><rect x="580" y="188" width="130" height="62" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="645" y="212" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🔍 Half-Open</text>
+      <text x="645" y="230" text-anchor="middle" font-size="10" fill="#5b6472">one trial request</text>
+
+      <path d="M580,219 H560 V140 H554" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA2Green)"/>
+      <text x="622" y="172" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">trial succeeds → closes</text>
+
+      <path d="M600,250 V264 H542" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA2Amber)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="2.5s" repeatCount="indefinite"/>
+      </path>
+      <text x="571" y="279" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">trial fails → reopens</text>
     </svg>
     <figcaption>Only one path reaches the real dependency — the other degrades on purpose.</figcaption>
   </figure>
@@ -209,6 +227,10 @@
 
   <div class="followup">
     <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How does the circuit know when to go back to normal?"</b> After the
+    cooldown, the breaker moves to <code>Half-Open</code> and lets exactly one trial request
+    through — succeed and it closes, back to normal; fail and it reopens, restarting the
+    cooldown instead of assuming the dependency has recovered.</p>
     <p class="ftline"><b>"How do retry and idempotency relate?"</b> Retrying a non-idempotent
     call — a <code>POST</code> with no idempotency key — risks the exact duplicate-creation
     problem <a href="../basic/2.html">Idempotency</a> covers; resilience and idempotency have to
@@ -261,12 +283,12 @@
       show for it.</p>
 
       <table class="cmp-table">
-        <thead><tr><th></th><th>Timeout</th><th>Retry (backoff+jitter)</th><th>Circuit Breaker</th><th>Fallback</th></tr></thead>
+        <thead><tr><th></th><th>Timeout</th><th>Retry (backoff+jitter)</th><th>Circuit Breaker</th><th>Half-Open</th><th>Fallback</th></tr></thead>
         <tbody>
-          <tr><th>What it does</th><td>caps how long a call can wait</td><td>tries again, waiting longer + more randomly each time</td><td>stops calling entirely for a cooldown</td><td>returns something usable instead of failing</td></tr>
-          <tr><th>Triggers on</th><td>no response by a deadline</td><td>a failed or timed-out call</td><td>N consecutive failures to one dependency</td><td>the primary path failed, or the circuit is open</td></tr>
-          <tr><th>Protects</th><td>threads/connections from hanging forever</td><td>a single blip from becoming a user-visible failure</td><td>both the caller and the struggling dependency</td><td>the end user from seeing total failure</td></tr>
-          <tr><th>Risk if skipped</th><td>a hung call ties up resources indefinitely</td><td>an instant retry storm makes the outage worse</td><td>callers keep hammering a service that can't recover</td><td>every failure propagates straight to the user</td></tr>
+          <tr><th>What it does</th><td>caps how long a call can wait</td><td>tries again, waiting longer + more randomly each time</td><td>stops calling entirely for a cooldown</td><td>lets exactly one trial request through to test recovery</td><td>returns something usable instead of failing</td></tr>
+          <tr><th>Triggers on</th><td>no response by a deadline</td><td>a failed or timed-out call</td><td>N consecutive failures to one dependency</td><td>the open circuit's cooldown period elapsing</td><td>the primary path failed, or the circuit is open</td></tr>
+          <tr><th>Protects</th><td>threads/connections from hanging forever</td><td>a single blip from becoming a user-visible failure</td><td>both the caller and the struggling dependency</td><td>against guessing recovery instead of testing it</td><td>the end user from seeing total failure</td></tr>
+          <tr><th>Risk if skipped</th><td>a hung call ties up resources indefinitely</td><td>an instant retry storm makes the outage worse</td><td>callers keep hammering a service that can't recover</td><td>breaker stays open forever, or slams closed and fails again immediately</td><td>every failure propagates straight to the user</td></tr>
         </tbody>
       </table>
     </div>

@@ -84,6 +84,7 @@
       <p class="rrow">logical properties <span class="rarrow">→</span> follow <b>text direction</b>, not left/right</p>
       <p class="rrow"><code>gap</code> <span class="rarrow">→</span> spacing with <b>no margin hacks</b></p>
       <p class="rrow"><code>subgrid</code> <span class="rarrow">→</span> child's tracks <b>= the parent's tracks</b></p>
+      <p class="rrow"><code>:has()</code> <span class="rarrow">→</span> picks the <b>parent</b>, based on what's inside it</p>
     </div>
     <p class="rthink"><b class="tc-label">Think:</b> six properties, six old hacks retired — a spacer div, a wall of breakpoints, an LTR-only rule, or a nested grid that never quite lined up.</p>
   </div>
@@ -166,6 +167,7 @@
       <li><code>clamp(min, preferred, max)</code> <span class="hl hl-teal">→ one fluid width, no breakpoint list</span>.</li>
       <li><span class="hl hl-basic">margin-inline / padding-block</span> → correct automatically in RTL and vertical writing modes.</li>
       <li><code>subgrid</code> → <span class="hl hl-hot">a nested item's tracks literally ARE the parent's tracks</span> — no more independent, misaligned grid.</li>
+      <li><code>:has()</code> → <span class="hl hl-blue">a real parent/relational selector</span> — style an element based on what's inside it, something CSS couldn't do before.</li>
     </ul>
   </div>
 
@@ -187,8 +189,13 @@
           <tr><th>Logical properties</th><td>Spacing/position relative to text direction, not left/right</td><td>Sites supporting RTL languages or vertical writing modes</td></tr>
           <tr><th><code>gap</code></th><td>Space between Flexbox/Grid items</td><td>Replaces margin-hack spacing</td></tr>
           <tr><th><code>subgrid</code></th><td>A nested grid item's rows/columns reuse the parent's exact tracks</td><td>Sibling cards whose internal columns must line up</td></tr>
+          <tr><th><code>:has()</code></th><td>Selects a parent/ancestor based on what's inside it</td><td>Style a <code>.card</code> differently only when it contains an <code>img</code></td></tr>
         </tbody>
       </table>
+
+      <p><code>:has()</code> is the odd one out, too — not a layout property at all, but a genuinely new kind of <b>selector</b>. Every CSS selector before it could only select an element based on itself or its ancestors (<code>.card .title</code> selects a descendant), never the other direction — there was no way to select a <i>parent</i> based on what's inside it. <code>:has()</code> fixes that: <code>.card:has(img)</code> matches a <code>.card</code> element, but only when it contains an <code>img</code> somewhere inside it. It's commonly described as a <b>parent selector</b> or <b>relational selector</b> for exactly this reason — the condition lives inside the parentheses, but the thing that actually gets selected and styled is the element on the left.</p>
+
+      <p>A realistic use case: a card component that should look different depending on whether it has an image. Before <code>:has()</code>, that distinction needed a class added by JavaScript (<code>.card--with-image</code>) just so CSS had something to select. With <code>:has()</code>, <code>.card:has(img) { grid-template-rows: auto 1fr; }</code> makes that decision in CSS alone, reacting to the actual markup instead of a class someone has to remember to add.</p>
     </div>
   </details>
 
@@ -255,6 +262,21 @@
 .card { display: grid; grid-column: <span class="num">2</span> / <span class="num">5</span>; grid-template-columns: subgrid; }</code></pre>
       </div>
       <p class="cx-note"><code>.card</code> reuses <code>.row</code>'s exact 3 tracks (columns 2–4) instead of inventing its own.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> CSS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>.card:has(img) {
+  grid-template-rows: auto <span class="num">1</span>fr;  <span class="cx-cmt">/* only cards that actually contain an image get this layout */</span>
+}
+
+.form-field:has(<span class="ty">:invalid</span>) {
+  border-color: <span class="str">crimson</span>;  <span class="cx-cmt">/* style the wrapper based on the input inside it */</span>
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>:has()</code> selects the <code>.card</code>/<code>.form-field</code> itself — the parent — based on a condition about what's inside it, something no earlier CSS selector could do.</p>
 
     </div>
   </details>

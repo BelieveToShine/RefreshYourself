@@ -203,10 +203,12 @@
           <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
         </div>
         <pre><code><span class="ty">SearchClient</span> searchClient = <span class="kw">new</span>(endpoint, <span class="str">"docs-index"</span>, credential);
-<span class="ty">SearchOptions</span> options = <span class="kw">new</span>() { QueryType = <span class="ty">SearchQueryType</span>.Semantic }; <span class="cx-ok">// ✅ hybrid: keyword + vector</span>
+<span class="ty">ReadOnlyMemory</span>&lt;<span class="kw">float</span>&gt; queryVector = <span class="kw">await</span> embeddingClient.EmbedQueryAsync(userQuery); <span class="cx-cmt">// the vector leg needs its own embedding call</span>
+<span class="ty">SearchOptions</span> options = <span class="kw">new</span>() { QueryType = <span class="ty">SearchQueryType</span>.Semantic }; <span class="cx-cmt">// keyword text query + semantic re-ranking</span>
+options.VectorQueries.Add(<span class="kw">new</span> <span class="ty">VectorizedQuery</span>(queryVector) { Fields = { <span class="str">"contentVector"</span> } }); <span class="cx-ok">// ✅ adds the vector leg — now it's genuinely hybrid</span>
 <span class="kw">var</span> results = <span class="kw">await</span> searchClient.SearchAsync&lt;<span class="ty">SearchDocument</span>&gt;(userQuery, options);</code></pre>
       </div>
-      <p class="cx-note">One call runs keyword and vector matching together and hands back the ranked chunks — that's the "hybrid" in hybrid search.</p>
+      <p class="cx-note"><code>QueryType.Semantic</code> on its own only turns on keyword search plus semantic re-ranking — it does not run vector search by itself. The <code>VectorQueries</code> entry is what adds the actual vector leg; the text query plus that vector leg together is what makes this genuinely hybrid.</p>
 
       <div class="code-card">
         <div class="cc-head">
