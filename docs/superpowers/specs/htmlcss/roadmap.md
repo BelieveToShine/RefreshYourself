@@ -66,9 +66,9 @@ axis is a separate, independent judgment call, exactly as the site's own rule re
 
 | Tier | Count | Groups |
 |---|---|---|
-| Basic | 14 | HTML Fundamentals; Semantic HTML; Forms & Validation; Accessibility; CSS Fundamentals & Cascade; Selectors; Box Model; Units & Sizing; Display & Visibility; Document Structure & Metadata; Tables & Lists; HTML5 Elements & Browser APIs; SEO & Web Semantics; Inheritance |
-| Intermediate | 13 | Specificity; Positioning; Overflow & Stacking; Flexbox; CSS Grid; Responsive Design; Typography; Pseudo-classes & Pseudo-elements; CSS Variables; Container Queries; Modern CSS Layout; Transitions & Animations; Colors, Backgrounds & Gradients |
-| Advanced | 7 | Browser Rendering; CSS Performance; Production UI Scenarios; Accessibility in Practice; CSS Cascade Layers; CSS Architecture; Cross-Browser Compatibility |
+| Basic | 14 (15 after the 2026-10-07 addendum) | HTML Fundamentals; Semantic HTML; Forms & Validation; Accessibility; CSS Fundamentals & Cascade; Selectors; Box Model; Units & Sizing; Display & Visibility; Document Structure & Metadata; Tables & Lists; HTML5 Elements & Browser APIs; SEO & Web Semantics; Inheritance |
+| Intermediate | 13 (16 after the 2026-10-07 addendum) | Specificity; Positioning; Overflow & Stacking; Flexbox; CSS Grid; Responsive Design; Typography; Pseudo-classes & Pseudo-elements; CSS Variables; Container Queries; Modern CSS Layout; Transitions & Animations; Colors, Backgrounds & Gradients |
+| Advanced | 7 (8 after the 2026-10-07 addendum) | Browser Rendering; CSS Performance; Production UI Scenarios; Accessibility in Practice; CSS Cascade Layers; CSS Architecture; Cross-Browser Compatibility |
 
 Placements double-checked:
 - **Semantic HTML and Forms & Validation stay Basic** despite having real comparison content
@@ -99,7 +99,7 @@ did.
 | 🔥 Must Know | HTML Fundamentals; Semantic HTML; Forms & Validation; Accessibility; CSS Fundamentals & Cascade; Selectors; Specificity; Box Model; Units & Sizing; Display & Visibility; Positioning; Overflow & Stacking; Flexbox; CSS Grid; Responsive Design; Typography; Pseudo-classes & Pseudo-elements; CSS Variables; Browser Rendering; CSS Performance; Production UI Scenarios; Accessibility in Practice |
 | ⭐ Should Know | Document Structure & Metadata; Tables & Lists; HTML5 Elements & Browser APIs; SEO & Web Semantics; Inheritance; Container Queries; Modern CSS Layout; Transitions & Animations; Colors, Backgrounds & Gradients; CSS Cascade Layers; CSS Architecture; Cross-Browser Compatibility |
 
-## Phase 6 — Final roadmap: 34 pages
+## Phase 6 — Final roadmap: 34 pages (39 after the 2026-10-07 gap pages — see the addendum at the end)
 
 Hot-first ordering within each tier (site-wide rule, every tier, every track).
 
@@ -169,3 +169,20 @@ and — after a 2026-09-18 fix — DSA, AI, and JavaScript too).
 None — every one of the user's 32 groups is represented, plus the two gap-hunt additions
 (Colors/Backgrounds/Gradients, Accessibility in Practice) this track's own Phase 2 found and
 folded in as their own pages rather than leaving them uncovered.
+
+
+## Addendum 2026-10-06 — gap pages (Phases 2–6)
+
+**Status: all pages in this addendum were written and wired on 2026-10-07** (track total 34 -> 39: Basic 15, Intermediate 16, Advanced 8). On-disk counts before the addendum: Basic 14, Intermediate 13, Advanced 7 = 34. Checked and **dropped as already covered**: `:is()/:where()` (basic/6 has a quoted question), `:has()` (intermediate/11). **Not covered anywhere:** margin collapsing, float/clear, `defer`/`async`, `loading="lazy"`, Core Web Vitals.
+
+| # | Tier | Pri | Title | Interview question | Scope (one sentence) | Diagram idea | Cross-links |
+|---|---|---|---|---|---|---|---|
+| 35 | Basic (`basic/15.html`) | 🔥 | Script Loading — defer vs. async | "What is the difference between `<script>`, `async` and `defer`?" | Parser-blocking default vs. async (run when downloaded, unordered) vs. defer (download in parallel, run after parsing, in order); module scripts defer by default. | Three timelines of parse / download / execute bars. | basic/10, advanced/1, advanced/2 |
+| 36 | Intermediate (`intermediate/14.html`) | 🔥 | Margin Collapsing | "Two stacked boxes have 20px and 30px margins — how far apart are they, and why?" | Adjacent vertical margins collapse to the larger; parent/child and empty-block cases; what prevents it (padding, border, flex/grid, new BFC). | Two boxes with overlapping margins -> 30px gap, not 50. | basic/7, intermediate/4, intermediate/5 |
+| 37 | Intermediate (`intermediate/15.html`) | ⭐ | Float & Clearfix (Legacy Layout) | "What does `float` do, why does the parent collapse, and how do you clear it?" | Floats leave normal flow for text-wrap; parent height collapses; `clear`, clearfix, `display: flow-root`; flex/grid replaced floats for layout. | Float leaving parent at zero height, then flow-root containing it. | intermediate/14, intermediate/4, intermediate/11 |
+| 38 | Intermediate (`intermediate/16.html`) | ⭐ | Lazy Loading & Resource Hints | "How do you stop below-the-fold images from slowing the page?" | `loading="lazy"`, width/height to avoid layout shift, `fetchpriority`, `preload`; never lazy-load the LCP image. | Viewport with images loading as they near it. | basic/12, advanced/2, advanced/8 |
+| 39 | Advanced (`advanced/8.html`) | ⭐ | Core Web Vitals (LCP, INP, CLS) | "What are Core Web Vitals and how would you improve each?" | LCP (loading), INP (responsiveness; replaced FID), CLS (visual stability) with the typical fix for each. **Quote thresholds only if verified** (accuracy.md). | Three gauges, each with top cause + fix. | advanced/1, advanced/2, intermediate/16 |
+
+New totals: Basic 15, Intermediate 16, Advanced 8 = **39**.
+
+**Dropped / folded:** `:is()/:where()/:has()` (covered); `text-wrap: balance` and `@scope` (niche — fold one line into intermediate/7 / basic/6 only if those pages are edited anyway).

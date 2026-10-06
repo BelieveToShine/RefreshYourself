@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How do you run concurrent tasks safely in asyncio and cancel them on failure or timeout?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="asyncio TaskGroup &amp; timeout — Python Advanced — RefreshYourself">
+<meta property="og:description" content="How do you run concurrent tasks safely in asyncio and cancel them on failure or timeout?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>asyncio TaskGroup &amp; timeout — Python Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="python/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#306998;">🐍 Python</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">asyncio TaskGroup &amp; timeout</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Python · Advanced · Must Know</div>
+    <h1><code>TaskGroup</code> — when one task fails, its <span class="hl hl-hot">siblings are cancelled</span>, not left running</h1>
+    <p class="interview-q">"How do you run concurrent tasks safely in <code>asyncio</code> and cancel them on failure or timeout?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🧵 Structured concurrency</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>With a bare <code>create_task</code> or <code>gather</code>, other tasks can keep running after a sibling fails or the caller gives up — orphaned work, lost errors, nothing stopping a hang.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>TaskGroup</code> ties every task to one <code>async with</code> block: it waits for all of them, cancels the rest if one fails, and <code>asyncio.timeout()</code> puts a deadline on the whole block.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">TaskGroup = one scope owns its tasks — fail one, cancel the rest.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline"><code>TaskGroup</code> = <b>"one scope owns its tasks — fail one, cancel the rest."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>TaskGroup</code></b> → one task fails, siblings are cancelled</span>
+      <span class="tc-line"><b><code>timeout()</code></b> → block too slow, cancelled, <code>TimeoutError</code></span>
+      <span class="tc-line"><b><code>gather</code></b> → one fails, the others <b>keep running</b></span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 290" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arrNeutral" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/></marker>
+        <marker id="arrGreen" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#16a34a"/></marker>
+        <marker id="arrAmber" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d97706"/></marker>
+        <marker id="arrRose" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#dc2626"/></marker>
+        <marker id="arrBlue" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3b82f6"/></marker>
+      </defs>
+
+      <rect x="20" y="20" width="600" height="244" rx="16" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="6 4"/>
+      <text x="320" y="44" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">async with asyncio.TaskGroup() — the parent scope</text>
+      <g filter="url(#cardShadow)"><rect x="45" y="64" width="160" height="66" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="125" y="93" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">💥 task A</text>
+      <text x="125" y="111" text-anchor="middle" font-size="10.5" fill="#5b6472">raises ValueError</text>
+      <g filter="url(#cardShadow)"><rect x="240" y="64" width="160" height="66" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="93" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">task B</text>
+      <text x="320" y="111" text-anchor="middle" font-size="10.5" fill="#5b6472">⏳ still running</text>
+      <g filter="url(#cardShadow)"><rect x="435" y="64" width="160" height="66" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="515" y="93" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">task C</text>
+      <text x="515" y="111" text-anchor="middle" font-size="10.5" fill="#5b6472">⏳ still running</text>
+      <g filter="url(#cardShadow)"><rect x="45" y="204" width="160" height="44" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="125" y="222" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">📦 ExceptionGroup</text>
+      <text x="125" y="240" text-anchor="middle" font-size="10.5" fill="#5b6472">raised out of the block</text>
+      <g filter="url(#cardShadow)"><rect x="240" y="204" width="160" height="44" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="222" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🛑 B cancelled</text>
+      <text x="320" y="240" text-anchor="middle" font-size="10.5" fill="#5b6472">stops at its next await</text>
+      <g filter="url(#cardShadow)"><rect x="435" y="204" width="160" height="44" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="515" y="222" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🛑 C cancelled</text>
+      <text x="515" y="240" text-anchor="middle" font-size="10.5" fill="#5b6472">stops at its next await</text>
+      <path d="M125,130 V204" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arrRose)"/>
+      <path d="M125,170 H515" fill="none" stroke="#dc2626" stroke-width="1.8"/>
+      <path d="M320,170 V204" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrRose)">
+        <animate attributeName="stroke-dashoffset" values="0;-20" dur="3s" repeatCount="indefinite"/>
+      </path>
+      <path d="M515,170 V204" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrRose)">
+        <animate attributeName="stroke-dashoffset" values="0;-20" dur="3s" repeatCount="indefinite"/>
+      </path>
+      <text x="222" y="190" text-anchor="middle" font-size="10.5" fill="#5b6472">cancel signal</text>
+    </svg>
+    <figcaption>Task A raises. The group cancels B and C, waits until everything has stopped, and only then raises the collected errors as one <code>ExceptionGroup</code> out of the <code>async with</code> block.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>asyncio.gather</code> does not cancel the other tasks when one fails.</b> The first error reaches you straight away, but the rest keep running in the background unless you cancel them yourself.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What if two tasks in the group fail?"</b> The group raises one <code>ExceptionGroup</code> holding both errors, and you handle them by type with <code>except*</code>.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"In asyncio, a <code>TaskGroup</code> runs tasks as one unit: if any task fails, the rest are cancelled and the errors come out together as an <code>ExceptionGroup</code>. <code>asyncio.timeout()</code> puts a deadline on a whole block. Both need Python 3.11 or newer."</p>
+    <ul>
+      <li><code>TaskGroup</code> <span class="hl hl-hot">→ one failure should stop the whole batch</span> — no task is left running.</li>
+      <li><code>gather</code> <span class="hl hl-inter">→ collect all results</span> — add <code>return_exceptions=True</code> if partial failure is fine.</li>
+      <li><code>asyncio.timeout(n)</code> <span class="hl hl-blue">→ one deadline for a block</span>; raises <code>TimeoutError</code>.</li>
+      <li><code>wait_for(aw, n)</code> <span class="hl hl-teal">→ deadline for a single awaitable</span>.</li>
+      <li>Group errors <span class="hl hl-basic">→ handle with <code>except*</code></span>.</li>
+      <li>Cancellation lands at a task's <span class="hl hl-hot">next <code>await</code></span> — code that never awaits can't be cancelled.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <b>TaskGroup</b> (Python 3.11+) is a scope that <b>owns its tasks</b>. Write <code>async with asyncio.TaskGroup() as tg:</code>, then <code>tg.create_task(...)</code> for each job. The block does not finish until every task in it has finished, so nothing is left running by accident. If a task raises an error, the group <b>cancels the other tasks</b> and, once everything has stopped, raises an <code>ExceptionGroup</code> holding the errors.</p>
+
+      <p><code>asyncio.timeout(seconds)</code> (3.11+) is the matching tool for deadlines. Wrap a block in <code>async with asyncio.timeout(2):</code> and if it takes longer, the work inside is cancelled and <code>TimeoutError</code> is raised. Put it <b>around</b> a TaskGroup and one deadline covers the whole group.</p>
+
+      <p><code>gather</code> is the older way: it returns results in order, but when one awaitable fails the error reaches you at once while the others <b>keep running</b> unless you cancel them. Cancellation is delivered as <code>CancelledError</code> at a task's next <code>await</code>. On Python older than 3.11, use <code>gather</code> and <code>wait_for</code> instead — check the current docs for your version.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>gather</code></th><th><code>TaskGroup</code></th><th><code>asyncio.timeout()</code></th></tr></thead>
+        <tbody>
+          <tr><td><b>Job</b></td><td>run awaitables, collect results</td><td>run tasks as one scope</td><td>put a deadline on a block</td></tr>
+          <tr><td><b>When one fails</b></td><td>first error reaches you; others keep running</td><td>siblings cancelled; <code>ExceptionGroup</code> raised</td><td>—</td></tr>
+          <tr><td><b>Needs</b></td><td>long-standing</td><td>Python 3.11+</td><td>Python 3.11+</td></tr>
+        </tbody>
+      </table>
+
+      <p>See also: <a href="10.html">asyncio</a> (event loop basics), <a href="20.html">ExceptionGroup &amp; except*</a> (handling the errors), <a href="../basic/9.html">Exceptions</a>.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">import</span> asyncio
+
+<span class="kw">async</span> <span class="kw">def</span> ok():
+    <span class="kw">await</span> asyncio.sleep(<span class="num">1</span>)
+    <span class="kw">print</span>(<span class="str">"ok finished"</span>)      <span class="cx-cmt"># never printed: cancelled first</span>
+
+<span class="kw">async</span> <span class="kw">def</span> boom():
+    <span class="kw">await</span> asyncio.sleep(<span class="num">0.1</span>)
+    <span class="kw">raise</span> ValueError(<span class="str">"boom"</span>)
+
+<span class="kw">async</span> <span class="kw">def</span> main():
+    <span class="kw">try</span>:
+        <span class="kw">async</span> <span class="kw">with</span> asyncio.TaskGroup() <span class="kw">as</span> tg:
+            tg.create_task(ok())
+            tg.create_task(boom())
+    <span class="kw">except</span>* ValueError <span class="kw">as</span> eg:   <span class="cx-ok"># ✅ catches errors inside the group</span>
+        <span class="kw">print</span>(<span class="str">"caught"</span>, len(eg.exceptions), eg.exceptions[<span class="num">0</span>])
+
+asyncio.run(main())</code></pre>
+      </div>
+      <p class="cx-note">Prints only <code>caught 1 boom</code>. When <code>boom()</code> fails after 0.1 seconds, the group cancels <code>ok()</code> while it is still sleeping, so <code>"ok finished"</code> never appears.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">async</span> <span class="kw">def</span> slow():
+    <span class="kw">await</span> asyncio.sleep(<span class="num">10</span>)
+
+<span class="kw">async</span> <span class="kw">def</span> main():
+    <span class="kw">try</span>:
+        <span class="kw">async</span> <span class="kw">with</span> asyncio.timeout(<span class="num">0.5</span>):
+            <span class="kw">await</span> slow()
+    <span class="kw">except</span> TimeoutError:
+        <span class="kw">print</span>(<span class="str">"too slow, cancelled"</span>)
+
+asyncio.run(main())</code></pre>
+      </div>
+      <p class="cx-note">Prints <code>too slow, cancelled</code>. After 0.5 seconds the work inside the block is cancelled and <code>TimeoutError</code> is raised at the <code>async with</code>.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A page needs the user, their orders and some recommendations, fetched in parallel. If the user lookup fails there is no point waiting for the rest, so a <code>TaskGroup</code> cancels them — and an <code>asyncio.timeout(2)</code> around the whole thing means the request can never hang.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="18.html">← Python Architecture / Senior Scenarios</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Python Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="20.html">ExceptionGroup &amp; except* →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Python · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

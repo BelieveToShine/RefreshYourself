@@ -105,4 +105,41 @@ below is the tier-folder page number (`oops/<tier>/<n>.html`):
 
 ## Known gaps
 
-None yet — Phase 7 (writing the 15 pages) is the next and only remaining phase for this track.
+None among the original 15 pages (all written). The 11 gap pages found afterwards were written 2026-10-07 — see the addendum below.
+
+---
+
+## Addendum 2026-10-06 — gap pages (Phases 2–6)
+
+Active gap-hunt ([`rules/gap-hunting.md`](../../rules/gap-hunting.md)) seeded by
+`docs/review-2026-10-06.md` §5. The Phase 2 line above ("No gaps found") reflected a re-read of the
+source list only; real interviews reliably ask the patterns/principles below. **Status: all pages in this
+addendum were written and wired on 2026-10-07** (track total now 26 = 15 original + 11 gap pages). Numbers are the next free in each tier from disk (Basic 4, Intermediate 8,
+Advanced 3 live) and are permanent. 9 candidates -> 9 pages; 2 extra gaps from our own hunt
+(Shallow vs. Deep Copy, Adapter vs. Facade) = 11 new pages (15 -> 26). No Advanced gap found: the
+three existing Advanced pages are already architecture-depth.
+
+| # | Tier | Pri | Title | Interview question (`.interview-q`) | Scope (one concept) | Diagram idea | Cross-link |
+|---|---|---|---|---|---|---|---|
+| Basic 5 | Basic | ⭐ | Association, Aggregation & Composition | "What's the difference between association, aggregation and composition?" | Three strengths of has-a: uses / whole-part with independent lifetime / whole-part with owned lifetime; UML arrows, C# field examples. | Three UML-style boxes: line, hollow diamond, filled diamond, with lifetime note | Basic 2 (Inheritance vs. Composition), Advanced 2, Intermediate 8 (coupling) |
+| Basic 6 | Basic | ⭐ | DRY, KISS & YAGNI | "What do DRY, KISS and YAGNI mean — and can DRY ever be taken too far?" | Three short rules of thumb as a contrast set; premature abstraction as the DRY failure mode. | Three tiny panels: duplicated blocks merged, simple path vs maze, unused feature crossed out | Basic 4 (SRP), Intermediate 2 (OCP), Advanced 1 (SOLID as a whole) |
+| Basic 7 | Basic | ⭐ | Static vs. Instance Members & `sealed` | "When would you use a static class or member instead of an instance one, and what does `sealed` do?" | Shared-per-type vs per-object state, static class limits (no inheritance/DI/mocking), global-state risk, `sealed` as a design choice. | One shared static slot vs three object boxes each with its own slot | Basic 1, Basic 3, Intermediate 5 (DIP), C# Basic 5, C# Basic 21 (mechanics) |
+| Intermediate 9 | Intermediate | 🔥 | Multiple Inheritance & the Diamond Problem | "Why doesn't C# support multiple inheritance, and how do interfaces solve the diamond problem?" | Ambiguity from two paths to one base member; C# allows many interfaces but one base class; default interface members / explicit implementation as the escape hatch. | Diamond of four boxes with the ambiguous call highlighted, beside the interface-based fix | Intermediate 1 (Interface vs. Abstract), Basic 2, Advanced 2 |
+| Intermediate 10 | Intermediate | 🔥 | Singleton Pattern | "What is the Singleton pattern, how do you make it thread-safe, and why is it often called an anti-pattern?" | One instance + global access; `Lazy<T>`/static init for thread safety; hidden coupling and test pain; DI singleton lifetime as the better alternative. | Many callers arrowing to one instance with a "hidden dependency" warning vs the DI-injected version | Intermediate 5 (DIP), Intermediate 7 (Factory vs. DI), Basic 7, C# Advanced 2 (locking) |
+| Intermediate 11 | Intermediate | ⭐ | Repository Pattern | "What is the Repository pattern, and is it still worth it on top of EF Core?" | Collection-like abstraction over data access, testability, and the debate over wrapping an ORM that is already a repository/unit of work. | Service -> IRepository interface -> EF / in-memory implementations | Intermediate 5 (DIP), C# Advanced 4 (IQueryable leakage), EF Core track |
+| Intermediate 12 | Intermediate | ⭐ | Observer Pattern | "What is the Observer pattern, and how do C# events relate to it?" | One subject notifies many subscribers without knowing them; events/`IObservable<T>` as built-in forms; lifecycle/leak risk. | Subject box fanning notifications to 3 observers, subscribe/unsubscribe arrows | Intermediate 8 (coupling), Intermediate 5 (DIP), C# Intermediate 19 (events) |
+| Intermediate 13 | Intermediate | ⭐ | Decorator Pattern | "What is the Decorator pattern, and how does it differ from inheritance?" | Wrap an object with the same interface to add behavior at runtime (logging, caching); stackable; `Stream`/middleware examples. | Nested boxes: logging wraps caching wraps the real service, same interface on each | Basic 2, Advanced 2, Intermediate 2 (OCP), Intermediate 6 (Strategy) |
+| Intermediate 14 | Intermediate | 🧠 | Law of Demeter | "What is the Law of Demeter, and what's wrong with `a.GetB().GetC().DoIt()`?" | Talk only to immediate collaborators; train-wreck chains leak structure; "tell, don't ask" fix. | Chain of three objects with the long reach crossed out vs a single delegating call | Intermediate 8 (coupling), Basic 1 (encapsulation), Advanced 3 |
+| Intermediate 15 | Intermediate | ⭐ | Shallow vs. Deep Copy (extra gap) | "What's the difference between a shallow copy and a deep copy, and how would you clone an object safely?" | Copying references vs whole graphs; `MemberwiseClone`, copy constructors, records' `with` (shallow), why `ICloneable` is discouraged. | Original and copy sharing one inner object (shallow) vs separate inner objects (deep) | C# Basic 1 (value/reference), C# Intermediate 8 (records), C# Intermediate 12 (immutability) |
+| Intermediate 16 | Intermediate | ⭐ | Adapter vs. Facade (extra gap) | "What's the difference between the Adapter and Facade patterns?" | Adapter converts one interface to the one expected; Facade offers a simpler front to a complex subsystem; Decorator contrast. | Two small panels: plug-shape converter vs one front door to many subsystems | Intermediate 13 (Decorator), Intermediate 5 (DIP), Intermediate 7 (Factory) |
+
+### Dropped / folded
+
+- None of the candidates was already covered: Basic 2 covers has-a vs is-a only (not the three
+  has-a strengths); no existing page names Singleton/Repository/Observer/Decorator or
+  DRY/KISS/YAGNI/Demeter.
+- **Static vs. instance & `sealed`** — design view only here; keyword mechanics
+  (`virtual`/`override`/`new`/`sealed`) live on C# Basic 21 to avoid duplication. Overload vs.
+  override is already on Basic 3, so no separate page.
+- Considered and rejected: Abstract Factory/Builder (niche; add only if asked), "Tell, Don't Ask"
+  as its own page (folded into Law of Demeter), UML class-diagram basics (tutorial-level).

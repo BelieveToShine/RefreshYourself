@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How does EF Core map a class hierarchy to tables?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Inheritance Mapping: TPH, TPT &amp; TPC — EF Core Intermediate — RefreshYourself">
+<meta property="og:description" content="How does EF Core map a class hierarchy to tables?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Inheritance Mapping: TPH, TPT &amp; TPC — EF Core Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">TPH, TPT &amp; TPC</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ EF Core · Intermediate · Should Know</div>
+    <h1><code>TPH</code>, <code>TPT</code>, <code>TPC</code> — <span class="hl hl-inter">one table, or a join, or repeated columns?</span></h1>
+    <p class="interview-q">"How does EF Core map a class hierarchy to tables?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🧬 Inheritance Mapping</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Your C# classes inherit from each other, but a database has no inheritance. EF Core has to pick a table layout, and each layout trades speed against tidy columns.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Know the three layouts: <b>TPH</b> (one table, the default), <b>TPT</b> (one table per type, joined) and <b>TPC</b> (one table per concrete type, no joins).</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">TPH = one table + discriminator; TPT = table per type + joins; TPC = table per concrete type, columns repeated.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Inheritance mapping = <b>"one table, joined tables, or copied columns."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b>TPH</b> → one table, a <code>Discriminator</code> column, nullable derived columns</span>
+      <span class="tc-line"><b>TPT</b> → a table per type, joined on the key</span>
+      <span class="tc-line"><b>TPC</b> → a table per concrete type, base columns repeated</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 236" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI14" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI14" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arRI14" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">ONE HIERARCHY — THREE TABLE LAYOUTS</text>
+      <text x="112" y="46" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">TPH — one table (default)</text>
+      <text x="320" y="46" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">TPT — table per type</text>
+      <text x="528" y="46" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">TPC — per concrete type</text>
+      <g filter="url(#shI14)"><rect x="12" y="56" width="200" height="142" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="112" y="78" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">Animals</text>
+      <text x="28" y="100" text-anchor="start" font-size="10.5" fill="#5b6472">Id</text>
+      <text x="28" y="118" text-anchor="start" font-size="10.5" fill="#5b6472">Name</text>
+      <text x="28" y="136" text-anchor="start" font-size="10.5" fill="#5b6472">Breed (null for cats)</text>
+      <text x="28" y="154" text-anchor="start" font-size="10.5" fill="#5b6472">Lives (null for dogs)</text>
+      <text x="28" y="172" text-anchor="start" font-size="10.5" fill="#5b6472">Discriminator</text>
+      <g filter="url(#shI14)"><rect x="220" y="56" width="200" height="42" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="73" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">Animals</text>
+      <text x="320" y="91" text-anchor="middle" font-size="10" fill="#5b6472">Id · Name</text>
+      
+      <g filter="url(#shI14)"><rect x="220" y="106" width="200" height="42" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="123" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">Dogs</text>
+      <text x="320" y="141" text-anchor="middle" font-size="10" fill="#5b6472">Id (PK + FK) · Breed</text>
+      
+      <g filter="url(#shI14)"><rect x="220" y="156" width="200" height="42" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="173" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">Cats</text>
+      <text x="320" y="191" text-anchor="middle" font-size="10" fill="#5b6472">Id (PK + FK) · Lives</text>
+      
+      <g filter="url(#shI14)"><rect x="428" y="56" width="200" height="64" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="528" y="80" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">Dogs</text>
+      <text x="528" y="98" text-anchor="middle" font-size="10" fill="#5b6472">Id · Name · Breed</text>
+      
+      <g filter="url(#shI14)"><rect x="428" y="134" width="200" height="64" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="528" y="158" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">Cats</text>
+      <text x="528" y="176" text-anchor="middle" font-size="10" fill="#5b6472">Id · Name · Lives</text>
+      
+      <text x="112" y="222" text-anchor="middle" font-size="10" fill="#5b6472">no joins · many nullable columns</text>
+      <text x="320" y="222" text-anchor="middle" font-size="10" fill="#5b6472">join to read a Dog or Cat</text>
+      <text x="528" y="222" text-anchor="middle" font-size="10" fill="#5b6472">no joins · base columns repeated</text>
+    </svg>
+    <figcaption>Animal with Dog and Cat below it, mapped three ways.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"TPT is the cleanest layout, so it must be the best one."</b> It is the most normalized, but reading a type needs joins. TPH is the default, and EF Core's own guidance generally leans toward it for performance — choose TPT or TPC for a reason, not by taste.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why is TPH the default, and what is its downside?"</b> Everything lives in one table, so queries need no joins. The cost is that columns that belong only to a derived type must be nullable, and the table gets wider as the hierarchy grows.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"EF Core can map a hierarchy three ways. TPH, the default, puts everything in one table with a discriminator column. TPT gives each type its own table and joins them. TPC, added in EF Core 7, gives each concrete type its own full table. I start with TPH and only switch when the nullable columns or the shape of the data say otherwise."</p>
+    <ul>
+      <li><code>TPH</code> → <span class="hl hl-hot">default, one table</span> with a discriminator; derived columns are nullable.</li>
+      <li><code>TPT</code> → <span class="hl hl-inter">table per type</span>; reads need joins (EF Core 5+).</li>
+      <li><code>TPC</code> → <span class="hl hl-basic">table per concrete type</span>; no joins, base columns repeated (EF Core 7+).</li>
+      <li>Switch away from TPH <span class="hl hl-blue">only for a reason</span> — a very wide, mostly-NULL table, or strict per-type tables.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A database table has no "is-a" relationship, so EF Core has to flatten the hierarchy. With <span class="hl hl-blue">TPH</span> (table-per-hierarchy, the default) every type in the hierarchy shares <b>one</b> table, and a <code>Discriminator</code> column says which type each row is. There are no joins, but columns that exist only on a derived type must allow NULL.</p>
+
+      <p><span class="hl hl-inter">TPT</span> (table-per-type, EF Core 5+) gives each type its own table holding only that type's columns. The derived table's key is also a foreign key to the base table, so loading a <code>Dog</code> joins the two. <span class="hl hl-basic">TPC</span> (table-per-concrete-type, EF Core 7+) gives each <em>concrete</em> type a table with <em>all</em> its columns, base ones included — no joins when you query one concrete type, but the base columns are repeated, and an abstract base gets no table.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>TPH</th><th>TPT</th><th>TPC</th></tr></thead>
+        <tbody>
+          <tr><th>Tables</th><td>one</td><td>one per type</td><td>one per concrete type</td></tr>
+          <tr><th>Reading one type</th><td>filter on discriminator</td><td class="no">joins</td><td>no joins</td></tr>
+          <tr><th>Derived columns</th><td class="no">nullable</td><td>not nullable</td><td>not nullable</td></tr>
+          <tr><th>Querying the base type</th><td>one table</td><td>joins</td><td>combines the tables</td></tr>
+          <tr><th>Default?</th><td>✅ yes</td><td>opt in</td><td>opt in</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">abstract</span> <span class="kw">class</span> Animal { <span class="kw">public</span> <span class="kw">int</span> Id { <span class="kw">get</span>; <span class="kw">set</span>; } <span class="kw">public</span> <span class="kw">string</span> Name { <span class="kw">get</span>; <span class="kw">set</span>; } }
+<span class="kw">public</span> <span class="kw">class</span> Dog : Animal { <span class="kw">public</span> <span class="kw">string</span> Breed { <span class="kw">get</span>; <span class="kw">set</span>; } }
+<span class="kw">public</span> <span class="kw">class</span> Cat : Animal { <span class="kw">public</span> <span class="kw">int</span> Lives { <span class="kw">get</span>; <span class="kw">set</span>; } }
+
+<span class="kw">public</span> DbSet&lt;Animal&gt; Animals { <span class="kw">get</span>; <span class="kw">set</span>; }   <span class="cx-ok">// ✅ TPH by default — nothing else to configure</span>
+<span class="kw">public</span> DbSet&lt;Dog&gt; Dogs { <span class="kw">get</span>; <span class="kw">set</span>; }
+<span class="kw">public</span> DbSet&lt;Cat&gt; Cats { <span class="kw">get</span>; <span class="kw">set</span>; }</code></pre>
+      </div>
+      <p class="cx-note">With no extra configuration, EF Core uses <b>TPH</b>: one <code>Animals</code> table plus a discriminator column.</p>
+
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>modelBuilder.Entity&lt;Animal&gt;().UseTptMappingStrategy();   <span class="cx-cmt">// EF Core 7+: table per type</span>
+<span class="cx-cmt">// or</span>
+modelBuilder.Entity&lt;Animal&gt;().UseTpcMappingStrategy();   <span class="cx-cmt">// EF Core 7+: table per concrete type</span></code></pre>
+      </div>
+      <p class="cx-note">Opt in to <b>TPT</b> or <b>TPC</b> on the root type of the hierarchy.</p>
+
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> dogs = <span class="kw">await</span> db.Animals.OfType&lt;Dog&gt;().ToListAsync();   <span class="cx-cmt">// TPH: filters on the discriminator</span></code></pre>
+      </div>
+      <p class="cx-note"><code>OfType&lt;T&gt;()</code> reads one subtype — under TPH that is just a filter on the discriminator column.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A <code>Payment</code> hierarchy with <code>CardPayment</code>, <code>BankTransfer</code> and <code>WalletPayment</code> that each add a couple of columns</b> fits TPH well. If each subtype adds a dozen of its own, one wide, mostly-NULL table gets awkward — that is the moment to measure and consider TPT or TPC.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="13.html">← Disconnected Entities: Attach vs. Update</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="15.html">Owned Types &amp; Value Converters →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

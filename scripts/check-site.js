@@ -53,7 +53,8 @@ for (const t of TRACKS) {
       if (!/<title>[^<]+<\/title>/.test(html)) err(`${rel}: no <title>`);
       for (const [name, re] of [["interview-q", /class="interview-q"/], ["recall", /class="recall"/], ["keypoints", /class="keypoints"/], ["explanation", /class="explain/], ["code", /class="codebox/]])
         if (!re.test(html)) warn(`${rel}: missing section ${name}`);
-      for (const m of html.matchAll(/(?:href|src)="([^"#:]+?)(?:#[^"]*)?"/g)) {
+      const linkScan = html.split("<pre").map((s, i) => (i ? s.slice(s.indexOf("</pre>") + 6) : s)).join(" ").split("<text").map((s, i) => (i ? s.slice(s.indexOf("</text>") + 7) : s)).join(" "); // ignore sample markup in code blocks / diagram text
+      for (const m of linkScan.matchAll(/(?:href|src)="([^"#:]+?)(?:#[^"]*)?"/g)) {
         if (m[1].startsWith("/")) continue; // escaped sample markup inside diagram text, not a real link
         const target = path.normalize(path.join(path.dirname(rel), m[1]));
         if (m[1] && !fs.existsSync(path.join(ROOT, target))) err(`${rel}: broken local link ${m[1]}`);
@@ -90,6 +91,9 @@ for (const f of fs.readdirSync(path.join(ROOT, "docs/rules")).filter((f) => f.en
 }
 for (const t of TRACKS) for (const f of ["overview.md", "roadmap.md", "question-taxonomy.md"])
   if (!exists(`docs/superpowers/specs/${t}/${f}`)) err(`missing docs/superpowers/specs/${t}/${f}`);
+
+// pagers must link the neighbouring pages (node scripts/fix-pagers.js --fix repairs them)
+{ const pr = require("child_process").spawnSync(process.execPath, [path.join(__dirname, "fix-pagers.js")], { encoding: "utf8" }); if (pr.status !== 0) pr.stdout.split(String.fromCharCode(10)).filter((l) => l.includes(": prev") || l.includes(": next") || l.includes("unexpected")).forEach((l) => err("pager: " + l + " — run node scripts/fix-pagers.js --fix")); }
 
 console.log("Pages on disk:", JSON.stringify(counts), "total", Object.values(counts).reduce((a, b) => a + b, 0));
 warns.forEach((w) => console.log("WARN ", w));

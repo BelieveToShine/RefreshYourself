@@ -163,22 +163,22 @@
 
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
-    <p class="tline"><b><code>.ToList()</code> mid-query isn't harmless materialization</b> — call it before your filters run and the whole table gets pulled into memory first, with every later <code>Where</code> filtering .NET objects instead of rows in SQL.</p>
+    <p class="tline"><b>A <code>Func&lt;T,bool&gt;</code> is not an <code>Expression&lt;Func&lt;T,bool&gt;&gt;</code></b> — pass a delegate (a <code>Func</code> variable) to <code>.Where()</code> on a queryable and the compiler binds <code>Enumerable.Where</code>, not <code>Queryable.Where</code>: no expression tree, so nothing can become SQL. The EF Core side of this is on <a href="../../efcore/intermediate/5.html">IQueryable vs. IEnumerable in EF Core</a>.</p>
   </div>
 
   <div class="followup">
     <div class="fhead">🔄 Likely Follow-up</div>
-    <p class="ftline"><b>"So should everything just stay <code>IQueryable&lt;T&gt;</code> as long as possible?"</b> Not always — once the data's already in memory (a <code>List&lt;T&gt;</code>, an array) there's no database left to translate against, so <code>IEnumerable&lt;T&gt;</code> is the only option and the right one; the risk only shows up when a query that's supposed to run in the database quietly runs in memory because of an early <code>.ToList()</code> or <code>.AsEnumerable()</code>.</p>
+    <p class="ftline"><b>"So should everything just stay <code>IQueryable&lt;T&gt;</code> as long as possible?"</b> Not always — once the data's already in memory (a <code>List&lt;T&gt;</code>, an array) there's no provider left to translate against, so <code>IEnumerable&lt;T&gt;</code> is the only option and the right one. How EF Core turns the tree into SQL, and the early-<code>.ToList()</code> pitfalls, are covered on the <a href="../../efcore/intermediate/5.html">EF Core page</a>.</p>
   </div>
 
   <div class="keypoints">
     <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
-    <p class="kp-primary">"<code>IQueryable&lt;T&gt;</code> builds an expression tree that EF Core translates into SQL and runs in the database. The moment you switch to <code>IEnumerable&lt;T&gt;</code> — by calling <code>.AsEnumerable()</code> or <code>.ToList()</code>, or holding the query in an <code>IEnumerable&lt;T&gt;</code> variable — everything from that point runs in .NET, in memory, against whatever rows have already been pulled back."</p>
+    <p class="kp-primary">"<code>IQueryable&lt;T&gt;</code> carries an expression tree — a description of the query — that a provider like EF Core can translate and run elsewhere, such as in the database. <code>IEnumerable&lt;T&gt;</code> just iterates in-process, with each operator run as a delegate over objects in .NET memory. Both are lazy until enumerated; the difference is who executes the query."</p>
     <ul>
-      <li><code>IQueryable&lt;T&gt;</code> → <span class="hl hl-adv">keep filtering in the database</span> for as long as possible — every <code>Where</code>/<code>Select</code> before materializing becomes part of the SQL.</li>
-      <li><code>IEnumerable&lt;T&gt;</code> → <span class="hl hl-inter">use once the data's already local</span> — an in-memory list, or logic EF Core genuinely can't translate.</li>
-      <li><code>.ToList()</code> / <code>.AsEnumerable()</code> → <span class="hl hl-hot">the line where execution moves</span> — everything before it is SQL, everything after is .NET.</li>
-      <li>A repository returning <code>IQueryable&lt;T&gt;</code> → <span class="hl hl-basic">lets the caller keep composing the query</span>, but couples the service layer to EF Core.</li>
+      <li><code>IQueryable&lt;T&gt;</code> → <span class="hl hl-adv">holds an expression tree</span>, which a provider translates.</li>
+      <li><code>IEnumerable&lt;T&gt;</code> → <span class="hl hl-inter">iterates in-process</span> with delegates, in .NET.</li>
+      <li><code>Expression&lt;Func&lt;T,bool&gt;&gt;</code> → <span class="hl hl-hot">inspectable code-as-data</span>; plain <code>Func</code> is compiled and opaque.</li>
+      <li>Both are <span class="hl hl-basic">deferred until enumerated</span> — <code>.ToList()</code>, <code>foreach</code>, <code>.First()</code>.</li>
     </ul>
   </div>
 
@@ -196,19 +196,20 @@
       chained after that point compiles against <code>Enumerable</code>, not <code>Queryable</code> — there's no more
       expression tree left to translate.</p>
 
-      <p>Why this bites specifically with EF Core: an early <code>.ToList()</code> or <code>.AsEnumerable()</code> (or a
-      method that returns <code>IEnumerable&lt;T&gt;</code>) makes the switch. The query still compiles and still
-      runs — it just quietly stops being one database query and starts being "fetch everything so far, then filter
-      it in .NET." A method EF Core can't translate inside a <code>Where</code> on an <code>IQueryable&lt;T&gt;</code>
-      does <em>not</em> do this — since EF Core 3.0 it throws instead.</p>
+      <p>The other half of the mechanics is the lambda itself. <code>Queryable.Where</code> takes an
+      <code>Expression&lt;Func&lt;T, bool&gt;&gt;</code> — the compiler turns the lambda into a tree a provider can
+      read — while <code>Enumerable.Where</code> takes a plain <code>Func&lt;T, bool&gt;</code>, compiled code that can
+      only be called. Both kinds of query are lazy until enumerated. What EF Core does with the tree — the SQL
+      translation, and where an early <code>.ToList()</code> or <code>.AsEnumerable()</code> hurts — is on
+      <a href="../../efcore/intermediate/5.html">IQueryable vs. IEnumerable in EF Core</a>.</p>
 
       <table class="cmp-table">
         <thead><tr><th></th><th><code>IQueryable&lt;T&gt;</code></th><th><code>IEnumerable&lt;T&gt;</code></th></tr></thead>
         <tbody>
           <tr><th>What it holds</th><td>an expression tree — a query description</td><td>a sequence you can loop over</td></tr>
           <tr><th>Where filtering runs</th><td>in the database, as SQL</td><td>in .NET, in memory</td></tr>
-          <tr><th>When it runs</th><td>only once enumerated</td><td>as soon as each method executes</td></tr>
-          <tr><th>Best used for</th><td>composing a query before it hits the database</td><td>data that's already local, or logic EF Core can't translate</td></tr>
+          <tr><th>When it runs</th><td>only once enumerated</td><td>also lazy until enumerated — but runs in-process, as delegates</td></tr>
+          <tr><th>Best used for</th><td>composing a query before it hits the database</td><td>data that's already local, or logic a provider can't translate</td></tr>
         </tbody>
       </table>
     </div>
@@ -235,22 +236,13 @@
           <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
           <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
         </div>
-        <pre><code><span class="kw">var</span> orders = db.Orders
-    .AsEnumerable()                  <span class="cx-err">// ❌ switches to IEnumerable&lt;T&gt; here</span>
-    .Where(o =&gt; IsSpecialOrder(o)); <span class="cx-err">// runs in .NET, after the WHOLE table is pulled in</span></code></pre>
-      </div>
-      <p class="cx-note">Everything after <code>.AsEnumerable()</code> compiles against <code>Enumerable</code>, not <code>Queryable</code> — EF Core already fetched every row by then.</p>
+        <pre><code><span class="ty">Expression</span>&lt;<span class="ty">Func</span>&lt;<span class="ty">Order</span>, <span class="kw">bool</span>&gt;&gt; expr = o =&gt; o.Total &gt; <span class="num">100</span>;
+<span class="ty">Func</span>&lt;<span class="ty">Order</span>, <span class="kw">bool</span>&gt;             fn   = o =&gt; o.Total &gt; <span class="num">100</span>;
 
-      <div class="code-card">
-        <div class="cc-head">
-          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
-          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-        </div>
-        <pre><code><span class="kw">var</span> orders = db.Orders
-    .Where(o =&gt; o.Total &gt; <span class="num">100</span>)  <span class="cx-ok">// ✅ stays IQueryable&lt;T&gt; — becomes part of the SQL</span>
-    .ToList();                     <span class="cx-ok">// ✅ materialize last, once filtering is done</span></code></pre>
+db.Orders.Where(expr);  <span class="cx-ok">// ✅ Queryable.Where — joins the expression tree</span>
+db.Orders.Where(fn);    <span class="cx-err">// ❌ Enumerable.Where — runs in .NET, the whole table is fetched</span></code></pre>
       </div>
-      <p class="cx-note">Keep every filter inside the <code>IQueryable&lt;T&gt;</code> chain and materialize (<code>.ToList()</code>) once, at the end.</p>
+      <p class="cx-note">Same lambda text, different target type: an <code>Expression</code> is data a provider can read, a <code>Func</code> is just compiled code.</p>
 
     </div>
   </details>
@@ -292,11 +284,7 @@
               <text x="390" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">💥 throws</text>
             </svg>
           </div>
-          <p class="uc-what">A custom C# method, string formatting, or anything else the translator
-          can't turn into SQL makes EF Core throw when the query runs (EF Core 3.0 and later) — it
-          does not quietly run that part in memory. <b>A real trap</b> — the "fix" people reach for,
-          an early <code>.AsEnumerable()</code> or <code>.ToList()</code>, compiles and works, but
-          now the whole table comes back first and the filter runs in .NET.</p>
+          <p class="uc-what">A custom C# method, string formatting, or anything else the translator can't turn into SQL makes EF Core throw when the query runs (EF Core 3.0 and later) — it does not quietly run that part in memory. The workarounds, and why an early <code>.AsEnumerable()</code> is a trap, are on the <a href="../../efcore/intermediate/5.html">EF Core page</a>.</p>
           <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">An untranslatable method throws — adding <code>.AsEnumerable()</code> to silence it pulls the whole table into memory.</span></div>
         </div>
 
@@ -326,10 +314,7 @@
   <details class="realworld toggle">
     <summary>🌍 Real-world example <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <p><b>Scenario:</b> A report page that used to load instantly starts timing out under load. The code calls
-      <code>.ToList()</code> right after loading the table, then filters and sorts that in-memory list with LINQ.
-      Every one of those filters used to be a <code>WHERE</code> clause — now they're .NET loops over rows that
-      shouldn't have been fetched at all.</p>
+      <p><b>Scenario:</b> A helper takes a <code>Func&lt;Order, bool&gt;</code> filter so callers can pass any lambda, and it's used with <code>db.Orders.Where(filter)</code>. It compiles and works in testing, but every call now loads the whole table first — changing the parameter to <code>Expression&lt;Func&lt;Order, bool&gt;&gt;</code> lets the provider see the filter. (The slow-report version of this story is on the <a href="../../efcore/intermediate/5.html">EF Core page</a>.)</p>
       <p><b>Architecture:</b> Should a repository return <code>IQueryable&lt;T&gt;</code> up to the service layer, or
       always materialize first? Generally <b>materialize at the repository boundary</b> — handing an
       <code>IQueryable&lt;T&gt;</code> upward lets the service layer keep composing the query, which quietly couples

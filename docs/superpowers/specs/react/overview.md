@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 43 pages written
+## Status — Phases 1–7 complete, all 47 pages written (43 earlier + 4 gap pages added 2026-10-07)
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): 337 raw questions across 35
   concept sections, through two independent adversarial passes (most recently commit `4831f58`).
@@ -47,7 +47,7 @@ keeping it in sync with the live pages.
 | 7 | Lists & Keys | 🔥 | ✅ |
 | 8 | Hooks — Rules & Overview | 🔥 | ✅ |
 
-## Intermediate (17 topics) — 17 written
+## Intermediate (21 topics) — 21 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -68,6 +68,10 @@ keeping it in sync with the live pages.
 | 15 | Accessibility | ⭐ | ✅ |
 | 16 | Refs — Forwarding & Imperative APIs **[gap-hunt]** | ⭐ | ✅ |
 | 17 | Automatic Batching & flushSync **[gap-hunt]** | ⭐ | ✅ |
+| 18 | useReducer vs. useState | 🔥 | ✅ |
+| 19 | Server State vs. Client State (TanStack Query / SWR) | ⭐ | ✅ |
+| 20 | Redux vs. Zustand vs. Context | ⭐ | ✅ |
+| 21 | Vite vs. Next.js (Choosing a React Setup) | ⭐ | ✅ |
 
 ## Advanced (18 topics) — 18 written
 
@@ -128,3 +132,5 @@ every page passed the mandatory independent diagram-verification sweep; a subseq
 gap-hunt (see the addendum above and [`roadmap.md`](roadmap.md)) found and closed 2 more, also
 independently verified (`issueCount: 0`, run one page at a time, not sampled). Expect a
 review/feedback pass once the user goes through it, same as every other completed track.
+
+- **Gap pages added 2026-10-07 (planned 2026-10-06):** 4 gap pages written and wired (43 -> 47) — Intermediate 18 useReducer vs. useState, 19 Server State vs. Client State (TanStack Query / SWR), 20 Redux vs. Zustand vs. Context, 21 Vite vs. Next.js (Choosing a React Setup) - see the `Addendum 2026-10-06` section in [`roadmap.md`](roadmap.md). Counts: Basic 8, Intermediate 21, Advanced 18.

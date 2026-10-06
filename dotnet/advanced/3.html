@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="You inherit a slow MVC app — what's your first diagnostic step?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Slow MVC App Under Load — Triage — .NET Advanced — RefreshYourself">
+<meta property="og:description" content="You inherit a slow MVC app — what's your first diagnostic step?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Slow MVC App Under Load — Triage — .NET Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dotnet/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#7c3aed;">🧱 .NET / ASP.NET Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Slow MVC App Under Load — Triage</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ .NET · Advanced · Should Know</div>
+    <h1>A slow MVC app under load — <span class="hl hl-hot">measure first</span>, <span class="hl hl-blue">fix second</span></h1>
+    <p class="interview-q">"You inherit a slow MVC app — what's your first diagnostic step?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+        <div class="wc-head">🩺 Triage</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A slow app has many possible causes. Guessing and changing code at random wastes days, adds risk, and you can't prove whether the change helped.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Measure first with a profiler or APM to find where the time really goes, fix that one thing, then measure again to prove it worked.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Measure, find the hot path, fix one thing, measure again.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Step 1 <span class="rarrow">→</span> <b>measure</b> with a profiler, APM, or traces</p>
+      <p class="rrow">Step 2 <span class="rarrow">→</span> <b>find</b> the hot path, where time really goes</p>
+      <p class="rrow">Step 3 <span class="rarrow">→</span> <b>fix one thing</b>, then measure again</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b>doctor first, medicine second</b> — no
+    one prescribes before the tests come back.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA3a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA3a" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arA3aRed" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">FROM "IT'S SLOW" TO A FIX THAT'S PROVEN</text>
+
+      <g filter="url(#shA3a)"><rect x="26" y="50" width="126" height="70" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="89" y="80" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">😟 Symptom</text>
+      <text x="89" y="99" text-anchor="middle" font-size="10" fill="#5b6472">slow under load</text>
+
+      <path d="M152,85 H180" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA3a)"/>
+
+      <g filter="url(#shA3a)"><rect x="180" y="50" width="126" height="70" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="243" y="80" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📏 Measure</text>
+      <text x="243" y="99" text-anchor="middle" font-size="10" fill="#5b6472">APM or profiler</text>
+
+      <path d="M306,85 H334" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA3a)"/>
+
+      <g filter="url(#shA3a)"><rect x="334" y="50" width="126" height="70" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="397" y="80" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🎯 Hot path</text>
+      <text x="397" y="99" text-anchor="middle" font-size="10" fill="#5b6472">where time goes</text>
+
+      <path d="M460,85 H488" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA3a)"/>
+
+      <g filter="url(#shA3a)"><rect x="488" y="50" width="126" height="70" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="551" y="80" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🔧 Fix one thing</text>
+      <text x="551" y="99" text-anchor="middle" font-size="10" fill="#5b6472">then re-measure</text>
+
+      <path d="M89,120 V205 H190" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arA3aRed)"><animate attributeName="stroke-dashoffset" values="10;0" dur="1.2s" repeatCount="indefinite"/></path>
+      <path d="M450,205 H551 V120" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arA3aRed)"><animate attributeName="stroke-dashoffset" values="10;0" dur="1.2s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shA3a)"><rect x="190" y="175" width="260" height="60" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="201" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">🐛 Guess and tweak</text>
+      <text x="320" y="219" text-anchor="middle" font-size="10.5" fill="#5b6472">skips measuring — no proof it helped</text>
+    </svg>
+    <figcaption>The safe route goes through measuring; the red shortcut jumps straight to a change with nothing to prove it worked.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 215" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA3b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA3b" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">ONCE MEASURED — THE USUAL SUSPECTS</text>
+
+      <g filter="url(#shA3b)"><rect x="220" y="30" width="200" height="44" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="49" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🎯 Hot path found</text>
+      <text x="320" y="64" text-anchor="middle" font-size="10" fill="#5b6472">what does it spend time on?</text>
+
+      <path d="M320,74 V96" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M86,96 H554" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M86,96 V122" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA3b)"/>
+      <path d="M242,96 V122" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA3b)"/>
+      <path d="M398,96 V122" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA3b)"/>
+      <path d="M554,96 V122" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA3b)"/>
+
+      <g filter="url(#shA3b)"><rect x="17" y="122" width="138" height="64" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="86" y="143" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🗄️ N+1 queries</text>
+      <text x="86" y="160" text-anchor="middle" font-size="9.5" fill="#5b6472">one query per row</text>
+      <text x="86" y="174" text-anchor="middle" font-size="9.5" fill="#5b6472">no AsNoTracking</text>
+
+      <g filter="url(#shA3b)"><rect x="173" y="122" width="138" height="64" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="242" y="143" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">⏳ Sync-over-async</text>
+      <text x="242" y="160" text-anchor="middle" font-size="9.5" fill="#5b6472">.Result / .Wait()</text>
+      <text x="242" y="174" text-anchor="middle" font-size="9.5" fill="#5b6472">threads pile up</text>
+
+      <g filter="url(#shA3b)"><rect x="329" y="122" width="138" height="64" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/></g>
+      <text x="398" y="143" text-anchor="middle" font-size="11" font-weight="700" fill="#6d28d9">🔁 Repeated work</text>
+      <text x="398" y="160" text-anchor="middle" font-size="9.5" fill="#5b6472">chatty remote calls</text>
+      <text x="398" y="174" text-anchor="middle" font-size="9.5" fill="#5b6472">nothing cached</text>
+
+      <g filter="url(#shA3b)"><rect x="485" y="122" width="138" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="554" y="143" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">📄 Big views</text>
+      <text x="554" y="160" text-anchor="middle" font-size="9.5" fill="#5b6472">huge Razor views</text>
+      <text x="554" y="174" text-anchor="middle" font-size="9.5" fill="#5b6472">often the rarer cause</text>
+    </svg>
+    <figcaption>These are where to look once the measurement points at a slow area — not a checklist to run blindly.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Adding a cache or more servers before measuring.</b> It feels like action,
+    but if the real cause is something else, you pay for the extra servers and the app is still
+    slow — and you still don't know why.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why does sync-over-async hurt especially under load?"</b>
+    <code>.Result</code> or <code>.Wait()</code> makes a thread sit and wait for a
+    <code>Task</code>. With many requests at once, those waiting threads can use up the thread
+    pool, and new requests queue behind them. The fix is <code>async</code> all the way down.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"My first step is to measure, not to change code. I'd use a profiler or
+    APM traces to find the hot path, because guessing wastes time and I couldn't prove a fix
+    worked. Once I know where the time goes, I'd check the usual suspects there, change one thing
+    at a time, and measure again."</p>
+    <ul>
+      <li>First step <span class="hl hl-hot">→ measure before touching code</span> — a profiler, APM, or distributed traces.</li>
+      <li>Goal <span class="hl hl-blue">→ find the hot path</span>, the place the time really goes.</li>
+      <li>Usual suspects <span class="hl hl-inter">→ N+1 queries, sync-over-async, repeated work, missing caching, big views</span> — a guide, not a checklist.</li>
+      <li>Discipline <span class="hl hl-basic">→ change one thing, then re-measure</span> to prove it helped.</li>
+      <li>Not first <span class="hl hl-adv">→ scaling out or adding a cache</span> — they can hide the cause and still miss it.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>When you inherit a slow app, you don't know yet <span class="hl hl-blue">where</span> it
+      is slow. So the first move is to measure, not to fix. Attach a profiler, look at APM traces
+      (for example Application Insights), or watch live numbers with tools like
+      <code>dotnet-counters</code> and <code>dotnet-trace</code>. Ask one question: which part of
+      a request takes the time?</p>
+
+      <p>Once you know the <span class="hl hl-hot">hot path</span>, the usual suspects become
+      useful. A request may fire a query for every row (N+1), or read data it never changes
+      without <code>AsNoTracking()</code>. It may block on <code>.Result</code> or
+      <code>.Wait()</code> and use up the thread pool. It may make many small remote calls or
+      recompute something that could be cached. Rarely, a very large Razor view is the cause. Each
+      of these only matters if the measurement points at it.</p>
+
+      <p>Then change <span class="hl hl-basic">one thing</span> and measure again. If the numbers
+      improve, you have proof. If not, undo it and go back to the data. (How the database side
+      goes wrong is on <a href="../../efcore/basic/5.html">The N+1 Problem</a> and
+      <a href="../../efcore/advanced/4.html">Beyond N+1</a>; the same "diagnose first" habit for
+      an API is on <a href="../../webapi/advanced/5.html">Web API Advanced</a>.)</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err">// ❌ blocks a thread-pool thread while it waits</span>
+<span class="kw">var</span> orders = _repo.GetOrdersAsync().Result;
+
+<span class="cx-ok">// ✅ async all the way — the thread is free while it waits</span>
+<span class="kw">var</span> orders = <span class="kw">await</span> _repo.GetOrdersAsync();</code></pre>
+      </div>
+      <p class="cx-note">Under many concurrent requests, blocked threads can exhaust the thread
+      pool — <b>the app looks slow even though the CPU is idle</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err">// ❌ N+1: one query for the orders, then one more per order</span>
+<span class="kw">var</span> orders = <span class="kw">await</span> _db.Orders.ToListAsync();
+<span class="kw">foreach</span> (<span class="kw">var</span> o <span class="kw">in</span> orders)
+    counts[o.Id] = <span class="kw">await</span> _db.OrderLines.CountAsync(l =&gt; l.OrderId == o.Id);
+
+<span class="cx-ok">// ✅ one query, read-only, only the columns we need</span>
+<span class="kw">var</span> rows = <span class="kw">await</span> _db.Orders
+    .AsNoTracking()
+    .Select(o =&gt; <span class="kw">new</span> { o.Id, LineCount = o.Lines.Count })
+    .ToListAsync();</code></pre>
+      </div>
+      <p class="cx-note">A trace full of near-identical queries is the N+1 signature — one query
+      with a projection replaces all of them.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#b91c1c">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your manager says "just add more servers" before anyone has looked at a trace</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc31" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b91c1c"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">MEASURE BEFORE SCALING</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🖥️ More servers</text>
+              <path d="M190,43 H290" stroke="#b91c1c" stroke-width="1.6" fill="none" stroke-dasharray="5 4" marker-end="url(#arUc31)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">📏 Trace first</text>
+            </svg>
+          </div>
+          <p class="uc-what">More servers can cost a lot and still miss the real cause. Looking at a trace
+          first tells you whether the problem is even something servers can fix.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Measure first, then decide whether to scale.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> The trace shows one page firing dozens of near-identical queries</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc32" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">SAME QUERY, MANY TIMES</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🗄️ many small queries</text>
+              <path d="M210,43 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc32)"/>
+              <rect x="310" y="24" width="150" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">one query</text>
+            </svg>
+          </div>
+          <p class="uc-what">That pattern is the N+1 signature. The fix is one query that fetches
+          what the page needs, not a query per row.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Many identical queries in a trace → N+1.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">3</span> It's fine with one user but crawls at peak, with the CPU mostly idle</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc33" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#6d28d9"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b21b6" letter-spacing=".03em">THREADS WAITING, NOT WORKING</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#5b21b6">⏳ .Result / .Wait()</text>
+              <path d="M210,43 H310" stroke="#6d28d9" stroke-width="1.6" fill="none" marker-end="url(#arUc33)"/>
+              <rect x="310" y="24" width="150" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="385" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b21b6">thread pool starved</text>
+            </svg>
+          </div>
+          <p class="uc-what">Blocking calls hold threads while they wait. At peak, new requests queue up
+          even though the CPU has little to do — a sign to look for sync-over-async.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Slow at peak + idle CPU → suspect blocked threads.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>An MVC order page used to feel fine and now times out during the lunch rush.</b> Instead
+      of guessing, the team opens an APM trace of one slow request and sees most of the time sitting in
+      one action that calls <code>.Result</code> inside a loop. They switch it to
+      <code>await</code>, redeploy, and watch the same trace get shorter — the proof the fix worked.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="2.html">← Model Binding Internals</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to .NET Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="4.html">Identity, OAuth2 &amp; OpenID Connect →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · .NET / ASP.NET Core · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

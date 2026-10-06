@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="The same stored procedure is fast for one customer and slow for another. Why?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Parameter Sniffing — SQL Advanced — RefreshYourself">
+<meta property="og:description" content="The same stored procedure is fast for one customer and slow for another. Why?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Parameter Sniffing — SQL Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Parameter Sniffing</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 SQL · Advanced · Must Know</div>
+    <h1>Parameter sniffing — the plan was built for <span class="hl hl-blue">one value</span>, then reused for <span class="hl hl-hot">all of them</span></h1>
+    <p class="interview-q">The same stored procedure is fast for one customer and slow for another. Why?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">👃 Parameter sniffing</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A procedure that is fast for a small customer and slow for a huge one looks random — same code, same data, different speed.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>SQL Server builds the plan from the parameter values of the first call and caches it; later calls reuse that plan, which fits the first value but not always the rest.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Sniffing = the cached plan was built for whichever value came first.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Parameter sniffing = <b>"the cached plan was built for the first value that came in."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b>Small value</b> → plan for few rows (seek + lookup)</span>
+      <span class="tc-line"><b>Huge value</b> → same plan reused → very slow</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA9" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA9Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arA9Rose" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">PLAN BUILT ONCE · REUSED FOR EVERY VALUE</text>
+
+      <g filter="url(#shA9)"><rect x="20" y="40" width="150" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="95" y="64" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">1st call · id 7</text>
+      <text x="95" y="84" text-anchor="middle" font-size="10.5" fill="#5b6472">3 rows — small</text>
+
+      <path d="M170,70 H245" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arA9Blue)"/>
+
+      <g filter="url(#shA9)"><rect x="245" y="30" width="170" height="80" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="330" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🗄️ Plan cache</text>
+      <text x="330" y="76" text-anchor="middle" font-size="10.5" fill="#5b6472">plan built for id 7:</text>
+      <text x="330" y="94" text-anchor="middle" font-size="10.5" fill="#5b6472">e.g. Seek + Lookup</text>
+
+      <g filter="url(#shA9)"><rect x="20" y="170" width="150" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="95" y="194" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">2nd call · id 1</text>
+      <text x="95" y="214" text-anchor="middle" font-size="10.5" fill="#5b6472">2,000,000 rows — huge</text>
+
+      <path d="M170,200 H330 V110" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arA9Blue)"/>
+      <text x="250" y="190" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">reuses cached plan</text>
+
+      <path d="M415,70 H545 V170" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arA9Rose)">
+        <animate attributeName="stroke-dashoffset" values="11;0" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+      <text x="537" y="140" text-anchor="end" font-size="10.5" font-weight="700" fill="#991b1b">reused as-is</text>
+
+      <g filter="url(#shA9)"><rect x="470" y="170" width="150" height="60" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="545" y="194" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐌 Slow for id 1</text>
+      <text x="545" y="214" text-anchor="middle" font-size="10.5" fill="#5b6472">millions of lookups</text>
+    </svg>
+    <figcaption>The plan compiled for a tiny customer is cached, then reused unchanged for the giant one.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Parameter sniffing is a bug, so turn it off."</b> It is normal behaviour that usually helps by reusing a good plan; it only hurts when the data is very uneven, so fix that one query rather than the feature.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How do you confirm it, and what is the safest first fix?"</b> Compare the plan and timings for a fast value and a slow value (Query Store keeps plans per query); if the plans differ, try <code>OPTION (RECOMPILE)</code> on the affected statement, then test — pinning a good plan in Query Store is the option when you cannot change the code.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Parameter sniffing is SQL Server compiling a plan using the parameter values of the first call and then reusing it. It works well until the data is skewed — a plan that suits a small value can be very slow for a huge one. I'd confirm by comparing plans, then fix it with <code>OPTION (RECOMPILE)</code>, <code>OPTIMIZE FOR</code>, or by forcing a good plan in Query Store."</p>
+    <ul>
+      <li>The <span class="hl hl-blue">first call's values</span> are used to compile the plan; later calls reuse it.</li>
+      <li>It hurts with <span class="hl hl-hot">skewed data</span> — one value matches a few rows, another matches millions.</li>
+      <li>Tell-tale: <span class="hl hl-inter">a recompile makes it fast again</span> — until an unlucky value arrives first.</li>
+      <li><code>OPTION (RECOMPILE)</code> → <span class="hl hl-basic">fresh plan each run</span>, at the cost of compiling every time.</li>
+      <li><code>OPTIMIZE FOR</code> or the local-variable trick → <span class="hl hl-teal">plan from a chosen or average estimate</span>, not the sniffed value.</li>
+      <li>Query Store → <span class="hl hl-basic">force a known-good plan</span> without touching the code.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>When a procedure or parameterized query runs, SQL Server compiles an <b>execution plan</b> and caches it. At compile time it <span class="hl hl-blue">"sniffs"</span> the actual parameter value to estimate how many rows will match. That is usually good: later calls skip the compile cost. The catch is that the plan is then reused for <b>every</b> value, whatever it is.</p>
+
+      <p>Say <code>CustomerId = 7</code> matches 3 rows, so the plan uses an index seek plus a key lookup per row — ideal for a few rows. Now <code>CustomerId = 1</code> matches millions: the same plan does millions of lookups where a scan would have been cheaper (see <a href="6.html">How the Optimizer Picks an Index</a> and <a href="3.html">Execution Plans</a>). Reverse the order and the problem flips. A restart (which empties the plan cache) or a statistics update (which can invalidate cached plans), so <span class="hl hl-hot">which value arrives first</span> decides the plan for a while — which is why the same procedure seems fast one day and slow the next.</p>
+
+      <p>The fixes all trade something, so choose per query (table below). Newer SQL Server versions also add features aimed at this problem, such as parameter-sensitive plan optimization — check what your version supports. Related reading: <a href="4.html">Performance Degraded Over Time</a> and <a href="../basic/10.html">Stored Procedures</a>.</p>
+
+      <div style="overflow-x:auto;">
+        <table class="cmp-table">
+
+            <thead><tr><th>Fix</th><th>What it does</th><th>Trade-off</th></tr></thead>
+            <tbody>
+              <tr><th><code>OPTION (RECOMPILE)</code></th><td>fresh plan built for the actual value every run</td><td>compile cost on every run; no plan reuse</td></tr>
+              <tr><th><code>OPTIMIZE FOR (@p = value)</code></th><td>always builds the plan as if the parameter were that value</td><td>can be wrong for other values</td></tr>
+              <tr><th><code>OPTIMIZE FOR UNKNOWN</code> / local variable</th><td>plans from a general average estimate, not a real value</td><td>a middle-of-the-road plan, rarely the best for any value</td></tr>
+              <tr><th>Query Store forcing</th><td>pins a chosen known-good plan, no code change</td><td>forced plan may need review as the data changes</td></tr>
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> T-SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">CREATE PROCEDURE</span> dbo.usp_OrdersByCustomer @CustomerId <span class="ty">INT</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> OrderId, Total
+    <span class="kw">FROM</span> dbo.Orders
+    <span class="kw">WHERE</span> CustomerId = @CustomerId
+    <span class="kw">OPTION</span> (<span class="kw">RECOMPILE</span>);                         <span class="cx-ok">-- ✅ new plan for each value</span>
+    <span class="cx-cmt">-- or: OPTION (OPTIMIZE FOR (@CustomerId UNKNOWN));  average-case plan</span>
+    <span class="cx-cmt">-- or: OPTION (OPTIMIZE FOR (@CustomerId = 1));      plan for a typical big value</span>
+<span class="kw">END</span>;</code></pre>
+      </div>
+      <p class="cx-note">Without the <code>OPTION</code> line, the plan from the first call would be reused for every customer.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> T-SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">CREATE PROCEDURE</span> dbo.usp_OrdersByCustomer2 @CustomerId <span class="ty">INT</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> @Id <span class="ty">INT</span> = @CustomerId;               <span class="cx-cmt">-- local-variable trick</span>
+    <span class="kw">SELECT</span> OrderId, Total <span class="kw">FROM</span> dbo.Orders <span class="kw">WHERE</span> CustomerId = @Id;
+<span class="kw">END</span>;                                           <span class="cx-cmt">-- optimizer can't sniff @Id → average estimate</span>
+
+<span class="cx-cmt">-- Query Store: pin a known-good plan without changing code</span>
+<span class="kw">EXEC</span> sp_query_store_force_plan @query_id = <span class="num">42</span>, @plan_id = <span class="num">7</span>;</code></pre>
+      </div>
+      <p class="cx-note">The local variable hides the real value from the optimizer, which then uses a general estimate; Query Store forcing needs no code change at all.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Scenario:</b> after a server restart empties the plan cache, the first call to a report procedure happens to be for a tiny customer — so the plan cached for the rest of the day crawls whenever the biggest customer runs it, and clearing that one plan or adding <code>OPTION (RECOMPILE)</code> makes it fast again.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="8.html">← Table Partitioning</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="10.html">Dynamic SQL &amp; SQL Injection →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

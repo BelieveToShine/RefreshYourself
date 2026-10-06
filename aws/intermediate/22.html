@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="gp3 vs. io2, EBS vs. EFS vs. instance store — which for a database and which for shared files?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Block & File Storage — EBS, EFS & FSx — AWS Intermediate — RefreshYourself">
+<meta property="og:description" content="gp3 vs. io2, EBS vs. EFS vs. instance store — which for a database and which for shared files?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Block & File Storage — EBS, EFS & FSx — AWS Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="aws/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ffedd5;--crumb-ink:#c2410c;">📦 AWS</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Block &amp; File Storage — EBS, EFS &amp; FSx</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ AWS · Intermediate · Should Know</div>
+    <h1>Which disk? <span class="hl hl-blue">One instance</span> → EBS, <span class="hl hl-basic">many instances</span> → EFS</h1>
+    <p class="interview-q">"gp3 vs. io2, EBS vs. EFS vs. instance store — which for a database and which for shared files?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">💽 EBS (gp3 / io2)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A database needs a fast disk that survives the instance being stopped or replaced.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>EBS is a network-attached volume that lives on its own, in one Availability Zone, attached to one instance. Use <b>gp3</b> for most things and <b>io2</b> when guaranteed IOPS and low latency matter.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">EBS = one instance, one AZ, survives a stop.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">📁 EFS &amp; FSx</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Many servers need to read and write the same files — a normal EBS volume isn't a shared drive.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><b>EFS</b> is a managed NFS file system that many Linux instances mount at once, across AZs, and it grows by itself. <b>FSx</b> covers specific needs: Windows (SMB), Lustre for HPC, and others.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">EFS = shared files for many instances.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">⚡ Instance store</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Some data — cache, buffers, scratch space — needs the fastest disk and doesn't need to survive.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Instance store is a disk physically on the host: very fast, but wiped when the instance stops or terminates, or its host fails.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Instance store = fast but temporary.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>EBS</code> <span class="rarrow">→</span> <b>one</b> instance, one AZ, survives a stop</p>
+      <p class="rrow"><code>EFS</code> <span class="rarrow">→</span> <b>many</b> instances, shared files, grows by itself</p>
+      <p class="rrow"><code>Instance store</code> <span class="rarrow">→</span> fastest, but <b>gone</b> when the instance stops</p>
+      <p class="rrow"><code>gp3</code> / <code>io2</code> <span class="rarrow">→</span> <b>default</b> SSD / <b>provisioned IOPS</b> for critical databases</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b>EBS</b> is the disk inside one server. <b>EFS</b> is the shared drive down the hall. <b>Instance store</b> is a scratch pad.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 316" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shSt" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arSt" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shSt)"><rect x="210" y="14" width="220" height="44" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320.0" y="40.5" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Shared by many instances?</text>
+      <path d="M320,58 V84 H150 V110" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arSt)"/>
+      <path d="M320,58 V84 H490 V110" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arSt)"/>
+      <text x="185" y="78" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b6472">No</text>
+      <text x="455" y="78" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b6472">Yes</text>
+
+      <g filter="url(#shSt)"><rect x="40" y="110" width="220" height="50" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="150.0" y="132" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">💽 IOPS-critical database?</text>
+      <text x="150.0" y="148" text-anchor="middle" font-size="10.5" fill="#5b6472">it's block storage: EBS</text>
+      <g filter="url(#shSt)"><rect x="380" y="110" width="220" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="490.0" y="132" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">📁 Windows (SMB) or HPC?</text>
+      <text x="490.0" y="148" text-anchor="middle" font-size="10.5" fill="#5b6472">it's a shared file system</text>
+
+      <path d="M150,160 V185 H80 V210" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arSt)"/>
+      <path d="M150,160 V185 H220 V210" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arSt)"/>
+      <path d="M490,160 V185 H420 V210" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arSt)"/>
+      <path d="M490,160 V185 H560 V210" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arSt)"/>
+      <text x="110" y="176" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b6472">No</text>
+      <text x="190" y="176" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b6472">Yes</text>
+      <text x="450" y="176" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b6472">No</text>
+      <text x="530" y="176" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b6472">Yes</text>
+
+      <g filter="url(#shSt)"><rect x="20" y="210" width="120" height="52" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="80.0" y="232" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">gp3</text>
+      <text x="80.0" y="248" text-anchor="middle" font-size="10.5" fill="#5b6472">default SSD</text>
+      <g filter="url(#shSt)"><rect x="160" y="210" width="120" height="52" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="220.0" y="232" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">io2</text>
+      <text x="220.0" y="248" text-anchor="middle" font-size="10.5" fill="#5b6472">provisioned IOPS</text>
+      <g filter="url(#shSt)"><rect x="360" y="210" width="120" height="52" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="420.0" y="232" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">EFS</text>
+      <text x="420.0" y="248" text-anchor="middle" font-size="10.5" fill="#5b6472">shared NFS, Linux</text>
+      <g filter="url(#shSt)"><rect x="500" y="210" width="120" height="52" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="560.0" y="232" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">FSx</text>
+      <text x="560.0" y="248" text-anchor="middle" font-size="10.5" fill="#5b6472">SMB, HPC, ONTAP</text>
+
+      <text x="320" y="296" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">INSTANCE STORE: FASTEST, BUT GONE WHEN THE INSTANCE STOPS — SCRATCH ONLY</text>
+    </svg>
+    <figcaption>Start with one question: is it shared by many instances? If not, it is block storage (EBS) — gp3 by default, io2 when IOPS are critical. If yes, it is a shared file system: EFS by default, FSx for Windows or HPC needs. Instance store sits outside the tree: scratch data only.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"An EBS volume works like a shared network drive."</b> It doesn't — it is block storage in one AZ, attached to one instance. Sharing files across instances means EFS or FSx. Multi-Attach is a narrow exception (io1/io2, same AZ) and needs software that coordinates concurrent writes.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How do you move an EBS volume to another AZ?"</b> Take a snapshot (incremental, held by AWS), then create a new volume from it in the target AZ. To go to another Region, copy the snapshot there first.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"For a database on one instance I use EBS — gp3 by default, io2 when I need guaranteed IOPS and low latency. For files shared by many instances I use EFS, or FSx if I need Windows SMB or HPC. Instance store is only for scratch data, because it disappears with the instance."</p>
+    <ul>
+      <li><code>EBS</code> <span class="hl hl-blue">→ block, one AZ, one instance</span> — survives a stop; snapshots are the backup.</li>
+      <li><code>gp3</code> <span class="hl hl-basic">→ the default SSD</span> — IOPS and throughput are set apart from size.</li>
+      <li><code>io2</code> <span class="hl hl-hot">→ provisioned IOPS</span> for IOPS-critical, latency-sensitive databases.</li>
+      <li><code>st1</code> / <code>sc1</code> <span class="hl hl-inter">→ HDD</span> — big sequential reads / cold data; not boot volumes.</li>
+      <li><code>EFS</code> / <code>FSx</code> <span class="hl hl-teal">→ shared files</span> — EFS is NFS for Linux across AZs; FSx for Windows SMB, Lustre HPC and more.</li>
+      <li><code>Instance store</code> <span class="hl hl-adv">→ fast but temporary</span> — gone when the instance stops or terminates.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>EBS</b> is block storage: a network-attached volume that lives in one Availability Zone and attaches to an instance in that zone. It survives the instance being stopped. <b>gp3</b> is the general-purpose SSD — you set IOPS and throughput separately from the size. <b>io2</b> is the provisioned-IOPS SSD for IOPS-critical, latency-sensitive databases. <b>st1</b> (throughput-optimised HDD) and <b>sc1</b> (cold HDD) are cheaper hard-disk types for big sequential reads or rarely used data, and can't be boot volumes. Exact IOPS, throughput and size limits change — check current docs.</p>
+
+      <p><b>Snapshots</b> are EBS's backup: incremental, kept by AWS, and the way to rebuild a volume in a different AZ or copy it to another Region. Volumes can be encrypted with KMS. <b>Multi-Attach</b> lets one io1/io2 volume attach to several instances in the same AZ, but it is not a shared file system — your software must coordinate the writes.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>EBS</th><th>EFS</th><th>Instance store</th></tr></thead>
+        <tbody>
+          <tr><th>Type</th><td>block volume</td><td>file system (NFS)</td><td>block, on the host's own disk</td></tr>
+          <tr><th>Shared by many instances?</th><td>no (Multi-Attach is the narrow exception)</td><td>yes</td><td>no</td></tr>
+          <tr><th>Scope</th><td>one AZ</td><td>a whole Region, across AZs</td><td>that one host</td></tr>
+          <tr><th>Survives an instance stop?</th><td>yes</td><td>yes</td><td>no</td></tr>
+          <tr><th>Best for</th><td>databases, boot disks</td><td>shared content, home folders</td><td>cache, scratch, buffers</td></tr>
+        </tbody>
+      </table>
+
+      <p><b>FSx</b> is a family of managed file systems for needs EFS doesn't cover: <b>FSx for Windows File Server</b> (SMB, Windows apps), <b>FSx for Lustre</b> (fast HPC workloads), plus NetApp ONTAP and OpenZFS options.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> CLI</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">aws</span> ec2 create-volume \
+  --volume-type <span class="str">gp3</span> \
+  --size <span class="num">100</span> \
+  --iops <span class="num">3000</span> \
+  --throughput <span class="num">125</span> \
+  --availability-zone <span class="str">us-east-1a</span> \
+  --encrypted</code></pre>
+      </div>
+      <p class="cx-note">gp3 lets you set IOPS and throughput on their own, apart from the size. For an IOPS-critical database you would use <code>--volume-type io2</code> and provision the IOPS you need.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> CLI</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">aws</span> ec2 create-snapshot \
+  --volume-id <span class="str">vol-0123456789abcdef0</span>
+
+<span class="kw">aws</span> ec2 create-volume \
+  --snapshot-id <span class="str">snap-0123456789abcdef0</span> \
+  --availability-zone <span class="str">us-east-1b</span></code></pre>
+      </div>
+      <p class="cx-note">Snapshot the volume, then build a new volume from that snapshot in a different AZ — the standard way to move an EBS volume between zones.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A web fleet of six instances serves user uploads from one shared EFS mount, while the database primary runs on its own EBS volume with scheduled snapshots — and each instance's cache lives on instance store, because losing it costs nothing.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="21.html">← KMS &amp; Envelope Encryption</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to AWS Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="../advanced/index.html">Continue to Advanced →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · AWS · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

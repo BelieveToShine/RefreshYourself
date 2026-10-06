@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What is a closure, and what is the classic bug when you capture a loop variable?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Lambdas &amp; Closures — C# Intermediate — RefreshYourself">
+<meta property="og:description" content="What is a closure, and what is the classic bug when you capture a loop variable?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Lambdas &amp; Closures — C# Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="csharp/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#1d4ed8;">🎵 C#</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Lambdas &amp; Closures</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ C# · Intermediate · Should Know</div>
+    <h1>Lambdas &amp; Closures — <span class="hl hl-inter">lambdas that remember variables</span></h1>
+    <p class="interview-q">"What is a closure, and what's the classic bug when you capture a loop variable?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+        <div class="wc-head">🎒 Closure</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A lambda often needs a variable from the method around it, but it may run later — after that code has moved on — so it has to carry that variable along somehow.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The compiler moves the captured variable into a hidden class and the lambda uses it there — the lambda captures the variable itself, not a copy of its value.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Closure = a lambda plus the variables it captured.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Closure = <b>"a lambda that remembers the variable, not the value."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>for</code></b> → one shared variable → all show the last value</span>
+      <span class="tc-line"><b><code>foreach</code></b> → a new variable each pass → each shows its own</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 252" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs><filter id="shi20" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/></filter><marker id="ari20" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto"><path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/></marker></defs>
+      <text x="320" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">3 LAMBDAS, ONE CAPTURED VARIABLE</text>
+      <g filter="url(#shi20)"><rect x="30" y="46" width="150" height="44" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="105" y="63" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">LAMBDA 1</text>
+      <text x="105" y="81" text-anchor="middle" font-size="12" font-family="Fira Code, Consolas, monospace" fill="#1d4ed8">() =&gt; i</text>
+
+      <g filter="url(#shi20)"><rect x="30" y="98" width="150" height="44" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="105" y="115" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">LAMBDA 2</text>
+      <text x="105" y="133" text-anchor="middle" font-size="12" font-family="Fira Code, Consolas, monospace" fill="#1d4ed8">() =&gt; i</text>
+
+      <g filter="url(#shi20)"><rect x="30" y="150" width="150" height="44" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="105" y="167" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">LAMBDA 3</text>
+      <text x="105" y="185" text-anchor="middle" font-size="12" font-family="Fira Code, Consolas, monospace" fill="#1d4ed8">() =&gt; i</text>
+
+      <path d="M180,68 H300" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ari20)"/>
+      <path d="M180,120 H300" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ari20)"/>
+      <path d="M180,172 H300" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ari20)"/>
+      <g filter="url(#shi20)"><rect x="300" y="46" width="310" height="148" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="455" y="76" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">COMPILER-GENERATED CLASS (hidden)</text>
+      <text x="455" y="116" text-anchor="middle" font-size="14" font-family="Fira Code, Consolas, monospace" fill="#92400e">int i;</text>
+      <text x="455" y="148" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">one variable, shared — not 3 copies</text>
+      <text x="455" y="170" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">so each lambda sees later changes</text>
+
+      <text x="320" y="222" text-anchor="middle" font-size="11" fill="#5b6472">for loop: ONE shared i — all three print the final value.</text>
+      <text x="320" y="240" text-anchor="middle" font-size="11" fill="#5b6472">foreach: a fresh variable each pass (C# 5 onward) — each lambda gets its own.</text>
+    </svg>
+    <figcaption>Three lambdas, one hidden object holding one <code>i</code> — change it and every lambda sees the change.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A lambda does not copy the variable's value when it is created.</b> It captures the variable itself, so if the variable changes later, the lambda sees the new value — that is the loop bug.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How do you fix it, and does capturing cost anything?"</b> Copy the loop variable into a local inside the loop (<code>int copy = i;</code>). Capturing makes the compiler allocate a hidden object, so it can matter in hot code — a <code>static</code> lambda promises to capture nothing (see the <a href="../advanced/13.html">performance checklist</a>).</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A closure is a lambda that captures variables from the surrounding method. The compiler stores them in a hidden class, so the lambda shares the variable, not a copy of its value. In a <code>for</code> loop every lambda shares one <code>i</code> and sees its final value; <code>foreach</code> gives each iteration its own variable. The fix is to copy into a local inside the loop."</p>
+    <ul>
+      <li>Lambdas capture <span class="hl hl-hot">variables, not values</span> — later changes are visible to the lambda.</li>
+      <li>The compiler builds a <span class="hl hl-blue">hidden class</span> to hold captured variables — that is an allocation.</li>
+      <li><code>for</code> → <span class="hl hl-inter">one shared <code>i</code></span>, so 3, 3, 3; <code>foreach</code> (since C# 5) → a fresh variable each pass.</li>
+      <li>Fix: <span class="hl hl-teal">copy into a local</span> inside the loop body.</li>
+      <li>A <code>static</code> lambda <span class="hl hl-basic">can't capture</span> anything — the compiler rejects it if it tries.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A lambda is a short inline method like <code>x =&gt; x * 2</code>. If it uses a variable from the method around it, it is a closure. The compiler creates a hidden class, makes that variable a field of it, and both the method and the lambda use that field — which is why the lambda sees changes. It builds on <a href="../basic/19.html">delegates</a>.</p>
+
+      <p>The classic bug: in <code>for (int i = 0; i &lt; 3; i++)</code> every lambda captures the same <code>i</code>. By the time they run, the loop has finished and <code>i</code> is 3. A <code>foreach</code> loop variable is fresh on each pass (since C# 5), so it does not have this bug. The same "runs later, sees the current value" effect shows up in <a href="13.html">deferred LINQ queries</a> and <a href="14.html">iterators</a>.</p>
+
+      <p>To fix the loop, copy <code>i</code> into a local declared inside the loop body — each pass then has its own variable. The cost is a hidden object plus a delegate allocation, which is fine normally and worth knowing in hot paths.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> actions = <span class="kw">new</span> <span class="ty">List</span>&lt;<span class="ty">Action</span>&gt;();
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">3</span>; i++)
+    actions.Add(() =&gt; <span class="ty">Console</span>.WriteLine(i));
+
+<span class="kw">foreach</span> (<span class="kw">var</span> a <span class="kw">in</span> actions) a();   <span class="cx-cmt">// 3 3 3 — they all share one i</span></code></pre>
+      </div>
+      <p class="cx-note">The bug: three lambdas, one shared <code>i</code>.</p>
+
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> fixedActions = <span class="kw">new</span> <span class="ty">List</span>&lt;<span class="ty">Action</span>&gt;();
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">3</span>; i++)
+{
+    <span class="kw">int</span> copy = i;                       <span class="cx-cmt">// a new variable each pass</span>
+    fixedActions.Add(() =&gt; <span class="ty">Console</span>.WriteLine(copy));
+}
+
+<span class="kw">foreach</span> (<span class="kw">var</span> a <span class="kw">in</span> fixedActions) a();   <span class="cx-cmt">// 0 1 2</span></code></pre>
+      </div>
+      <p class="cx-note">Copy into a local and each lambda captures its own variable.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Wiring a button per row.</b> Creating a handler like <code>() =&gt; Delete(i)</code> inside a <code>for</code> loop makes every handler see the same final <code>i</code> — copying <code>i</code> to a local first gives each row its own.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="19.html">← Events vs. Delegates</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to C# Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="21.html">async void vs. async Task →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · C# · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

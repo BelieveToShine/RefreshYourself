@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Your API has JWT auth — is it secure? What else do you guard against?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="API Security Beyond Authentication — Web API Intermediate — RefreshYourself">
+<meta property="og:description" content="Your API has JWT auth — is it secure? What else do you guard against?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>API Security Beyond Authentication — Web API Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">API Security Beyond Authentication</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Web API · Intermediate · Must Know</div>
+    <h1><code>JWT</code> <span class="hl hl-hot">isn't security</span> — a valid token can still ask for someone else's data</h1>
+    <p class="interview-q">Your API has JWT auth — is it secure? What else do you guard against?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-3">
+<div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+  <div class="wc-head">🎯 Object-level check</div>
+  <div class="wc-ps">
+    <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A logged-in user changes <code>/orders/41</code> to <code>/orders/42</code> and reads someone else's order — the token is valid, so authentication passes.</span></div>
+    <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The API checks, on every object it loads, that this caller is allowed to touch <b>this</b> object (BOLA / IDOR protection).</span></div>
+  </div>
+  <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Valid token ≠ allowed on <b>this</b> object.</span></div>
+</div>
+<div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+  <div class="wc-head">🧱 Guard the rest</div>
+  <div class="wc-ps">
+    <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Junk or hostile input, over-sized responses, request floods, plain-HTTP traffic and secrets in error messages all get past a valid token.</span></div>
+    <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Validate input, return only needed fields, rate-limit, force HTTPS, keep tokens least-privilege, and send generic errors.</span></div>
+  </div>
+  <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Auth = <b>who</b>. The rest = what, how much, how safe.</span></div>
+</div>
+<div class="why-card" style="--why-color:#166534; --why-bg:#dcfce7">
+  <div class="wc-head">🕵️ 404 vs. 403</div>
+  <div class="wc-ps">
+    <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Answering <code>403</code> for "exists but not yours" tells an attacker which ids are real.</span></div>
+    <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Return <code>404</code> when existence itself is sensitive; use <code>403</code> when the resource is publicly known and just restricted.</span></div>
+  </div>
+  <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>404</code> hides it. <code>403</code> admits it.</span></div>
+</div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><b>Authentication</b> <span class="rarrow">→</span> <b>who</b> is calling</p>
+      <p class="rrow"><b>Object check</b> <span class="rarrow">→</span> is it <b>theirs</b>?</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line">Valid token + someone else's id <span class="rarrow">→</span> <b>BOLA</b>, stopped at the object check</span>
+      <span class="tc-line">Hide that it exists <span class="rarrow">→</span> <b><code>404</code></b> · admit it <span class="rarrow">→</span> <b><code>403</code></b></span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI15a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI15a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI15r" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="26" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.5">VALID TOKEN ≠ ALLOWED ON THIS OBJECT</text>
+      <g filter="url(#shI15a)"><rect x="18" y="48" width="100" height="56" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="68.0" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">📨 Request</text>
+      <text x="68.0" y="90" text-anchor="middle" font-size="10" fill="#5b6472">token + id 42</text>
+      <g filter="url(#shI15a)"><rect x="144" y="48" width="100" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="194.0" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🔑 Auth</text>
+      <text x="194.0" y="90" text-anchor="middle" font-size="10" fill="#5b6472">token valid ✅</text>
+      <g filter="url(#shI15a)"><rect x="270" y="48" width="100" height="56" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320.0" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🧪 Validate</text>
+      <text x="320.0" y="90" text-anchor="middle" font-size="10" fill="#5b6472">limits, HTTPS</text>
+      <g filter="url(#shI15a)"><rect x="396" y="48" width="100" height="56" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="446.0" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🎯 Owner?</text>
+      <text x="446.0" y="90" text-anchor="middle" font-size="10" fill="#5b6472">is id 42 theirs?</text>
+      <g filter="url(#shI15a)"><rect x="522" y="48" width="100" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="572.0" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">📦 Data</text>
+      <text x="572.0" y="90" text-anchor="middle" font-size="10" fill="#5b6472">returned</text>
+      <path d="M118,76 H144" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15a)"/>
+      <path d="M244,76 H270" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15a)"/>
+      <path d="M370,76 H396" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15a)"/>
+      <path d="M496,76 H522" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15a)"/>
+      <path d="M446,104 V168" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arI15r)"><animate attributeName="stroke-dashoffset" from="18" to="0" dur="1.5s" repeatCount="indefinite"/></path>
+      <g filter="url(#shI15a)"><rect x="346" y="168" width="200" height="56" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="446.0" y="192" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🚫 404 / 403</text>
+      <text x="446.0" y="210" text-anchor="middle" font-size="10" fill="#5b6472">valid token, someone else's id</text>
+      <text x="458" y="140" text-anchor="start" font-size="10.5" font-weight="700" fill="#991b1b">not theirs</text>
+      <text x="170" y="200" text-anchor="middle" font-size="11" fill="#5b6472">Token passed ✅ — the object didn't</text>
+      <text x="320" y="262" text-anchor="middle" font-size="11" fill="#5b6472">The object check is the one guard a valid token can never replace.</text>
+    </svg>
+    <figcaption>A valid token gets through authentication — it's the <b>object check</b> that stops it reading an id that isn't its own.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 252" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI15b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI15b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shI15b)"><rect x="190" y="14" width="260" height="44" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320.0" y="33" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">🧑 User A asks for /orders/42</text>
+      <text x="320.0" y="49" text-anchor="middle" font-size="10" fill="#5b6472">it exists, but belongs to user B</text>
+      <path d="M320,58 V84" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M160,84 H480" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M160,84 V116" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15b)"/>
+      <path d="M480,84 V116" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15b)"/>
+      <g filter="url(#shI15b)"><rect x="40" y="116" width="240" height="60" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160.0" y="140" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">404 Not Found</text>
+      <text x="160.0" y="158" text-anchor="middle" font-size="10" fill="#5b6472">can't tell missing from not-yours</text>
+      <g filter="url(#shI15b)"><rect x="360" y="116" width="240" height="60" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480.0" y="140" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">403 Forbidden</text>
+      <text x="480.0" y="158" text-anchor="middle" font-size="10" fill="#5b6472">tells the caller the id exists</text>
+      <text x="160" y="200" text-anchor="middle" font-size="10.5" fill="#5b6472">Use when the id itself is sensitive</text>
+      <text x="480" y="200" text-anchor="middle" font-size="10.5" fill="#5b6472">Use when it's public, just restricted</text>
+      <text x="320" y="232" text-anchor="middle" font-size="11" fill="#5b6472">Hide it (404) or admit it (403) — pick one rule and stay consistent.</text>
+    </svg>
+    <figcaption>Same request, two honest answers — <code>404</code> leaks nothing, <code>403</code> confirms the object exists.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"The token is valid, so the request is fine."</b> A valid token only proves who is calling — the API must still check that this caller may touch this specific object, and skipping that is exactly how BOLA / IDOR happens.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If an object exists but isn't the caller's, is it <code>403</code> or <code>404</code>?"</b> Depends on whether its existence is itself secret — <code>404</code> hides it (other users' orders, other tenants), <code>403</code> is fine when the resource is publicly known and just restricted. Pick one rule per resource type and apply it everywhere, since mixed answers leak the difference.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Authentication only tells me who is calling. I also check that this caller may touch this specific object — that's BOLA, the most common API flaw — then validate input, return only the fields needed, rate-limit, enforce HTTPS, keep tokens least-privilege, and never leak internals in errors. When an object isn't theirs, I return <code>404</code> if its existence is sensitive and <code>403</code> if it isn't."</p>
+    <ul>
+      <li>Object-level check <span class="hl hl-hot">→ verify every id against the caller</span>, not just the token.</li>
+      <li>Changing the id in the URL <span class="hl hl-blue">→ must never reach someone else's data</span> (BOLA / IDOR).</li>
+      <li>Validate input, return a DTO <span class="hl hl-inter">→ reject bad data in, send only needed fields out</span>.</li>
+      <li>Rate limit, HTTPS, least privilege <span class="hl hl-basic">→ guard the rest of the request</span>, keep secrets out of errors.</li>
+      <li><code>404</code> hides, <code>403</code> admits <span class="hl hl-hot">→ pick one rule</span> and stay consistent.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Authentication</span> answers one question: <b>who is calling?</b> It says nothing about <b>which objects</b> that caller may touch. The most common API flaw lives exactly there — <b>BOLA</b> (broken object-level authorization, also called <b>IDOR</b>). The caller is logged in, changes <code>42</code> to <code>43</code> in the URL, and the API returns someone else's record because it only checked the token. OWASP's API Security Top 10 lists it first. The fix is an ownership check on every object load, not a bigger login. Going async doesn't change any of this — see <a href="12.html">Async APIs</a>.</p>
+
+      <p>Around that check sit the other guards, each stopping a different thing: <b>validate input</b> so bad data never reaches business logic, <b>return a response DTO</b> instead of the raw entity so extra fields don't leak, <b>rate-limit</b> so one caller can't flood you, <b>HTTPS only</b> so nothing travels readable, <b>least privilege</b> so a token unlocks only what that caller needs, and <b>no secrets or stack traces</b> in errors or logs. None replaces another.</p>
+
+      <p><b>404 vs. 403</b> is the information-leakage choice. If an object exists but isn't the caller's, <code>403</code> says "it's there, you can't have it" — an attacker can walk ids and learn which ones exist. Answering <code>404</code> for both "missing" and "not yours" hides that. Use <code>404</code> where existence is itself sensitive; <code>403</code> is fine for publicly known, restricted things like an admin endpoint.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>404</code> (hide)</th><th><code>403</code> (admit)</th></tr></thead>
+        <tbody>
+          <tr><th>What the caller learns</th><td>nothing — missing and not-yours look the same</td><td>the id exists</td></tr>
+          <tr><th>Best for</th><td>other users' or tenants' private objects</td><td>public but restricted resources</td></tr>
+          <tr><th>Cost</th><td>harder to debug — a real miss looks identical</td><td>leaks which ids are real</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>[Authorize]
+[HttpGet(<span class="str">"orders/{id}"</span>)]
+<span class="kw">public</span> <span class="kw">async</span> Task&lt;<span class="ty">IActionResult</span>&gt; GetOrder(<span class="kw">int</span> id)
+{
+    <span class="kw">var</span> order = <span class="kw">await</span> _db.Orders.FindAsync(id);
+    <span class="kw">return</span> order <span class="kw">is</span> <span class="kw">null</span> ? NotFound() : Ok(order);
+    <span class="cx-err">// ❌ any logged-in user can read ANY order id (BOLA)</span>
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>[Authorize]</code> only proved <b>who</b> is calling — nothing checked whose order this is.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> userId = User.FindFirstValue(<span class="ty">ClaimTypes</span>.NameIdentifier);   <span class="cx-cmt">// from the token</span>
+<span class="kw">var</span> order = <span class="kw">await</span> _db.Orders
+    .FirstOrDefaultAsync(o =&gt; o.Id == id &amp;&amp; o.OwnerId == userId);   <span class="cx-ok">// ✅ owner check in the query</span>
+<span class="kw">return</span> order <span class="kw">is</span> <span class="kw">null</span> ? NotFound() : Ok(order);   <span class="cx-ok">// ✅ missing and not-yours look identical</span></code></pre>
+      </div>
+      <p class="cx-note">One query does both jobs: it finds the order <b>and</b> proves it belongs to the caller, so the answer is <code>404</code> either way.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> order = <span class="kw">await</span> _db.Orders.FindAsync(id);
+<span class="kw">if</span> (order <span class="kw">is</span> <span class="kw">null</span>) <span class="kw">return</span> NotFound();
+<span class="kw">var</span> result = <span class="kw">await</span> _auth.AuthorizeAsync(User, order, <span class="str">"OrderOwner"</span>);
+<span class="kw">if</span> (!result.Succeeded) <span class="kw">return</span> Forbid();   <span class="cx-cmt">// 403 — admits the order exists</span></code></pre>
+      </div>
+      <p class="cx-note">The resource-based version (<code>IAuthorizationService</code>) answers <code>403</code> — fine when existence isn't secret.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A logged-in user edits the id in the URL and gets someone else's record</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc15r1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">WHERE BOLA SHOWS UP</text>
+              <rect x="20" y="24" width="220" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🧑 /orders/41 → 42</text>
+              <path d="M240,43 H280" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc15r1)"/>
+              <rect x="280" y="24" width="180" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="370" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🎯 owner check → 404</text>
+            </svg>
+          </div>
+          <p class="uc-what">Nothing is wrong with the login — the hole is that the handler never asks <b>whose</b> order 42 is. Put the owner check in the query (or a resource-based policy) so every id is tested against the caller.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Check the object, not just the token.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> An endpoint returns the whole database entity, including fields the caller never needed</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc15r2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">SEND ONLY WHAT'S NEEDED</text>
+              <rect x="20" y="24" width="220" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🗃️ Entity (all columns)</text>
+              <path d="M240,43 H280" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc15r2)"/>
+              <rect x="280" y="24" width="180" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="370" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">📦 DTO (safe fields)</text>
+            </svg>
+          </div>
+          <p class="uc-what">Returning the raw entity can expose internal ids, flags or other people's data the screen never showed. Map to a response DTO that lists exactly the fields the client should see.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Return a DTO, not the entity.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A forbidden object returns <code>403</code> while a missing one returns <code>404</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc15r3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">THE DIFFERENCE LEAKS</text>
+              <rect x="20" y="24" width="220" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">403 → 'it exists'</text>
+              <path d="M240,43 H280" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc15r3)"/>
+              <rect x="280" y="24" width="180" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="370" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">404 → 'it doesn't'</text>
+            </svg>
+          </div>
+          <p class="uc-what">An attacker can try ids one by one and sort them into "real" and "not real" just from the status code. Where existence is sensitive, give the same answer for missing and not-yours. <b>A classic follow-up</b> when you mention BOLA.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same answer for "missing" and "not yours" when existence is sensitive.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A support-ticket API logs customers in fine</b>, yet one customer changes <code>/tickets/1001</code> to <code>/tickets/1002</code> and reads another company's ticket. The token was valid — the query just never scoped by tenant. The fix is to filter by the caller's tenant in the query and answer <code>404</code> when nothing matches. See <a href="9.html">JWT &amp; Refresh Tokens</a> for the token side, <a href="2.html">HTTP Status Codes</a> for 403 vs. 404, <a href="../basic/5.html">Rate Limiting</a> for abuse control, and <a href="../../dotnet/intermediate/14.html">Authorization Policies &amp; Claims</a> for the policy side.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="14.html">← Sorting &amp; Filtering Conventions</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="16.html">ProblemDetails (RFC 7807) →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 39 pages written
+## Status — Phases 1–7 complete, all 50 pages written (39 earlier + 11 gap pages added 2026-10-07)
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): raw questions, grouped by concept
   across 8 subsections, kept tightly to the user's own original SQL section of the interview-prep
@@ -31,7 +31,7 @@ keeping it in sync with the live pages.
   check on. See [`roadmap.md`](roadmap.md)'s "Phase 2 addendum" section and this file's
   per-tier tables below for the full list.
 
-## Basic (15 topics) — 15 written
+## Basic (18 topics) — 18 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -50,8 +50,11 @@ keeping it in sync with the live pages.
 | 13 | Logical Query Execution Order **[gap-hunt]** | 🔥 | ✅ |
 | 14 | Foreign Key Referential Actions **[gap-hunt]** | ⭐ | ✅ |
 | 15 | Transaction Control Mechanics **[gap-hunt]** | ⭐ | ✅ |
+| 16 | TRUNCATE vs. DELETE vs. DROP | 🔥 | ✅ |
+| 17 | CASE WHEN | ⭐ | ✅ |
+| 18 | Constraints: UNIQUE, CHECK, DEFAULT & NOT NULL | ⭐ | ✅ |
 
-## Intermediate (16 topics) — 16 written
+## Intermediate (22 topics) — 22 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -71,8 +74,14 @@ keeping it in sync with the live pages.
 | 14 | Index Seek vs. Scan vs. Table Scan **[gap-hunt]** | 🔥 | ✅ |
 | 15 | Materialized/Indexed Views vs. Regular Views **[gap-hunt]** | ⭐ | ✅ |
 | 16 | Triggers **[gap-hunt]** | ⭐ | ✅ |
+| 17 | Self, FULL & CROSS Joins | 🔥 | ✅ |
+| 18 | Nth Highest & Top-N per Group | 🔥 | ✅ |
+| 19 | Finding & Deleting Duplicates | 🔥 | ✅ |
+| 20 | Set Operators: EXCEPT & INTERSECT | ⭐ | ✅ |
+| 21 | MERGE & Upsert | ⭐ | ✅ |
+| 22 | Stored Procedure vs. Function | ⭐ | ✅ |
 
-## Advanced (8 topics) — 8 written
+## Advanced (10 topics) — 10 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -84,6 +93,8 @@ keeping it in sync with the live pages.
 | 6 | How the Optimizer Picks an Index | 🧠 | ✅ |
 | 7 | Bulk Operations from the Database's Own Side **[gap-hunt]** | ⭐ | ✅ |
 | 8 | Table Partitioning **[gap-hunt]** | 🧠 | ✅ |
+| 9 | Parameter Sniffing | 🔥 | ✅ |
+| 10 | Dynamic SQL & SQL Injection | 🔥 | ✅ |
 
 ## Where the roadmap came from
 
@@ -118,3 +129,7 @@ sitting and every page passed the mandatory independent diagram-verification swe
 subsequent active gap-hunt (see the addendum above and [`roadmap.md`](roadmap.md)) found and
 closed 12 more, also independently verified. Expect a review/feedback pass once the user goes
 through it, same as every other completed track.
+
+## Addendum 2026-10-06 — gap pages (written 2026-10-07)
+
+11 new gap pages (Basic 16–18, Intermediate 17–22, Advanced 9–10) were written and wired on 2026-10-07 (39 -> 50) — see the "Addendum 2026-10-06" section of [`roadmap.md`](roadmap.md). Basic 16 TRUNCATE vs. DELETE vs. DROP, 17 CASE WHEN, 18 Constraints: UNIQUE, CHECK, DEFAULT & NOT NULL; Intermediate 17 Self, FULL & CROSS Joins, 18 Nth Highest & Top-N per Group, 19 Finding & Deleting Duplicates, 20 Set Operators: EXCEPT & INTERSECT, 21 MERGE & Upsert, 22 Stored Procedure vs. Function; Advanced 9 Parameter Sniffing, 10 Dynamic SQL & SQL Injection. Counts: Basic 18, Intermediate 22, Advanced 10. The original 39 pages are unchanged.

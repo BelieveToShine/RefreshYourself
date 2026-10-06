@@ -33,7 +33,7 @@ Node is used only for **maintenance scripts** in `scripts/` (below), never by th
 | `assets/nav-index.js` | `window.NAV_INDEX` — per-tier sidebar data, keyed `<track>/<tier>`. [`tier-navigation.md`](tier-navigation.md) |
 | `assets/images/` | Roadmap badge icons. |
 | `docs/` | All documentation (this tree). `docs/topics/` holds two **source/seed topic maps** (AI, Azure) the user supplied; they feed Phase 1 of those tracks and are not rendered on the site. |
-| `scripts/` | Maintenance scripts: `check-site.js`, `add-head-meta.js`, `pre-commit-check.js`, hooks. [`pre-commit-docs-sync.md`](pre-commit-docs-sync.md) |
+| `scripts/` | Maintenance scripts: `check-site.js`, `add-head-meta.js`, `wire-indexes.js`, `fix-pagers.js`, `pre-commit-check.js`, hooks. [`pre-commit-docs-sync.md`](pre-commit-docs-sync.md) |
 | `.claude/` | `launch.json` (local preview server) and `settings.json` (commit guard hook). |
 | `.github/workflows/static.yml` | GitHub Pages deploy. |
 
@@ -61,7 +61,7 @@ Body attributes: `data-root="../../"` (path back to repo root) and `data-tier-ke
 filler; `check-site.js` only *warns* about a missing code box.
 
 The 14 original C# Basic pages use an older, **frozen** template (no `.interview-q`); see
-[`content-writing.md`](content-writing.md). Don't "fix" them in passing.
+[`content-writing.md`](content-writing.md). Don't "fix" them in passing. *(Update 2026-10-07: C# Basic 1–14 were migrated to the new template — the “frozen” status no longer applies.)*
 
 ## "I changed X — what else must change?" (the change → files map)
 
@@ -88,11 +88,22 @@ This table is also what `scripts/pre-commit-check.js` enforces. Details/why:
 [`reporting.md`](reporting.md): name the branch and short hash. Never commit/push/open a PR
 unless asked that turn.
 
+## Adding pages in bulk — the scripted workflow (used 2026-10-07 for 108 pages)
+
+Hand-wiring each page into five places is slow and error-prone. For a batch:
+
+1. **Plan first** (Phases 2–6): append a table to `docs/superpowers/specs/<track>/roadmap.md` — page number (next free number in the tier; never renumber), tier, priority, title, quoted interview question, scope, diagram idea, cross-links.
+2. **Write the page files only** (one writer per ≤6 pages; copy the head/skeleton of a finished page of the same tier). Each writer also emits a wiring manifest JSON per page: `{track, tier, n, file, title, short(≤22 chars), tail(≤60), priority, keywords}` (+ optional `cluster` for tracks whose `roadmap.html` is grouped by concept, and a `retitles` array for renamed existing pages).
+3. `node scripts/wire-indexes.js --dir <manifest-folder>` — adds the entries to `assets/nav-index.js` and `assets/search-index.js` (idempotent; applies retitles).
+4. Wire the per-track HTML (`<tier>/index.html` rows + counts, `<track>/index.html` card counts, `<track>/roadmap.html` rows + counts + hero) — one agent/person per track, since the markup differs per track.
+5. `node scripts/add-head-meta.js` (head/meta/skip-link boilerplate) then `node scripts/fix-pagers.js --fix` (Prev/Next links between neighbouring pages, incl. cross-tier).
+6. `node scripts/check-site.js` → 0 errors; run the live-browser diagram script on every new/edited page (see `diagram-style.md`); update the docs per the table above in the same commit.
+
 ## Machine-checked consistency
 
 `node scripts/check-site.js` validates, across all 15 tracks: every written page is in
 `search-index.js`, `nav-index.js`, its tier index and `roadmap.html`; `data-root`/`data-tier-key`
 are right; each page has a diagram and the core sections; every local `href`/`src` resolves;
-page counts in `refreshyourself-overview.md` match disk; every rule file is indexed. It does
+every page carries the head/a11y boilerplate; Prev/Next pagers link the right neighbours (`fix-pagers.js`); page counts in `refreshyourself-overview.md` match disk; every rule file is indexed. It does
 **not** replace the mandatory live-browser diagram verification in
 [`diagram-style.md`](diagram-style.md) — that needs a rendered page.

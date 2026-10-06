@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How do you handle transient database failures in EF Core?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Connection Resiliency &amp; Execution Strategies — EF Core Advanced — RefreshYourself">
+<meta property="og:description" content="How do you handle transient database failures in EF Core?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Connection Resiliency &amp; Execution Strategies — EF Core Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Connection Resiliency</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ EF Core · Advanced · Should Know</div>
+    <h1><code>EnableRetryOnFailure</code> — <span class="hl hl-adv">retry the whole unit</span>, not one command</h1>
+    <p class="interview-q">"How do you handle transient database failures in EF Core?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+        <div class="wc-head">🔁 Connection Resiliency</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Cloud databases sometimes drop a connection or time out for a moment. Without retries, a failure that would have cleared in a second becomes a failed request.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Turn on <code>EnableRetryOnFailure()</code> so transient errors are retried automatically — and wrap your own transactions in an execution strategy so the whole unit can be repeated.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Retry transient errors → <code>EnableRetryOnFailure()</code>; own transaction → <code>strategy.ExecuteAsync</code>; the unit may run twice.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Resiliency = <b>"retry the whole unit when the failure is transient."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>EnableRetryOnFailure()</code></b> → turns retries on</span>
+      <span class="tc-line"><b>Your own transaction</b> → wrap it in <code>CreateExecutionStrategy().ExecuteAsync</code></span>
+      <span class="tc-line"><b>Retried unit</b> → may run twice, so keep it safe to repeat</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 196" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA7" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA7" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arRA7" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">A RETRY RE-RUNS THE WHOLE UNIT</text>
+      <rect x="16" y="40" width="608" height="116" rx="14" fill="none" stroke="#7c3aed" stroke-width="1.6" stroke-dasharray="6 4"/>
+      <text x="30" y="58" text-anchor="start" font-size="11" font-weight="700" fill="#5b21b6">ExecuteAsync — the retry unit (BEGIN … work … COMMIT)</text>
+      <g filter="url(#shA7)"><rect x="40" y="70" width="150" height="64" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="115" y="94" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">Attempt 1</text>
+      <text x="115" y="112" text-anchor="middle" font-size="10" fill="#5b6472">❌ transient error</text>
+      
+      <path d="M190,102 H250" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arRA7)"/>
+      <g filter="url(#shA7)"><rect x="250" y="70" width="140" height="64" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="94" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">⏳ Wait</text>
+      <text x="320" y="112" text-anchor="middle" font-size="10" fill="#5b6472">back off, then retry</text>
+      
+      <path d="M390,102 H450" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA7)"/>
+      <g filter="url(#shA7)"><rect x="450" y="70" width="150" height="64" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="525" y="94" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">Attempt 2</text>
+      <text x="525" y="112" text-anchor="middle" font-size="10" fill="#5b6472">✅ succeeds</text>
+      
+      <text x="320" y="182" text-anchor="middle" font-size="10" fill="#5b6472">The whole block runs again from the start — so it must be safe to repeat</text>
+    </svg>
+    <figcaption>A transient failure triggers a wait and a fresh attempt — and the transaction wraps the whole retried block, not one statement.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"I turned on <code>EnableRetryOnFailure()</code> and my manual <code>BeginTransaction</code> code still works."</b> It throws an <code>InvalidOperationException</code> — the strategy cannot replay a transaction it does not control. Wrap the whole unit in <code>strategy.ExecuteAsync</code>.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What if the commit actually succeeded, but the connection dropped before you heard back?"</b> The strategy may run the unit again, so it has to be safe to repeat — make it idempotent, or check whether the first attempt already worked before doing it again.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I enable <code>EnableRetryOnFailure</code> on the database provider, so transient errors like a brief connection drop are retried with a delay. A plain <code>SaveChanges</code> is retried automatically. If I need my own transaction, I wrap the whole unit in an execution strategy's <code>ExecuteAsync</code> and make sure running it twice is safe."</p>
+    <ul>
+      <li><code>EnableRetryOnFailure()</code> → <span class="hl hl-hot">retries transient errors only</span> — not every error.</li>
+      <li>Plain <code>SaveChanges()</code> → <span class="hl hl-inter">retried automatically</span> as one unit.</li>
+      <li>Own transaction → <span class="hl hl-adv">wrap it in <code>strategy.ExecuteAsync</code></span>.</li>
+      <li>The unit may run twice → <span class="hl hl-blue">keep it idempotent</span>; no emails or outside calls inside.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <span class="hl hl-blue">transient failure</span> is one that is likely to go away if you simply try again — a dropped connection, a short timeout, a brief failover. <code>EnableRetryOnFailure()</code> installs a retrying <b>execution strategy</b> for your provider: when a command fails with a known transient error, it waits and tries again, waiting longer each time, up to limits you can configure. Each provider decides which errors count as transient.</p>
+
+      <p>A retry has to replay <em>everything that belongs together</em>. A plain <code>SaveChanges()</code> already runs as one unit, so it retries safely on its own. But if you start a transaction yourself, the strategy cannot know which statements to repeat, so <code>BeginTransaction</code> throws once retries are on. The fix is to hand the <b>whole unit</b> — begin, work, commit — to <code>CreateExecutionStrategy().ExecuteAsync(...)</code>, and rebuild any state inside it, because it may be run more than once.</p>
+
+      <p>That last point is the real risk: if a commit succeeded but the confirmation was lost, the unit can run again. Keep what is inside <span class="hl hl-adv">idempotent</span> — safe to repeat — and keep side effects such as sending an email outside it.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>services.AddDbContext&lt;AppDb&gt;(o =&gt; o.UseSqlServer(connectionString,
+    sql =&gt; sql.EnableRetryOnFailure()));      <span class="cx-ok">// ✅ transient errors are retried</span></code></pre>
+      </div>
+      <p class="cx-note">One line on the provider options turns retries on.</p>
+
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">await</span> <span class="kw">using</span> <span class="kw">var</span> tx = <span class="kw">await</span> db.Database.BeginTransactionAsync();
+<span class="cx-err">// ❌ throws InvalidOperationException once retry-on-failure is enabled</span></code></pre>
+      </div>
+      <p class="cx-note">A transaction you start yourself sits outside the strategy, so EF Core refuses it.</p>
+
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> strategy = db.Database.CreateExecutionStrategy();
+
+<span class="kw">await</span> strategy.ExecuteAsync(<span class="kw">async</span> () =&gt;
+{
+    <span class="kw">await</span> <span class="kw">using</span> <span class="kw">var</span> tx = <span class="kw">await</span> db.Database.BeginTransactionAsync();   <span class="cx-ok">// ✅ inside the retry unit</span>
+    db.Orders.Add(order);
+    <span class="kw">await</span> db.SaveChangesAsync();
+    <span class="kw">await</span> tx.CommitAsync();                                           <span class="cx-cmt">// may run again — keep it repeat-safe</span>
+});</code></pre>
+      </div>
+      <p class="cx-note">The strategy owns the whole begin-to-commit block, so a retry repeats all of it.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>An API on a cloud database sees occasional one-second connection drops during maintenance or throttling.</b> With retries enabled, most requests quietly succeed on the second attempt; a transfer that uses its own transaction goes through <code>ExecuteAsync</code> and checks it cannot be applied twice.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="6.html">← Connection Management</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="8.html">Interceptors &amp; Audit Trails →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

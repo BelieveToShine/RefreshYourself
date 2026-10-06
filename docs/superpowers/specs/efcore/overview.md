@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 21 pages written
+## Status — Phases 1–7 complete, all 35 pages written (21 original + 14 gap pages added 2026-10-07)
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): raw questions, grouped by
   concept across 7 subsections, deliberately scoped to EF Core as the *ORM layer* — LINQ
@@ -23,7 +23,7 @@ keeping it in sync with the live pages.
   [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
   before this track was considered done.
 
-## Basic (7 topics) — 7 written
+## Basic (9 topics) — 9 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -34,8 +34,10 @@ keeping it in sync with the live pages.
 | 5 | The N+1 Problem | 🔥 | ✅ |
 | 6 | Projection — Selecting into a DTO | 🔥 | ✅ |
 | 7 | Configuring Relationships | ⭐ | ✅ |
+| 8 | Cascade Delete Behaviours | ⭐ | ✅ |
+| 9 | Code-First vs. Database-First | ⭐ | ✅ |
 
-## Intermediate (8 topics) — 8 written
+## Intermediate (17 topics) — 17 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -47,8 +49,17 @@ keeping it in sync with the live pages.
 | 6 | Fluent API vs. Data Annotations | ⭐ | ✅ |
 | 7 | Migrations, Mechanically | ⭐ | ✅ |
 | 8 | Transactions Around SaveChanges() | ⭐ | ✅ |
+| 9 | Raw SQL in EF Core & Injection | 🔥 | ✅ |
+| 10 | Repository & Unit of Work over EF Core | 🔥 | ✅ |
+| 11 | Global Query Filters & Soft Delete | ⭐ | ✅ |
+| 12 | Find vs. FirstOrDefault vs. SingleOrDefault | ⭐ | ✅ |
+| 13 | Disconnected Entities: Attach vs. Update | ⭐ | ✅ |
+| 14 | Inheritance Mapping: TPH, TPT & TPC | ⭐ | ✅ |
+| 15 | Owned Types & Value Converters | ⭐ | ✅ |
+| 16 | Indexes, Unique Constraints & Composite Keys in the Model | ⭐ | ✅ |
+| 17 | Testing EF Core Code: SQLite vs. InMemory vs. Real DB | ⭐ | ✅ |
 
-## Advanced (6 topics) — 6 written
+## Advanced (9 topics) — 9 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -58,6 +69,9 @@ keeping it in sync with the live pages.
 | 4 | Beyond N+1 — Common Performance Pitfalls | 🔥 | ✅ |
 | 5 | Bulk Operations | ⭐ | ✅ |
 | 6 | Connection Management | ⭐ | ✅ |
+| 7 | Connection Resiliency & Execution Strategies | ⭐ | ✅ |
+| 8 | Interceptors & Audit Trails | ⭐ | ✅ |
+| 9 | Keyless Entities & Views | 🧠 | ✅ |
 
 ## Where the roadmap came from
 
@@ -80,3 +94,7 @@ Nothing was added beyond the source list for this track.
 
 None — this is the first pass through the full 7-phase pipeline for this track, built and
 verified in one sitting. Expect a review/feedback pass once the user goes through it.
+
+## Addendum 2026-10-06 — gap pages (written 2026-10-07)
+
+14 new gap pages (Basic 8–9, Intermediate 9–17, Advanced 7–9) were written and wired on 2026-10-07 (21 -> 35) — see the "Addendum 2026-10-06" section of [`roadmap.md`](roadmap.md). Basic 8 Cascade Delete Behaviours, 9 Code-First vs. Database-First; Intermediate 9 Raw SQL in EF Core & Injection, 10 Repository & Unit of Work over EF Core, 11 Global Query Filters & Soft Delete, 12 Find vs. FirstOrDefault vs. SingleOrDefault, 13 Disconnected Entities: Attach vs. Update, 14 Inheritance Mapping: TPH, TPT & TPC, 15 Owned Types & Value Converters, 16 Indexes, Unique Constraints & Composite Keys in the Model, 17 Testing EF Core Code: SQLite vs. InMemory vs. Real DB; Advanced 7 Connection Resiliency & Execution Strategies, 8 Interceptors & Audit Trails, 9 Keyless Entities & Views. Counts: Basic 9, Intermediate 17, Advanced 9. The original 21 pages are unchanged.

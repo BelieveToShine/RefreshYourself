@@ -179,16 +179,17 @@
   <details class="explain toggle">
     <summary>📖 Explanation <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <p><span class="hl hl-blue">IQueryable&lt;T&gt;</span> is a query, not a result. Every LINQ method
-      chained onto it — <code>Where</code>, <code>Select</code>, <code>OrderBy</code> — gets captured into
-      the same expression tree instead of running immediately. EF Core only translates that whole tree
-      into one SQL statement once something actually enumerates it: a <code>foreach</code>,
-      <code>.ToList()</code>, <code>.First()</code>, and so on.</p>
+      <p><span class="hl hl-blue">IQueryable&lt;T&gt;</span> is a query, not a result — the expression-tree and
+      <code>Expression&lt;Func&lt;&gt;&gt;</code> mechanics are on <a href="../../csharp/advanced/4.html">IEnumerable vs. IQueryable in C#</a>.
+      What matters here: EF Core translates the whole chained tree into one SQL statement once something
+      enumerates it (<code>foreach</code>, <code>.ToList()</code>, <code>.First()</code>), so only matching rows come back.</p>
 
       <p><span class="hl hl-inter">IEnumerable&lt;T&gt;</span> means the sequence is already executing, or
-      already sitting fully in memory. Once something is typed as <code>IEnumerable&lt;T&gt;</code>, any
-      further LINQ chained onto it compiles against <code>Enumerable</code>'s in-memory extension
-      methods — plain C#, not SQL — regardless of what the object actually is underneath.</p>
+      already in memory — further LINQ compiles against <code>Enumerable</code> and runs in C#, never SQL.
+      So the placement of <code>.AsEnumerable()</code> / <code>.ToList()</code> is the switch point: filters before it
+      become SQL, filters after it run on rows already fetched. A method EF Core can't translate inside a
+      <code>Where</code> on an <code>IQueryable&lt;T&gt;</code> throws (since EF Core 3.0) rather than silently running
+      in memory — and the tempting fix, an early <code>.AsEnumerable()</code>, makes the whole table come back first.</p>
 
       <p>That last part is what makes the trap possible: C# resolves an extension method like
       <code>.Where()</code> using a variable's <b>compile-time type</b>, never the object it happens to

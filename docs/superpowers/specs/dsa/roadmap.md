@@ -6,7 +6,7 @@ than becoming new pages — see that file's Gap-hunt log).
 
 ## Phase 3 — Grouping into pages
 
-All 30 groups map 1:1 onto 30 pages — no merges, no splits. Each concept is already the right
+All 30 groups map 1:1 onto 30 pages — no merges, no splits (33 pages after the 2026-10-07 gap pages — see the addendum at the end). Each concept is already the right
 size for one topic page, matching the granularity the user's own final tree used (one bullet-tree
 leaf = one page).
 
@@ -148,3 +148,18 @@ roadmap page's grouping changed.
 
 None — Phase 2's gap-hunt (reservoir sampling, Bloom filters) is folded into the initial taxonomy
 pass, and this file is written before any Phase 7 page exists, per the mandated 7-phase order.
+
+
+## Addendum 2026-10-06 — gap pages (Phases 2–6)
+
+**Status: all pages in this addendum were written and wired on 2026-10-07** (track total 30 -> 33: Basic 10, Intermediate 14, Advanced 9). On-disk counts before the addendum: Basic 10, Intermediate 12, Advanced 8 = 30. Verified absent: Kadane/max-subarray, quickselect (heap top-k exists in basic/7, advanced/4), LRU as a *design* (only a passing mention in basic/3).
+
+| # | Tier | Pri | Title | Interview question | Scope (one sentence) | Diagram idea | Cross-links |
+|---|---|---|---|---|---|---|---|
+| 31 | Intermediate (`intermediate/13.html`) | 🔥 | Kadane's Algorithm (Maximum Subarray) | "Find the contiguous subarray with the largest sum in O(n)." | At each element extend the running sum or restart; track the best; O(n) time, O(1) space; all-negative edge case. | Array with a running-sum line resetting when it drops below zero. | intermediate/5, intermediate/4, intermediate/9, intermediate/1 |
+| 32 | Intermediate (`intermediate/14.html`) | ⭐ | Quickselect (Kth Largest Element) | "Find the kth largest element faster than sorting — and when is a heap better?" | Partition, recurse into one side only; O(n) average, O(n^2) worst; vs. heap O(n log k); Dutch-flag partition folded in. | Partition step discarding part of the array each round. | basic/7, basic/9, advanced/4 |
+| 33 | Advanced (`advanced/9.html`) | 🔥 | Design an LRU Cache | "Design an LRU cache with O(1) get and put." | Hash map to nodes of a doubly linked list; move to head on access, evict tail; why neither structure alone works; code in the language the track declares. | Map pointing into list nodes; get moves node to head, put evicts tail. | basic/3, basic/5, advanced/2 |
+
+New totals: Basic 10, Intermediate 14, Advanced 9 = **33**.
+
+**Dropped / folded:** Boyer–Moore majority vote, Dutch national flag as its own page (folded into quickselect), LFU (LRU variant), Manacher/Tarjan (niche).

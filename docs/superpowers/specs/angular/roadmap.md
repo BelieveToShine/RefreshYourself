@@ -22,7 +22,7 @@ No duplicate content found across groups — where two groups touch the same voc
 "route-level providers" in both §12 DI-Advanced and §20 Routing-Advanced), it's the same
 deliberate multi-angle layering seen on every other track, not a repeat.
 
-## Phase 3 — Grouping into pages (43 pages)
+## Phase 3 — Grouping into pages (43 pages at Phase 3; 46 after the 2026-10-07 gap pages)
 
 Default is one taxonomy group → one page, same as every other track. Two groups needed a split,
 one needed a fan-out into several scenario pages:
@@ -131,7 +131,7 @@ number (`angular/<tier>/<n>.html`).
 | 35 | Micro Frontends | Advanced | 🧠 | advanced/10.html |
 | 36 | Production Scenarios | Advanced | mixed | advanced/11.html (Performance Under Load), advanced/12.html (RxJS in Production), advanced/13.html (Change Detection Gone Wrong), advanced/14.html (State Management at Scale), advanced/15.html (Modernizing a Legacy Angular App), advanced/16.html (SSR & Hydration Issues) |
 
-New totals: **Basic 10, Intermediate 17, Advanced 16 — 43 pages.**
+New totals at that point: **Basic 10, Intermediate 17, Advanced 16 — 43 pages** (now 46 after the 2026-10-07 gap pages: Intermediate 20).
 
 ## Track-specific decisions and boundaries
 
@@ -168,3 +168,18 @@ New totals: **Basic 10, Intermediate 17, Advanced 16 — 43 pages.**
 None — this track went through the full 7-phase pipeline (including its own Phase 2 gap-hunt,
 folded into the initial pass rather than needing a later addendum) in one build. Expect a
 review/feedback pass once the user goes through it, same as every other completed track.
+
+
+## Addendum 2026-10-06 — gap pages (Phases 2–6)
+
+**Status: all pages in this addendum were written and wired on 2026-10-07** (track total 43 -> 46: Basic 10, Intermediate 20, Advanced 16). On-disk counts before the addendum: Basic 10, Intermediate 17, Advanced 16 = 43. Checked and dropped as already covered: `linkedSignal`/`resource`/`httpResource` (advanced/5, intermediate/13), `@if/@for/@switch` control flow (basic/4), `input()/model()/output()` (basic/2, advanced/5), `@defer` (advanced/7). The testing page (intermediate/17) covers TestBed only — no mention of Karma or its replacements.
+
+| # | Tier | Pri | Title | Interview question | Scope (one sentence) | Diagram idea | Cross-links |
+|---|---|---|---|---|---|---|---|
+| 44 | Intermediate (`intermediate/18.html`) | ⭐ | Test Runners — Karma/Jasmine vs. Jest vs. Vitest | "Karma is deprecated — what do you run Angular tests with now?" | Karma+Jasmine was the CLI default and has been deprecated by the Angular team; Jest and Vitest are the alternatives (Node + simulated DOM, no real browser); TestBed usage stays the same. **Verify current CLI default/status against official docs before writing** (accuracy.md). | Real-browser pipeline (Karma) vs. Node + simulated-DOM pipeline (Jest/Vitest). | intermediate/17, intermediate/11 |
+| 45 | Intermediate (`intermediate/19.html`) | ⭐ | Content Projection (ng-content, ng-container, ng-template) | "How do you build a reusable card/modal component that accepts custom content?" | `<ng-content>` slots with `select`, `ng-container` as a no-DOM wrapper, `ng-template` + `ngTemplateOutlet` for template inputs. | Parent content flowing through slots into the child layout. | basic/2, basic/4, basic/6, intermediate/1 |
+| 46 | Intermediate (`intermediate/20.html`) | 🧠 | View Encapsulation & Component Styles | "How do component styles stay scoped in Angular, and what do `:host` and `::ng-deep` do?" | Emulated (default) vs. ShadowDom vs. None; `:host`; why `::ng-deep` is discouraged. | Emulated attribute stamping on two components DOM. | basic/2, basic/3, intermediate/19 |
+
+New totals once written: Basic 10, Intermediate 20, Advanced 16 = **46**.
+
+**Dropped / folded:** host directives (niche, revisit later), i18n, `afterNextRender` (a bullet could go in advanced/6 if that page is ever edited), PWA/service worker, legacy NgModule (intermediate/1).

@@ -93,8 +93,8 @@ architecture/scenario → Advanced), not a difficulty ladder. One placement doub
 
 | Tier | Count | Groups |
 |---|---|---|
-| Basic | 11 | JavaScript Fundamentals; `var`/`let`/`const`; Data Types & Coercion; `==` vs. `===`; Functions; Scope & Hoisting; Arrays & Objects; Destructuring/Spread/Rest; Array Methods; Modern JavaScript/ES6+; Error Handling |
-| Intermediate | 15 | Closures; `this`/`call`/`apply`/`bind`; Prototypes & Prototype Chain; Modules; Promises; `async`/`await`; Event Loop; DOM & Browser Events; Event Delegation; Fetch/HTTP/`AbortController`; Classes & Inheritance; Higher-Order & Functional JavaScript; Iterators & Generators; Browser Storage; Testing Fundamentals |
+| Basic | 11 (13 after the 2026-10-07 addendum) | JavaScript Fundamentals; `var`/`let`/`const`; Data Types & Coercion; `==` vs. `===`; Functions; Scope & Hoisting; Arrays & Objects; Destructuring/Spread/Rest; Array Methods; Modern JavaScript/ES6+; Error Handling |
+| Intermediate | 15 (17 after the 2026-10-07 addendum) | Closures; `this`/`call`/`apply`/`bind`; Prototypes & Prototype Chain; Modules; Promises; `async`/`await`; Event Loop; DOM & Browser Events; Event Delegation; Fetch/HTTP/`AbortController`; Classes & Inheritance; Higher-Order & Functional JavaScript; Iterators & Generators; Browser Storage; Testing Fundamentals |
 | Advanced | 12 | JavaScript Runtime & Execution Model; Advanced Async Concurrency; Promise Combinators; Debounce vs. Throttle; Memory & Garbage Collection; Performance & Rendering; Security; Production JavaScript Scenarios; Web Workers; Service Workers; Polyfills & Transpilation; Proxy & Reflect |
 
 ## Phase 5 — Priority translation
@@ -116,7 +116,7 @@ carried the user's own triple-flame emphasis — these six get this track's deep
 treatment (2 diagrams, 2-3 code cards each) per Phase 3 above, even though priority-wise they
 sit alongside the rest of 🔥 Must Know.
 
-## Phase 6 — Final roadmap: 38 pages
+## Phase 6 — Final roadmap: 38 pages (42 after the 2026-10-07 gap pages — see the addendum at the end)
 
 Hot-first ordering within each tier (site-wide rule, every tier, every track) — 🔥 pages first in
 roughly the source material's own thematic order, then ⭐, then 🧠 last.
@@ -189,3 +189,19 @@ tables above are unchanged; only the live roadmap page's grouping changed.
 None — every one of the user's 37 groups is represented, plus the one gap-hunt addition
 (Testing Fundamentals) this track's own Phase 2 found and folded in as its own page rather than
 leaving it uncovered.
+
+
+## Addendum 2026-10-06 — gap pages (Phases 2–6)
+
+**Status: all pages in this addendum were written and wired on 2026-10-07** (track total 38 -> 42: Basic 13, Intermediate 17, Advanced 12). On-disk counts before the addendum: Basic 11, Intermediate 15, Advanced 12 = 38. Already covered (dropped): debounce/throttle with code (advanced/4), `structuredClone` (basic/7), currying *concept* (intermediate/12 — but it has no `curry(fn)` implementation, so that coding question is kept).
+
+| # | Tier | Pri | Title | Interview question | Scope (one sentence) | Diagram idea | Cross-links |
+|---|---|---|---|---|---|---|---|
+| 39 | Basic (`basic/12.html`) | 🔥 | Array sort() — Mutation & Default Order | "Why does `[10, 9, 1].sort()` give `[1, 10, 9]`, and does sort return a new array?" | Default sort compares as strings, needs a comparator for numbers, mutates in place; ES2023 `toSorted/toReversed/toSpliced/with` return copies. | [10,9,1] stringified vs. numeric comparator result; in-place vs. copy arrows. | basic/9, basic/7, basic/3 |
+| 40 | Basic (`basic/13.html`) | ⭐ | Modern JS Additions (ES2022–2024) | "What recent JS features do you use — `.at()`, `Object.groupBy`, `Promise.withResolvers`?" | A short cheat-sheet: `.at(-1)`, `findLast`, `Object.groupBy`, `Promise.withResolvers`, each beside its old workaround. **Check support wording against MDN before writing.** | Old workaround vs. new one-liner, four pairs. | basic/10, basic/9, intermediate/5 |
+| 41 | Intermediate (`intermediate/16.html`) | ⭐ | Implement curry(fn) | "Write a `curry` function so `curry(add)(1)(2)(3)` and `curry(add)(1,2)(3)` both work." | Collect args until `args.length >= fn.length`, then call; why `fn.length` breaks with default/rest params. | Accumulating-args box filling until arity is met. | intermediate/12, intermediate/1, advanced/4 |
+| 42 | Intermediate (`intermediate/17.html`) | ⭐ | for await…of & Async Iterators | "What is `for await…of`, and when do you use it over awaiting in a loop?" | Consumes async iterables (streams, paginated APIs, async generators) sequentially; contrast with `Promise.all` parallelism. | Async generator yielding promised values consumed one by one. | intermediate/13, intermediate/6, advanced/3 |
+
+New totals: Basic 13, Intermediate 17, Advanced 12 = **42**.
+
+**Dropped / folded:** debounce/throttle from scratch (advanced/4 has working code); `Intl`, tagged templates, `Temporal` (niche / uneven support).

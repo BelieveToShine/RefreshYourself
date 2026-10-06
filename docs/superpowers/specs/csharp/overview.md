@@ -3,7 +3,7 @@
 **Start here for anything C#-related.** See [`docs/superpowers/specs/README.md`](../README.md)
 for what this file is and the process for keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 49 pages written
+## Status — Phases 1–7 complete, all 60 pages written (49 original + 11 gap pages added 2026-10-07)
 
 The site is moving from "topic tutorial" to "interview question bank" (locked with the user
 2026-09-15). For C#:
@@ -25,9 +25,9 @@ added the site-wide Problem/Solution why-cards + Use Cases panel to them, by exp
 approval, matching all other C# pages and every other track. The left tier-navigation sidebar
 (see [`rules/tier-navigation.md`](../../rules/tier-navigation.md)) was left untouched by that
 retrofit. All 18 Basic pages, plus Intermediate and Advanced, now share the same
-why-it-matters/Use-Cases structure.
+why-it-matters/Use-Cases structure. *(Update 2026-10-07: C# Basic 1–14 were migrated to the new template — the “frozen” status no longer applies.)*
 
-## Basic (18 topics) — 18 written
+## Basic (21 topics) — 21 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -49,8 +49,11 @@ why-it-matters/Use-Cases structure.
 | 16 | params, optional & named parameters | ⭐ | ✅ |
 | 17 | Tuples & deconstruction | ⭐ | ✅ |
 | 18 | Indexers | 🧠 | ✅ |
+| 19 | Delegates & Func / Action / Predicate | 🔥 | ✅ |
+| 20 | Properties vs. Fields | ⭐ | ✅ |
+| 21 | virtual / override / new / abstract / sealed | 🔥 | ✅ |
 
-## Intermediate (18 topics) — 18 written
+## Intermediate (24 topics) — 24 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -72,8 +75,14 @@ why-it-matters/Use-Cases structure.
 | 16 | Task vs. Thread vs. ThreadPool | 🔥 | ✅ |
 | 17 | Cancellation (CancellationToken) | ⭐ | ✅ |
 | 18 | IDisposable & using — the basics | 🔥 | ✅ |
+| 19 | Events vs. Delegates | 🔥 | ✅ |
+| 20 | Lambdas & Closures | ⭐ | ✅ |
+| 21 | async void vs. async Task | 🔥 | ✅ |
+| 22 | Task.WhenAll / WhenAny | ⭐ | ✅ |
+| 23 | IComparable<T> vs. IComparer<T> | ⭐ | ✅ |
+| 24 | Covariance & Contravariance | 🧠 | ✅ |
 
-## Advanced (13 topics) — 13 written
+## Advanced (15 topics) — 15 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -90,6 +99,8 @@ why-it-matters/Use-Cases structure.
 | 11 | Attributes | 🧠 | ✅ |
 | 12 | Expression Trees | 🧠 | ✅ |
 | 13 | C# performance checklist — what to check under GC pressure | ⭐ | ✅ |
+| 14 | Dictionary / HashSet Internals | 🔥 | ✅ |
+| 15 | Task vs. ValueTask | ⭐ | ✅ |
 
 ## Where the roadmap came from
 
@@ -153,3 +164,5 @@ rehearsed a version of, not just recalled the definition of.
 - The tier/priority calls in `roadmap.md` are a first pass through the full taxonomy — now
   pressure-tested by actually writing all 49 pages, but still reviewable/revisable pending the
   user's sign-off, same as any of this rebuild's other tracks.
+
+**Known gaps (update 2026-10-07):** the 11 gap pages from the [roadmap addendum 2026-10-06](roadmap.md#addendum-2026-10-06--gap-pages-phases-26) were all written and wired on 2026-10-07 (49 -> 60 pages): Basic 19 Delegates & Func / Action / Predicate, 20 Properties vs. Fields, 21 virtual / override / new / abstract / sealed; Intermediate 19 Events vs. Delegates, 20 Lambdas & Closures, 21 async void vs. async Task, 22 Task.WhenAll / WhenAny, 23 IComparable<T> vs. IComparer<T>, 24 Covariance & Contravariance; Advanced 14 Dictionary / HashSet Internals, 15 Task vs. ValueTask. Counts: Basic 21, Intermediate 24, Advanced 15.

@@ -13,7 +13,7 @@ Those are Phases 2–7 (review/dedupe → group into pages → assign tier → a
 roadmap/index → build/update pages) and happen only after this taxonomy itself is approved. **The
 already-written C# Basic pages (`csharp/basic/1.html`–`14.html`) are frozen and untouched by this
 document** — this is pure raw material for the eventual refresh pass, not an instruction to change
-anything live.
+anything live. *(Update 2026-10-07: C# Basic 1–14 were migrated to the new template — the “frozen” status no longer applies.)*
 
 ## How to read each concept
 

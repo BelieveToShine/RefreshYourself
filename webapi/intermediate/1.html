@@ -461,6 +461,7 @@
       <li><code>PUT</code> / <code>DELETE</code> <span class="hl hl-blue">→ not safe, but idempotent</span> — repeating lands in the same state.</li>
       <li><code>PATCH</code> <span class="hl hl-inter">→ idempotency depends on the operation</span> — "set field to X" is; "increment by 1" isn't.</li>
       <li>"Safe" only means <span class="hl hl-hot">no server-side state change</span> — not "no downside at all."</li>
+      <li>Retry-safe <code>POST</code> → <span class="hl hl-blue">Idempotency-Key header</span>, deduplicated on the server.</li>
     </ul>
   </div>
 
@@ -489,6 +490,12 @@
       HTTP spec enforces any of this in code — a handler for <code>GET</code> can technically delete a row if
       you write it that way. Safety and idempotency are a contract with the HTTP infrastructure sitting
       between your client and your server, not a guarantee the compiler or the framework checks for you.</p>
+
+      <p>Since <code>POST</code> can't be made idempotent by the verb, retry-safe creates use an
+      <b><code>Idempotency-Key</code></b> header: the client generates one unique value per logical
+      operation and resends the same value on every retry. The server stores the key with the result,
+      and if it sees the key again it returns the stored result instead of creating a second resource.
+      This is a convention (payment APIs use it widely), not part of the HTTP spec itself.</p>
 
       <table class="cmp-table">
         <thead><tr><th></th><th><code>GET</code></th><th><code>POST</code></th><th><code>PUT</code></th><th><code>PATCH</code></th><th><code>DELETE</code></th></tr></thead>
@@ -569,6 +576,26 @@
 }</code></pre>
       </div>
       <p class="cx-note">Same verb, same route shape — but an "increment" <code>PATCH</code> is <b>not idempotent</b>. The verb never guarantees it; the operation's own semantics do.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>[<span class="ty">HttpPost</span>]
+<span class="kw">public</span> <span class="ty">IActionResult</span> CreateOrder(<span class="ty">OrderDto</span> dto, [<span class="ty">FromHeader</span>(Name = <span class="str">"Idempotency-Key"</span>)] <span class="kw">string</span> key)
+{
+    <span class="kw">var</span> existing = _db.Orders.FirstOrDefault(o =&gt; o.IdempotencyKey == key);
+    <span class="kw">if</span> (existing != <span class="kw">null</span>)
+        <span class="kw">return</span> Ok(existing);       <span class="cx-ok">// ✅ same key → return the original, no duplicate</span>
+
+    <span class="kw">var</span> order = <span class="kw">new</span> <span class="ty">Order</span> { ProductId = dto.ProductId, IdempotencyKey = key };
+    _db.Orders.Add(order);
+    _db.SaveChanges();
+    <span class="kw">return</span> CreatedAtAction(<span class="kw">nameof</span>(GetOrder), <span class="kw">new</span> { id = order.Id }, order);
+}</code></pre>
+      </div>
+      <p class="cx-note">Still <code>POST</code> — the endpoint becomes retry-safe because it checks the key before creating anything. (A real implementation also needs a unique index on the key to survive two simultaneous retries.)</p>
 
     </div>
   </details>

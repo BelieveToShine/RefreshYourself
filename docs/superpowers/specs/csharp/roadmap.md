@@ -3,7 +3,7 @@
 Builds on [`question-taxonomy.md`](question-taxonomy.md) (Phase 1). This document is Phases
 2–6 of the pipeline (see [`specs/README.md`](../README.md)): reviewed/expanded, grouped into
 actual pages, tiered by **interview depth** (not difficulty), and given an interview-priority
-tag. Phase 7 (writing the final diagram-rich HTML pages) is now complete (all 49 pages written) — this is the complete,
+tag. Phase 7 (writing the final diagram-rich HTML pages) is now complete (all 60 pages written: 49 original + 11 gap pages added 2026-10-07) — this is the complete,
 reviewable plan for what those pages will be and what each should say.
 
 **Goal driving every call below:** someone who reads this track end-to-end should be able to
@@ -25,7 +25,7 @@ independent of seniority; an Advanced page can still be 🔥, and a Basic page c
 an architect brushing up on fundamentals.
 
 **The 14 live C# Basic pages are frozen** — listed below for completeness (so the roadmap is
-one coherent picture) with their *existing* tier/priority carried over as-is, not re-litigated.
+one coherent picture) with their *existing* tier/priority carried over as-is, not re-litigated. *(Update 2026-10-07: C# Basic 1–14 were migrated to the new template — the “frozen” status no longer applies.)*
 
 ---
 
@@ -413,7 +413,7 @@ one coherent picture) with their *existing* tier/priority carried over as-is, no
 | Basic | 14 (all written) | 18 (14 live + 4 new) |
 | Intermediate | 14 (roadmap only) | 18 |
 | Advanced | 12 (roadmap only) | 13 |
-| **Total** | **40** | **49** |
+| **Total** | **40** | **49** (60 after the 2026-10-07 gap pages — see the addendum at the end) |
 
 Notable re-tiering calls (interview depth, not the old plan's tier):
 - **Tuples & deconstruction** moved Intermediate → Basic — "what is a tuple" is genuinely a
@@ -453,3 +453,39 @@ Injection, in the rule file):
 
 The remaining seven Advanced pages didn't get one — not every concept needs an architecture
 question, and forcing one on, say, `Span<T>`/`Memory<T>` or Unsafe code would have been padding.
+
+---
+
+## Addendum 2026-10-06 — gap pages (Phases 2–6)
+
+Result of an active gap-hunt ([`rules/gap-hunting.md`](../../rules/gap-hunting.md)) seeded by
+`docs/review-2026-10-06.md` §5. **Status: all pages in this addendum were written and wired on 2026-10-07.** Numbers are the next
+free number in each tier from the real files on disk (Basic 18, Intermediate 18, Advanced 13 live)
+and are permanent from now on (never renumber). Hot-first is a teaching-order/badge rule, so 🔥
+pages simply take their number in sequence. Phase 2 outcome: 9 review candidates -> 9 pages; string
+interning **folded** (see below); 2 extra gaps found by our own hunt (Closures, Properties vs.
+Fields) = 11 new pages (49 -> 60).
+
+| # | Tier | Pri | Title | Interview question (`.interview-q`) | Scope (one concept) | Diagram idea | Cross-link |
+|---|---|---|---|---|---|---|---|
+| Basic 19 | Basic | 🔥 | Delegates & `Func` / `Action` / `Predicate` | "What is a delegate in C#, and how do `Func`, `Action` and `Predicate` relate to it?" | A delegate is a type-safe reference to a method; `Func` returns a value, `Action` returns void, `Predicate<T>` returns bool; multicast with `+=`. | Variable box holding an arrow to a method, with three small labelled signatures | Intermediate 19 (events), Intermediate 20 (closures), Intermediate 13 (LINQ), Advanced 12 (expression trees) |
+| Basic 20 | Basic | ⭐ | Properties vs. Fields (extra gap) | "What's the difference between a property and a field, and why not just make fields public?" | A property is accessor methods over a backing field (validation, `init`, binding/serialization, can change later without breaking callers); auto-property shorthand. | Caller -> get/set gate -> private backing field | Basic 6 (access modifiers), Intermediate 11 (`init`/`required`), Intermediate 12 (immutability), OOP Basic 1 |
+| Basic 21 | Basic | 🔥 | `virtual` / `override` / `new` / `abstract` / `sealed` | "What's the difference between `virtual`, `override` and `new` — and what does `sealed` do?" | Method-slot rules: override replaces via the vtable, `new` hides by reference type, abstract forces an override, sealed stops further override/inheritance. | Base-typed variable pointing at a derived object; two columns: `override` runs Derived, `new` runs Base | OOP Basic 3 (polymorphism), OOP Advanced 2, Basic 6, OOP Basic 7 |
+| Intermediate 19 | Intermediate | 🔥 | Events vs. Delegates | "What's the difference between an event and a delegate — why not just expose a public delegate field?" | `event` restricts outsiders to `+=`/`-=` (only the owner can invoke), `EventHandler<T>` convention, leak risk from unsubscribed handlers. | Publisher box with subscriber arrows; crossed-out "outsider invokes / assigns `=`" | Basic 19, OOP Intermediate 12 (Observer), Intermediate 18 (IDisposable) |
+| Intermediate 20 | Intermediate | ⭐ | Lambdas & Closures (extra gap) | "What is a closure, and what's the classic bug when you capture a loop variable?" | A lambda captures *variables* (not values) into a compiler-generated class; `for` vs `foreach` capture; allocation cost. | Lambda arrow -> hidden display-class box holding the captured variable, shared by 3 lambdas | Basic 19, Intermediate 13/14 (LINQ, iterators), Advanced 13 (perf checklist) |
+| Intermediate 21 | Intermediate | 🔥 | `async void` vs. `async Task` | "Why should you avoid `async void`, and when is it actually acceptable?" | `async void` can't be awaited and its exceptions go to the SynchronizationContext (can crash the process); acceptable only for event handlers. | Two lanes: `Task` carries the exception back to the caller; `void` loses it to the context | Intermediate 15, Advanced 1, Intermediate 19 |
+| Intermediate 22 | Intermediate | ⭐ | `Task.WhenAll` / `WhenAny` | "How do you run several async calls concurrently and wait for all of them — and what happens if two of them fail?" | `WhenAll` vs sequential awaits, `WhenAny` for first-wins/timeout, `await` surfaces only the first exception while the task's `Exception` holds all. | Three parallel bars vs one long sequential bar; WhenAny picks the first finisher | Intermediate 15 (mentions WhenAll only in passing), 16, 17 (cancellation) |
+| Intermediate 23 | Intermediate | ⭐ | `IComparable<T>` vs. `IComparer<T>` | "What's the difference between `IComparable` and `IComparer`, and how does `List.Sort` use them?" | Natural order built into the type vs an external swappable ordering; `Comparison<T>` delegate and `Comparer<T>.Create`; `Sort` is not stable. | Items ordered by "inside" CompareTo vs an external comparer box | Intermediate 6/7 (Equals, IEquatable), Intermediate 2, Basic 19, Intermediate 13 (OrderBy) |
+| Intermediate 24 | Intermediate | 🧠 | Covariance & Contravariance | "What are covariance and contravariance in C# generics — why can't a `List<Dog>` be a `List<Animal>`?" | `out`/`in` on interfaces/delegates (`IEnumerable<out T>`, `Action<in T>`), why `List<T>` is invariant, array covariance runtime hole. | Arrow-direction diagram: `out` produces, `in` consumes, `List` locked | Intermediate 1 (generics), Basic 19, Intermediate 2, OOP Intermediate 3 (LSP) |
+| Advanced 14 | Advanced | 🔥 | `Dictionary` / `HashSet` Internals | "How does `Dictionary<TKey,TValue>` work internally, and how does it differ from `SortedDictionary` and `HashSet`?" | Hash -> bucket -> entry chain, collisions, resize/rehash, O(1) average vs O(n) worst; `SortedDictionary` is a tree O(log n); `HashSet` is keys only. | Hash function -> bucket array -> entry chain with a collision highlighted | Intermediate 6 (GetHashCode), Intermediate 7, Advanced 8 (concurrent), Basic 7 |
+| Advanced 15 | Advanced | ⭐ | `Task` vs. `ValueTask` | "When would you return a `ValueTask` instead of a `Task`, and what are the rules for consuming one?" | Avoids allocation when a result is often synchronous (cache hit); never await twice or `.Result` early; measure first. | Two result paths: synchronous (no heap box) vs real async (state machine) | Intermediate 15, Advanced 1, Advanced 13 (perf), Advanced 5 (GC) |
+
+### Dropped / folded
+
+- **String interning** — not a page (too small). Fold 3-4 lines (literals are interned,
+  `string.Intern`, why `==` on strings still works) into the existing **Basic 9 String vs.
+  StringBuilder** when that page is next touched; it is not covered there today.
+- Nothing else on the candidate list was already covered: `Task.WhenAll` appears only in passing on
+  Intermediate 15, and delegates only as asides on Advanced 4/8/10/12.
+- Considered and rejected extras: `static` class/constructor (goes to OOP Basic 7), `Lazy<T>`
+  (inside the OOP Singleton page), default interface methods (niche).

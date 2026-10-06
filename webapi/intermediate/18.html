@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Two clients update the same resource — how do you stop a lost update over HTTP?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="ETag &amp; If-Match — Optimistic Concurrency — Web API Intermediate — RefreshYourself">
+<meta property="og:description" content="Two clients update the same resource — how do you stop a lost update over HTTP?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>ETag &amp; If-Match — Optimistic Concurrency — Web API Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">ETag &amp; If-Match — Optimistic Concurrency</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Web API · Intermediate · Should Know</div>
+    <h1><code>ETag</code> + <code>If-Match</code> — <span class="hl hl-hot">stop the lost update</span> over HTTP</h1>
+    <p class="interview-q">Two clients update the same resource — how do you stop a lost update over HTTP?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+<div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+  <div class="wc-head">🔖 ETag + If-Match</div>
+  <div class="wc-ps">
+    <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Two clients read the same record and both edit it; the second <code>PUT</code> silently overwrites the first, so one person's change is lost with no error anywhere.</span></div>
+    <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The server hands out a version (<code>ETag</code>) on every read; the client sends it back in <code>If-Match</code> on write, and a stale version is rejected with <code>412 Precondition Failed</code>.</span></div>
+  </div>
+  <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">ETag = the version. <code>If-Match</code> = "only if it's still that version."</span></div>
+</div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>ETag</code> <span class="rarrow">→</span> the resource's <b>version</b>, sent on read</p>
+      <p class="rrow"><code>If-Match</code> <span class="rarrow">→</span> write <b>only if</b> still that version</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line">Stale version <span class="rarrow">→</span> <b><code>412</code></b> Precondition Failed</span>
+      <span class="tc-line">Header missing, but required <span class="rarrow">→</span> <b><code>428</code></b> Precondition Required</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI18" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI18" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI18r" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.5">TWO CLIENTS · SAME VERSION · ONE WINS</text>
+      <g filter="url(#shI18)"><rect x="24" y="50" width="170" height="44" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="109.0" y="70" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">A: GET</text>
+      <text x="109.0" y="86" text-anchor="middle" font-size="10" fill="#5b6472">gets ETag v1</text>
+      <g filter="url(#shI18)"><rect x="235" y="50" width="170" height="44" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320.0" y="70" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">📦 Resource</text>
+      <text x="320.0" y="86" text-anchor="middle" font-size="10" fill="#5b6472">ETag v1</text>
+      <g filter="url(#shI18)"><rect x="446" y="50" width="170" height="44" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="531.0" y="70" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">B: GET</text>
+      <text x="531.0" y="86" text-anchor="middle" font-size="10" fill="#5b6472">gets ETag v1</text>
+      <path d="M235,72 H194" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI18)"/>
+      <path d="M405,72 H446" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI18)"/>
+      <g filter="url(#shI18)"><rect x="24" y="140" width="170" height="44" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="109.0" y="160" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">A: PUT</text>
+      <text x="109.0" y="176" text-anchor="middle" font-size="10" fill="#5b6472">If-Match: v1</text>
+      <g filter="url(#shI18)"><rect x="235" y="140" width="170" height="44" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320.0" y="160" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ 200 → v2</text>
+      <text x="320.0" y="176" text-anchor="middle" font-size="10" fill="#5b6472">If-Match v1 matched</text>
+      <path d="M194,162 H235" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI18)"/>
+      <path d="M320,94 V140" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI18)"/>
+      <text x="531" y="166" text-anchor="middle" font-size="10.5" fill="#5b6472">B still holds v1</text>
+      <text x="109" y="256" text-anchor="middle" font-size="10.5" fill="#5b6472">A's write got there first</text>
+      <g filter="url(#shI18)"><rect x="446" y="230" width="170" height="44" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="531.0" y="250" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">B: PUT (stale)</text>
+      <text x="531.0" y="266" text-anchor="middle" font-size="10" fill="#5b6472">If-Match: v1</text>
+      <g filter="url(#shI18)"><rect x="235" y="230" width="170" height="44" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320.0" y="250" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">❌ 412</text>
+      <text x="320.0" y="266" text-anchor="middle" font-size="10" fill="#5b6472">sent v1, server is at v2</text>
+      <path d="M320,184 V230" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI18)"/>
+      <path d="M446,252 H405" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arI18r)"><animate attributeName="stroke-dashoffset" from="18" to="0" dur="1.5s" repeatCount="indefinite"/></path>
+    </svg>
+    <figcaption>B's write was based on v1, but A already moved the resource to v2 — the server refuses it instead of overwriting.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"<code>ETag</code> is just for caching."</b> <code>If-None-Match</code> on a <code>GET</code> saves bandwidth with a <code>304</code>; <code>If-Match</code> on a <code>PUT</code> is the write-side use that stops two clients overwriting each other.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Where does the ETag value come from?"</b> From a version of the row — usually a row-version / concurrency-token column (or a hash of the content). It's opaque to the client, which just echoes it back; the database check on save is what makes it safe.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"On read I return a strong <code>ETag</code> — an opaque version of the resource, often built from a row-version column. On write the client sends it back in <code>If-Match</code>; if it no longer matches I return <code>412 Precondition Failed</code>, so the second writer re-reads and retries instead of silently overwriting. If I want to force clients to send it, a missing header gets <code>428</code>."</p>
+    <ul>
+      <li><code>ETag</code> on every read <span class="hl hl-blue">→ an opaque version</span> of the resource.</li>
+      <li><code>If-Match</code> on <code>PUT</code>/<code>PATCH</code>/<code>DELETE</code> <span class="hl hl-basic">→ "only if it's still this version"</span>.</li>
+      <li>Mismatch <span class="hl hl-hot">→ <code>412</code></span>; header missing but required <span class="hl hl-inter">→ <code>428</code></span>.</li>
+      <li><code>If-None-Match</code> vs. <code>If-Match</code> <span class="hl hl-blue">→ cache reads (<code>304</code>) vs. protect writes</span>.</li>
+      <li>EF Core concurrency token <span class="hl hl-hot">→ the database enforces it</span>, not just the handler.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>This is <b>optimistic concurrency</b>: nobody takes a lock, the server just <span class="hl hl-blue">detects</span> a conflict at write time. Every read returns an <code>ETag</code> — a quoted, opaque version string like <code>"v1"</code>. The client keeps it, edits, then sends it back as <code>If-Match</code> on the update. If the resource changed in between, the versions differ and the server answers <code>412 Precondition Failed</code>. The client re-reads, merges or asks the user, and tries again.</p>
+
+      <p>Use a <b>strong</b> ETag here — <code>If-Match</code> compares strongly, so a weak ETag (<code>W/"…"</code>) won't match. To <b>force</b> the habit, answer <code>428 Precondition Required</code> when a write arrives with no <code>If-Match</code>. In ASP.NET Core you build the header yourself; the value usually comes from an EF Core row-version concurrency token, so the database also rejects a stale save (see <a href="../../efcore/advanced/3.html">Optimistic Concurrency &amp; Row Versioning</a>). It's the write-side partner of the <code>If-None-Match</code> caching on <a href="11.html">Caching Strategies</a>.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>If-None-Match</code></th><th><code>If-Match</code></th></tr></thead>
+        <tbody>
+          <tr><th>Used on</th><td><code>GET</code> (reads)</td><td><code>PUT</code> / <code>PATCH</code> / <code>DELETE</code> (writes)</td></tr>
+          <tr><th>Purpose</th><td>skip re-downloading unchanged data</td><td>stop a lost update</td></tr>
+          <tr><th>Version matches</th><td><code>304 Not Modified</code>, no body</td><td>the write goes ahead</td></tr>
+          <tr><th>Version differs</th><td><code>200</code> with the new body</td><td><code>412 Precondition Failed</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> p = <span class="kw">await</span> _db.Products.FindAsync(id);
+<span class="kw">if</span> (p <span class="kw">is</span> <span class="kw">null</span>) <span class="kw">return</span> NotFound();
+Response.Headers[<span class="str">"ETag"</span>] = ETagOf(p);   <span class="cx-ok">// ✅ version goes out on every read</span>
+<span class="kw">return</span> Ok(p);
+
+<span class="kw">static</span> <span class="kw">string</span> ETagOf(<span class="ty">Product</span> p) =&gt; $<span class="str">"\"{Convert.ToBase64String(p.RowVersion)}\""</span>;   <span class="cx-cmt">// helper on the controller: quoted, opaque</span></code></pre>
+      </div>
+      <p class="cx-note">The ETag is just the row version, quoted — the client never needs to understand it.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>[HttpPut(<span class="str">"{id}"</span>)]
+<span class="kw">public</span> <span class="kw">async</span> Task&lt;<span class="ty">IActionResult</span>&gt; Put(<span class="kw">int</span> id, <span class="ty">ProductDto</span> dto,
+    [FromHeader(Name = <span class="str">"If-Match"</span>)] <span class="kw">string</span>? ifMatch)
+{
+    <span class="kw">if</span> (ifMatch <span class="kw">is</span> <span class="kw">null</span>) <span class="kw">return</span> StatusCode(StatusCodes.Status428PreconditionRequired);   <span class="cx-ok">// ✅ header required</span>
+    <span class="kw">var</span> p = <span class="kw">await</span> _db.Products.FindAsync(id);
+    <span class="kw">if</span> (p <span class="kw">is</span> <span class="kw">null</span>) <span class="kw">return</span> NotFound();
+    <span class="kw">if</span> (ETagOf(p) != ifMatch) <span class="kw">return</span> StatusCode(StatusCodes.Status412PreconditionFailed);   <span class="cx-err">// ❌ stale</span>
+    p.Name = dto.Name;
+    <span class="cx-cmt">// ...save — see next card</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Missing header → <code>428</code>; stale header → <code>412</code>; only a matching version reaches the update.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>_db.Entry(p).Property(x =&gt; x.RowVersion).OriginalValue = <span class="ty">Convert</span>.FromBase64String(version);
+<span class="kw">try</span> { <span class="kw">await</span> _db.SaveChangesAsync(); }
+<span class="kw">catch</span> (<span class="ty">DbUpdateConcurrencyException</span>)
+{
+    <span class="kw">return</span> StatusCode(StatusCodes.Status412PreconditionFailed);   <span class="cx-ok">// ✅ lost the race after the check</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Checking in code and then saving still leaves a gap — the concurrency token makes the <b>database</b> refuse a stale save too (<code>version</code> is the <code>If-Match</code> value with its quotes removed).</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A user keeps an edit form open for ten minutes while a colleague saves a change</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18r1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">STALE FORM, SAFE SAVE</text>
+              <rect x="20" y="24" width="220" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">✏️ PUT with old ETag</text>
+              <path d="M240,43 H280" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc18r1)"/>
+              <rect x="280" y="24" width="180" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="370" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">❌ 412 → reload</text>
+            </svg>
+          </div>
+          <p class="uc-what">The form still holds the ETag from when it loaded. The save is rejected with <code>412</code>, and the UI re-fetches the latest copy and lets the user merge — instead of quietly wiping the colleague's edit.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Stale edit → <code>412</code> → re-read, then retry.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> A script updates resources without ever sending <code>If-Match</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18r2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">FORCE THE HABIT</text>
+              <rect x="20" y="24" width="220" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">✏️ PUT, no If-Match</text>
+              <path d="M240,43 H280" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc18r2)"/>
+              <rect x="280" y="24" width="180" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="370" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🚫 428 Required</text>
+            </svg>
+          </div>
+          <p class="uc-what">If the API must never allow blind overwrites, it answers <code>428 Precondition Required</code> when the header is absent — so clients learn to send a version rather than guess.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No header, but required → <code>428</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> The code compares the ETag, then saves — and two requests squeeze through together</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18r3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">THE RACE AFTER THE CHECK</text>
+              <rect x="20" y="24" width="220" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">✅ both checks pass</text>
+              <path d="M240,43 H280" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc18r3)"/>
+              <rect x="280" y="24" width="180" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="370" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">💥 second save wins</text>
+            </svg>
+          </div>
+          <p class="uc-what">Two requests can pass the version check at the same moment, then both save. Put the version into the database update itself (an EF Core concurrency token) so one of them fails with <code>DbUpdateConcurrencyException</code>. <b>A classic follow-up.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Let the database enforce the version too.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Two support agents open the same customer record.</b> Agent A saves a new phone number; agent B, still on the old copy, saves a new address a minute later. Without <code>If-Match</code>, B's save puts the old phone number back. With it, B gets <code>412</code>, the screen reloads with A's change, and B re-applies the address. See <a href="11.html">Caching Strategies</a> for the read-side ETag, <a href="1.html">HTTP Verbs</a> for <code>PUT</code> vs. <code>PATCH</code>, and <a href="2.html">HTTP Status Codes</a> for the <code>4xx</code> family.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="17.html">← Content Negotiation &amp; Formatters</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="19.html">Richardson &amp; HATEOAS →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

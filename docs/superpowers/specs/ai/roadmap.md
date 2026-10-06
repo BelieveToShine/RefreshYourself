@@ -46,7 +46,7 @@ skeleton's `overview.md` tables already captured accurately — no conflicts to 
 Azure/SQL, which each had a handful of source-tag-vs-summary conflicts to adjudicate). The only
 adjustment: groups added implicitly by the gap-hunt (prompt caching, speculative decoding,
 constrained decoding) don't get their own priority tag since they're folded into an existing
-page's content rather than becoming a row of their own.
+page's content rather than becoming a row of their own. (**Correction 2026-10-07:** speculative decoding was never actually covered by an existing page; it now has its own page, `ai/advanced/15` "LLM Inference Performance".)
 
 ## Phase 6 — Final page table
 
@@ -141,3 +141,22 @@ roadmap page's grouping changed.
 None — Phase 2's gap-hunt is folded into the initial taxonomy pass (see
 `question-taxonomy.md`'s Gap-hunt log), and this file is written before any Phase 7 page exists,
 per the mandated 7-phase order.
+
+## Addendum 2026-10-06 — gap pages (Phases 2–6)
+
+Active gap-hunt against the 48 live pages, `review-2026-10-06.md` §5, and this track's own Phase 2 log. Numbering takes the **next free number in each tier** (permanent). Counts on disk at time of writing: Basic 16, Intermediate 18, Advanced 14. **Status: all pages in this addendum were written and wired on 2026-10-07** (track total 48 -> 52: Basic 16, Intermediate 21, Advanced 15).
+
+**Correction found:** the Phase 2 log and `overview.md` say speculative decoding was "folded into Self-Hosted vs. Managed Models," but no live page mentions it (nor KV cache). Decision: give it a real page (Advanced 15, together with KV cache/batching since they are one latency story) rather than silently weakening the claim; written 2026-10-07 as `ai/advanced/15`; `overview.md`/`question-taxonomy.md` now carry a correction pointing to the page.
+
+| # | Tier | Pri | Title | Quoted interview question | Scope (one sentence) | Diagram idea | Cross-links |
+|---|---|---|---|---|---|---|---|
+| Intermediate 19 | Intermediate | 🔥 | Reasoning ("Thinking") Models — Test-Time Compute | "When would you use a reasoning model instead of a regular one, and what does it cost you?" | Models that spend extra hidden "thinking" tokens before answering (test-time compute), where they win (multi-step logic, code, planning) vs. where they waste money (extraction, classification, chat), plus latency, thinking-token billing and effort/budget controls; no invented benchmark numbers. | Two lanes: plain model (prompt -> answer) vs. reasoning model (prompt -> thinking tokens -> answer), with cost/latency bars. | basic/7 (CoT), advanced/4, advanced/7, basic/4 |
+| Intermediate 20 | Intermediate | ⭐ | Context Engineering & Conversation Memory | "A chat gets long — what do you keep in the context window, and how do you give the bot memory across sessions?" | Deciding what enters the window (instructions, retrieved chunks, tool results, history), trimming vs. rolling summary vs. retrieved memory, and short- vs. long-term memory stores; builds on context-window tricks. | Window as a budgeted box filled from several sources, with an overflow arrow to a summary store and a memory store. | basic/1, basic/15, intermediate/1, intermediate/7, advanced/8 |
+| Intermediate 21 | Intermediate | 🧠 | Beyond MCP — A2A and Computer-Use Agents | "How do MCP and agent-to-agent protocols differ, and when would an agent drive a GUI instead of an API?" | MCP = agent-to-tool, A2A = agent-to-agent interop (reverses the earlier exclusion; verify its current standing before writing), and computer use (screenshot/click loop) as the last resort when no API exists, with its reliability and safety limits. | Agent in the middle: tool arrow (MCP), peer-agent arrow (A2A), and a screen loop (see -> click) labelled "last resort". | intermediate/12, intermediate/18, intermediate/6, advanced/1 |
+| Advanced 15 | Advanced | ⭐ | LLM Inference Performance — KV Cache, Batching & Speculative Decoding | "How does speculative decoding speed up generation, and what limits your tokens-per-second when self-hosting?" | Prefill vs. decode, KV cache, continuous batching (named on advanced/13), time-to-first-token vs. throughput, and speculative decoding (small draft model proposes, big model verifies in one pass; output distribution preserved). | Timeline of a draft model proposing 4 tokens and the target model accepting 3 and fixing 1 in one verification step. | advanced/13, basic/14 (quantization), basic/5 (streaming), advanced/12 |
+
+**Dropped, with reasons**
+- **Agent evaluation / agent safety as a separate page** — covered by Agent Loop, OWASP LLM Top 10 (excessive agency), Tracing and Eval Set pages.
+- **Long-term memory architecture as its own page** — folded into Intermediate 20 rather than split.
+- **Transformer positional-encoding math, eval-tooling internals** — unchanged research-depth exclusions.
+- **MCP itself** — already `intermediate/12`; only the A2A/computer-use delta is new.

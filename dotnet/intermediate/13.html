@@ -88,7 +88,7 @@
           <div class="wc-head">🎫 JWT (Bearer)</div>
           <div class="wc-ps">
             <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>APIs, mobile apps, and service-to-service calls have no browser to auto-resend a cookie, and a server-side session lookup on every call doesn't scale across many independent services.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The client stores a signed token itself and attaches it manually as a Bearer header, and the server verifies only the signature with no session lookup — the same statelessness that makes revocation hard: it stays valid until it expires unless a denylist is built.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The client stores a signed token itself and attaches it manually as a Bearer header, and the server verifies only the signature with no session lookup — which is also why it can't be cancelled early.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">JWT = client-held, manually attached, verified by signature only — hard to kill early.</span></div>
         </div>
@@ -189,7 +189,7 @@
 
   <div class="followup">
     <div class="fhead">🔄 Likely Follow-up</div>
-    <p class="ftline"><b>"If a JWT is stolen, what can you actually do about it before it expires?"</b> Short expiry plus a refresh-token rotation pattern is the standard mitigation — a stolen short-lived token limits the exposure window; true instant revocation typically needs a server-side denylist, which reintroduces some of the statefulness JWT was meant to avoid.</p>
+    <p class="ftline"><b>"If a JWT is stolen, what can you actually do about it before it expires?"</b> Not much on the token itself — that is exactly why access tokens are kept short-lived and paired with a server-checked refresh token. The full token lifecycle and revocation story is on <a href="../../webapi/intermediate/9.html">JWT &amp; Refresh Tokens</a> in Web API.</p>
   </div>
 
   <div class="keypoints">
@@ -200,7 +200,7 @@
       <li><code>JWT</code> <span class="hl hl-inter">→ client-managed, self-contained</span>, no server lookup needed.</li>
       <li>Multiple schemes can run together → <span class="hl hl-teal">cookies + bearer, side by side</span>, chosen per endpoint.</li>
       <li><code>[Authorize]</code> checks <span class="hl hl-hot">HttpContext.User</span>, after authentication middleware already ran.</li>
-      <li>Revocation → <span class="hl hl-hot">a JWT is hard to kill early</span>; short expiry plus refresh rotation is the standard fix.</li>
+      <li>Revoking a JWT early → <span class="hl hl-hot">covered under token lifecycle</span> — see <a href="../../webapi/intermediate/9.html">JWT &amp; Refresh Tokens</a>.</li>
     </ul>
   </div>
 
@@ -220,10 +220,9 @@
       it and attaching it (<code>Authorization: Bearer &lt;token&gt;</code>) to every later
       request. The server only verifies the signature — no server-side session lookup is
       needed, because the token is self-contained. That statelessness is exactly why JWT fits
-      APIs, mobile apps, SPAs, and service-to-service calls so well, at the cost of harder
-      revocation: a JWT stays valid until it expires, with no simple "log this session out right
-      now" — unlike a cookie, if the app keeps a server-side session store to kill, unless extra
-      infrastructure is built for it.</p>
+      APIs, mobile apps, SPAs, and service-to-service calls so well. The cost is that a JWT can't be
+      individually cancelled once issued — how short-lived access tokens and refresh tokens work around
+      that is covered on <a href="../../webapi/intermediate/9.html">JWT &amp; Refresh Tokens</a>.</p>
 
       <p><code>[Authorize]</code> checks whether <code>HttpContext.User</code> — populated by
       whichever authentication middleware actually ran, cookie or JWT bearer or both — represents
@@ -361,11 +360,11 @@
               <text x="368" y="54" text-anchor="middle" font-size="9" fill="#991b1b">valid until expiry ❌</text>
             </svg>
           </div>
-          <p class="uc-what">A cookie can be revoked right away only if the app keeps a server-side session store to kill; by default it is self-contained and lasts until it expires. A JWT has no such store — it
-          stays valid until it naturally expires unless a denylist has been built, which
-          reintroduces the server-side state JWT was meant to avoid. <b>Candidates often assume
-          revoking a JWT is as easy as killing a server-side cookie session — it isn't.</b></p>
-          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Cookie revokes instantly only with a session store; JWT needs a denylist or a short expiry.</span></div>
+          <p class="uc-what">A cookie can be revoked right away only if the app keeps a server-side session store
+          to kill. A JWT has no such store — it stays valid until it expires. <b>Candidates often assume
+          revoking a JWT is as easy as killing a server-side cookie session — it isn't.</b> The workaround
+          is on <a href="../../webapi/intermediate/9.html">JWT &amp; Refresh Tokens</a>.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Cookie revokes instantly only with a session store; a JWT can't be cancelled early.</span></div>
         </div>
 
       </div>

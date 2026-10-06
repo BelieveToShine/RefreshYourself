@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 38 pages written
+## Status — Phases 1–7 complete, all 42 pages written (38 original + 4 gap pages added 2026-10-07)
 
 - **Phase 1** — the user personally checked current interview-prep material and recent developer
   discussions before shaping this track's plan, then shared a fully detailed 37-group structure
@@ -84,7 +84,7 @@ keeping it in sync with the live pages.
   all three tier pills linked — icon ⚡ and color `#eab308` (both set when the tile was first
   added to the new "🎨 Frontend" homepage section) preserved.
 
-## Basic (11 topics) — 11 written
+## Basic (13 topics) — 13 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -99,8 +99,10 @@ keeping it in sync with the live pages.
 | 9 | Array Methods | 🔥 | ✅ |
 | 10 | Modern JavaScript / ES6+ | 🔥 | ✅ |
 | 11 | Error Handling | ⭐ | ✅ |
+| 12 | Array sort() — Mutation & Default Order | 🔥 | ✅ |
+| 13 | Modern JS Additions (ES2022–2024) | ⭐ | ✅ |
 
-## Intermediate (15 topics) — 15 written
+## Intermediate (17 topics) — 17 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -119,6 +121,8 @@ keeping it in sync with the live pages.
 | 13 | Iterators & Generators | ⭐ | ✅ |
 | 14 | Browser Storage | ⭐ | ✅ |
 | 15 | Testing Fundamentals | ⭐ | ✅ |
+| 16 | Implement curry(fn) | ⭐ | ✅ |
+| 17 | for await…of & Async Iterators | ⭐ | ✅ |
 
 ## Advanced (12 topics) — 12 written
 
@@ -176,3 +180,5 @@ independent diagram-verification sweep (38/38 pages, 45/45 diagrams, `issueCount
 sweep, re-confirmed clean after the pager-consistency and site-wiring edits — see the Status
 section above for the real defects found and fixed along the way, not glossed over, including the
 ones caused by a second concurrent session building this same track on the shared machine).
+
+- **Gap pages added 2026-10-07 (planned 2026-10-06):** 4 gap pages written and wired (38 -> 42) — Basic 12 Array sort() — Mutation & Default Order, 13 Modern JS Additions (ES2022–2024); Intermediate 16 Implement curry(fn), 17 for await…of & Async Iterators - see the `Addendum 2026-10-06` section in [`roadmap.md`](roadmap.md). Counts: Basic 13, Intermediate 17, Advanced 12.

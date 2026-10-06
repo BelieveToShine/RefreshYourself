@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 25 pages written
+## Status — Phases 1–7 complete, all 38 pages written (25 earlier + 13 split/gap pages added 2026-10-07)
 
 **Post-launch addition (2026-09-18):** the user reported that unit testing had no coverage
 anywhere in this track. Confirmed as a genuine gap — no "Testing" group existed in the original
@@ -34,7 +34,7 @@ diagrams verified `issueCount: 0` against the live rendered page. Full rationale
   [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
   before this track was considered done.
 
-## Basic (6 topics) — 6 written
+## Basic (9 topics) — 9 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -42,10 +42,13 @@ diagrams verified `issueCount: 0` against the live rendered page. Full rationale
 | 2 | CLR, BCL & Managed Code | 🔥 | ✅ |
 | 3 | SDK vs. Runtime, .csproj & NuGet | ⭐ | ✅ |
 | 4 | What Is MVC | 🔥 | ✅ |
-| 5 | Filters, CORS, HTTPS & Logging | ⭐ | ✅ |
+| 5 | Filters — Hooks Around an Action *(retitled 2026-10-07; was "Filters, CORS, HTTPS & Logging")* | ⭐ | ✅ |
 | 6 | Unit Testing Fundamentals | 🔥 | ✅ |
+| 7 | HTTPS Redirection & HSTS | ⭐ | ✅ |
+| 8 | Logging — ILogger, Levels & Providers | 🔥 | ✅ |
+| 9 | LTS vs. STS & .NET Standard | ⭐ | ✅ |
 
-## Intermediate (17 topics) — 17 written
+## Intermediate (25 topics) — 25 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -66,13 +69,23 @@ diagrams verified `issueCount: 0` against the live rendered page. Full rationale
 | 15 | Global Exception Handling | 🔥 | ✅ |
 | 16 | The Generic Host & Application Lifetime | ⭐ | ✅ |
 | 17 | Mocking & Testing ASP.NET Core Components | 🔥 | ✅ |
+| 18 | MVC vs. Web API vs. Razor Pages | ⭐ | ✅ |
+| 19 | Minimal APIs | 🔥 | ✅ |
+| 20 | IHttpClientFactory | 🔥 | ✅ |
+| 21 | BackgroundService Patterns | ⭐ | ✅ |
+| 22 | Health Checks | ⭐ | ✅ |
+| 23 | Options Pattern Validation | ⭐ | ✅ |
+| 24 | HttpContext & IHttpContextAccessor | ⭐ | ✅ |
+| 25 | SignalR vs. WebSockets vs. SSE | ⭐ | ✅ |
 
-## Advanced (2 topics) — 2 written
+## Advanced (4 topics) — 4 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
 | 1 | Kestrel & Reverse Proxies | ⭐ | ✅ |
-| 2 | Model Binding Internals & MVC vs. Web API vs. Razor Pages | 🧠 | ✅ |
+| 2 | Model Binding Internals *(retitled 2026-10-07; was "Model Binding Internals & MVC vs. Web API vs. Razor Pages")* | 🧠 | ✅ |
+| 3 | Slow MVC App Under Load — Triage | ⭐ | ✅ |
+| 4 | Identity, OAuth2 & OpenID Connect | 🔥 | ✅ |
 
 ## Where the roadmap came from
 
@@ -88,13 +101,13 @@ coverage note. No topics invented beyond the source list.
   track is entirely about modern, cross-platform .NET/ASP.NET Core. The `dotnet/` folder slug is
   kept only because it already existed in this repo, not because it still means the old
   Framework.
-- **This track skews heavily Intermediate (16 of 23 pages)** — deliberately not rebalanced to
+- **This track skews heavily Intermediate (16 of 23 pages at Phase 7; 25 of 38 after the 2026-10-07 additions)** — deliberately not rebalanced to
   force a more even tier spread. The source material is practical framework-usage knowledge
   (DI lifetimes, middleware, config, MVC wiring), which is genuinely Intermediate-depth content
   per [`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md); only two
   pages (Kestrel/reverse-proxy architecture, model-binding internals) reach Advanced-depth
   content in the given source.
-- **"Filters, CORS, HTTPS & Logging" (Basic) does NOT cover global exception handling** — that
+- **"Filters, CORS, HTTPS & Logging" (Basic; since 2026-10-07 retitled "Filters — Hooks Around an Action") does NOT cover global exception handling** — that
   content lives entirely on the dedicated "Global Exception Handling" page (Intermediate) to
   avoid the duplicate found during Phase 2 review. See [`roadmap.md`](roadmap.md)'s Phase 2 note.
 - **Code examples are C#**, matching every other track on this site.
@@ -104,3 +117,5 @@ coverage note. No topics invented beyond the source list.
 
 None — this is the first pass through the full 7-phase pipeline for this track, built and
 verified in one sitting. Expect a review/feedback pass once the user goes through it.
+
+- **2026-10-06 addendum — written and wired 2026-10-07:** 13 new pages (3 basic, 8 intermediate, 2 advanced; 25 -> 38) from splitting basic/5 and advanced/2 plus a gap hunt - see the Addendum in [roadmap.md](roadmap.md). Basic 7 HTTPS Redirection & HSTS and 8 Logging — ILogger, Levels & Providers (both split out of basic/5), 9 LTS vs. STS & .NET Standard; Intermediate 18 MVC vs. Web API vs. Razor Pages (split out of advanced/2), 19 Minimal APIs, 20 IHttpClientFactory, 21 BackgroundService Patterns, 22 Health Checks, 23 Options Pattern Validation, 24 HttpContext & IHttpContextAccessor, 25 SignalR vs. WebSockets vs. SSE; Advanced 3 Slow MVC App Under Load — Triage (split out of advanced/2), 4 Identity, OAuth2 & OpenID Connect. Retitles: basic/5 is now "Filters — Hooks Around an Action" (CORS dropped, owned by webapi/basic/3; HTTPS and logging moved out); advanced/2 is now "Model Binding Internals". Counts: Basic 9, Intermediate 25, Advanced 4.

@@ -3,7 +3,7 @@
 **Start here for anything AI/GenAI-related.** See [`docs/superpowers/specs/README.md`](../README.md)
 for what this file is and the process for keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 48 pages written
+## Status — Phases 1–7 complete, all 52 pages written (48 original + 4 gap pages added 2026-10-07)
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): 48 concept groups mapped to
   specific sections of `docs/topics/AI-Interview-Topics.md` (a real GenAI/LLM engineering
@@ -14,7 +14,7 @@ for what this file is and the process for keeping it in sync with the live pages
 - **Phase 2** — gap-hunt logged in `question-taxonomy.md`: 3 real gaps found (provider-native
   prompt caching, speculative decoding, constrained/grammar-based decoding), all folded into
   existing groups rather than becoming new pages (Cost Control, Self-Hosted vs. Managed Models,
-  and Structured Output respectively) — plus a "considered and excluded" table (A2A protocol,
+  and Structured Output respectively; **correction 2026-10-07:** speculative decoding was never actually covered on any existing page and now has its own page, `ai/advanced/15` "LLM Inference Performance") — plus a "considered and excluded" table (A2A protocol,
   long-term agent-memory architecture, transformer positional-encoding math depth, eval-tooling
   internals) reasoned against the source's own scope note: "the bar is applied GenAI engineering
   + system design, not research."
@@ -91,7 +91,7 @@ for what this file is and the process for keeping it in sync with the live pages
 | 15 | Context-Window Tricks | ⭐ | ✅ |
 | 16 | Classic ML vs. LLM | ⭐ | ✅ |
 
-## Intermediate (18 topics) — 18 written
+## Intermediate (21 topics) — 21 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -113,8 +113,11 @@ for what this file is and the process for keeping it in sync with the live pages
 | 16 | Azure OpenAI & Azure AI Search for RAG | ⭐ | ✅ |
 | 17 | Query Transformation | ⭐ | ✅ |
 | 18 | Multi-Agent Patterns | ⭐ | ✅ |
+| 19 | Reasoning ("Thinking") Models — Test-Time Compute | 🔥 | ✅ |
+| 20 | Context Engineering & Conversation Memory | ⭐ | ✅ |
+| 21 | Beyond MCP — A2A and Computer-Use Agents | 🧠 | ✅ |
 
-## Advanced (14 topics) — 14 written
+## Advanced (15 topics) — 15 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -132,6 +135,7 @@ for what this file is and the process for keeping it in sync with the live pages
 | 12 | Async/Queue-Based Inference | ⭐ | ✅ |
 | 13 | Self-Hosted vs. Managed Models | ⭐ | ✅ |
 | 14 | Responsible AI | ⭐ | ✅ |
+| 15 | LLM Inference Performance — KV Cache, Batching & Speculative Decoding | ⭐ | ✅ |
 
 ## Where the roadmap came from
 
@@ -178,3 +182,5 @@ and fixed along the way, and the accidentally-skipped page, not glossed over). T
 at least one stale pager link, the missing sidebar-nav wiring on all 48 pages, and the 36 missing
 search-index entries are also documented above, not silently corrected. Expect a review/feedback
 pass once the user goes through it, same as every other completed track.
+
+> **2026-10-06 gap-hunt — written and wired 2026-10-07:** 4 new pages (48 -> 52): Intermediate 19 Reasoning ("Thinking") Models — Test-Time Compute, 20 Context Engineering & Conversation Memory, 21 Beyond MCP — A2A and Computer-Use Agents; Advanced 15 LLM Inference Performance — KV Cache, Batching & Speculative Decoding (speculative decoding is the one the Phase 2 text above says was "folded in" though no live page mentioned it — it now has this page). Counts: Basic 16, Intermediate 21, Advanced 15. See the "Addendum 2026-10-06" in [`roadmap.md`](roadmap.md).

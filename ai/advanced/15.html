@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How does speculative decoding speed up generation, and what limits your tokens-per-second when self-hosting?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="LLM Inference Performance — KV Cache, Batching &amp; Speculative Decoding — AI Advanced — RefreshYourself">
+<meta property="og:description" content="How does speculative decoding speed up generation, and what limits your tokens-per-second when self-hosting?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>LLM Inference Performance — KV Cache, Batching &amp; Speculative Decoding — AI Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="ai/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fae8ff;--crumb-ink:#c026d3;">🤖 AI</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">LLM Inference Performance — KV Cache, Batching &amp; Speculative Decoding</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ AI · Advanced · Should Know</div>
+    <h1>Inference speed — a model writes <span class="hl hl-adv">one token at a time</span>, so who guesses ahead?</h1>
+    <p class="interview-q">"How does speculative decoding speed up generation, and what limits your tokens-per-second when self-hosting?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">⏱️ Inference Performance</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A model writes its answer one token at a time, and every step has to read the model and a growing cache from memory. Self-hosted, that is what limits how fast users see words and how many users you can serve at once.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Know the levers: a <b>KV cache</b> so the prompt is never recomputed, <b>continuous batching</b> to keep the GPU busy across many users, and <b>speculative decoding</b> — a small draft model guesses ahead and the big model checks the guesses in one pass.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">KV cache = don't redo the past. Batching = share the GPU. Speculative = guess, then verify.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Speculative decoding = <b>"a small model guesses ahead, the big model checks them all at once."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line">Prefill reads the prompt in one go → <b>sets time-to-first-token</b></span>
+      <span class="tc-line">Decode makes one token per step → <b>sets tokens per second</b></span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 284" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="csA" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arrA" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+      <g filter="url(#csA)"><rect x="15" y="70" width="120" height="44" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="75" y="97" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">Prompt</text>
+      <g filter="url(#csA)"><rect x="175" y="56" width="130" height="72" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="240" y="82" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">⚙️ Prefill</text>
+      <text x="240" y="99" text-anchor="middle" font-size="10.5" fill="#5b6472">whole prompt at once</text>
+      <g filter="url(#csA)"><rect x="345" y="56" width="130" height="72" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="410" y="82" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🔁 Decode</text>
+      <text x="410" y="99" text-anchor="middle" font-size="10.5" fill="#5b6472">one token per step</text>
+      <g filter="url(#csA)"><rect x="515" y="70" width="110" height="44" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="570" y="97" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">Tokens out</text>
+      <path d="M135,92 H175" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrA)"/>
+      <path d="M305,92 H345" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrA)"/>
+      <path d="M475,92 H515" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrA)"/>
+      <g filter="url(#csA)"><rect x="175" y="182" width="300" height="52" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="325" y="203" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">🗄️ KV cache</text>
+      <text x="325" y="220" text-anchor="middle" font-size="10.5" fill="#5b6472">saved attention keys &amp; values, reused</text>
+      <path d="M240,128 V182" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrA)"/>
+      <text x="250" y="160" text-anchor="start" font-size="11" fill="#5b6472">writes</text>
+      <path d="M410,182 V128" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrA)"/>
+      <text x="420" y="160" text-anchor="start" font-size="11" fill="#5b6472">reads every step</text>
+      <text x="320" y="266" text-anchor="middle" font-size="11" fill="#5b6472">Prefill sets time-to-first-token; decode speed sets tokens per second.</text>
+    </svg>
+    <figcaption>Two phases: prefill writes the KV cache once; decode re-reads it for every new token.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 284" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="csB" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arrB" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+      <text x="320" y="26" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">Draft guesses 4 tokens, the target checks them together</text>
+      <text x="40" y="80" text-anchor="start" font-size="12" font-weight="700" fill="#475569">Draft model</text>
+      <text x="40" y="96" text-anchor="start" font-size="10.5" fill="#5b6472">small, fast</text>
+      <g filter="url(#csB)"><rect x="170" y="60" width="60" height="36" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="200" y="83" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">t1</text>
+      <g filter="url(#csB)"><rect x="240" y="60" width="60" height="36" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="270" y="83" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">t2</text>
+      <g filter="url(#csB)"><rect x="310" y="60" width="60" height="36" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="340" y="83" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">t3</text>
+      <g filter="url(#csB)"><rect x="380" y="60" width="60" height="36" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="410" y="83" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">t4</text>
+      <g filter="url(#csB)"><rect x="170" y="150" width="270" height="48" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="305" y="170" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🎯 Target model: one pass</text>
+      <text x="305" y="187" text-anchor="middle" font-size="10.5" fill="#5b6472">checks all 4 guesses at once</text>
+      <text x="40" y="170" text-anchor="start" font-size="12" font-weight="700" fill="#475569">Target model</text>
+      <text x="40" y="186" text-anchor="start" font-size="10.5" fill="#5b6472">big, slower</text>
+      <path d="M200,96 V150" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrB)"/>
+      <path d="M270,96 V150" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrB)"/>
+      <path d="M340,96 V150" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrB)"/>
+      <path d="M410,96 V150" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrB)"/>
+      <g filter="url(#csB)"><rect x="170" y="224" width="60" height="34" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="200" y="246" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ t1</text>
+      <path d="M200,198 V224" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrB)"/>
+      <g filter="url(#csB)"><rect x="240" y="224" width="60" height="34" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="270" y="246" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ t2</text>
+      <path d="M270,198 V224" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrB)"/>
+      <g filter="url(#csB)"><rect x="310" y="224" width="60" height="34" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="340" y="246" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ t3</text>
+      <path d="M340,198 V224" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrB)"/>
+      <g filter="url(#csB)"><rect x="380" y="224" width="60" height="34" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="410" y="246" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🔧 fix</text>
+      <path d="M410,198 V224" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrB)"/>
+      <text x="460" y="238" text-anchor="start" font-size="11" fill="#5b6472">3 accepted +</text>
+      <text x="460" y="254" text-anchor="start" font-size="11" fill="#5b6472">1 corrected = 4 tokens</text>
+    </svg>
+    <figcaption>Speculative decoding: one big-model pass verifies several cheap guesses, so you often get more than one token per pass.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Speculative decoding trades quality for speed."</b> Not in its standard form: the big model checks every guess, and the method is designed to keep the same output distribution as the big model alone. What you pay is extra compute and memory for the draft model — and the speed-up depends on how often the guesses are accepted.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Does it always make things faster?"</b> No. If the draft model guesses badly, most guesses are thrown away and the gain shrinks or vanishes. It also helps less when the server is already busy with large batches. Measure on your own traffic.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Generation has two phases: prefill reads the prompt in parallel, and decode makes one token per step while re-reading the KV cache. Self-hosted, speed is limited mainly by GPU memory and memory bandwidth, and by how you batch requests. Speculative decoding speeds up decode: a small draft model proposes several tokens and the big model verifies them in a single pass, keeping the same output distribution."</p>
+    <ul>
+      <li><span class="hl hl-blue">Prefill vs. decode</span> → prefill sets time-to-first-token; decode sets tokens per second.</li>
+      <li><span class="hl hl-basic">KV cache</span> → saves past attention keys and values so they aren't recomputed; it takes GPU memory that grows with context length and with the number of users.</li>
+      <li><span class="hl hl-inter">Continuous batching</span> → new requests join the running batch as others finish, so throughput rises; each request may wait a bit longer under load.</li>
+      <li><span class="hl hl-adv">Speculative decoding</span> → draft proposes, target verifies in one pass; same output distribution, speed-up depends on the acceptance rate.</li>
+      <li><span class="hl hl-hot">Self-hosting limits</span> → GPU memory, memory bandwidth, batch size and model size; quantization helps by shrinking the weights.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Generating text has two phases. <b>Prefill</b> reads the whole prompt at once and builds the <b>KV cache</b> — the saved attention keys and values of every token so far. <b>Decode</b> then produces one token per step, and each step reads the model weights and the cache again, so it is usually limited by <b>memory bandwidth</b>, not raw compute. That is why prefill drives <b>time-to-first-token</b> and decode drives <b>tokens per second</b>. Streaming (<a href="../basic/5.html">Prompt vs. Completion Cost &amp; Streaming</a>) hides the wait by showing words as they arrive. The cache is explained in <a href="../basic/12.html">Transformer Basics</a>.</p>
+
+      <p><b>Continuous batching</b> keeps the GPU busy: instead of waiting for a whole batch to finish, a serving engine lets new requests join as others complete (vLLM is one well-known engine that does this; check the docs of whatever you run). Bigger batches raise total throughput but can slow each single request, and the KV cache of every active request must fit in GPU memory. <a href="../basic/14.html">Quantization</a> shrinks the weights, which frees memory and cuts the bytes read per step.</p>
+
+      <p><b>Speculative decoding</b> attacks the one-token-per-step wall. A small, fast <b>draft model</b> proposes a few tokens. The big <b>target model</b> checks them all in one pass, keeps the ones that match what it would have produced, fixes the first wrong one, and moves on. The accept-or-reject rule is built so the final text follows the same distribution as the target alone. Some variants avoid a separate draft model — check what your serving engine supports. Whether to run all this yourself is the question on <a href="13.html">Self-Hosted vs. Managed Models</a>; for non-interactive work, <a href="12.html">queue-based inference</a> trades latency for throughput.</p>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A self-hosted chat feature gets slow at peak hours. The first word still appears quickly, but streaming crawls. The team checks GPU memory (the KV caches of many users are filling it), turns on continuous batching, quantizes the weights, and tests speculative decoding on real traffic to see if the acceptance rate justifies it.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="14.html">← Responsible AI</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to AI Advanced</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · AI · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

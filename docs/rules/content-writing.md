@@ -59,7 +59,7 @@ interview-recall system, not a documentation site — SCAN → SEE → RECALL �
 READ → STUDY → MEMORIZE. This is the template for **new pages under the interview-question-bank
 rebuild** (locked 2026-09-15/16); the 14 live C# Basic pages were written under the previous
 version and are frozen, not retrofitted — see [tier-navigation.md](tier-navigation.md)'s note on
-what "frozen" means in practice.
+what "frozen" means in practice. *(Update 2026-10-07: C# Basic 1–14 were migrated to the new template — the “frozen” status no longer applies.)*
 
 Six things earn a permanent, always-visible spot: the "❓ Interview Question" line, the "🔥 Easy
 interview recall" line, the "🧠 Visual Mental Model" diagram, the "⚠️ Common Trap" warning, the

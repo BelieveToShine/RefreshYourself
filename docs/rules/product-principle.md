@@ -35,7 +35,7 @@ for cutting), not a reason to make this one longer.
 **Updated 2026-09-16 for the interview-question-bank rebuild** — this order applies to every
 *new* page (Phase 7 of a track's rebuild); the 14 live C# Basic pages are frozen under the
 previous version of this hierarchy and are not retrofitted. Full spec in
-[content-writing.md](content-writing.md), this is the summary:
+[content-writing.md](content-writing.md), this is the summary: *(Update 2026-10-07: C# Basic 1–14 were migrated to the new template — the “frozen” status no longer applies.)*
 
 1. Title / hook, **plus a compact "❓ Interview Question" line right under it** stating the
    literal phrasing an interviewer would use — the hook title stays (it's already proven across

@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 43 pages written
+## Status — Phases 1–7 complete, all 47 pages written (43 original + 4 gap pages added 2026-10-07)
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): raw questions, grouped by
   concept across 43 subsections, sourced from the user's own Python interview-roadmap document
@@ -80,7 +80,7 @@ keeping it in sync with the live pages.
 | 10 | Modules & Packages | 🔥 | ✅ |
 | 11 | OOP Fundamentals | 🔥 | ✅ |
 
-## Intermediate (14 topics) — 14 written
+## Intermediate (16 topics) — 16 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -98,8 +98,10 @@ keeping it in sync with the live pages.
 | 12 | Testing | 🔥 | ✅ |
 | 13 | Virtual Environments & Packaging | 🔥 | ✅ |
 | 14 | Pythonic Code | ⭐ | ✅ |
+| 15 | functools.cache & lru_cache | ⭐ | ✅ |
+| 16 | match Statement (Structural Pattern Matching) | ⭐ | ✅ |
 
-## Advanced (18 topics) — 18 written
+## Advanced (20 topics) — 20 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -121,6 +123,8 @@ keeping it in sync with the live pages.
 | 16 | Python Web / API | ⭐ | ✅ |
 | 17 | Python + Databases | ⭐ | ✅ |
 | 18 | Python Architecture / Senior Scenarios | 🧠 | ✅ |
+| 19 | asyncio TaskGroup & timeout | 🔥 | ✅ |
+| 20 | ExceptionGroup & except* | 🧠 | ✅ |
 
 ## Where the roadmap came from
 
@@ -166,3 +170,5 @@ above for the real defects found and fixed along the way, not glossed over). The
 at least one stale pager link found and fixed during this same pass are also documented above,
 not silently corrected. Expect a review/feedback pass once the user goes through it, same as
 every other completed track.
+
+- **Gap pages added 2026-10-07 (planned 2026-10-06):** 4 gap pages written and wired (43 -> 47) — Intermediate 15 functools.cache & lru_cache, 16 match Statement (Structural Pattern Matching); Advanced 19 asyncio TaskGroup & timeout, 20 ExceptionGroup & except* - see the `Addendum 2026-10-06` section in [`roadmap.md`](roadmap.md). Counts: Basic 11, Intermediate 16, Advanced 20.

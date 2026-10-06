@@ -57,7 +57,7 @@ rebuild until a deliberate later migration pass — and the **new** one (❓ Int
 🔥 Recall → 🧠 Visual → ⚠️ Trap → 🔄 Follow-up → 🎯 Say-this → 📖 Explanation → 💻 Code → 🌍
 Real-world/Scenario), which C# has already used to write its other 35 pages (Basic 15–18, all
 of Intermediate, all of Advanced) — the reference example for every other track's eventual
-Phase 7.
+Phase 7. *(Update 2026-10-07: C# Basic 1–14 were migrated to the new template — the “frozen” status no longer applies.)*
 
 ## Where things live
 
@@ -72,7 +72,7 @@ Phase 7.
 **Core backend path — C#, OOP, .NET/ASP.NET Core, Web API, EF Core, SQL, Azure, and AWS are all
 through all 7 phases:**
 
-- **C#** — **all 7 phases complete, 49/49 pages written** (2026-09-16):
+- **C#** — **all 7 phases complete, 60/60 pages written** (2026-09-16):
   [`question-taxonomy.md`](superpowers/specs/csharp/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/csharp/roadmap.md) → 49 tiered/prioritized pages, live on the
   site and on [`csharp/roadmap.html`](../csharp/roadmap.html). The 14 *original* Basic pages
@@ -82,14 +82,14 @@ through all 7 phases:**
   review the original 14 had. This track is the reference example for how every other track
   goes through the pipeline. See
   [`specs/csharp/overview.md`](superpowers/specs/csharp/overview.md).
-- **OOP** — **all 7 phases complete, 15/15 pages written** (2026-09-16):
+- **OOP** — **all 7 phases complete, 26/26 pages written** (2026-09-16):
   [`question-taxonomy.md`](superpowers/specs/oops/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/oops/roadmap.md) → 15 tiered/prioritized pages, live on the
   site and on [`oops/roadmap.html`](../oops/roadmap.html). Deliberately scenario-heavy per the
   user's instruction (design/scenario questions, not "what is polymorphism" from zero). Every
   diagram passed the mandatory automated verification script before this track was marked done —
   see [`specs/oops/overview.md`](superpowers/specs/oops/overview.md).
-- **.NET / ASP.NET Core** — **all 7 phases complete, 25/25 pages written** (2026-09-16; +2 more
+- **.NET / ASP.NET Core** — **all 7 phases complete, 38/38 pages written** (2026-09-16; +2 more
   on 2026-09-18 after the user reported Unit Testing had no coverage):
   [`question-taxonomy.md`](superpowers/specs/dotnet/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/dotnet/roadmap.md) → 25 tiered/prioritized pages, live on the
@@ -98,7 +98,7 @@ through all 7 phases:**
   never-written ".NET Framework" slot — different technology, same folder slug (`dotnet/`). Every
   diagram passed the mandatory automated verification script. See
   [`specs/dotnet/overview.md`](superpowers/specs/dotnet/overview.md).
-- **Web API** — **all 7 phases complete, 25/25 pages written** (2026-09-16):
+- **Web API** — **all 7 phases complete, 36/36 pages written** (2026-09-16):
   [`question-taxonomy.md`](superpowers/specs/webapi/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/webapi/roadmap.md) → 25 tiered/prioritized pages, live on the
   site and on [`webapi/roadmap.html`](../webapi/roadmap.html). Deliberately scoped away from
@@ -106,14 +106,14 @@ through all 7 phases:**
   only what's specific to designing/operating an HTTP API contract. Every diagram passed the
   mandatory automated verification script. See
   [`specs/webapi/overview.md`](superpowers/specs/webapi/overview.md).
-- **EF Core** — **all 7 phases complete, 21/21 pages written** (2026-09-16):
+- **EF Core** — **all 7 phases complete, 35/35 pages written** (2026-09-16):
   [`question-taxonomy.md`](superpowers/specs/efcore/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/efcore/roadmap.md) → 21 tiered/prioritized pages, live on the
   site and on [`efcore/roadmap.html`](../efcore/roadmap.html). Scoped to EF Core as the ORM
   layer — LINQ translation, tracking, loading, migrations — leaving raw SQL/database-engine
   internals to the `sql/` track. Every diagram passed the mandatory automated verification
   script. See [`specs/efcore/overview.md`](superpowers/specs/efcore/overview.md).
-- **SQL** — **all 7 phases complete, 39/39 pages written** (2026-09-17; 27 original + 12 added
+- **SQL** — **all 7 phases complete, 50/50 pages written** (2026-09-17; 27 original + 12 added
   from a post-Phase-7 active [gap-hunt](rules/gap-hunting.md)):
   [`question-taxonomy.md`](superpowers/specs/sql/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/sql/roadmap.md) → 39 tiered/prioritized pages, live on the
@@ -122,7 +122,7 @@ through all 7 phases:**
   layer to `efcore/`. Every diagram passed the mandatory automated verification script,
   including a full independent re-sweep of the 12 gap-hunt additions. See
   [`specs/sql/overview.md`](superpowers/specs/sql/overview.md).
-- **Azure** — **all 7 phases complete, 44/44 pages written** (2026-09-17):
+- **Azure** — **all 7 phases complete, 49/49 pages written** (2026-09-17):
   [`question-taxonomy.md`](superpowers/specs/azure/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/azure/roadmap.md) → 44 tiered/prioritized pages, live on the
   site and on [`azure/roadmap.html`](../azure/roadmap.html). Deliberately simplified/
@@ -132,7 +132,7 @@ through all 7 phases:**
   needing a later addendum. Every diagram passed the mandatory automated verification script,
   run independently against every single page. The old, frozen three-tier roadmap (0 written) is
   fully superseded. See [`specs/azure/overview.md`](superpowers/specs/azure/overview.md).
-- **AWS** — **all 7 phases complete, 44/44 pages written** (2026-09-17):
+- **AWS** — **all 7 phases complete, 49/49 pages written** (2026-09-17):
   [`question-taxonomy.md`](superpowers/specs/aws/question-taxonomy.md) (44 concept groups, incl.
   a Phase 2 gap-hunt that added 6 items, one a whole new group) →
   [`roadmap.md`](superpowers/specs/aws/roadmap.md) → 44 tiered/prioritized pages, live on the
@@ -143,11 +143,11 @@ through all 7 phases:**
   `roadmap.html` grouped by 11 cross-tier concept clusters rather than by tier. Every diagram
   passed the mandatory automated verification script, run independently against every single
   page (48 diagrams across 44 pages). See
-  [`specs/aws/overview.md`](superpowers/specs/aws/overview.md).
+  [`specs/aws/overview.md`](superpowers/specs/aws/overview.md). *(Update 2026-10-07: C# Basic 1–14 were migrated to the new template — the “frozen” status no longer applies.)* *(2026-10-07: +11 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +11 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +13 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +11 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +14 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +11 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +5 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +5 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)*
 
 **Other tracks, outside the core backend path:**
 
-- **React** — **all 7 phases complete, 43/43 pages written** (41 original + 2 from a post-Phase-7
+- **React** — **all 7 phases complete, 47/47 pages written** (41 original + 2 from a post-Phase-7
   [gap-hunt](rules/gap-hunting.md), 2026-09-17):
   [`question-taxonomy.md`](superpowers/specs/react/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/react/roadmap.md) → 43 tiered/prioritized pages, live on the
@@ -157,7 +157,7 @@ through all 7 phases:**
   passed the mandatory automated verification script, run independently against every single
   page, including the 2 gap-hunt additions (`forwardRef`/`useImperativeHandle`; automatic
   batching & `flushSync`). See [`specs/react/overview.md`](superpowers/specs/react/overview.md).
-- **Angular** — **all 7 phases complete, 43/43 pages written** (2026-09-17), a brand-new track
+- **Angular** — **all 7 phases complete, 46/46 pages written** (2026-09-17), a brand-new track
   built from zero: [`question-taxonomy.md`](superpowers/specs/angular/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/angular/roadmap.md) → 43 tiered/prioritized pages, live on the
   site and on [`angular/roadmap.html`](../angular/roadmap.html). Sourced from the user's own
@@ -170,7 +170,7 @@ through all 7 phases:**
   track was the first to follow correctly. Every diagram passed the mandatory automated
   verification script, run independently against every single page. See
   [`specs/angular/overview.md`](superpowers/specs/angular/overview.md).
-- **Python** — **all 7 phases complete, 43/43 pages written** (2026-09-18):
+- **Python** — **all 7 phases complete, 47/47 pages written** (2026-09-18):
   [`question-taxonomy.md`](superpowers/specs/python/question-taxonomy.md) (43 concept groups,
   incl. a Phase 2 gap-hunt that added 8 items — `enum`, `collections`, walrus/`match`-`case`,
   positional-only/keyword-only params, exception chaining, `itertools`, `pathlib` vs. `os.path`,
@@ -184,10 +184,10 @@ through all 7 phases:**
   verification script, run independently against every single page (43 pages, 45 diagrams).
   Not part of the ordered core-backend path — grouped with React/Angular/DSA/AI. See
   [`specs/python/overview.md`](superpowers/specs/python/overview.md).
-- **AI** — **all 7 phases complete, 48/48 pages written** (2026-09-18):
+- **AI** — **all 7 phases complete, 52/52 pages written** (2026-09-18):
   [`question-taxonomy.md`](superpowers/specs/ai/question-taxonomy.md) (48 concept groups,
-  incl. a Phase 2 gap-hunt that added 3 items folded into existing pages — provider-native
-  prompt caching, speculative decoding, constrained/grammar-based decoding) →
+  incl. a Phase 2 gap-hunt that added 3 items — provider-native prompt caching and
+  constrained/grammar-based decoding folded into existing pages; speculative decoding was *claimed* folded in but no page covered it, so it got its own page, `ai/advanced/15`, on 2026-10-07) →
   [`roadmap.md`](superpowers/specs/ai/roadmap.md) → 48 tiered/prioritized pages, live on the site
   and on [`ai/roadmap.html`](../ai/roadmap.html), grouped by tier rather than cross-tier concept
   clusters. RAG is the track's single most-asked area per the source material, and the .NET/
@@ -195,7 +195,7 @@ through all 7 phases:**
   own differentiator. Every diagram passed the mandatory automated verification script, run
   independently against every single page. Not part of the ordered core-backend path — grouped
   with React/Angular/DSA/Python. See [`specs/ai/overview.md`](superpowers/specs/ai/overview.md).
-- **DSA** — **all 7 phases complete, 30/30 pages written** (2026-09-18):
+- **DSA** — **all 7 phases complete, 33/33 pages written** (2026-09-18):
   [`question-taxonomy.md`](superpowers/specs/dsa/question-taxonomy.md) (30 concept groups: this
   session's own 19-group draft, expanded to 30 after the user independently cross-checked it
   against another vendor's DSA curriculum, plus a Phase 2 gap-hunt that added 2 items folded into
@@ -208,7 +208,7 @@ through all 7 phases:**
   verification script, run independently against every single page. Not part of the ordered
   core-backend path — grouped with React/Angular/Python/AI. See
   [`specs/dsa/overview.md`](superpowers/specs/dsa/overview.md).
-- **JavaScript** — **all 7 phases complete, 38/38 pages written** (2026-09-18):
+- **JavaScript** — **all 7 phases complete, 42/42 pages written** (2026-09-18):
   [`question-taxonomy.md`](superpowers/specs/javascript/question-taxonomy.md) (37 groups the
   user personally checked against current interview-prep material and shared directly, plus a
   Phase 2 gap-hunt that added 1 page — Testing Fundamentals, since the user's own priority list
@@ -224,7 +224,7 @@ through all 7 phases:**
   automated verification script, run independently against every single page. Sits in the "🎨
   Frontend" homepage section, not the ordered core-backend path. See
   [`specs/javascript/overview.md`](superpowers/specs/javascript/overview.md).
-- **HTML & CSS** — **all 7 phases complete, 34/34 pages written** (2026-09-18):
+- **HTML & CSS** — **all 7 phases complete, 39/39 pages written** (2026-09-18):
   [`question-taxonomy.md`](superpowers/specs/htmlcss/question-taxonomy.md) (32 groups the user
   shared directly across HTML/CSS Fundamentals/Layout/Styling & UI/Advanced-Production sub-areas,
   plus a Phase 2 gap-hunt that added 2 pages — Colors/Backgrounds/Gradients and Accessibility in
@@ -241,7 +241,7 @@ through all 7 phases:**
   pipeline, other pages cross-reference it. Every diagram passed the mandatory automated
   verification script, run independently against every single page. Sits in the "🎨 Frontend"
   homepage section, not the ordered core-backend path. See
-  [`specs/htmlcss/overview.md`](superpowers/specs/htmlcss/overview.md).
+  [`specs/htmlcss/overview.md`](superpowers/specs/htmlcss/overview.md). *(2026-10-07: +4 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +3 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +4 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +4 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +3 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +4 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +5 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)*
 
 ## Adding a new track's spec
 

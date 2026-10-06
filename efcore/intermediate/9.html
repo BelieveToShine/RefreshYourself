@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How do you run raw SQL or a stored procedure in EF Core, and is it safe?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Raw SQL in EF Core &amp; Injection — EF Core Intermediate — RefreshYourself">
+<meta property="og:description" content="How do you run raw SQL or a stored procedure in EF Core, and is it safe?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Raw SQL in EF Core &amp; Injection — EF Core Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Raw SQL in EF Core &amp; Injection</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 EF Core · Intermediate · Must Know</div>
+    <h1><code>FromSql</code> vs. <code>FromSqlRaw</code> — <span class="hl hl-hot">same-looking code, very different safety</span></h1>
+    <p class="interview-q">How do you run raw SQL or a stored procedure in EF Core, and is it safe?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+        <div class="wc-head">💉 SQL injection</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>LINQ can't express everything, and the moment you build a raw SQL string from user input, that input can rewrite the query.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>FromSql</code> with an interpolated string turns every <code>{value}</code> into a database <b>parameter</b>, so input stays data — and <code>FromSqlRaw</code> is safe only when you pass parameters, never when you concatenate.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Interpolated into <code>FromSql</code> = parameter. Concatenated into <code>FromSqlRaw</code> = injection.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>FromSql($"… {x}")</code> <span class="rarrow">→</span> <b>parameterized</b> ✅</p>
+      <p class="rrow"><code>FromSqlRaw("… {0}", x)</code> <span class="rarrow">→</span> <b>parameterized</b> ✅</p>
+      <p class="rrow"><code>FromSqlRaw("…" + x)</code> <span class="rarrow">→</span> <b>pasted into SQL</b> ❌</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <span class="tc-line"><b><code>FromSql</code></b> sees the placeholders, so it makes parameters.</span><span class="tc-line"><b><code>FromSqlRaw</code></b> only gets a finished string — it can't tell data from SQL.</span></p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 292" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI9a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI9aR" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arI9aG" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shI9a)"><rect x="130" y="30" width="380" height="28" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.7"/></g>
+      <text x="320" y="48" text-anchor="middle" font-size="11" font-weight="600" fill="#475569" font-family="'Fira Code', monospace">user types:  x' OR '1'='1</text>
+      <path d="M160,58 V84" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arI9aR)"/>
+      <path d="M480,58 V84" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arI9aG)"/>
+      <g filter="url(#shI9a)"><rect x="20" y="84" width="280" height="96" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.7"/></g>
+      <text x="160" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">❌ CONCATENATED INTO THE SQL</text>
+      <text x="160" y="128" text-anchor="middle" font-size="10.5" font-weight="500" fill="#7f1d1d" font-family="'Fira Code', monospace">WHERE Name = 'x' OR '1'='1'</text>
+      <text x="160" y="144" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">the quote ends the string —</text>
+      <text x="160" y="160" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">the rest runs as SQL</text>
+      <g filter="url(#shI9a)"><rect x="340" y="84" width="280" height="96" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.7"/></g>
+      <text x="480" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ SENT AS A PARAMETER</text>
+      <text x="480" y="128" text-anchor="middle" font-size="10.5" font-weight="500" fill="#14532d" font-family="'Fira Code', monospace">WHERE Name = @p0</text>
+      <text x="480" y="144" text-anchor="middle" font-size="10.5" font-weight="500" fill="#5b6472" font-family="'Fira Code', monospace">@p0 = "x' OR '1'='1"</text>
+      <text x="480" y="160" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">the whole text stays plain data</text>
+      <path d="M160,180 V204" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arI9aR)"/>
+      <path d="M480,180 V204" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arI9aG)"/>
+      <g filter="url(#shI9a)"><rect x="20" y="204" width="280" height="44" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.7"/></g>
+      <text x="160" y="230" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">💥 returns every row</text>
+      <g filter="url(#shI9a)"><rect x="340" y="204" width="280" height="44" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.7"/></g>
+      <text x="480" y="230" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ looks for that exact name</text>
+      <text x="320" y="276" text-anchor="middle" font-size="11" font-weight="400" fill="#5b6472">Same input — a parameter keeps it as data, concatenation lets it become SQL</text>
+    </svg>
+    <figcaption>The same user input: pasted into the SQL text it can rewrite the query; passed as a parameter it is only ever a value.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>FromSql($"…{x}")</code> and <code>FromSqlRaw($"…{x}")</code> look the same but are not.</b> <code>FromSql</code> receives the interpolated string as a template and parameterizes each value; <code>FromSqlRaw</code> receives an already-built string, so the value is pasted straight into the SQL.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Can you add <code>.Where()</code> or <code>.Include()</code> after a stored-procedure call?"</b> No — a stored procedure can't be wrapped as a subquery. Run it, call <code>AsEnumerable()</code> right after, and finish in memory. A plain <code>SELECT</code> can be composed with LINQ.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I use <code>FromSql</code> with an interpolated string — EF Core turns each placeholder into a database parameter, so user input stays data and can't inject SQL. I never concatenate input into <code>FromSqlRaw</code>. For commands that return no rows I use <code>ExecuteSql</code>, and a stored procedure runs through the same calls."</p>
+    <ul>
+      <li><code>FromSql($"…{x}")</code> → <span class="hl hl-basic">each <code>{x}</code> becomes a parameter</span>.</li>
+      <li><code>FromSqlRaw</code> → <span class="hl hl-hot">only with <code>{0}</code> placeholders</span> or <code>DbParameter</code>s, never concatenation.</li>
+      <li><code>ExecuteSql</code> → <span class="hl hl-blue">non-query commands</span>, returns rows affected.</li>
+      <li>Stored procedure → <span class="hl hl-inter">can't be composed</span> — add <code>AsEnumerable()</code> and filter in memory.</li>
+      <li>Raw SQL is the <span class="hl hl-blue">last resort</span> — reach for it when LINQ can't express the query.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><code>FromSql</code> (EF Core 7+) runs your SQL and maps the rows to entities. Pass the SQL as an <b>interpolated string</b> and EF Core turns every <code>{value}</code> into a <span class="hl hl-basic">database parameter</span> — the value travels separately from the SQL text, so it can never change what the SQL means.</p>
+
+      <p><code>FromSqlRaw</code> takes a plain string, so it can't tell where your values came from. It is safe only with <code>{0}</code>-style placeholders plus separate arguments, or <code>DbParameter</code> objects. Build the string yourself — with <code>+</code> or <code>$"…"</code> — and the input is pasted into the SQL: <span class="hl hl-hot">SQL injection</span>.</p>
+
+      <p><code>ExecuteSql</code> is the same idea for commands that return no rows (<code>UPDATE</code>, <code>DELETE</code>, a stored procedure) and gives back the rows affected. Raw queries must return every column the entity needs. A plain <code>SELECT</code> can still be composed with LINQ (EF Core wraps it in a subquery); a stored-procedure call cannot. <code>Database.SqlQuery&lt;T&gt;</code> covers results that aren't entities (arbitrary types from EF Core 8). See also <a href="../../sql/basic/10.html">Stored Procedures</a> and <a href="../advanced/5.html">Bulk Operations</a>.</p>
+
+      <div style="overflow-x:auto;">
+        <table class="cmp-table">
+          <thead><tr><th></th><th><code>FromSql</code></th><th><code>FromSqlRaw</code></th><th><code>ExecuteSql</code></th></tr></thead>
+          <tbody>
+            <tr><th>Used for</th><td>queries returning entities</td><td>same, with explicit parameters</td><td>commands (no rows back)</td></tr>
+            <tr><th>Input is safe when</th><td class="yes">✅ interpolated <code>{x}</code></td><td class="no">⚠️ only <code>{0}</code> / <code>DbParameter</code></td><td class="yes">✅ interpolated <code>{x}</code></td></tr>
+            <tr><th>Returns</th><td><code>IQueryable</code> (composable for a <code>SELECT</code>)</td><td>same</td><td>rows affected (<code>int</code>)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">string</span> name = input;
+<span class="kw">var</span> users = db.Users
+    .FromSql(<span class="str">$"SELECT * FROM Users WHERE Name = {name}"</span>)   <span class="cx-ok">// ✅ {name} becomes a parameter</span>
+    .ToList();</code></pre>
+      </div>
+      <p class="cx-note">The interpolated string is a <b>template</b> to <code>FromSql</code> — the value never becomes part of the SQL text.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> users = db.Users
+    .FromSqlRaw(<span class="str">"SELECT * FROM Users WHERE Name = '"</span> + name + <span class="str">"'"</span>)   <span class="cx-err">// ❌ input pasted into SQL</span>
+    .ToList();
+
+<span class="kw">var</span> safe = db.Users
+    .FromSqlRaw(<span class="str">"SELECT * FROM Users WHERE Name = {0}"</span>, name)        <span class="cx-ok">// ✅ parameterized</span>
+    .ToList();</code></pre>
+      </div>
+      <p class="cx-note">Same method, two outcomes — what matters is <b>whether you concatenated</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">int</span> rows = db.Database.ExecuteSql(<span class="str">$"UPDATE Users SET Active = 0 WHERE Id = {id}"</span>);   <span class="cx-ok">// ✅ command</span>
+
+<span class="kw">var</span> top = db.Orders
+    .FromSql(<span class="str">$"EXEC dbo.GetTopOrders {count}"</span>)   <span class="cx-cmt">// stored procedure</span>
+    .AsEnumerable()                              <span class="cx-ok">// ✅ stop composing in SQL</span>
+    .Where(o =&gt; o.Total &gt; <span class="num">100</span>)                   <span class="cx-cmt">// filtered in memory</span>
+    .ToList();</code></pre>
+      </div>
+      <p class="cx-note"><code>ExecuteSql</code> for commands; after a stored procedure, <code>AsEnumerable()</code> keeps EF Core from composing over it.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A search box on an admin page</b> was wired to <code>FromSqlRaw</code> with the text concatenated in. Typing <code>' OR '1'='1</code> returned every customer. Switching to <code>FromSql</code> with an interpolated string fixed it — no other change.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="8.html">← Transactions Around SaveChanges()</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="10.html">Repository &amp; Unit of Work over EF Core →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

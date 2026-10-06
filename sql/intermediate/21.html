@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How do you insert-or-update in one statement?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="MERGE &amp; Upsert — SQL Intermediate — RefreshYourself">
+<meta property="og:description" content="How do you insert-or-update in one statement?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>MERGE &amp; Upsert — SQL Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#a5b4fc"/>
+            <stop offset=".5" stop-color="#6d5be0"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
+          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
+        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
+      </svg>
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">MERGE &amp; Upsert</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ SQL · Intermediate · Should Know</div>
+    <h1><code>MERGE</code> — update if it <span class="hl hl-blue">matches</span>, insert if it <span class="hl hl-basic">doesn't</span> (and the <span class="hl hl-hot">race</span> to watch)</h1>
+    <p class="interview-q">How do you insert-or-update in one statement?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+        <div class="wc-head">🔀 MERGE / upsert</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>The "check, then insert or update" approach takes extra statements, and two sessions can both decide a row is missing and both try to insert it.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>MERGE</code> joins a source to a target and runs <code>UPDATE</code> for matches and <code>INSERT</code> for non-matches in one statement — but under concurrency it still needs a lock hint such as <code>HOLDLOCK</code> to be safe.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">MERGE = match on a key → update if found, insert if not.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline"><code>MERGE</code> = <b>"match on a key — update if found, insert if not."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>WHEN MATCHED</code></b> → UPDATE</span>
+      <span class="tc-line"><b><code>WHEN NOT MATCHED</code></b> → INSERT</span>
+      <span class="tc-line"><b>Concurrent callers</b> → add <code>HOLDLOCK</code>, or use UPDATE-then-INSERT in a transaction</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI21" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI21Slate" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">ONE STATEMENT · TWO BRANCHES</text>
+
+      <g filter="url(#shI21)"><rect x="15" y="88" width="140" height="104" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="85" y="122" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">📥 Source</text>
+      <text x="85" y="142" text-anchor="middle" font-size="10.5" fill="#5b6472">incoming rows</text>
+      <text x="85" y="160" text-anchor="middle" font-size="10.5" font-family="Fira Code, Consolas, monospace" fill="#5b6472">ids 1, 2, 5</text>
+
+      <path d="M155,140 H215" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arI21Slate)"/>
+
+      <g filter="url(#shI21)"><rect x="215" y="105" width="150" height="70" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="290" y="137" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🔑 Match on key</text>
+      <text x="290" y="157" text-anchor="middle" font-size="10.5" font-family="Fira Code, Consolas, monospace" fill="#5b6472">t.Id = s.Id</text>
+
+      <path d="M365,140 H405" fill="none" stroke="#64748b" stroke-width="1.8"/>
+      <path d="M405,140 V75 H445" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arI21Slate)"/>
+      <path d="M405,140 V205 H445" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arI21Slate)"/>
+
+      <g filter="url(#shI21)"><rect x="445" y="40" width="175" height="70" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="532" y="69" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">✏️ UPDATE</text>
+      <text x="532" y="89" text-anchor="middle" font-size="10.5" fill="#5b6472">WHEN MATCHED · ids 1, 2</text>
+
+      <g filter="url(#shI21)"><rect x="445" y="170" width="175" height="70" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="532" y="199" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">➕ INSERT</text>
+      <text x="532" y="219" text-anchor="middle" font-size="10.5" fill="#5b6472">WHEN NOT MATCHED · id 5</text>
+    </svg>
+    <figcaption>Each source row is matched to the target on the key, then routed: found → <code>UPDATE</code>, not found → <code>INSERT</code>.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"One <code>MERGE</code> statement means the upsert is automatically race-free."</b> Without a lock hint such as <code>HOLDLOCK</code>, two sessions can both see "not matched" and both try to insert, so one can fail with a duplicate-key error.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"So what do you use in production?"</b> Either <code>MERGE</code> with <code>HOLDLOCK</code> on a unique key, or an <code>UPDATE</code> followed by an <code>INSERT</code> when no row was updated, inside a transaction with <code>UPDLOCK, SERIALIZABLE</code> — many teams prefer the second because it is easier to reason about.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>MERGE</code> compares a source to a target on a key: <code>WHEN MATCHED</code> runs an update, <code>WHEN NOT MATCHED</code> runs an insert, all in one statement. It is not automatically safe for concurrent callers, so I add a lock hint such as <code>HOLDLOCK</code> — or use UPDATE-then-INSERT in a transaction."</p>
+    <ul>
+      <li><code>WHEN MATCHED</code> → <span class="hl hl-blue">UPDATE</span>; <code>WHEN NOT MATCHED</code> → <span class="hl hl-basic">INSERT</span>.</li>
+      <li><code>WHEN NOT MATCHED BY SOURCE</code> → <span class="hl hl-hot">delete or update target rows</span> the source no longer has.</li>
+      <li><code>OUTPUT $action</code> → <span class="hl hl-teal">shows what happened</span> to each row (INSERT, UPDATE or DELETE).</li>
+      <li>Each target row may match <span class="hl hl-inter">only one source row</span> — otherwise an UPDATE or DELETE fails with an error.</li>
+      <li>Concurrent callers → <span class="hl hl-hot"><code>HOLDLOCK</code> on the target</span>, plus a unique index as the safety net.</li>
+      <li>Many teams use <span class="hl hl-basic">UPDATE-then-INSERT</span> in a transaction instead — simpler to reason about.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue"><code>MERGE</code></span> takes a <b>source</b> (a table, a query, or a <code>VALUES</code> list) and a <b>target</b>, joins them with <code>ON</code>, and runs a different action per case. <code>WHEN MATCHED</code> updates the existing row. <code>WHEN NOT MATCHED</code> inserts a new one. Optionally, <code>WHEN NOT MATCHED BY SOURCE</code> handles target rows that the source no longer has. An <code>OUTPUT</code> clause, with <code>$action</code>, returns what happened to each row. The statement must end with a semicolon.</p>
+
+      <p>The catch is <span class="hl hl-hot">concurrency</span>. A <code>MERGE</code> is one statement, but that alone does not stop two sessions racing on the same key: both can find "no match" and both try to insert. The commonly used fix is a <code>HOLDLOCK</code> (serializable) hint on the target, with a unique index on the key so a duplicate becomes an error, never a silent second row.</p>
+
+      <p>Because of this — and because <code>MERGE</code> has a reputation among practitioners for edge-case problems (check Microsoft's current documentation and known issues for your version before relying on it for something complex) — many teams use plain <b>UPDATE-then-INSERT</b>: update the row, and if <code>@@ROWCOUNT</code> is zero, insert it, all inside a transaction with <code>UPDLOCK, SERIALIZABLE</code>. Neither is wrong; know both. Related: <a href="../basic/15.html">Transaction Control Mechanics</a> and <a href="../advanced/5.html">Locking</a>.</p>
+
+      <div style="overflow-x:auto;">
+        <table class="cmp-table">
+
+            <thead><tr><th></th><th><code>MERGE</code></th><th><code>UPDATE</code> then <code>INSERT</code></th></tr></thead>
+            <tbody>
+              <tr><th>Statements</th><td>one</td><td>two, inside one transaction</td></tr>
+              <tr><th>Can also delete rows missing from the source?</th><td class="yes">✅ yes — <code>WHEN NOT MATCHED BY SOURCE</code></td><td class="no">❌ no — a separate <code>DELETE</code></td></tr>
+              <tr><th>Safe against two sessions on the same key?</th><td>only with a lock hint such as <code>HOLDLOCK</code></td><td>only with <code>UPDLOCK, SERIALIZABLE</code> hints inside a transaction</td></tr>
+              <tr><th>Why teams pick it</th><td>compact, handles bulk source rows</td><td>simple to reason about, and <code>MERGE</code> has a reputation for edge-case problems</td></tr>
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> T-SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">MERGE</span> dbo.Stock <span class="kw">WITH</span> (HOLDLOCK) <span class="kw">AS</span> t           <span class="cx-cmt">-- HOLDLOCK = guard against a concurrent insert</span>
+<span class="kw">USING</span> (<span class="kw">VALUES</span> (<span class="num">1</span>, <span class="num">50</span>), (<span class="num">5</span>, <span class="num">20</span>)) <span class="kw">AS</span> s (ProductId, Qty)
+   <span class="kw">ON</span> t.ProductId = s.ProductId
+<span class="kw">WHEN MATCHED THEN</span>
+    <span class="kw">UPDATE SET</span> t.Qty = s.Qty                <span class="cx-ok">-- ✅ product exists → update</span>
+<span class="kw">WHEN NOT MATCHED THEN</span>
+    <span class="kw">INSERT</span> (ProductId, Qty) <span class="kw">VALUES</span> (s.ProductId, s.Qty)   <span class="cx-ok">-- ✅ new → insert</span>
+<span class="kw">OUTPUT</span> $action, inserted.ProductId;           <span class="cx-cmt">-- shows INSERT / UPDATE per row</span></code></pre>
+      </div>
+      <p class="cx-note">One statement does both jobs; <code>OUTPUT $action</code> reports which branch each row took.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> T-SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">BEGIN TRAN</span>;
+<span class="kw">UPDATE</span> dbo.Stock <span class="kw">WITH</span> (UPDLOCK, SERIALIZABLE)
+<span class="kw">SET</span> Qty = @Qty <span class="kw">WHERE</span> ProductId = @Id;    <span class="cx-cmt">-- locks the key range, even if no row exists</span>
+
+<span class="kw">IF</span> @@ROWCOUNT = <span class="num">0</span>                          <span class="cx-cmt">-- nothing updated → row is missing</span>
+    <span class="kw">INSERT</span> dbo.Stock (ProductId, Qty) <span class="kw">VALUES</span> (@Id, @Qty);
+<span class="kw">COMMIT</span>;</code></pre>
+      </div>
+      <p class="cx-note">The alternative many teams prefer: the hints hold the key range until commit, so a second session cannot slip an insert in between the two statements.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Scenario:</b> a nightly job loads a supplier price file into a staging table, then one <code>MERGE</code> updates the prices of products you already have and inserts the new ones — and if two imports could ever overlap, the <code>HOLDLOCK</code> hint keeps them from inserting the same product twice.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="20.html">← Set Operators: EXCEPT &amp; INTERSECT</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="22.html">Stored Procedure vs. Function →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

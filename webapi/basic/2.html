@@ -91,7 +91,6 @@
     <div class="rgrid">
       <p class="rrow"><code>GET / PUT / DELETE</code> <span class="rarrow">→</span> <b>same</b> end state, every time</p>
       <p class="rrow"><code>POST</code> <span class="rarrow">→</span> <b>new</b> thing created, every time</p>
-      <p class="rrow"><code>PATCH</code> <span class="rarrow">→</span> <b>depends</b> on what it changes</p>
     </div>
     <p class="rthink"><b class="tc-label">Think:</b> call it <b><code>1</code></b> time or <b><code>100</code></b> times — does the end state change past the first call?</p>
   </div>
@@ -141,11 +140,11 @@
 
       <g filter="url(#shB2)"><rect x="190" y="218" width="260" height="48" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
       <text x="320" y="240" text-anchor="middle" font-size="14" font-weight="700" fill="#92400e">PATCH</text>
-      <text x="320" y="256" text-anchor="middle" font-size="10.5" fill="#5b6472">→ depends on what it changes</text>
+      <text x="320" y="256" text-anchor="middle" font-size="10.5" fill="#5b6472">→ covered in Intermediate: HTTP Verbs</text>
 
       <text x="320" y="292" text-anchor="middle" font-size="11" fill="#5b6472">Repeat PUT or DELETE → same result. Repeat POST → a brand-new order each time.</text>
     </svg>
-    <figcaption>Same request, sent three times: PUT/DELETE land on the same state, POST creates something new each time, PATCH depends on the operation.</figcaption>
+    <figcaption>Same request, sent three times: PUT/DELETE land on the same state, POST creates something new each time, PATCH is covered on the Intermediate HTTP Verbs page.</figcaption>
   </figure>
 
   <div class="trap">
@@ -155,17 +154,16 @@
 
   <div class="followup">
     <div class="fhead">🔄 Likely Follow-up</div>
-    <p class="ftline"><b>"If POST isn't idempotent, how do you make a 'create' operation safe to retry over a flaky network?"</b> Idempotency keys — the client sends a unique key per logical operation, and the server checks whether it already processed that key before creating anything new, returning the original result instead of a duplicate. This is exactly how payment APIs like Stripe make retry-safe charge creation possible.</p>
+    <p class="ftline"><b>"If POST isn't idempotent, how do you make a 'create' operation safe to retry over a flaky network?"</b> Idempotency keys — the client sends a unique key per logical operation and the server returns the original result instead of creating a duplicate. The mechanics are on the <a href="../intermediate/1.html">HTTP Verbs</a> page.</p>
   </div>
 
   <div class="keypoints">
     <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
-    <p class="kp-primary">"An operation is idempotent if making the same request multiple times leaves the system in the same end state as making it once. <code>GET</code>, <code>PUT</code>, and <code>DELETE</code> are specified to be idempotent. <code>POST</code> is not, because its job is to create a new thing every time. <code>PATCH</code> depends on whether the patch sets an absolute value or something like an increment."</p>
+    <p class="kp-primary">"An operation is idempotent if making the same request multiple times leaves the system in the same end state as making it once. <code>GET</code>, <code>PUT</code>, and <code>DELETE</code> are specified to be idempotent. <code>POST</code> is not, because its job is to create a new thing every time."</p>
     <ul>
       <li><code>GET</code> / <code>PUT</code> / <code>DELETE</code> → <span class="hl hl-basic">repeat it, the end state doesn't change further</span>.</li>
       <li><code>POST</code> → <span class="hl hl-hot">repeat it, you likely get duplicates</span>.</li>
-      <li><code>PATCH</code> → <span class="hl hl-inter">idempotent only if it sets an absolute value</span>, not if it increments.</li>
-      <li>Retry-safe <code>POST</code> → use an <span class="hl hl-blue">idempotency key</span>, not the verb itself.</li>
+      <li>Retry-safe <code>POST</code> → needs an <span class="hl hl-blue">idempotency key</span> — see <a href="../intermediate/1.html">HTTP Verbs</a>.</li>
     </ul>
   </div>
 
@@ -181,25 +179,13 @@
       send, so sending the same replacement twice leaves the same object in place the second
       time. <span class="hl hl-hot">POST</span>'s job is different by design: it means "create a
       new thing," so the spec doesn't — and can't — promise idempotency; two identical
-      <code>POST</code> calls are two separate creates on purpose. <span class="hl hl-inter">PATCH</span>
-      sits in between: it's idempotent only when the patch itself is (setting a field to a fixed
-      value), not when it isn't (incrementing a counter).</p>
+      <code>POST</code> calls are two separate creates on purpose. The full verb-by-verb breakdown,
+      including <code>PATCH</code>, is on <a href="../intermediate/1.html">HTTP Verbs</a>.</p>
 
       <p>This is exactly why retry logic differs by verb. A client or load balancer can safely
       retry a <code>GET</code>, <code>PUT</code>, or <code>DELETE</code> after a timeout without
       knowing whether the first attempt actually landed. Retrying a <code>POST</code> the same
       blind way is what creates duplicate orders, duplicate charges, duplicate emails.</p>
-
-      <div style="overflow-x:auto;">
-        <table class="cmp-table">
-          <thead><tr><th></th><th><code>GET</code></th><th><code>POST</code></th><th><code>PUT</code></th><th><code>PATCH</code></th><th><code>DELETE</code></th></tr></thead>
-          <tbody>
-            <tr><th>Idempotent by spec?</th><td class="yes">✅ yes</td><td class="no">❌ no</td><td class="yes">✅ yes</td><td>depends</td><td class="yes">✅ yes</td></tr>
-            <tr><th>Repeat 3× → end state</th><td>same</td><td>3 separate resources</td><td>same</td><td>same, only if it sets a value</td><td>same — stays gone</td></tr>
-            <tr><th>Why</th><td>read-only, changes nothing</td><td>means "create a new one" every call</td><td>replaces the whole resource with the same body</td><td>depends entirely on the patch operation</td><td>end state is "gone," first call or third</td></tr>
-          </tbody>
-        </table>
-      </div>
     </div>
   </details>
 
@@ -238,26 +224,6 @@
 }</code></pre>
       </div>
       <p class="cx-note">Two identical calls make two different order rows with two different <code>Id</code>s — not idempotent, exactly as the spec expects from <code>POST</code>.</p>
-
-      <div class="code-card">
-        <div class="cc-head">
-          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
-          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-        </div>
-        <pre><code><span class="kw">[HttpPost(</span><span class="str">"orders"</span><span class="kw">)]</span>
-<span class="kw">public</span> <span class="ty">IActionResult</span> CreateOrder(<span class="ty">OrderDto</span> body, [FromHeader(Name = <span class="str">"Idempotency-Key"</span>)] <span class="ty">string</span> idempotencyKey)
-{
-    <span class="kw">var</span> existing = _db.Orders.FirstOrDefault(o =&gt; o.IdempotencyKey == idempotencyKey);
-    <span class="kw">if</span> (existing != <span class="kw">null</span>)
-        <span class="kw">return</span> Ok(existing);            <span class="cx-ok">// ✅ same key → return the original, don't duplicate</span>
-
-    <span class="kw">var</span> order = <span class="kw">new</span> <span class="ty">Order</span>(body) { IdempotencyKey = idempotencyKey };
-    _db.Orders.Add(order);
-    _db.SaveChanges();
-    <span class="kw">return</span> Created($<span class="str">"/orders/{order.Id}"</span>, order);
-}</code></pre>
-      </div>
-      <p class="cx-note">The verb is still <code>POST</code> — the endpoint itself becomes idempotent because it checks the key before creating anything.</p>
 
     </div>
   </details>
@@ -309,7 +275,7 @@
           <p class="uc-what">This isn't one request retried — it's two separate requests, both
           fired from the browser before either one's response returns. Disabling the button
           after the first click helps, but can't fully close the gap on a slow connection.
-          Without server-side dedupe (an idempotency key) on the endpoint, two clicks on a
+          Without server-side dedupe on the endpoint, two clicks on a
           <code>POST</code> can create two separate payments.</p>
           <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Two clicks are two requests — not one request retried.</span></div>
         </div>
@@ -348,7 +314,7 @@
       <p><b>A mobile client's PUT request times out after the server already processed it.</b> The
       app's retry logic fires automatically. Because <code>PUT</code> is idempotent, that blind
       retry is safe — worst case, the same order gets updated to the same values twice. If that
-      had been a plain <code>POST</code> with no idempotency key, the exact same automatic retry
+      had been a plain <code>POST</code>, the exact same automatic retry
       could double-order or double-charge the customer.</p>
     </div>
   </details>

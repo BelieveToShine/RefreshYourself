@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 44 pages written
+## Status — Phases 1–7 complete, all 49 pages written (44 original + 5 gap pages added 2026-10-07)
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): raw questions, grouped by
   concept across 44 subsections, sourced from the user's own AWS interview-roadmap document
@@ -79,7 +79,7 @@ keeping it in sync with the live pages.
 | 10 | CloudWatch | 🔥 | ✅ |
 | 11 | Route 53 | ⭐ | ✅ |
 
-## Intermediate (19 topics) — 19 written
+## Intermediate (22 topics) — 22 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -102,8 +102,11 @@ keeping it in sync with the live pages.
 | 17 | CI/CD & Deployment | ⭐ | ✅ |
 | 18 | Backup & Disaster Recovery | 🔥 | ✅ |
 | 19 | CloudFront & Content Delivery **[gap-hunt]** | 🔥 | ✅ |
+| 20 | Step Functions in Depth | ⭐ | ✅ |
+| 21 | KMS & Envelope Encryption | ⭐ | ✅ |
+| 22 | Block & File Storage — EBS, EFS & FSx | ⭐ | ✅ |
 
-## Advanced (14 topics) — 14 written
+## Advanced (16 topics) — 16 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -121,6 +124,8 @@ keeping it in sync with the live pages.
 | 12 | Architecture Design Questions | 🔥 | ✅ |
 | 13 | Architect-Level Trade-off Questions | 🧠 | ✅ |
 | 14 | Sustainability | ⭐ | ✅ |
+| 15 | Multi-Account Governance — Organizations, Control Tower & Config | ⭐ | ✅ |
+| 16 | DynamoDB Data Modeling — Access Patterns, Single-Table & Streams | ⭐ | ✅ |
 
 ## Where the roadmap came from
 
@@ -172,3 +177,5 @@ passed the mandatory independent diagram-verification sweep (44/44 pages, 48/48 
 fixed along the way, not glossed over). The 11 stale Advanced-tier pager links found and fixed
 during this same pass are also documented above, not silently corrected. Expect a
 review/feedback pass once the user goes through it, same as every other completed track.
+
+> **2026-10-06 gap-hunt — written and wired 2026-10-07:** 5 new pages (44 -> 49): Intermediate 20 Step Functions in Depth, 21 KMS & Envelope Encryption, 22 Block & File Storage — EBS, EFS & FSx; Advanced 15 Multi-Account Governance — Organizations, Control Tower & Config, 16 DynamoDB Data Modeling — Access Patterns, Single-Table & Streams - see the "Addendum 2026-10-06" in [`roadmap.md`](roadmap.md). Counts: Basic 11, Intermediate 22, Advanced 16.
