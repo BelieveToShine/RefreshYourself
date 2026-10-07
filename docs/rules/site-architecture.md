@@ -82,6 +82,8 @@ This table is also what `scripts/pre-commit-check.js` enforces. Details/why:
 
 ## Branches and history
 
+**Backup repo (added 2026-10-07):** `https://github.com/BelieveToShine/RefreshYourself_V1` mirrors `main` as a backup (its `main` was the old `v1` snapshot; the first backup push was a clean fast-forward, no history lost). The local clone has it as the `backup` remote: refresh it with `git push backup main` (never force-push it). It is **not** the deploy target — GitHub Pages deploys from `origin/main` only.
+
 `main` is deployed. Other remote branches: `v1` (earlier snapshot of the site) and two
 `claude/*-pipeline` branches created by remote sessions (their work has since been folded into
 `main`; check before assuming they hold unique content). When reporting a commit, follow
