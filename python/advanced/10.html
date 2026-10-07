@@ -316,6 +316,63 @@ asyncio.run(main())</code></pre>
     </div>
   </details>
 
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You want many waits, like network calls, to overlap on one thread</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="15" y="14" width="205" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="117" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#16a34a">⏳ await asyncio.sleep(3)</text>
+              <path d="M220,33 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="14" width="175" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="377" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#16a34a">🔀 other tasks run</text>
+            </svg>
+          </div>
+          <p class="uc-what">At an <code>await</code> the coroutine gives control back to the event loop, which runs other tasks meanwhile. So A, B and C finish in about 3 seconds in total, not 9.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>await</code> hands control back to the loop.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You call <code>time.sleep()</code> or a blocking driver inside <code>async def</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="15" y="14" width="205" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="117" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626">😴 time.sleep(3) in async</text>
+              <path d="M220,33 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="14" width="175" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="377" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626">🧊 whole loop frozen</text>
+            </svg>
+          </div>
+          <p class="uc-what">A blocking call never yields to the event loop. No other task can run until it returns, so every request on that loop stalls, not just this one.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Blocking in <code>async def</code> stalls everyone.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> The blocking call can't be rewritten as async</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="15" y="14" width="205" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="117" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🧵 to_thread(blocking_fn)</text>
+              <path d="M220,33 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="14" width="175" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="377" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🌬️ loop stays free</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>asyncio.to_thread()</code> runs the blocking function in a worker thread. The event-loop thread stays free, so <code>await</code> can return while the call runs.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Can't rewrite it? <code>to_thread</code> it.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
   <details class="realworld toggle">
     <summary>🌍 Real-world example <span class="chev">▾</span></summary>
     <div class="toggle-body">

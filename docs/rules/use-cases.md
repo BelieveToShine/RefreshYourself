@@ -122,3 +122,18 @@ pixel gap, don't just eyeball a screenshot).
 - **Column/layout note:** unlike `.why-grid`, `.uc-scenarios` is always a single vertical stack
   (`flex-direction:column`), never a grid — scenarios are read in order, one at a time, not
   scanned side-by-side.
+
+## Coverage and enforcement (added 2026-10-07)
+
+Python (47 pages) and DSA (33 pages) were the only tracks with **no** Use Cases panels (every other track
+had 58–93%), which the user spotted as an inconsistency. All 80 pages now have one (2–4 scenarios each,
+251 in total; red `.uc-trap` only where the page has a genuine Common Trap), so **every track now has
+Use Cases on essentially every page**. The "optional, only when 3+ distinct scenarios" guidance above still
+applies to genuinely thin topics, but the default for a new page is now: include the panel.
+
+`node scripts/check-site.js` now (a) **errors** on any panel that has fewer than 2 scenarios, a scenario with
+no `.uc-mini` diagram, no own `--uc-color`, or a Remember line without separate `.uc-rtag`/`.uc-rtext` spans,
+and (b) **warns** when a track has Use Cases on fewer than half its pages. The live overlap script from
+[`diagram-style.md`](diagram-style.md) must also be run on the `.uc-mini` diagrams — select
+`svg.topic-diagram, .uc-mini svg`; the 2026-10-07 sweep covered 251 mini-diagrams + 139 main diagrams on the
+80 pages with zero real findings.

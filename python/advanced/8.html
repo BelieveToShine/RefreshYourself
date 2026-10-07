@@ -290,6 +290,63 @@ print(count)  <span class="cx-ok"># always 200000</span></code></pre>
     </div>
   </details>
 
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> Several threads run <code>count += 1</code> on a shared counter</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="15" y="14" width="205" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="117" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626">🧵 two threads: count += 1</text>
+              <path d="M220,33 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="14" width="175" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="377" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626">💥 an increment is lost</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>count += 1</code> is three steps: read, add, write. If a thread switch happens in between, two threads can write the same new value, so one increment vanishes. The GIL does not prevent this.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">The GIL does not make <code>+=</code> safe.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> You need only one thread at a time inside a critical section</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="15" y="14" width="205" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="117" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#16a34a">🔐 with lock: count += 1</text>
+              <path d="M220,33 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="14" width="175" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="377" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#16a34a">🚦 threads take turns</text>
+            </svg>
+          </div>
+          <p class="uc-what">The lock lets one thread hold it at a time, so the whole read-add-write finishes before another thread starts its own. The result is always the full count.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Lock the whole read-modify-write.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> A function holding a lock calls another function that locks the same lock</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="15" y="14" width="205" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="117" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🔁 same thread locks twice</text>
+              <path d="M220,33 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="14" width="175" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="377" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">♾️ plain Lock: stuck</text>
+            </svg>
+          </div>
+          <p class="uc-what">A plain <code>Lock</code> cannot be taken twice, even by the thread that holds it, so the second attempt waits forever. An <code>RLock</code> lets the same thread take it again.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>RLock</code>: same thread may re-acquire.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
   <details class="realworld toggle">
     <summary>🌍 Real-world example <span class="chev">▾</span></summary>
     <div class="toggle-body">

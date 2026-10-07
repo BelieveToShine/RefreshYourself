@@ -21,7 +21,7 @@ const SEARCH = load("assets/search-index.js", "SEARCH_INDEX");
 const NAV = load("assets/nav-index.js", "NAV_INDEX");
 const searchPaths = new Set(SEARCH.map((e) => e.path));
 const rootIndex = read("index.html");
-const counts = {};
+const counts = {}, useCases = {};
 
 for (const t of TRACKS) {
   counts[t] = 0;
@@ -51,6 +51,17 @@ for (const t of TRACKS) {
       if (nav && !html.includes(`data-tier-key="${navKey}"`)) err(`${rel}: bad/missing data-tier-key`);
       if (!/<svg[^>]*class="topic-diagram"/.test(html)) err(`${rel}: no topic-diagram SVG`);
       if (!/<title>[^<]+<\/title>/.test(html)) err(`${rel}: no <title>`);
+      { // an optional "🧭 Use Cases" panel, when present, must be complete (docs/rules/use-cases.md)
+        const uc = (html.match(/<details class="usecase[^]*?<\/details>/) || [""])[0];
+        if (uc) {
+          const sc = (uc.match(/class="uc-scenario( uc-trap)?"/g) || []).length;
+          if (sc < 2) err(`${rel}: Use Cases panel needs at least 2 scenarios (has ${sc})`);
+          if ((uc.match(/class="uc-mini"/g) || []).length !== sc) err(`${rel}: every Use Cases scenario needs a .uc-mini diagram`);
+          if ((uc.match(/--uc-color:/g) || []).length < sc) err(`${rel}: every Use Cases scenario needs its own --uc-color`);
+          if ((uc.match(/class="uc-rtag"/g) || []).length !== sc || (uc.match(/class="uc-rtext"/g) || []).length !== sc) err(`${rel}: every Use Cases scenario needs a .uc-remember with separate .uc-rtag and .uc-rtext spans`);
+          useCases[t] = (useCases[t] || 0) + 1;
+        }
+      }
       { // "Why it matters" must be the Problem -> Solution -> Recall card format (docs/rules/why-it-matters.md)
         const why = (html.match(/<details class="topic-hook[^]*?<\/details>/) || [""])[0];
         if (!why) err(`${rel}: no "Why it matters" box`);
@@ -101,6 +112,7 @@ for (const t of TRACKS) for (const f of ["overview.md", "roadmap.md", "question-
 // pagers must link the neighbouring pages (node scripts/fix-pagers.js --fix repairs them)
 { const pr = require("child_process").spawnSync(process.execPath, [path.join(__dirname, "fix-pagers.js")], { encoding: "utf8" }); if (pr.status !== 0) pr.stdout.split(String.fromCharCode(10)).filter((l) => l.includes(": prev") || l.includes(": next") || l.includes("unexpected")).forEach((l) => err("pager: " + l + " — run node scripts/fix-pagers.js --fix")); }
 
+for (const t of TRACKS) if (counts[t] && (useCases[t] || 0) / counts[t] < 0.5) warn(`${t}: only ${useCases[t] || 0}/${counts[t]} pages have a Use Cases panel (other tracks have 58–93%)`);
 console.log("Pages on disk:", JSON.stringify(counts), "total", Object.values(counts).reduce((a, b) => a + b, 0));
 warns.forEach((w) => console.log("WARN ", w));
 errors.forEach((e) => console.log("ERROR", e));
