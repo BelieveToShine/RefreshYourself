@@ -51,6 +51,12 @@ for (const t of TRACKS) {
       if (nav && !html.includes(`data-tier-key="${navKey}"`)) err(`${rel}: bad/missing data-tier-key`);
       if (!/<svg[^>]*class="topic-diagram"/.test(html)) err(`${rel}: no topic-diagram SVG`);
       if (!/<title>[^<]+<\/title>/.test(html)) err(`${rel}: no <title>`);
+      { // "Why it matters" must be the Problem -> Solution -> Recall card format (docs/rules/why-it-matters.md)
+        const why = (html.match(/<details class="topic-hook[^]*?<\/details>/) || [""])[0];
+        if (!why) err(`${rel}: no "Why it matters" box`);
+        else if (!why.includes("wc-row problem") || !why.includes("wc-row solution") || !why.includes("wcr-tag"))
+          err(`${rel}: "Why it matters" must be Problem, Solution and Recall cards (docs/rules/why-it-matters.md)`);
+      }
       for (const [name, re] of [["interview-q", /class="interview-q"/], ["recall", /class="recall"/], ["keypoints", /class="keypoints"/], ["explanation", /class="explain/], ["code", /class="codebox/]])
         if (!re.test(html)) warn(`${rel}: missing section ${name}`);
       const linkScan = html.split("<pre").map((s, i) => (i ? s.slice(s.indexOf("</pre>") + 6) : s)).join(" ").split("<text").map((s, i) => (i ? s.slice(s.indexOf("</text>") + 7) : s)).join(" "); // ignore sample markup in code blocks / diagram text
