@@ -134,3 +134,13 @@ should say.
 ## Brand logo (changed 2026-10-07)
 
 The header logo is the external file `assets/images/brand-mark.svg`, referenced as `<img class="brand-mark" width="24" height="24" alt="">` on every page (`scripts/add-head-meta.js` swaps old inline copies). Edit the logo once in that file. `.brand .brand-mark` in `style.css` still sizes it.
+
+## Roadmap icon on a tile — click target (fixed 2026-10-07)
+
+`.roadmap-badge` (the circle in a tile's top-right) must **always** open that track's `roadmap.html` — wherever you click on it. The bug: the tile's title link (`.tile-head`, an `inline-flex` anchor that was stretching the full tile width) is `position:relative` (every anchor is, for the underline animation) and comes *after* the badge in the DOM, so it painted on top of the badge's centre and only the right edge reached the badge. Fix, now in `style.css`:
+
+- `.roadmap-badge{ z-index:5 }` (also `.hero-roadmap-link`) so it is above any positioned sibling link;
+- `.tile-head{ align-self:flex-start; max-width:calc(100% - 64px) }` so the title link shrink-wraps and never runs under the badge;
+- the badge is 44px (icon 28px) with an invisible `::before{ inset:-6px }` extra hit area (≈56px target).
+
+**Rule:** any absolutely-positioned corner control inside a tile/card that also contains a stretched link must have an explicit `z-index` above that link. Verify with `document.elementFromPoint` at the centre, edges and just outside the control (all 15 tiles were checked this way) — a screenshot can't show it.
