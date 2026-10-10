@@ -15,7 +15,7 @@ junior/mid-level interview. Two groups of tracks:
 
 - **Core backend interview path**, in this order: C# → LINQ → OOP → .NET/ASP.NET Core (MVC lives
   inside this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure →
-  AWS. **LINQ — Phases 1–6 complete, roadmap-only, 0/58 pages written** (added 2026-10-10): a
+  AWS. **LINQ — Phases 1–6 complete, roadmap-only, 0/59 pages written** (added 2026-10-10): a
   separate top-level category per the user's own explicit request, scoped to LINQ-the-language-
   feature (operators, execution model, providers, SQL translation mechanics) rather than EF
   Core's own machinery or raw SQL internals, which stay in their existing tracks and get

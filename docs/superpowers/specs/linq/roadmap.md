@@ -47,6 +47,14 @@ database-specific material" / "don't force every page...").
    Cross-linked instead, from the pages where tracking naturally comes up (Premature
    Materialization, N+1).
 
+**Addendum (2026-10-10)** — after this roadmap was first drafted, the user asked for one more
+Scenario page: writing a custom LINQ-style extension method (a `Where`-style filter built from
+scratch, applied in a query chain like a built-in operator) — testing whether a candidate
+actually understands `Where`'s own deferred-execution mechanism (an iterator block using `yield
+return`) well enough to reproduce it, not just use it. Added as Scenario 11 / Advanced #28
+throughout this document and the live site; every count below (58→59 pages, 27→28 Advanced,
+10→11 scenarios) reflects this addition.
+
 Three pages do sit close to existing EF Core pages but earn their own LINQ-side page rather than
 being excluded, because they ask a genuinely different question from the LINQ-authoring side
 (see each page's own "cross-link, not duplicate" note in the taxonomy): **`Include` vs.
@@ -73,14 +81,15 @@ Operators" page itself will cite this table and note it should be re-checked aga
 learn.microsoft.com's own LINQ API reference at write-time, since this site's own accuracy rule
 never lets a version claim ride on memory alone.)
 
-## Phase 3 — Grouping into pages (58 pages)
+## Phase 3 — Grouping into pages (59 pages)
 
 Everything not already addressed by a Phase 2 merge/exclusion is one taxonomy concept → one page,
-same as every other track. The 10 user-supplied scenarios each keep their own page — Phase 3
-considered folding 1–2 of them into their closest comparison page (e.g. scenario 7, "Distinct vs.
-DistinctBy vs. GroupBy vs. a custom comparer," sounds adjacent to the Basic `Distinct`/
-`DistinctBy` page) but kept all 10 separate: the user asked for scenario questions to be "a
-separate subsection so developers can practise applying LINQ under interview pressure" —
+same as every other track. The 11 scenarios (10 from the user's original list, plus the
+custom-extension-method scenario added per the Phase 2 addendum) each keep their own page —
+Phase 3 considered folding 1–2 of them into their closest comparison page (e.g. scenario 7,
+"Distinct vs. DistinctBy vs. GroupBy vs. a custom comparer," sounds adjacent to the Basic
+`Distinct`/`DistinctBy` page) but kept all 11 separate: the user asked for scenario questions to
+be "a separate subsection so developers can practise applying LINQ under interview pressure" —
 collapsing any of them back into a comparison page would undercut exactly that distinction
 between "know the difference" and "solve the problem live."
 
@@ -90,7 +99,7 @@ between "know the difference" and "solve the problem live."
 |---|---|---|
 | Basic | 14 | What Is LINQ?; Select vs. SelectMany; Where vs. First(predicate); First vs. FirstOrDefault vs. Single vs. SingleOrDefault; Any vs. Count() > 0; Any vs. All vs. Contains; Where vs. OfType; OrderBy vs. OrderByDescending vs. ThenBy; Skip vs. Take; Distinct vs. DistinctBy; ToList vs. ToArray vs. ToDictionary; Cast vs. OfType; Min vs. Max vs. Sum vs. Average vs. Count; Anonymous Types and Projection |
 | Intermediate | 17 | Query Syntax vs. Method Syntax — When to Use Each; Deferred vs. Immediate Execution; Lazy Evaluation vs. Materialization; IEnumerable vs. IQueryable; GroupBy vs. ToLookup; Join vs. GroupJoin; Inner Join vs. Left Outer Join; SelectMany vs. Join; Zip vs. Join; Aggregate vs. Sum/Count; Append/Prepend vs. Collection Modification; Concat vs. Union vs. Intersect vs. Except; SequenceEqual vs. Set Equality; ToDictionary vs. ToLookup; Equality Comparers and Custom Equality; let/into and Grouping in Query Syntax; Multiple Enumeration and Side Effects |
-| Advanced | 27 (17 core + 10 scenario) | Func vs. Expression\<Func\>; How LINQ Providers Work; LINQ-to-Objects vs. LINQ-to-Entities; How LINQ Expressions Become SQL; Client-Side vs. Server-Side Evaluation; AsEnumerable vs. AsQueryable; Why EF Core Cannot Translate Certain C# Methods; Premature Materialization and ToList() Placement; Query Execution and Database Round Trips; Include vs. Projection Using Select; N+1 Queries and Navigation Properties; Offset Pagination vs. Keyset Pagination; Async LINQ (ToListAsync/AnyAsync/CountAsync); IAsyncEnumerable vs. IEnumerable; Streaming vs. Buffering Large Results; PLINQ (AsParallel, Ordering, Trade-offs); Modern LINQ Operators; + 10 Scenario pages (see Phase 6) |
+| Advanced | 28 (17 core + 11 scenario) | Func vs. Expression\<Func\>; How LINQ Providers Work; LINQ-to-Objects vs. LINQ-to-Entities; How LINQ Expressions Become SQL; Client-Side vs. Server-Side Evaluation; AsEnumerable vs. AsQueryable; Why EF Core Cannot Translate Certain C# Methods; Premature Materialization and ToList() Placement; Query Execution and Database Round Trips; Include vs. Projection Using Select; N+1 Queries and Navigation Properties; Offset Pagination vs. Keyset Pagination; Async LINQ (ToListAsync/AnyAsync/CountAsync); IAsyncEnumerable vs. IEnumerable; Streaming vs. Buffering Large Results; PLINQ (AsParallel, Ordering, Trade-offs); Modern LINQ Operators; + 11 Scenario pages (see Phase 6) |
 
 Reasoning for the less-obvious calls:
 
@@ -113,20 +122,23 @@ Reasoning for the less-obvious calls:
   covered earlier, matching `interview-depth-and-priority.md`'s explicit call-out that
   performance/scalability questions belong in Advanced regardless of how simple the triggering
   code looks.
-- **All 10 Scenario pages are Advanced** — "a real problem that requires using the knowledge, not
+- **All 11 Scenario pages are Advanced** — "a real problem that requires using the knowledge, not
   just stating it" is this site's own definition of the Scenario question layer
   (`interview-depth-and-priority.md`), and every completed track before this one (React, Angular,
   AWS, DSA) places its scenario pages in Advanced for exactly that reason — no exception made
   here despite a couple of the scenarios (e.g. scenario 2, First/FirstOrDefault/Single/
   SingleOrDefault) drawing on Basic-tier knowledge. Tier is about the *question type* (an applied
-  scenario), not how basic the underlying fact is.
+  scenario), not how basic the underlying fact is. The 11th scenario (writing a custom LINQ
+  extension method) is Advanced for the same reason even though the end result is a short method
+  — *writing* an iterator block that reproduces `Where`'s own deferred-execution contract is a
+  provider/mechanism-level task, squarely alongside the rest of this tier.
 
 ## Phase 5 — Priority (🔥 Must Know / ⭐ Should Know / 🧠 Deep Dive — independent of tier)
 
 | Priority | Pages |
 |---|---|
 | 🔥 Must Know | What Is LINQ?; Select vs. SelectMany; First vs. FirstOrDefault vs. Single vs. SingleOrDefault; Any vs. Count() > 0; OrderBy vs. OrderByDescending vs. ThenBy; Min vs. Max vs. Sum vs. Average vs. Count; Deferred vs. Immediate Execution; Lazy Evaluation vs. Materialization; IEnumerable vs. IQueryable; Inner Join vs. Left Outer Join; Multiple Enumeration and Side Effects; Func vs. Expression\<Func\>; LINQ-to-Objects vs. LINQ-to-Entities; Client-Side vs. Server-Side Evaluation; Why EF Core Cannot Translate Certain C# Methods; Premature Materialization and ToList() Placement; N+1 Queries and Navigation Properties; Async LINQ; Scenario: First/FirstOrDefault/Single/SingleOrDefault When Records May Be Missing or Duplicated; Scenario: Diagnosing Repeated Queries; Scenario: Fast In-Memory, Slow Against the Database; Scenario: Diagnosing an N+1 Query Problem; Scenario: Fixing an Untranslatable EF Core Query |
-| ⭐ Should Know | Where vs. First(predicate); Any vs. All vs. Contains; Where vs. OfType; Skip vs. Take; Distinct vs. DistinctBy; ToList vs. ToArray vs. ToDictionary; Anonymous Types and Projection; Query Syntax vs. Method Syntax — When to Use Each; GroupBy vs. ToLookup; Join vs. GroupJoin; SelectMany vs. Join; Aggregate vs. Sum/Count; Concat vs. Union vs. Intersect vs. Except; ToDictionary vs. ToLookup; Equality Comparers and Custom Equality; How LINQ Providers Work; How LINQ Expressions Become SQL; AsEnumerable vs. AsQueryable; Query Execution and Database Round Trips; Include vs. Projection Using Select; Offset Pagination vs. Keyset Pagination; Streaming vs. Buffering Large Results; Modern LINQ Operators; Scenario: Flattening Customers and Orders with SelectMany; Scenario: Predicting Output When Operator Order Changes; Scenario: Distinct vs. DistinctBy vs. GroupBy vs. a Custom Comparer; Scenario: Finding the Highest-Paid Employee Per Department; Scenario: Processing Millions of Records |
+| ⭐ Should Know | Where vs. First(predicate); Any vs. All vs. Contains; Where vs. OfType; Skip vs. Take; Distinct vs. DistinctBy; ToList vs. ToArray vs. ToDictionary; Anonymous Types and Projection; Query Syntax vs. Method Syntax — When to Use Each; GroupBy vs. ToLookup; Join vs. GroupJoin; SelectMany vs. Join; Aggregate vs. Sum/Count; Concat vs. Union vs. Intersect vs. Except; ToDictionary vs. ToLookup; Equality Comparers and Custom Equality; How LINQ Providers Work; How LINQ Expressions Become SQL; AsEnumerable vs. AsQueryable; Query Execution and Database Round Trips; Include vs. Projection Using Select; Offset Pagination vs. Keyset Pagination; Streaming vs. Buffering Large Results; Modern LINQ Operators; Scenario: Flattening Customers and Orders with SelectMany; Scenario: Predicting Output When Operator Order Changes; Scenario: Distinct vs. DistinctBy vs. GroupBy vs. a Custom Comparer; Scenario: Finding the Highest-Paid Employee Per Department; Scenario: Processing Millions of Records; Scenario: Writing Your Own Custom LINQ Extension Method |
 | 🧠 Deep Dive | Cast vs. OfType; Zip vs. Join; Append/Prepend vs. Collection Modification; SequenceEqual vs. Set Equality; let/into and Grouping in Query Syntax; IAsyncEnumerable vs. IEnumerable; PLINQ (AsParallel, Ordering, Trade-offs) |
 
 🔥 is intentionally the largest bucket on this track — LINQ interview questions skew toward "must
@@ -183,7 +195,7 @@ category, not tier — the site-wide convention). Numbering below is the tier-fo
 | 16 | let, into and Grouping in Query Syntax | 🧠 | intermediate/16.html |
 | 17 | Multiple Enumeration and Side Effects | 🔥 | intermediate/17.html |
 
-### Advanced (27)
+### Advanced (28)
 
 | # | Topic | Priority | Page |
 |---|---|---|---|
@@ -214,6 +226,7 @@ category, not tier — the site-wide convention). Numbering below is the tier-fo
 | 25 | Scenario: Finding the Highest-Paid Employee in Each Department | ⭐ | advanced/25.html |
 | 26 | Scenario: Fixing an EF Core Query That Can't Translate a Custom C# Method | 🔥 | advanced/26.html |
 | 27 | Scenario: Processing Millions of Records — Buffering, Streaming, Batching, and Database-Side Aggregation | ⭐ | advanced/27.html |
+| 28 | Scenario: Writing Your Own Custom LINQ Extension Method — Building a Where-Style Filter from Scratch | ⭐ | advanced/28.html |
 
 ## Track-specific decisions and boundaries
 
@@ -224,7 +237,7 @@ category, not tier — the site-wide convention). Numbering below is the tier-fo
   SQL/database-engine internals (index design, reading a query plan, isolation levels — all
   `sql/`'s job). Every page that brushes against either boundary cross-links the existing page
   instead of re-teaching it — see each affected page's own note in `question-taxonomy.md`.
-- **Scenario questions are a distinct, clearly-labelled sub-block inside Advanced** (pages 18–27,
+- **Scenario questions are a distinct, clearly-labelled sub-block inside Advanced** (pages 18–28,
   all titled `Scenario: ...`), matching the exact convention already used on `react/advanced/
   14–18.html` and `angular/advanced/11–16.html` — not a fourth tier, not a separate top-level
   site section. This satisfies the user's own request for "a distinct group... so developers can
@@ -265,6 +278,10 @@ category, not tier — the site-wide convention). Numbering below is the tier-fo
   - Code examples use modern, idiomatic C# (current collection/LINQ syntax, `async`/`await`
     terminal operators where EF Core's async API applies) and stay short enough to run/trace in
     your head — same discipline as every other track's code cards.
+  - The custom-extension-method scenario (Advanced #28) builds its example as a `yield return`
+    iterator block over `IEnumerable<T>`, exactly like the real `Where` — never as a method that
+    eagerly builds and returns a `List<T>`, which would silently break the deferred-execution
+    contract every other built-in operator honors.
 - **Code examples are C#**, matching every other track on this site.
 - Icon 🔗, track color indigo (`#4f46e5` ink on a light indigo background, e.g. `#e0e7ff`) —
   distinct from every track color already in use (closest neighbor is .NET's violet `#7c3aed`,
@@ -280,5 +297,5 @@ category, not tier — the site-wide convention). Numbering below is the tier-fo
 
 ## Known gaps
 
-None — Phase 7 (scaffolding the site structure and writing the 58 pages) is the next and only
+None — Phase 7 (scaffolding the site structure and writing the 59 pages) is the next and only
 remaining phase for this track, pending the user's review of this roadmap.

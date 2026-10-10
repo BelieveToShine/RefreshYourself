@@ -450,6 +450,8 @@ comparison pages above — see `roadmap.md`.
    table.
 10. Process millions of records, comparing buffering, streaming, batching, and database-side
     aggregation.
+11. Write a custom LINQ-style extension method (a `Where`-style filter built from scratch) and
+    apply it in a query chain exactly like a built-in operator.
 
 ## Gap-hunt log (additions beyond the user's own list, marked **[new]** above)
 

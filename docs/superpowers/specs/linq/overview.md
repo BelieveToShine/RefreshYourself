@@ -3,7 +3,7 @@
 **Start here for anything LINQ-related.** See [`docs/superpowers/specs/README.md`](../README.md)
 for what this file is and the process for keeping it in sync with the live pages.
 
-## Status — Phases 1–6 complete, roadmap-only, 0/58 pages written
+## Status — Phases 1–6 complete, roadmap-only, 0/59 pages written
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): 8 concept groups, sourced from
   the user's own detailed proposed roadmap (already organized into 3 tiers + a scenario section),
@@ -23,8 +23,8 @@ for what this file is and the process for keeping it in sync with the live pages
 
 ## The full roadmap, tier by tier
 
-See [`roadmap.md`](roadmap.md)'s Phase 6 tables for the complete, numbered list (58 rows: Basic
-14 / Intermediate 17 / Advanced 27, the last 10 of which are the "LINQ Scenarios" sub-block) — not
+See [`roadmap.md`](roadmap.md)'s Phase 6 tables for the complete, numbered list (59 rows: Basic
+14 / Intermediate 17 / Advanced 28, the last 11 of which are the "LINQ Scenarios" sub-block) — not
 re-duplicated here to avoid the two documents drifting out of sync while the roadmap is still
 under review. Once Phase 7 starts, this section will carry the same tier-by-tier table every
 other track's `overview.md` carries, mirrored from the live tier `index.html` pages.
@@ -62,6 +62,6 @@ into pages, tier, prioritize, and produce the final numbered roadmap — see
 
 ## Known gaps
 
-- **All 58 pages** — Phase 7 hasn't started. Pending the user's review of `roadmap.md`'s merge/
+- **All 59 pages** — Phase 7 hasn't started. Pending the user's review of `roadmap.md`'s merge/
   exclusion/tier/priority decisions before any page gets written.
 - No independent diagram-verification sweep has run yet (nothing to verify — no pages written).
