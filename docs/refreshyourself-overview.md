@@ -13,8 +13,16 @@ the user on 2026-09-15, audience/depth definition refined 2026-09-16, supersedin
 "topic tutorial" framing. Never write as if the reader is a beginner; never cap depth to a
 junior/mid-level interview. Two groups of tracks:
 
-- **Core backend interview path**, in this order: C# → OOP → .NET/ASP.NET Core (MVC lives inside
-  this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure → AWS.
+- **Core backend interview path**, in this order: C# → LINQ → OOP → .NET/ASP.NET Core (MVC lives
+  inside this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure →
+  AWS. **LINQ — Phases 1–6 complete, roadmap-only, 0/58 pages written** (added 2026-10-10): a
+  separate top-level category per the user's own explicit request, scoped to LINQ-the-language-
+  feature (operators, execution model, providers, SQL translation mechanics) rather than EF
+  Core's own machinery or raw SQL internals, which stay in their existing tracks and get
+  cross-linked instead of duplicated. Sourced from the user's own detailed proposed roadmap (54
+  topics + a 10-item "LINQ Scenarios" sub-block). See
+  [`specs/linq/overview.md`](superpowers/specs/linq/overview.md) — awaiting the user's review of
+  the roadmap before Phase 7 (page writing) starts.
 - **Frontend group** (homepage section added 2026-09-18, per the user's own restructuring
   request): HTML & CSS → JavaScript → React → Angular. Kept as separate tracks rather than one
   "Frontend" track or folded into React, per the user's own rule: *"Keep a technology as a
