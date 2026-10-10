@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How does logging work in ASP.NET Core, and what is structured logging?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Logging — ILogger, Levels &amp; Providers — .NET Basic — RefreshYourself">
+<meta property="og:description" content="How does logging work in ASP.NET Core, and what is structured logging?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Logging — ILogger, Levels &amp; Providers — .NET Basic — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dotnet/basic">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#7c3aed;">🧱 .NET / ASP.NET Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Logging — ILogger, Levels &amp; Providers</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 .NET · Basic · Must Know</div>
+    <h1><code>ILogger&lt;T&gt;</code> — <span class="hl hl-hot">log once in code, let config decide what is kept and where it goes</span></h1>
+    <p class="interview-q">"How does logging work in ASP.NET Core, and what is structured logging?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📝 ILogger&lt;T&gt;</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>If code wrote straight to a file or the console, changing where logs go would mean editing every call.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Inject <code>ILogger&lt;T&gt;</code> through DI; the registered providers decide the destination.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">One call, many possible destinations.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🎚️ Levels</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Debug chatter is noisy and costly in production, yet needed while investigating.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Every message has a level, and <code>appsettings.json</code> sets the minimum per category — no code change.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Level + config = what gets kept.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🧩 Message templates</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Building the text with string interpolation bakes the values in, so they cannot be searched as fields later.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A template like <code>"Order {OrderId} shipped"</code> keeps <code>OrderId</code> as a named property a provider can store.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Template + args = structured.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>ILogger&lt;T&gt;</code> <span class="rarrow">→</span> <b>injected</b>, called like any service</p>
+      <p class="rrow"><code>Level</code> <span class="rarrow">→</span> <b>filtered</b> per category in appsettings</p>
+      <p class="rrow"><code>{Template}</code> <span class="rarrow">→</span> <b>structured</b>, never interpolated</p>
+      <p class="rrow"><code>Provider</code> <span class="rarrow">→</span> decides <b>where</b> it lands</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line">The <b>code</b> says what happened.</span>
+      <span class="tc-line">The <b>config</b> says what is kept and where it goes.</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+      <filter id="shB8" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+      </filter>
+      <marker id="arB8Gry" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+      <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+      </marker>
+      <marker id="arB8Amb" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+      <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+      </marker>
+      <marker id="arB8Blu" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+      <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+      </marker>
+      </defs>
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">ONE LOG CALL IN CODE — CONFIG DECIDES THE REST</text>
+      <g filter="url(#shB8)">
+      <rect x="20" y="105" width="130" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/>
+      </g>
+      <text x="85" y="131" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">ILogger&lt;T&gt;</text>
+      <text x="85" y="149" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">injected via DI</text>
+      <path d="M150,135 H200" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arB8Blu)"/>
+      <g filter="url(#shB8)">
+      <rect x="200" y="100" width="140" height="70" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/>
+      </g>
+      <text x="270" y="128" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🎚️ Level filter</text>
+      <text x="270" y="146" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">per-category minimum</text>
+      <text x="270" y="160" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">from appsettings</text>
+      <text x="270" y="190" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">below the minimum → dropped</text>
+      <path d="M340,135 H420" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arB8Gry)"/>
+      <path d="M380,135 V58 H420" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arB8Gry)"/>
+      <path d="M380,135 V212 H420" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arB8Gry)"/>
+      <g filter="url(#shB8)">
+      <rect x="420" y="36" width="200" height="44" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/>
+      </g>
+      <text x="520" y="63" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">🖥️ Console</text>
+      <g filter="url(#shB8)">
+      <rect x="420" y="113" width="200" height="44" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/>
+      </g>
+      <text x="520" y="140" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">📄 File (e.g. Serilog)</text>
+      <g filter="url(#shB8)">
+      <rect x="420" y="190" width="200" height="44" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/>
+      </g>
+      <text x="520" y="217" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">☁️ Application Insights</text>
+      <text x="320" y="258" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">Providers decide where a message lands; the filter decides whether it gets that far.</text>
+    </svg>
+    <figcaption>The code never names a destination — providers and the level filter are configuration.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Using string interpolation in a log call.</b> <code>_logger.LogInformation($"Order {id} shipped")</code> builds the whole string up front, even if that level is switched off, and the order id is now just text. Pass a template and the values as arguments instead.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How do you use Serilog instead of the built-in logging?"</b> Serilog plugs in as a logging provider (<code>builder.Host.UseSerilog(...)</code>), so code keeps calling <code>ILogger&lt;T&gt;</code> and nothing in it changes. Serilog adds its own sinks and structured-data features.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I inject <code>ILogger&lt;T&gt;</code> from DI and log with message templates, not interpolated strings, so the values stay as named properties. Each message has a level, and appsettings sets the minimum per category, so I can turn Debug on without a code change. Providers — console, a file, Application Insights, or Serilog — decide where it lands."</p>
+    <ul>
+      <li><code>ILogger&lt;T&gt;</code> → <span class="hl hl-blue">injected like any service</span> — <code>T</code> becomes the category — the full class name.</li>
+      <li><code>Levels</code> → <span class="hl hl-hot">Trace, Debug, Information, Warning, Error, Critical</span> — filtered by <code>Logging:LogLevel</code>.</li>
+      <li><code>Templates</code> → <span class="hl hl-basic">named placeholders plus arguments</span> — never <code>$"..."</code> inside a log call.</li>
+      <li><code>Providers</code> → <span class="hl hl-teal">decide the destination</span> — console, file, Application Insights, or Serilog as a replacement.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">ILogger&lt;T&gt;</span> comes from the same DI container as any other service. <code>T</code> gives the log its <em>category</em> (the full class name, such as <code>Shop.OrderService</code>), which is what you filter on. If no level is configured, the default is <code>Information</code>. A new web app starts with a few built-in providers already registered, including the console.</p>
+
+      <p><span class="hl hl-hot">Levels</span> run from <code>Trace</code> up to <code>Critical</code>. In <code>appsettings.json</code>, <code>Logging:LogLevel</code> sets a minimum per category, such as <code>Default</code> at <code>Information</code> and <code>Microsoft.AspNetCore</code> at <code>Warning</code>; the most specific matching category wins. Different environments can override it with their own appsettings file.</p>
+
+      <p><span class="hl hl-basic">Structured logging</span> means the message is a template with named placeholders, and the arguments are matched by position. A provider that understands structure (Application Insights, Serilog sinks) stores <code>OrderId</code> as a real field, so you can later ask for every entry about order 42 instead of searching sentences. See also: <a href="../intermediate/2.html">The Built-in DI Container</a>, <a href="../intermediate/12.html">Configuration Sources</a>, and the <a href="../../webapi/advanced/6.html">500-errors-in-production scenario</a> where logs are the first clue.</p>
+
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">OrderService</span>
+{
+    <span class="kw">private</span> <span class="kw">readonly</span> <span class="ty">ILogger</span>&lt;<span class="ty">OrderService</span>&gt; _logger;   <span class="cx-cmt">// injected like any service</span>
+
+    <span class="kw">public</span> OrderService(<span class="ty">ILogger</span>&lt;<span class="ty">OrderService</span>&gt; logger) =&gt; _logger = logger;
+
+    <span class="kw">public</span> <span class="kw">void</span> Ship(<span class="kw">int</span> orderId)
+    {
+        _logger.LogInformation(<span class="str">"Order {OrderId} shipped"</span>, orderId);   <span class="cx-ok">// ✅ structured</span>
+        <span class="cx-err">// _logger.LogInformation($"Order {orderId} shipped");        // ❌ values baked into text</span>
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">The template stays constant; only the argument changes, so every "shipped" entry groups together.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> appsettings.json</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  }
+}</code></pre>
+      </div>
+      <p class="cx-note">Change a level here and the same code logs more or less — no recompile.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A form with labelled boxes, not a free-text diary.</b> A structured log is an incident form with fields for order id, user, and amount, so later you can ask "show me every entry for order 42" instead of reading sentences one by one.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="7.html">← HTTPS Redirection &amp; HSTS</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to .NET Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="9.html">LTS vs. STS &amp; .NET Standard →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · .NET / ASP.NET Core · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

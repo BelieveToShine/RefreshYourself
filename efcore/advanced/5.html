@@ -3,40 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What are bulk operations, and why doesn't EF Core's default SaveChanges() behave well for a large batch update or delete?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Bulk Operations — EF Core Advanced — RefreshYourself">
+<meta property="og:description" content="What are bulk operations, and why doesn't EF Core's default SaveChanges() behave well for a large batch update or delete?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <title>Bulk Operations — EF Core Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body data-root="../../" data-tier-key="efcore/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
 
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
-      <span class="gicon">🔎</span>
+      <span class="gicon" aria-hidden="true">🔎</span>
       <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
-      <span class="gkey">/</span>
+      <span class="gkey" aria-hidden="true">/</span>
       <div class="gsearch-results" role="listbox"></div>
     </div>
   </div>
@@ -54,7 +46,7 @@
   </nav>
 </div>
 
-<main class="wrap">
+<main class="wrap" id="main">
   <section class="hero">
     <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ EF Core · Advanced · Should Know</div>
     <h1><code>ExecuteUpdate()</code> — <span class="hl hl-basic">one SQL statement</span> instead of <span class="hl hl-hot">a million tracked entities</span></h1>
@@ -174,7 +166,7 @@
     <p class="tline"><b>Looping and calling <code>SaveChanges()</code> is not "the EF Core way" to
     bulk update.</b> It technically works, but it loads every matching row into memory and tracks
     it just to change one column — a single <code>ExecuteUpdate()</code> call performs the same
-    change directly inside the database with zero entities ever materialized.</p>
+    change directly inside the database with zero entities ever materialized — though it also bypasses the Change Tracker and <code>SaveChanges()</code> interceptors.</p>
   </div>
 
   <div class="followup">
@@ -199,6 +191,7 @@
       <li><code>ExecuteUpdate()</code> / <code>ExecuteDelete()</code> → <span class="hl hl-basic">one set-based SQL statement</span>, zero entities materialized.</li>
       <li>Before EF Core 7 → <span class="hl hl-inter">raw SQL or a third-party bulk-extensions library</span> was the only way to skip the load-and-track cycle.</li>
       <li>The trade-off → <span class="hl hl-adv">no per-row C# logic</span> — only what fits inside a SQL <code>SET</code>/<code>WHERE</code> clause.</li>
+      <li>They <span class="hl hl-hot">bypass the Change Tracker</span> — already-tracked entities go stale, and <code>SaveChanges()</code> interceptors, audit logic, and concurrency checks don't run for them.</li>
     </ul>
   </div>
 
@@ -230,9 +223,10 @@
           <tr><th>Rows loaded into memory</th><td>every matching row</td><td>none</td></tr>
           <tr><th>Change tracked?</th><td>yes, each entity</td><td>no tracking at all</td></tr>
           <tr><th>SQL generated</th><td>one statement per entity (fewer round trips on some providers)</td><td>one set-based statement for the whole filter</td></tr>
+          <tr><th>Tracker, interceptors, audit hooks?</th><td>yes — normal <code>SaveChanges()</code> pipeline</td><td>bypassed — tracked entities in memory go stale</td></tr>
           <tr><th>Per-row C# logic?</th><td>yes — any code inside the loop</td><td>no — only what fits a SQL <code>SET</code>/<code>WHERE</code> clause</td></tr>
           <tr><th>Available since</th><td>always</td><td>EF Core 7+</td></tr>
-          <tr><th>Scales to millions of rows?</th><td>❌ no — memory &amp; round trips grow with row count</td><td>✅ yes — cost stays close to constant</td></tr>
+          <tr><th>Scales to millions of rows?</th><td>❌ no — memory &amp; round trips grow with row count</td><td>✅ yes — nothing is loaded into app memory</td></tr>
         </tbody>
       </table>
     </div>
@@ -364,8 +358,9 @@
       <p><b>Your nightly job needs to mark 2 million stale orders as archived.</b> Looping over
       them and calling <code>SaveChanges()</code> tries to track 2 million entities in one
       process — memory climbs fast and the job can run for hours or crash outright. A single
-      <code>ExecuteUpdateAsync()</code> call does the same update as one statement, with cost that
-      stays close to constant no matter how many rows match.</p>
+      <code>ExecuteUpdateAsync()</code> call does the same update as one statement, with nothing
+      loaded into the app's memory, however many rows match. Just remember it skips the Change Tracker and any
+      <code>SaveChanges()</code> interceptors or audit logic, so don't use it where those must run.</p>
     </div>
   </details>
 

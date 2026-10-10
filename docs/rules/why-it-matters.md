@@ -151,3 +151,7 @@ caught and fixed. The fix that's now the standing pattern:
   real positive number. See the verification section in
   [build-process.md](build-process.md#verification-is-mandatory-twice-once-by-the-subagent-once-by-you)
   for where this fits alongside the diagram checks.
+
+## Enforced by `check-site.js` (added 2026-10-07)
+
+Python (43 pages) and DSA (30 pages) had still been using the old plain-bullets "Why it matters" while every other track used the cards — an inconsistency the user spotted. All 73 were converted on 2026-10-07 (single `.why-card` for single-concept topics, `.why-grid` / `.why-grid.cols-3` for topics that compare named things) and **`node scripts/check-site.js` now fails any topic page whose "Why it matters" box lacks `wc-row problem`, `wc-row solution` and a `wcr-tag` Recall** — so the bullets fallback cannot creep back in. A live sweep of all 80 Python + DSA pages (168 cards, 55 grids) found no orphan cards, no card overflow, and a positive Recall tag gap on every card.

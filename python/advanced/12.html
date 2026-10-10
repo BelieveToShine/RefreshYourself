@@ -3,40 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What happens when cached data becomes stale? How would you prevent a cache stampede?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Caching — Python Advanced — RefreshYourself">
+<meta property="og:description" content="What happens when cached data becomes stale? How would you prevent a cache stampede?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <title>Caching — Python Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body data-root="../../" data-tier-key="python/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
 
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
-      <span class="gicon">🔎</span>
+      <span class="gicon" aria-hidden="true">🔎</span>
       <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
-      <span class="gkey">/</span>
+      <span class="gkey" aria-hidden="true">/</span>
       <div class="gsearch-results" role="listbox"></div>
     </div>
   </div>
@@ -54,7 +46,7 @@
   </nav>
 </div>
 
-<main class="wrap">
+<main class="wrap" id="main">
   <section class="hero">
     <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Python · Advanced · Should Know</div>
     <h1>A cache should make things <span class="hl hl-blue">faster</span> when it works and merely unhelpful when it doesn't — never a source of <span class="hl hl-hot">wrong answers</span></h1>
@@ -64,14 +56,24 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Caching is one of the fastest, cheapest wins for a slow endpoint — but a cache with no
-        invalidation plan turns that win into a correctness bug that's hard to notice.</li>
-        <li>Cache stampede is a real production incident shape, not a textbook scenario — a
-        popular entry expiring during a traffic spike can knock a database over.</li>
-        <li>A very common senior/architect follow-up once caching comes up at all: "how do you
-        know it's not lying to you?"</li>
-      </ul>
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🕰️ Stale cache</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Without a plan for when an entry stops being valid, a cache silently serves stale or wrong data as if it were current.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Invalidate or evict entries on purpose — a TTL that expires them after a fixed time is the common, simple answer.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Invalidation is the hard part; TTL is the simple fix.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+          <div class="wc-head">🐘 Cache stampede</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>When a popular entry expires, many requests miss at once and all recompute the same thing, hammering whatever sits behind the cache.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Let only one request recompute behind a lock, stagger the TTLs, or serve a slightly stale value while one background refresh runs.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">One recomputes, the rest wait.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -271,6 +273,69 @@
       already filled by the first one — so only <b>one</b> call ever reaches
       <code>expensive_fetch</code>, not four.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You call the same function with the same arguments again and again</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="10" y="14" width="120" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="70" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#16a34a">🔁 Same call again</text>
+              <path d="M130,33 H180" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="180" y="14" width="120" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="240" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#16a34a">🗃️ lru_cache</text>
+              <path d="M300,33 H350" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="350" y="14" width="120" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="410" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#16a34a">⚡ Saved answer</text>
+            </svg>
+          </div>
+          <p class="uc-what">The first call runs the function and <code>lru_cache</code> remembers the result for those arguments. The next call with the same arguments returns the saved result without running the function. Once <code>maxsize</code> is full, the least recently used entry is dropped.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same arguments → saved answer.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You cached it and forgot about it, then the data changed</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="10" y="14" width="205" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="112.5" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626">✏️ Data changes in DB</text>
+              <path d="M215,33 H265" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="265" y="14" width="205" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="367.5" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626">❌ Cache serves old value</text>
+            </svg>
+          </div>
+          <p class="uc-what">The cache has no rule for when to forget, so it keeps returning the old value as if it were fresh. For data that must be correct, that is worse than no cache. Give entries a TTL, or clear them when the data changes.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Every cache needs a way to forget.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> A popular cache entry expires while many requests are arriving</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="10" y="14" width="120" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="70" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">⏳ Entry expires</text>
+              <path d="M130,33 H180" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="180" y="14" width="120" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="240" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">👥 All miss</text>
+              <path d="M300,33 H350" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="350" y="14" width="120" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="410" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">🔒 One rebuilds</text>
+            </svg>
+          </div>
+          <p class="uc-what">Every request misses at the same moment and all rebuild the same value, which hammers whatever is behind the cache. This is a cache stampede. A lock lets only one request rebuild while the others wait, and slightly random (jittered) TTLs stop many keys expiring together.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One rebuilds, the rest wait.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

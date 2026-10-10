@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Do you need a repository pattern on top of EF Core?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Repository &amp; Unit of Work over EF Core — EF Core Intermediate — RefreshYourself">
+<meta property="og:description" content="Do you need a repository pattern on top of EF Core?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Repository &amp; Unit of Work over EF Core — EF Core Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Repository &amp; Unit of Work over EF Core</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 EF Core · Intermediate · Must Know</div>
+    <h1>Repository over EF Core — <span class="hl hl-inter">a layer on top of a layer?</span></h1>
+    <p class="interview-q">Do you need a repository pattern on top of EF Core?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+        <div class="wc-head">🧱 Extra layer</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Wrapping EF Core in a generic <code>IRepository&lt;T&gt;</code> is a habit from older data access — but it often just forwards calls and hides the features that make EF Core useful.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>DbSet&lt;T&gt;</code> is already a repository and <code>DbContext</code> is already a unit of work, so add a wrapper only when it has a real job: named queries, a testing seam, an aggregate boundary.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>DbSet</code> = repository. <code>DbContext</code> = unit of work. Wrap only for a reason.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>DbSet&lt;T&gt;</code> <span class="rarrow">→</span> already a <b>repository</b></p>
+      <p class="rrow"><code>DbContext</code> <span class="rarrow">→</span> already a <b>unit of work</b></p>
+      <p class="rrow">Your wrapper <span class="rarrow">→</span> only if it <b>earns</b> its place</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b>Don't</b> wrap what is <b>already</b> wrapped — a layer needs a job.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 316" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI10a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI10a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shI10a)"><rect x="170" y="34" width="300" height="34" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.7"/></g>
+      <text x="320" y="55" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">Controller / service</text>
+      <path d="M320,68 V92" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI10a)"/>
+      <g filter="url(#shI10a)"><rect x="170" y="92" width="300" height="48" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.7" stroke-dasharray="7 5"/></g>
+      <text x="320" y="112" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">IRepository&lt;T&gt; wrapper</text>
+      <text x="320" y="128" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">often just forwards every call</text>
+      <path d="M320,140 V164" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI10a)"/>
+      <g filter="url(#shI10a)"><rect x="170" y="164" width="300" height="52" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.7"/></g>
+      <text x="320" y="186" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">DbContext</text>
+      <text x="320" y="202" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">DbSet&lt;T&gt; = repository · SaveChanges = unit of work</text>
+      <path d="M320,216 V240" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI10a)"/>
+      <g filter="url(#shI10a)"><rect x="170" y="240" width="300" height="34" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.7"/></g>
+      <text x="320" y="261" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">Database</text>
+      <text x="20" y="104" text-anchor="start" font-size="10.5" font-weight="700" fill="#92400e">earns its place when:</text>
+      <text x="20" y="119" text-anchor="start" font-size="10.5" font-weight="400" fill="#5b6472">• named queries</text>
+      <text x="20" y="134" text-anchor="start" font-size="10.5" font-weight="400" fill="#5b6472">• a test seam</text>
+      <text x="486" y="108" text-anchor="start" font-size="10.5" font-weight="700" fill="#92400e">⚠ a thin forwarder</text>
+      <text x="486" y="123" text-anchor="start" font-size="10.5" font-weight="400" fill="#5b6472">adds a layer, no value</text>
+      <text x="486" y="184" text-anchor="start" font-size="10.5" font-weight="700" fill="#166534">✅ already a repository</text>
+      <text x="486" y="199" text-anchor="start" font-size="10.5" font-weight="700" fill="#166534">+ unit of work</text>
+      <text x="320" y="304" text-anchor="middle" font-size="11" font-weight="400" fill="#5b6472">EF Core already is the repository + unit of work — add a layer only for a reason</text>
+    </svg>
+    <figcaption>The highlighted middle layer is the one in question: <code>DbContext</code> already plays both roles, so a generic wrapper usually adds a hop and hides features.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"A generic <code>IRepository&lt;T&gt;</code> over EF Core is automatically good architecture" is a common mistake.</b> It usually just forwards to <code>DbSet</code> and hides <code>Include</code>, projection and <code>AsNoTracking</code> — so people leak <code>IQueryable</code> out of it or load more data than they need.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Then why do many teams still add one?"</b> For a small, intention-revealing interface — reusable named queries and a seam for tests — not to re-expose generic CRUD. Keep it specific to the use case.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Not by default — <code>DbSet</code> is already a repository and <code>DbContext</code> is already a unit of work, so a generic repository on top mostly forwards calls. I add a thin, specific one only when it earns its place: reusable named queries, a testing seam, or an aggregate boundary."</p>
+    <ul>
+      <li><code>DbSet&lt;T&gt;</code> → <span class="hl hl-blue">already a repository</span>.</li>
+      <li><code>SaveChanges()</code> → <span class="hl hl-blue">the unit of work</span>, one transaction per call.</li>
+      <li>Generic <code>IRepository&lt;T&gt;</code> → <span class="hl hl-hot">hides <code>Include</code>, projection, <code>AsNoTracking</code></span>.</li>
+      <li>A wrapper earns its place for <span class="hl hl-basic">named queries or a test seam</span>.</li>
+      <li>With repositories, share <span class="hl hl-inter">one scoped <code>DbContext</code></span> per request so they share one unit of work.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <b>repository</b> is a collection-like gateway to data; a <b>unit of work</b> tracks changes and commits them together. EF Core already ships both: each <code>DbSet&lt;T&gt;</code> is the <span class="hl hl-blue">repository</span>, and the <code>DbContext</code> is the <span class="hl hl-blue">unit of work</span> — it tracks changes, and <code>SaveChanges()</code> writes them in one transaction.</p>
+
+      <p>A generic <code>IRepository&lt;T&gt;</code> on top usually forwards calls. Worse, it tends to hide what makes EF Core useful — <code>Include</code>, projection with <code>Select</code>, <code>AsNoTracking</code>, <code>ExecuteUpdate</code> — so teams leak <code>IQueryable</code> through it or fetch whole entities they don't need.</p>
+
+      <p>A wrapper <span class="hl hl-basic">earns its place</span> when it has a job: <b>named queries</b> used in many places (<code>GetOverdueOrders</code>), a <b>seam</b> for tests, or a domain-driven aggregate boundary. Keep it specific, not generic CRUD. If you do have repositories, register one scoped <code>DbContext</code> per request and share it. See <a href="../basic/2.html">DbContext &amp; DbSet</a>, <a href="3.html">The Change Tracker &amp; SaveChanges()</a> and <a href="17.html">Testing EF Core Code</a>.</p>
+
+      <div style="overflow-x:auto;">
+        <table class="cmp-table">
+          <thead><tr><th></th><th>Use <code>DbContext</code> directly</th><th>Thin, specific repository</th><th>Generic <code>IRepository&lt;T&gt;</code></th></tr></thead>
+          <tbody>
+            <tr><th>What you get</th><td>every EF Core feature</td><td>named, reusable queries</td><td>basic CRUD behind an interface</td></tr>
+            <tr><th>Main risk</th><td>queries scattered across services</td><td>one more class to maintain</td><td class="no">❌ hides features, leaks <code>IQueryable</code></td></tr>
+            <tr><th>Reach for it when</th><td>most apps, most of the time</td><td>a query is reused or needs a test seam</td><td>rarely</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">OrderService</span>(<span class="ty">AppDbContext</span> db)
+{
+    <span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span> CancelAsync(<span class="kw">int</span> id)
+    {
+        <span class="kw">var</span> order = <span class="kw">await</span> db.Orders.FindAsync(id);   <span class="cx-cmt">// DbSet = repository</span>
+        order!.Status = <span class="ty">OrderStatus</span>.Cancelled;
+        <span class="kw">await</span> db.SaveChangesAsync();                 <span class="cx-cmt">// DbContext = unit of work</span>
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">No wrapper needed — the two EF Core types already play both roles.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">OrderQueries</span>(<span class="ty">AppDbContext</span> db) : <span class="ty">IOrderQueries</span>
+{
+    <span class="kw">public</span> <span class="ty">Task</span>&lt;<span class="ty">List</span>&lt;<span class="ty">Order</span>&gt;&gt; GetOverdueAsync(<span class="ty">DateTime</span> today) =&gt;
+        db.Orders.AsNoTracking()
+            .Where(o =&gt; o.DueDate &lt; today &amp;&amp; !o.Paid)
+            .ToListAsync();                          <span class="cx-ok">// ✅ named, reusable, still full LINQ</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">A thin wrapper that earns its place: one <b>named query</b>, not generic CRUD.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">interface</span> <span class="ty">IRepository</span>&lt;T&gt;
+{
+    <span class="ty">IEnumerable</span>&lt;T&gt; GetAll();   <span class="cx-err">// ❌ no Include, no projection, no paging</span>
+    <span class="kw">void</span> Add(T entity);
+}</code></pre>
+      </div>
+      <p class="cx-note">The generic version — everything EF Core can do beyond this is now out of reach.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A team wrapped every entity in <code>IRepository&lt;T&gt;</code> plus an <code>IUnitOfWork</code>.</b> Each new screen needed a new method, and the interface slowly leaked <code>IQueryable</code> anyway. They kept a few named-query classes and used the <code>DbContext</code> directly everywhere else.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="9.html">← Raw SQL in EF Core &amp; Injection</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="11.html">Global Query Filters &amp; Soft Delete →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

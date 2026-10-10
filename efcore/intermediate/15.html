@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How do you map a value object or store an enum as a string?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Owned Types &amp; Value Converters — EF Core Intermediate — RefreshYourself">
+<meta property="og:description" content="How do you map a value object or store an enum as a string?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Owned Types &amp; Value Converters — EF Core Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Owned Types &amp; Values</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ EF Core · Intermediate · Should Know</div>
+    <h1><code>OwnsOne</code> and <code>HasConversion</code> — <span class="hl hl-inter">map a C# shape the database does not have</span></h1>
+    <p class="interview-q">"How do you map a value object or store an enum as a string?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🧩 Owned Types & Value Converters</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Your C# model has value objects (an <code>Address</code>, a <code>Money</code>) and enums, but a table only has plain columns. Without help, they become extra tables or unreadable numbers.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>OwnsOne</code> folds a value object into the owner's table, and <code>HasConversion</code> translates a C# type to the type stored in the database and back.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>OwnsOne</code> = value object as columns in the owner's table; <code>HasConversion</code> = convert on write, convert back on read.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Owned type = <b>"columns that belong to the owner."</b> Converter = <b>"translate on the way in and out."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>OwnsOne</code></b> → value object stored in the owner's table</span>
+      <span class="tc-line"><b><code>HasConversion</code></b> → enum as string, typed id as its raw value</span>
+      <span class="tc-line"><b>Mutable converted value</b> → needs a <code>ValueComparer</code></span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 208" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI15a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI15a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arRI15a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">OWNED TYPE — A VALUE OBJECT BECOMES COLUMNS</text>
+      <g filter="url(#shI15a)"><rect x="20" y="40" width="190" height="124" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="115" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📦 Order</text>
+      <text x="115" y="80" text-anchor="middle" font-size="10" fill="#5b6472">Id · Total</text>
+      <rect x="36" y="94" width="158" height="58" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+      <text x="115" y="114" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🏠 Address (owned)</text>
+      <text x="115" y="134" text-anchor="middle" font-size="10" fill="#5b6472">Street · City</text>
+      <path d="M210,102 H330" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15a)"/>
+      <text x="270" y="92" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">OwnsOne</text>
+      <g filter="url(#shI15a)"><rect x="330" y="40" width="290" height="124" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="475" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🗄️ Orders table — one table</text>
+      <text x="350" y="86" text-anchor="start" font-size="10.5" fill="#5b6472">Id</text>
+      <text x="350" y="104" text-anchor="start" font-size="10.5" fill="#5b6472">Total</text>
+      <text x="350" y="122" text-anchor="start" font-size="10.5" fill="#5b6472">ShippingAddress_Street</text>
+      <text x="350" y="140" text-anchor="start" font-size="10.5" fill="#5b6472">ShippingAddress_City</text>
+      <text x="320" y="192" text-anchor="middle" font-size="10" fill="#5b6472">The owned Address has no table of its own — its columns sit inside the owner's table</text>
+    </svg>
+    <figcaption>An owned type has no identity or table of its own — its properties become columns on the owner's table.</figcaption>
+  </figure>
+
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 164" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI15b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI15b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arRI15b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">VALUE CONVERTER — C# TYPE ↔ DATABASE TYPE</text>
+      <g filter="url(#shI15b)"><rect x="20" y="46" width="170" height="64" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="105" y="70" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">💻 C# value</text>
+      <text x="105" y="88" text-anchor="middle" font-size="10" fill="#5b6472">OrderStatus.Shipped</text>
+      
+      <path d="M190,78 H250" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15b)"/>
+      <g filter="url(#shI15b)"><rect x="250" y="46" width="140" height="64" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="70" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🔁 HasConversion</text>
+      <text x="320" y="88" text-anchor="middle" font-size="10" fill="#5b6472">&lt;string&gt;</text>
+      
+      <path d="M390,78 H450" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI15b)"/>
+      <g filter="url(#shI15b)"><rect x="450" y="46" width="170" height="64" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="535" y="70" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🗄️ Database column</text>
+      <text x="535" y="88" text-anchor="middle" font-size="10" fill="#5b6472">"Shipped" (text)</text>
+      
+      <text x="320" y="146" text-anchor="middle" font-size="10" fill="#5b6472">On the way back (reading), the same converter turns the text into the enum again</text>
+    </svg>
+    <figcaption>A converter sits between the C# property and the column and translates in both directions.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"A converter on any property just works."</b> For a mutable value such as a <code>List&lt;string&gt;</code> saved as text, change tracking compares references — an in-place edit may not be noticed, and <code>SaveChanges()</code> silently writes nothing. Give it a <code>ValueComparer</code>.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Owned type or a separate entity with a one-to-one?"</b> An owned type has no identity of its own, lives and dies with its owner, and is always loaded with it. If other entities need to reference it, or it needs its own lifecycle, make it a real entity.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"For a value object like an address I use <code>OwnsOne</code>, so its properties become columns on the owner's table and it has no identity of its own. For an enum I want readable in the database, or a strongly typed id, I use <code>HasConversion</code>. If the converted value is mutable, I also give it a value comparer."</p>
+    <ul>
+      <li><code>OwnsOne</code> → <span class="hl hl-hot">value object in the owner's table</span>, no identity of its own.</li>
+      <li><code>HasConversion&lt;string&gt;()</code> → <span class="hl hl-inter">enum stored as text</span>.</li>
+      <li>Typed id → <span class="hl hl-basic">convert to and from the raw value</span> (for example a <code>Guid</code>).</li>
+      <li>Mutable converted value → <span class="hl hl-blue">add a ValueComparer</span> or edits may go unnoticed.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>An <span class="hl hl-blue">owned type</span> is a class with no identity of its own that only makes sense inside its owner — an <code>Address</code> on an <code>Order</code>. With <code>OwnsOne</code>, a reference owned type is stored in the owner's table by default, with column names like <code>ShippingAddress_Street</code>, and it is loaded together with the owner. <code>OwnsMany</code> is for collections and uses a separate table. EF Core 8 also added <em>complex types</em> for value objects that need no identity at all.</p>
+
+      <p>A <span class="hl hl-inter">value converter</span> changes a property's type on its way to the database and back. The common uses are storing an enum as a string (<code>HasConversion&lt;string&gt;()</code>) and mapping a strongly typed id such as <code>OrderId</code> to its raw <code>Guid</code> or <code>int</code>. One trade-off: a text enum column is readable, but renaming an enum member later changes what the stored values mean.</p>
+
+      <p>The <b>comparer caveat</b>: change tracking has to decide whether a converted value changed. For simple immutable values that works by itself. For a mutable type such as a list, you supply a <code>ValueComparer</code> so EF Core can compare contents and take a safe snapshot.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>modelBuilder.Entity&lt;Order&gt;()
+    .OwnsOne(o =&gt; o.ShippingAddress);   <span class="cx-ok">// ✅ columns: ShippingAddress_Street, ShippingAddress_City</span></code></pre>
+      </div>
+      <p class="cx-note"><code>OwnsOne</code> keeps the address inside the <code>Orders</code> table — no join, no separate key.</p>
+
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>modelBuilder.Entity&lt;Order&gt;()
+    .Property(o =&gt; o.Status)
+    .HasConversion&lt;<span class="kw">string</span>&gt;();           <span class="cx-ok">// ✅ stored as "Shipped", not 2</span>
+
+modelBuilder.Entity&lt;Order&gt;()
+    .Property(o =&gt; o.Id)
+    .HasConversion(id =&gt; id.Value, v =&gt; <span class="kw">new</span> OrderId(v));   <span class="cx-cmt">// typed id ↔ raw value</span></code></pre>
+      </div>
+      <p class="cx-note">Two common converters: enum to text, and a strongly typed id to its raw value.</p>
+
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>modelBuilder.Entity&lt;Post&gt;()
+    .Property(p =&gt; p.Tags)
+    .HasConversion(
+        v =&gt; <span class="kw">string</span>.Join(<span class="str">","</span>, v),
+        v =&gt; v.Split(<span class="str">","</span>, StringSplitOptions.RemoveEmptyEntries).ToList(),
+        <span class="kw">new</span> ValueComparer&lt;List&lt;<span class="kw">string</span>&gt;&gt;(
+            (a, b) =&gt; a!.SequenceEqual(b!),                                  <span class="cx-ok">// ✅ compare contents</span>
+            v =&gt; v.Aggregate(<span class="num">0</span>, (h, s) =&gt; HashCode.Combine(h, s.GetHashCode())),
+            v =&gt; v.ToList()));                                               <span class="cx-cmt">// snapshot copy</span></code></pre>
+      </div>
+      <p class="cx-note">A mutable converted value needs a <code>ValueComparer</code> so in-place edits are noticed.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>An <code>Order</code> has a <code>Money</code> value (amount and currency) and a <code>Status</code> enum.</b> Map <code>Money</code> with <code>OwnsOne</code> so it is just two columns on the same row, and store <code>Status</code> as text so anyone reading the table sees "Shipped" instead of a bare number.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="14.html">← Inheritance Mapping: TPH, TPT &amp; TPC</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="16.html">Indexes, Unique Constraints &amp; Composite Keys in the Model →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

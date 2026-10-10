@@ -21,7 +21,7 @@ Locked decisions from the working session that set this project up. Don't re-der
 - `<track>` is a short lowercase slug: `csharp`, `oops`, `dotnet`, `sql`, `react`, `dsa`, etc.
 - **The tier index lists the full roadmap first — written and not-yet-written topics together**
   (see the workflow note in [content-writing.md](content-writing.md)). A topic's number is its
-  permanent slot in that hot-first roadmap from the moment it's *listed*, not from when it's
+  permanent slot in that roadmap from the moment it's *listed*, not from when it's
   *written* — so `7.html` is already "claimed" by whichever topic sits 7th on the index even
   before that file exists.
 - If a genuinely new topic needs inserting mid-list (not just filling a planned slot), renumber
@@ -106,4 +106,4 @@ Locked decisions from the working session that set this project up. Don't re-der
 1. Add the tile to `/index.html`.
 2. Create `/<track>/index.html` with all three tier cards (stub the tiers not built yet).
 3. Create `/<track>/basic/index.html` (even if empty for now, list it as "coming soon").
-4. Update the status table in [`docs/README.md`](../README.md).
+4. Add the track to [`docs/superpowers/specs/README.md`](../superpowers/specs/README.md) (index table) and [`docs/refreshyourself-overview.md`](../refreshyourself-overview.md) (status line). See [`site-architecture.md`](site-architecture.md) for the full change → files map.

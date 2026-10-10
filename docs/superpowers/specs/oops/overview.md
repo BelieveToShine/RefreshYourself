@@ -3,7 +3,7 @@
 **Start here for anything OOP-related.** See [`docs/superpowers/specs/README.md`](../README.md)
 for what this file is and the process for keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 15 pages written
+## Status — Phases 1–7 complete, all 26 pages written (15 original + 11 gap pages added 2026-10-07)
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): raw questions, grouped by
   concept, deliberately scenario-heavy per the user's instruction (design/scenario questions for
@@ -19,7 +19,7 @@ for what this file is and the process for keeping it in sync with the live pages
   before this track was considered done — the process that C#'s Phase 7 only added after the
   fact, applied here from the start.
 
-## Basic (4 topics) — 4 written
+## Basic (7 topics) — 7 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -27,8 +27,11 @@ for what this file is and the process for keeping it in sync with the live pages
 | 2 | Inheritance vs. Composition | 🔥 | ✅ |
 | 3 | Polymorphism | 🔥 | ✅ |
 | 4 | Single Responsibility Principle | 🔥 | ✅ |
+| 5 | Association, Aggregation & Composition | ⭐ | ✅ |
+| 6 | DRY, KISS & YAGNI | ⭐ | ✅ |
+| 7 | Static vs. Instance Members & sealed | ⭐ | ✅ |
 
-## Intermediate (8 topics) — 8 written
+## Intermediate (16 topics) — 16 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -40,6 +43,14 @@ for what this file is and the process for keeping it in sync with the live pages
 | 6 | Strategy Pattern vs. Conditional Logic | ⭐ | ✅ |
 | 7 | Factory vs. Dependency Injection | ⭐ | ✅ |
 | 8 | Coupling vs. Cohesion | ⭐ | ✅ |
+| 9 | Multiple Inheritance & the Diamond Problem | 🔥 | ✅ |
+| 10 | Singleton Pattern | 🔥 | ✅ |
+| 11 | Repository Pattern | ⭐ | ✅ |
+| 12 | Observer Pattern | ⭐ | ✅ |
+| 13 | Decorator Pattern | ⭐ | ✅ |
+| 14 | Law of Demeter | 🧠 | ✅ |
+| 15 | Shallow vs. Deep Copy | ⭐ | ✅ |
+| 16 | Adapter vs. Facade | ⭐ | ✅ |
 
 ## Advanced (3 topics) — 3 written
 
@@ -78,3 +89,5 @@ note for the full accounting.
 None — this is the first OOP-track pass through the full 7-phase pipeline, built and verified in
 one sitting (unlike C#, which had a page-by-page user review round after Phase 7). Expect the same
 kind of review/feedback pass once the user goes through it.
+
+**Known gaps (update 2026-10-07):** the 11 pages found by the 2026-10-06 gap hunt (patterns, principles, has-a strengths) were all written and wired on 2026-10-07 (15 -> 26 pages); see the [roadmap addendum](roadmap.md#addendum-2026-10-06--gap-pages-phases-26). Basic 5 Association, Aggregation & Composition; 6 DRY, KISS & YAGNI; 7 Static vs. Instance Members & sealed; Intermediate 9 Multiple Inheritance & the Diamond Problem; 10 Singleton Pattern; 11 Repository Pattern; 12 Observer Pattern; 13 Decorator Pattern; 14 Law of Demeter; 15 Shallow vs. Deep Copy; 16 Adapter vs. Facade. Counts: Basic 7, Intermediate 16, Advanced 3.

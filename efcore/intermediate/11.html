@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How would you implement soft delete or multi-tenancy once, for every query?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Global Query Filters &amp; Soft Delete — EF Core Intermediate — RefreshYourself">
+<meta property="og:description" content="How would you implement soft delete or multi-tenancy once, for every query?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Global Query Filters &amp; Soft Delete — EF Core Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Global Query Filters &amp; Soft Delete</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ EF Core · Intermediate · Should Know</div>
+    <h1><code>HasQueryFilter</code> — <span class="hl hl-blue">write the WHERE once, apply it everywhere</span></h1>
+    <p class="interview-q">How would you implement soft delete or multi-tenancy once, for every query?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔍 Global query filter</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Soft delete or tenant scoping means a <code>WHERE</code> on every single query — and one forgotten condition shows deleted rows or another tenant's data.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A <b>global query filter</b>, set once with <code>HasQueryFilter</code>, makes EF Core add that condition to every query on the entity automatically.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>HasQueryFilter</code> = a <code>WHERE</code> EF Core adds for you, on every query.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>HasQueryFilter</code> <span class="rarrow">→</span> <b>automatic</b> <code>WHERE</code> on every query</p>
+      <p class="rrow">Soft delete <span class="rarrow">→</span> filter <code>!IsDeleted</code> + flip the flag in <b><code>SaveChanges</code></b></p>
+      <p class="rrow"><code>IgnoreQueryFilters()</code> <span class="rarrow">→</span> <b>opt out</b> for one query</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b>Filter</b> hides. <b><code>SaveChanges</code></b> flags. <b><code>IgnoreQueryFilters()</code></b> shows it all again.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 214" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI11a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI11a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI11aA" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">WRITE THE RULE ONCE — EF CORE ADDS IT TO EVERY QUERY</text>
+      <g filter="url(#shI11a)"><rect x="15" y="70" width="140" height="48" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.7"/></g>
+      <text x="85" y="90" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">your LINQ</text>
+      <text x="85" y="106" text-anchor="middle" font-size="10.5" font-weight="500" fill="#475569" font-family="'Fira Code', monospace">db.Posts.ToList()</text>
+      <path d="M155,94 H235" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI11a)"/>
+      <g filter="url(#shI11a)"><rect x="235" y="70" width="170" height="48" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.7"/></g>
+      <text x="320" y="90" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">global query filter</text>
+      <text x="320" y="106" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">adds WHERE IsDeleted = 0</text>
+      <path d="M405,94 H485" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI11a)"/>
+      <g filter="url(#shI11a)"><rect x="485" y="70" width="140" height="48" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.7"/></g>
+      <text x="555" y="90" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">SQL sent</text>
+      <text x="555" y="106" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">… WHERE IsDeleted = 0</text>
+      <path d="M85,118 V160 H555 V118" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arI11aA)"/>
+      <text x="320" y="152" text-anchor="middle" font-size="10.5" font-weight="600" fill="#92400e">IgnoreQueryFilters() skips the filter</text>
+      <text x="320" y="200" text-anchor="middle" font-size="11" font-weight="400" fill="#5b6472">Every query on that entity is filtered automatically — until you opt out for one query</text>
+    </svg>
+    <figcaption>The filter is added to the SQL of every query on the entity; <code>IgnoreQueryFilters()</code> is the deliberate bypass.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 218" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI11b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI11b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI11bR" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arI11bG" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">SOFT DELETE — TURN THE DELETE INTO AN UPDATE</text>
+      <g filter="url(#shI11b)"><rect x="15" y="44" width="130" height="52" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.7"/></g>
+      <text x="80" y="66" text-anchor="middle" font-size="11" font-weight="700" fill="#475569" font-family="'Fira Code', monospace">db.Remove(post)</text>
+      <text x="80" y="82" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">state = Deleted</text>
+      <path d="M145,70 H200" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI11b)"/>
+      <g filter="url(#shI11b)"><rect x="200" y="44" width="240" height="52" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.7"/></g>
+      <text x="320" y="66" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">SaveChanges override / interceptor</text>
+      <text x="320" y="82" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">Deleted → Modified + IsDeleted = true</text>
+      <path d="M440,70 H495" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arI11bG)"/>
+      <g filter="url(#shI11b)"><rect x="495" y="44" width="130" height="52" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.7"/></g>
+      <text x="560" y="66" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">UPDATE the row</text>
+      <text x="560" y="82" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">IsDeleted = 1</text>
+      <path d="M80,96 V158 H495" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arI11bR)"/>
+      <text x="285" y="150" text-anchor="middle" font-size="10.5" font-weight="600" fill="#991b1b">no interception → a real DELETE</text>
+      <g filter="url(#shI11b)"><rect x="495" y="140" width="130" height="36" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.7"/></g>
+      <text x="560" y="162" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">DELETE the row</text>
+      <text x="320" y="204" text-anchor="middle" font-size="11" font-weight="400" fill="#5b6472">A query filter only hides rows — turning Remove() into an UPDATE is your job</text>
+    </svg>
+    <figcaption><code>HasQueryFilter</code> hides flagged rows; a <code>SaveChanges</code> override or interceptor is what makes <code>Remove()</code> set the flag instead of deleting.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A query filter does not make <code>Remove()</code> a soft delete.</b> It only hides rows that are already flagged — without a <code>SaveChanges</code> override or interceptor, <code>Remove()</code> still issues a real <code>DELETE</code>.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How can an admin still see the deleted rows?"</b> Call <code>IgnoreQueryFilters()</code> on that query — it turns the global filter off for that one query only.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A global query filter, set once with <code>HasQueryFilter</code>, is added to every query on that entity — I use it for soft delete and multi-tenancy. It doesn't turn <code>Remove()</code> into a soft delete; I do that in <code>SaveChanges</code> or an interceptor. And <code>IgnoreQueryFilters()</code> bypasses it when I need the hidden rows."</p>
+    <ul>
+      <li><code>HasQueryFilter</code> → <span class="hl hl-blue">a <code>WHERE</code> on every query</span>, automatically.</li>
+      <li>Soft delete → <span class="hl hl-inter">flip <code>Deleted</code> to <code>Modified</code></span> and set <code>IsDeleted</code> in <code>SaveChanges</code> or an interceptor.</li>
+      <li>Multi-tenancy → filter on <span class="hl hl-basic"><code>TenantId</code> read from the context</span>.</li>
+      <li><code>IgnoreQueryFilters()</code> → <span class="hl hl-hot">admin, audit, restore</span> screens.</li>
+      <li>Gotcha → a filtered parent <span class="hl hl-hot">hides children</span> that reach it through a required navigation.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <b>global query filter</b> is a <code>WHERE</code> that EF Core adds to every query for an entity — written once in <code>OnModelCreating</code> with <code>HasQueryFilter</code>. It is the clean way to do <span class="hl hl-blue">soft delete</span> (hide rows flagged <code>IsDeleted</code>) and <span class="hl hl-blue">multi-tenancy</span> (only this tenant's rows).</p>
+
+      <p>The filter <span class="hl hl-hot">hides rows; it doesn't delete them</span>. A normal <code>Remove()</code> still becomes a real <code>DELETE</code>. For soft delete, override <code>SaveChanges</code> (or use a <code>SaveChangesInterceptor</code>) and turn <code>Deleted</code> entries into <code>Modified</code> with <code>IsDeleted = true</code>. For tenants, the filter can read a field on the <code>DbContext</code>, such as the current tenant id. Before EF Core 10 an entity type has one filter (a second <code>HasQueryFilter</code> overwrites the first), so combine conditions with <code>&amp;&amp;</code>; EF Core 10 adds <b>named</b> filters that <code>IgnoreQueryFilters(["name"])</code> can switch off one at a time.</p>
+
+      <p><code>IgnoreQueryFilters()</code> switches the filter off for one query. One catch: if a parent is filtered out, children that reach it through a <b>required navigation</b> are hidden too — give the child a matching filter or make the navigation optional. See <a href="1.html">LINQ → SQL Translation</a>; interceptors come in <a href="../advanced/8.html">Interceptors &amp; Audit Trails</a>.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>modelBuilder.Entity&lt;<span class="ty">Post</span>&gt;().HasQueryFilter(p =&gt; !p.IsDeleted);
+<span class="cx-ok">// ✅ every query on Post now has WHERE IsDeleted = 0</span>
+
+modelBuilder.Entity&lt;<span class="ty">Order</span>&gt;().HasQueryFilter(o =&gt; o.TenantId == _tenantId);
+<span class="cx-cmt">// _tenantId is a field on this DbContext — set per request</span></code></pre>
+      </div>
+      <p class="cx-note">One line per rule — queries written later get the filter without anyone remembering it.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">override</span> <span class="ty">Task</span>&lt;<span class="kw">int</span>&gt; SaveChangesAsync(<span class="ty">CancellationToken</span> ct = default)
+{
+    <span class="kw">foreach</span> (<span class="kw">var</span> e <span class="kw">in</span> ChangeTracker.Entries&lt;<span class="ty">ISoftDelete</span>&gt;()
+                 .Where(e =&gt; e.State == <span class="ty">EntityState</span>.Deleted))
+    {
+        e.State = <span class="ty">EntityState</span>.Modified;   <span class="cx-cmt">// DELETE becomes UPDATE</span>
+        e.Entity.IsDeleted = <span class="kw">true</span>;        <span class="cx-ok">// ✅ the flag the filter hides</span>
+    }
+    <span class="kw">return</span> base.SaveChangesAsync(ct);
+}</code></pre>
+      </div>
+      <p class="cx-note">The filter only hides — <b>this</b> is what makes a delete soft. (Override <code>SaveChanges</code> the same way if you call it synchronously.)</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> all = <span class="kw">await</span> db.Posts.IgnoreQueryFilters().ToListAsync();   <span class="cx-ok">// ✅ includes IsDeleted rows</span></code></pre>
+      </div>
+      <p class="cx-note"><code>IgnoreQueryFilters()</code> — an explicit, visible opt-out for one query.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A multi-tenant SaaS app</b> used to rely on every developer adding <code>Where(x => x.TenantId == …)</code>; one forgotten condition leaked another customer's rows. One <code>HasQueryFilter</code> on <code>TenantId</code> scoped every query by default.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="10.html">← Repository &amp; Unit of Work over EF Core</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="12.html">Find vs. FirstOrDefault vs. SingleOrDefault →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

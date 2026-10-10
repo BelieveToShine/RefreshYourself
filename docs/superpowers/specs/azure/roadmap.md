@@ -3,7 +3,7 @@
 **Phases 2–6 of the 7-phase pipeline** (see [`docs/superpowers/specs/README.md`](../README.md)).
 Builds on [`question-taxonomy.md`](question-taxonomy.md) — read that first for the underlying
 questions; this file is where they get grouped into pages, tiered, and prioritized. Phase 7
-(writing the pages) has not started as of this file being written.
+(writing the pages) was completed later — all pages in this plan are written (see `overview.md`).
 
 ## Phase 2 — review, dedupe, gap-hunt
 
@@ -86,7 +86,7 @@ Independent of tier, per the same rule file. Reasoning for the less-obvious call
 
 ## Phase 6 — final page list
 
-**44 pages: Basic 18, Intermediate 19, Advanced 7.** Numbering is each tier's own hot-first order
+**44 pages at Phase 6: Basic 18, Intermediate 19, Advanced 7** (now 49 after the 2026-10-07 gap pages: Basic 18, Intermediate 23, Advanced 8 — see the addendum at the end). Numbering is each tier's own hot-first order
 (🔥 pages before ⭐/🧠 within a tier, same rule as every other track) — the file name matches this
 final position, not the taxonomy's original group order.
 
@@ -178,3 +178,21 @@ None identified going into Phase 7 — every taxonomy question (post-gap-hunt) m
 page above. Tiering/priority calls flagged above as non-obvious are worth a second look once the
 pages are actually written and reviewed, same as every other track's roadmap says about its own
 judgment calls.
+
+## Addendum 2026-10-06 — gap pages (Phases 2–6)
+
+Active gap-hunt (see [`gap-hunting.md`](../../../rules/gap-hunting.md)) against the 44 live pages. Numbering takes the **next free number in each tier** (permanent, never renumber; position in a tier does not imply priority — the 🔥/⭐/🧠 badge carries that). Counts on disk at time of writing: Basic 18, Intermediate 19, Advanced 7. **Status: all pages in this addendum were written and wired on 2026-10-07** (track total 44 -> 49: Basic 18, Intermediate 23, Advanced 8).
+
+| # | Tier | Pri | Title | Quoted interview question | Scope (one sentence) | Diagram idea | Cross-links |
+|---|---|---|---|---|---|---|---|
+| Intermediate 20 | Intermediate | 🔥 | Azure Functions — Triggers, Bindings & Hosting Plans | "Consumption vs. Premium vs. Dedicated plan — and how do you deal with cold starts?" | Trigger vs. input/output binding, the hosting-plan trade-off (scale-to-zero vs. pre-warmed vs. always-on, VNet support, timeouts), and cold start; check current plan names (Flex Consumption) before writing. | Left: trigger -> function -> output binding; right: three plan lanes with a cold-start gap on the scale-to-zero lane. | basic/3, intermediate/12 (Durable), intermediate/1 (slots), intermediate/6 |
+| Intermediate 21 | Intermediate | ⭐ | Azure SQL High Availability — Geo-Replication, Failover Groups & Elastic Pools | "How do you make Azure SQL survive a regional outage, and when would you use an elastic pool?" | Built-in zone/local HA vs. active geo-replication vs. auto-failover groups (one listener endpoint), RPO/RTO expectations, and elastic pools for many small databases with uneven load. | Primary region + readable secondary region with a failover-group listener on top; small inset of a pool sharing resources. | basic/5, basic/16, advanced/3, intermediate/18 |
+| Intermediate 22 | Intermediate | ⭐ | Storage Redundancy & Access Tiers | "LRS vs. ZRS vs. GRS vs. GZRS — and Hot vs. Cool vs. Archive?" | Copies-and-places redundancy options (what failure each survives, read-access variants) and cost-vs.-access-speed tiers with lifecycle rules. | A grid: redundancy options on one axis (zone / region failure survived), tiers on the other (cost vs. retrieval latency). | basic/4, advanced/3, advanced/5 |
+| Intermediate 23 | Intermediate | ⭐ | Entra Conditional Access, MFA & External Identities | "How would you require MFA only for risky sign-ins, and let partner or customer users sign in to your app?" | Conditional Access as if-signal-then-control policies, MFA, and B2B guest vs. customer-facing external identities (check current Entra External ID naming before writing). | Sign-in -> signals (user, device, location, risk) -> policy engine -> allow / require MFA / block. | basic/9, basic/10, intermediate/3 |
+| Advanced 8 | Advanced | ⭐ | AKS Architecture — Node Pools, Networking, Ingress & Autoscaling | "Design an AKS cluster for production: networking model, scaling, and how traffic gets in." | Node pools (system vs. user), kubenet vs. CNI-style pod networking, ingress controller vs. Application Gateway, pod autoscaling (HPA) vs. node autoscaling; builds on the 3-way container-choice page. | Cluster box with system + user node pools, ingress in front, two autoscaler arrows (pods, nodes). | intermediate/2, intermediate/8, advanced/4, basic/15 |
+
+**Dropped / still excluded, with reasons**
+- **Azure DevOps / GitHub Actions pipelines** — reaffirms the taxonomy exclusion: general CI/CD, not Azure-architecture-specific.
+- **API Management deep-dive** — `basic/17` already covers policies, throttling, auth and versioning at interview depth; a second page would repeat it.
+- **Event Grid vs. Event Hubs vs. Service Bus, Durable Functions, Cosmos consistency, Front Door/App Gateway, Private Endpoint, Redis** — already pages (intermediate/6, 12, 18, 8; basic/14; intermediate/16).
+- **Defender for Cloud / Sentinel / Azure Firewall**, **Data Factory / Synapse / Fabric**, **ExpressRoute/VPN** — security- or data-specialist depth; unchanged exclusions.

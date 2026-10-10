@@ -33,7 +33,8 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–18",
+        label: "Questions 11–20",
+        hot: 2,
         items: [
           { n: 11, file: "11.html", short: "var/dynamic/object",      title: "var vs. dynamic vs. object",       tail: "three ways to not name the type.", priority: "⭐" },
           { n: 12, file: "12.html", short: "Enums",                   title: "Enums",                            tail: "naming a fixed set of options.", priority: "⭐" },
@@ -42,7 +43,16 @@ window.NAV_INDEX = {
           { n: 15, file: "15.html", short: "is / as / casting",       title: "is / as / Explicit Casting",       tail: "safe conversion vs. an exception waiting to happen.", priority: "🔥" },
           { n: 16, file: "16.html", short: "params & named args",     title: "params, Optional & Named Parameters", tail: "three ways to make a method call easier to write.", priority: "⭐" },
           { n: 17, file: "17.html", short: "Tuples & deconstruction", title: "Tuples & Deconstruction",          tail: "a quick, private grouping of values.", priority: "⭐" },
-          { n: 18, file: "18.html", short: "Indexers",                title: "Indexers",                         tail: "letting a type support obj[i] syntax.", priority: "🧠" }
+          { n: 18, file: "18.html", short: "Indexers",                title: "Indexers",                         tail: "letting a type support obj[i] syntax.", priority: "🧠" },
+          { n: 19, file: "19.html", short: "Delegates, Func/Action", title: "Delegates & Func / Action / Predicate", tail: "a variable that holds a method; Func, Action, Predicate", priority: "🔥" },
+          { n: 20, file: "20.html", short: "Properties vs. Fields", title: "Properties vs. Fields", tail: "a gate in front of your data; get/set over a backing field", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 21",
+        hot: 1,
+        items: [
+          { n: 21, file: "21.html", short: "virtual / override / new", title: "virtual / override / new / abstract / sealed", tail: "who decides which method runs; abstract and sealed", priority: "🔥" }
         ]
       }
     ]
@@ -68,7 +78,8 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–18",
+        label: "Questions 11–20",
+        hot: 5,
         items: [
           { n: 11, file: "11.html", short: "init / required",         title: "init / required Members",           tail: "set once at construction, enforced how and when.", priority: "⭐" },
           { n: 12, file: "12.html", short: "Immutable objects",       title: "Immutable Objects",                 tail: "what actually makes an object immutable.", priority: "⭐" },
@@ -77,7 +88,19 @@ window.NAV_INDEX = {
           { n: 15, file: "15.html", short: "async/await — basics",    title: "async / await — the Basics",        tail: "what it actually does, and does it create a thread?", priority: "🔥" },
           { n: 16, file: "16.html", short: "Task/Thread/ThreadPool",  title: "Task vs. Thread vs. ThreadPool",    tail: "the actual relationship between the three.", priority: "🔥" },
           { n: 17, file: "17.html", short: "CancellationToken",       title: "Cancellation (CancellationToken)",  tail: "cooperative cancellation — nothing forces it to stop.", priority: "⭐" },
-          { n: 18, file: "18.html", short: "IDisposable & using",     title: "IDisposable & using — the Basics",  tail: "a reliable way to release a resource, even on an exception.", priority: "🔥" }
+          { n: 18, file: "18.html", short: "IDisposable & using",     title: "IDisposable & using — the Basics",  tail: "a reliable way to release a resource, even on an exception.", priority: "🔥" },
+          { n: 19, file: "19.html", short: "Events vs. Delegates", title: "Events vs. Delegates", tail: "a delegate with a safety lock; += and -= only", priority: "🔥" },
+          { n: 20, file: "20.html", short: "Lambdas & Closures", title: "Lambdas & Closures", tail: "lambdas that remember variables; the loop-capture bug", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 21–24",
+        hot: 1,
+        items: [
+          { n: 21, file: "21.html", short: "async void vs Task", title: "async void vs. async Task", tail: "Why async void loses exceptions; only for event handlers", priority: "🔥" },
+          { n: 22, file: "22.html", short: "Task.WhenAll / WhenAny", title: "Task.WhenAll / WhenAny", tail: "Run async calls concurrently; await shows only one failure", priority: "⭐" },
+          { n: 23, file: "23.html", short: "IComparable/IComparer", title: "IComparable<T> vs. IComparer<T>", tail: "Natural order vs external comparer; Sort is not stable", priority: "⭐" },
+          { n: 24, file: "24.html", short: "Covariance & Contra.", title: "Covariance & Contravariance", tail: "out/in on generics; why List<Dog> is not List<Animal>", priority: "🧠" }
         ]
       }
     ]
@@ -103,11 +126,14 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–13",
+        label: "Questions 11–15",
+        hot: 1,
         items: [
           { n: 11, file: "11.html", short: "Attributes",              title: "Attributes",                        tail: "declarative metadata, read back via reflection.", priority: "🧠" },
           { n: 12, file: "12.html", short: "Expression Trees",        title: "Expression Trees",                  tail: "code as data — why EF Core needs this, not a Func.", priority: "🧠" },
-          { n: 13, file: "13.html", short: "Performance checklist",   title: "C# Performance Checklist",          tail: "a hot path is under GC pressure — what do you check first?", priority: "⭐" }
+          { n: 13, file: "13.html", short: "Performance checklist",   title: "C# Performance Checklist",          tail: "a hot path is under GC pressure — what do you check first?", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Dictionary/HashSet", title: "Dictionary / HashSet Internals", tail: "Hash, bucket, chain; O(1) average; vs SortedDictionary", priority: "🔥" },
+          { n: 15, file: "15.html", short: "Task vs ValueTask", title: "Task vs. ValueTask", tail: "When ValueTask avoids allocation, and the one-await rule", priority: "⭐" }
         ]
       }
     ]
@@ -118,12 +144,16 @@ window.NAV_INDEX = {
     tier: "Basic",
     groups: [
       {
-        label: "Questions 1–4",
+        label: "Questions 1–7",
+        hot: 4,
         items: [
           { n: 1, file: "1.html", short: "Encapsulation vs. Abstraction", title: "Encapsulation vs. Abstraction", tail: "hides state vs. hides complexity.", priority: "🔥" },
           { n: 2, file: "2.html", short: "Inheritance vs. Composition",   title: "Inheritance vs. Composition",   tail: "is-a vs. has-a — how do you decide?", priority: "🔥" },
           { n: 3, file: "3.html", short: "Polymorphism",                  title: "Polymorphism",                  tail: "compile-time vs. runtime, overload vs. override.", priority: "🔥" },
-          { n: 4, file: "4.html", short: "Single Responsibility",         title: "Single Responsibility Principle", tail: "\"one reason to change,\" not \"one method.\"", priority: "🔥" }
+          { n: 4, file: "4.html", short: "Single Responsibility",         title: "Single Responsibility Principle", tail: "\"one reason to change,\" not \"one method.\"", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Assoc/Aggr/Composition", title: "Association, Aggregation & Composition", tail: "Uses, shares or owns — three strengths of has-a", priority: "⭐" },
+          { n: 6, file: "6.html", short: "DRY, KISS & YAGNI", title: "DRY, KISS & YAGNI", tail: "Three rules of thumb, and when DRY goes too far", priority: "⭐" },
+          { n: 7, file: "7.html", short: "Static vs. instance", title: "Static vs. Instance Members & sealed", tail: "One shared copy or one per object, and what sealed does", priority: "⭐" }
         ]
       }
     ]
@@ -134,7 +164,8 @@ window.NAV_INDEX = {
     tier: "Intermediate",
     groups: [
       {
-        label: "Questions 1–8",
+        label: "Questions 1–10",
+        hot: 7,
         items: [
           { n: 1, file: "1.html", short: "Interface vs. Abstract Class", title: "Interface vs. Abstract Class",   tail: "when to reach for each.", priority: "🔥" },
           { n: 2, file: "2.html", short: "Open/Closed Principle",        title: "Open/Closed Principle",          tail: "the switch statement that keeps growing.", priority: "🔥" },
@@ -143,7 +174,20 @@ window.NAV_INDEX = {
           { n: 5, file: "5.html", short: "Dependency Inversion",         title: "Dependency Inversion Principle", tail: "depend on abstractions, not concretions.", priority: "🔥" },
           { n: 6, file: "6.html", short: "Strategy vs. Conditional",     title: "Strategy Pattern vs. Conditional Logic", tail: "the payment-processor example.", priority: "⭐" },
           { n: 7, file: "7.html", short: "Factory vs. DI",               title: "Factory vs. Dependency Injection", tail: "when you need one in addition to the other.", priority: "⭐" },
-          { n: 8, file: "8.html", short: "Coupling vs. Cohesion",        title: "Coupling vs. Cohesion",          tail: "and what actually makes code maintainable.", priority: "⭐" }
+          { n: 8, file: "8.html", short: "Coupling vs. Cohesion",        title: "Coupling vs. Cohesion",          tail: "and what actually makes code maintainable.", priority: "⭐" },
+          { n: 9, file: "9.html", short: "Diamond problem", title: "Multiple Inheritance & the Diamond Problem", tail: "One base class, many interfaces — and why", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Singleton pattern", title: "Singleton Pattern", tail: "One instance, thread safety, and why it is an anti-pattern", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11–16",
+        items: [
+          { n: 11, file: "11.html", short: "Repository pattern", title: "Repository Pattern", tail: "A collection-like door to data, and EF Core", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Observer Pattern", title: "Observer Pattern", tail: "Subject notifies many subscribers; C# events", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Decorator Pattern", title: "Decorator Pattern", tail: "Wrap an object with the same interface to add behavior", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Law of Demeter", title: "Law of Demeter", tail: "Talk to immediate friends; avoid train-wreck call chains", priority: "🧠" },
+          { n: 15, file: "15.html", short: "Shallow vs. Deep Copy", title: "Shallow vs. Deep Copy", tail: "Copy references or copy the whole object graph; safe cloning", priority: "⭐" },
+          { n: 16, file: "16.html", short: "Adapter vs. Facade", title: "Adapter vs. Facade", tail: "Adapter converts an interface; Facade simplifies a subsystem", priority: "⭐" }
         ]
       }
     ]
@@ -169,14 +213,18 @@ window.NAV_INDEX = {
     tier: "Basic",
     groups: [
       {
-        label: "Questions 1–6",
+        label: "Questions 1–9",
+        hot: 5,
         items: [
           { n: 1, file: "1.html", short: ".NET vs. .NET Framework", title: ".NET vs. .NET Framework", tail: "the actual relationship between the two.", priority: "🔥" },
           { n: 2, file: "2.html", short: "CLR, BCL & Managed Code", title: "CLR, BCL & Managed Code", tail: "what \"managed\" actually means.", priority: "🔥" },
           { n: 3, file: "3.html", short: "SDK vs. Runtime & NuGet", title: "SDK vs. Runtime, .csproj & NuGet", tail: "what each piece of tooling actually does.", priority: "⭐" },
           { n: 4, file: "4.html", short: "What Is MVC",             title: "What Is MVC",             tail: "Model, View, Controller — and why you usually need a ViewModel too.", priority: "🔥" },
-          { n: 5, file: "5.html", short: "Filters, CORS & Logging", title: "Filters, CORS, HTTPS & Logging", tail: "four pipeline concerns worth knowing by name.", priority: "⭐" },
-          { n: 6, file: "6.html", short: "Unit Testing Fundamentals", title: "Unit Testing Fundamentals", tail: "AAA, xUnit/NUnit/MSTest, and what actually makes it a \"unit\" test.", priority: "🔥" }
+          { n: 5, file: "5.html", short: "Filters", title: "Filters — Hooks Around an Action", tail: "hooks around an action, and how they differ from middleware.", priority: "⭐" },
+          { n: 6, file: "6.html", short: "Unit Testing Fundamentals", title: "Unit Testing Fundamentals", tail: "AAA, xUnit/NUnit/MSTest, and what actually makes it a \"unit\" test.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "HTTPS & HSTS", title: "HTTPS Redirection & HSTS", tail: "why redirecting alone can't protect the first request.", priority: "⭐" },
+          { n: 8, file: "8.html", short: "Logging (ILogger)", title: "Logging — ILogger, Levels & Providers", tail: "ILogger<T>, levels, providers, and structured templates.", priority: "🔥" },
+          { n: 9, file: "9.html", short: "LTS vs. STS & Standard", title: "LTS vs. STS & .NET Standard", tail: "release support windows, and what .NET Standard was for.", priority: "⭐" }
         ]
       }
     ]
@@ -202,7 +250,8 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–17",
+        label: "Questions 11–20",
+        hot: 6,
         items: [
           { n: 11, file: "11.html", short: "Views, Layouts & Areas",    title: "Views, Layouts & Organization", tail: "partials, and when a project needs Areas.", priority: "⭐" },
           { n: 12, file: "12.html", short: "Configuration Sources",     title: "Configuration Sources", tail: "appsettings, env vars, and the override order.", priority: "🔥" },
@@ -210,7 +259,20 @@ window.NAV_INDEX = {
           { n: 14, file: "14.html", short: "AuthZ Policies & Claims",   title: "Authorization Policies & Claims", tail: "role-based vs. policy-based.", priority: "⭐" },
           { n: 15, file: "15.html", short: "Global Exception Handling", title: "Global Exception Handling", tail: "the standard pattern, and why dev vs. prod must differ.", priority: "🔥" },
           { n: 16, file: "16.html", short: "Generic Host & Lifetime",   title: "The Generic Host & Application Lifetime", tail: "the lifecycle events, and when to hook into each.", priority: "⭐" },
-          { n: 17, file: "17.html", short: "Mocking & Testing ASP.NET Core", title: "Mocking & Testing ASP.NET Core Components", tail: "Moq, testing a controller, and WebApplicationFactory.", priority: "🔥" }
+          { n: 17, file: "17.html", short: "Mocking & Testing ASP.NET Core", title: "Mocking & Testing ASP.NET Core Components", tail: "Moq, testing a controller, and WebApplicationFactory.", priority: "🔥" },
+          { n: 18, file: "18.html", short: "MVC vs API vs Razor", title: "MVC vs. Web API vs. Razor Pages", tail: "Three shapes on one routing base — pick per feature", priority: "⭐" },
+          { n: 19, file: "19.html", short: "Minimal APIs", title: "Minimal APIs", tail: "MapGet, endpoint filters, and trade-offs vs. controllers.", priority: "🔥" },
+          { n: 20, file: "20.html", short: "IHttpClientFactory", title: "IHttpClientFactory", tail: "why new HttpClient() per call leaks sockets.", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 21–25",
+        items: [
+          { n: 21, file: "21.html", short: "BackgroundService", title: "BackgroundService Patterns", tail: "ExecuteAsync loop + a new DI scope per tick", priority: "⭐" },
+          { n: 22, file: "22.html", short: "Health Checks", title: "Health Checks", tail: "Liveness vs readiness endpoints for orchestrators", priority: "⭐" },
+          { n: 23, file: "23.html", short: "Options Validation", title: "Options Pattern Validation", tail: "Fail at startup on invalid config with ValidateOnStart", priority: "⭐" },
+          { n: 24, file: "24.html", short: "HttpContext & Accessor", title: "HttpContext & IHttpContextAccessor", tail: "Per-request context, the accessor, and why it can be null", priority: "⭐" },
+          { n: 25, file: "25.html", short: "SignalR vs WS vs SSE", title: "SignalR vs. WebSockets vs. SSE", tail: "Real-time push options, transports, and backplane scale-out", priority: "⭐" }
         ]
       }
     ]
@@ -221,10 +283,13 @@ window.NAV_INDEX = {
     tier: "Advanced",
     groups: [
       {
-        label: "Questions 1–2",
+        label: "Questions 1–4",
+        hot: 1,
         items: [
           { n: 1, file: "1.html", short: "Kestrel & Reverse Proxies", title: "Kestrel & Reverse Proxies", tail: "why Kestrel isn't meant to face the internet alone.", priority: "⭐" },
-          { n: 2, file: "2.html", short: "Model Binding Internals",   title: "Model Binding Internals & MVC vs. Web API vs. Razor Pages", tail: "binder resolution order, and picking the right framework.", priority: "🧠" }
+          { n: 2, file: "2.html", short: "Model Binding", title: "Model Binding Internals", tail: "Source priority and custom IModelBinder", priority: "🧠" },
+          { n: 3, file: "3.html", short: "Slow App Triage", title: "Slow MVC App Under Load — Triage", tail: "Measure first, find the hot path, fix one thing", priority: "⭐" },
+          { n: 4, file: "4.html", short: "Identity, OAuth2, OIDC", title: "Identity, OAuth2 & OpenID Connect", tail: "OAuth2 = what, OIDC = who, Identity = local users", priority: "🔥" }
         ]
       }
     ]
@@ -267,12 +332,25 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–14",
+        label: "Questions 11–20",
+        hot: 3,
         items: [
           { n: 11, file: "11.html", short: "Caching Strategies",      title: "Caching Strategies", tail: "response caching vs. a distributed cache.", priority: "⭐" },
-          { n: 12, file: "12.html", short: "Async APIs & Security",   title: "Async APIs & API Security", tail: "beyond async/await, and beyond authentication.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Async APIs (202)", title: "Async APIs — 202 Accepted & Polling", tail: "beyond async/await — 202 Accepted, polling, webhooks", priority: "⭐" },
           { n: 13, file: "13.html", short: "Pagination",              title: "Pagination", tail: "offset vs. cursor-based.", priority: "🔥" },
-          { n: 14, file: "14.html", short: "Sorting & Filtering",     title: "Sorting & Filtering Conventions", tail: "what makes an API predictable to consume.", priority: "⭐" }
+          { n: 14, file: "14.html", short: "Sorting & Filtering",     title: "Sorting & Filtering Conventions", tail: "what makes an API predictable to consume.", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Security Beyond Auth", title: "API Security Beyond Authentication", tail: "BOLA, input, limits, and 404 vs 403 — beyond the JWT", priority: "🔥" },
+          { n: 16, file: "16.html", short: "ProblemDetails", title: "ProblemDetails (RFC 9457)", tail: "one standard error body — application/problem+json", priority: "🔥" },
+          { n: 17, file: "17.html", short: "Content Negotiation", title: "Content Negotiation & Formatters", tail: "Accept vs Content-Type, 406 vs 415, custom formatters", priority: "⭐" },
+          { n: 18, file: "18.html", short: "ETag & If-Match", title: "ETag & If-Match — Optimistic Concurrency", tail: "stop lost updates with a version — 412 and 428", priority: "⭐" },
+          { n: 19, file: "19.html", short: "Richardson & HATEOAS", title: "Richardson Maturity Model & HATEOAS", tail: "Levels 0–3, what each adds, and whether HATEOAS is worth it", priority: "⭐" },
+          { n: 20, file: "20.html", short: "Token Storage", title: "Token Storage — HttpOnly Cookie vs. localStorage", tail: "XSS vs CSRF trade-off, HttpOnly cookies, and the BFF option", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 21",
+        items: [
+          { n: 21, file: "21.html", short: "gRPC vs. REST", title: "gRPC vs. REST", tail: "HTTP/2 + protobuf, streaming, and why browsers still get REST", priority: "⭐" }
         ]
       }
     ]
@@ -283,14 +361,19 @@ window.NAV_INDEX = {
     tier: "Advanced",
     groups: [
       {
-        label: "Questions 1–6",
+        label: "Questions 1–10",
+        hot: 3,
         items: [
           { n: 1, file: "1.html", short: "Multiple Client Types", title: "Designing for Multiple Client Types", tail: "web, mobile, and a partner integration, all well-served.", priority: "⭐" },
           { n: 2, file: "2.html", short: "Retry vs. Resilience",  title: "Retry vs. Resilience", tail: "circuit breaking, timeouts, and fallback.", priority: "🔥" },
           { n: 3, file: "3.html", short: "Distributed Systems",   title: "Distributed Systems Considerations", tail: "what changes once there's more than one instance.", priority: "🔥" },
           { n: 4, file: "4.html", short: "Large Payloads",        title: "Large Payloads", tail: "streaming without blocking a thread or exhausting memory.", priority: "🧠" },
           { n: 5, file: "5.html", short: "Traffic Spike Scenario", title: "Traffic Spike Scenario", tail: "10x traffic, what do you check first?", priority: "🔥" },
-          { n: 6, file: "6.html", short: "500 Errors in Prod",    title: "500-Errors-in-Production Scenario", tail: "how you'd actually investigate.", priority: "⭐" }
+          { n: 6, file: "6.html", short: "500 Errors in Prod",    title: "500-Errors-in-Production Scenario", tail: "how you'd actually investigate.", priority: "⭐" },
+          { n: 7, file: "7.html", short: "API Gateway & BFF", title: "API Gateway & BFF", tail: "Gateway vs. BFF vs. reverse proxy — and its SPOF caveat", priority: "⭐" },
+          { n: 8, file: "8.html", short: "Polly & Resilience", title: "Resilience in .NET — Polly & Http.Resilience", tail: "Retry, breaker and timeout on outgoing HttpClient calls", priority: "⭐" },
+          { n: 9, file: "9.html", short: "Webhooks", title: "Webhooks", tail: "Sign, retry and dedupe callbacks to the client", priority: "⭐" },
+          { n: 10, file: "10.html", short: "Cancellation", title: "Cancellation, Timeouts & Client Disconnects", tail: "RequestAborted, CancellationToken and server timeouts", priority: "⭐" }
         ]
       }
     ]
@@ -301,7 +384,8 @@ window.NAV_INDEX = {
     tier: "Basic",
     groups: [
       {
-        label: "Questions 1–7",
+        label: "Questions 1–9",
+        hot: 5,
         items: [
           { n: 1, file: "1.html", short: "What Is EF Core",   title: "What Is EF Core", tail: "and what it saves you over raw SQL.", priority: "🔥" },
           { n: 2, file: "2.html", short: "DbContext & DbSet",  title: "DbContext & DbSet", tail: "what each one actually is.", priority: "🔥" },
@@ -309,7 +393,9 @@ window.NAV_INDEX = {
           { n: 4, file: "4.html", short: "Keys & Relationships", title: "Primary Keys & Relationships by Convention", tail: "what EF Core infers without being told.", priority: "⭐" },
           { n: 5, file: "5.html", short: "The N+1 Problem",   title: "The N+1 Problem", tail: "how it shows up with EF Core specifically.", priority: "🔥" },
           { n: 6, file: "6.html", short: "Projection",         title: "Projection — Selecting into a DTO", tail: "instead of the entity.", priority: "🔥" },
-          { n: 7, file: "7.html", short: "Configuring Relationships", title: "Configuring Relationships", tail: "one-to-many and many-to-many.", priority: "⭐" }
+          { n: 7, file: "7.html", short: "Configuring Relationships", title: "Configuring Relationships", tail: "one-to-many and many-to-many.", priority: "⭐" },
+          { n: 8, file: "8.html", short: "Cascade Delete", title: "Cascade Delete Behaviours", tail: "what happens to children on delete", priority: "⭐" },
+          { n: 9, file: "9.html", short: "Code vs. DB First", title: "Code-First vs. Database-First", tail: "migrations vs. dotnet ef scaffold", priority: "⭐" }
         ]
       }
     ]
@@ -320,7 +406,8 @@ window.NAV_INDEX = {
     tier: "Intermediate",
     groups: [
       {
-        label: "Questions 1–8",
+        label: "Questions 1–10",
+        hot: 5,
         items: [
           { n: 1, file: "1.html", short: "LINQ → SQL Translation", title: "LINQ → SQL Translation & Inspecting Generated SQL", tail: "and how to inspect the SQL it actually generates.", priority: "⭐" },
           { n: 2, file: "2.html", short: "Tracking vs. AsNoTracking", title: "Tracking vs. AsNoTracking()", tail: "what each costs and saves.", priority: "🔥" },
@@ -329,7 +416,21 @@ window.NAV_INDEX = {
           { n: 5, file: "5.html", short: "IQueryable vs. IEnumerable", title: "IQueryable<T> vs. IEnumerable<T>", tail: "where the query actually executes.", priority: "🔥" },
           { n: 6, file: "6.html", short: "Fluent API vs. Annotations", title: "Fluent API vs. Data Annotations", tail: "when you'd reach for one over the other.", priority: "⭐" },
           { n: 7, file: "7.html", short: "Migrations, Mechanically", title: "Migrations, Mechanically", tail: "what files dotnet ef migrations add actually produces.", priority: "⭐" },
-          { n: 8, file: "8.html", short: "Transactions & SaveChanges", title: "Transactions Around SaveChanges()", tail: "what EF Core wraps by default.", priority: "⭐" }
+          { n: 8, file: "8.html", short: "Transactions & SaveChanges", title: "Transactions Around SaveChanges()", tail: "what EF Core wraps by default.", priority: "⭐" },
+          { n: 9, file: "9.html", short: "Raw SQL & Injection", title: "Raw SQL in EF Core & Injection", tail: "FromSql vs. FromSqlRaw, safely", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Repository & UoW", title: "Repository & Unit of Work over EF Core", tail: "DbSet is already a repository", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11–17",
+        items: [
+          { n: 11, file: "11.html", short: "Query Filters", title: "Global Query Filters & Soft Delete", tail: "one WHERE for every query", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Find vs. First/Single", title: "Find vs. FirstOrDefault vs. SingleOrDefault", tail: "tracker-first lookup vs. always-query", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Attach vs. Update", title: "Disconnected Entities: Attach vs. Update", tail: "Save a detached entity: Update, Attach or load-then-patch", priority: "⭐" },
+          { n: 14, file: "14.html", short: "TPH, TPT & TPC", title: "Inheritance Mapping: TPH, TPT & TPC", tail: "How EF Core maps a class hierarchy to tables: TPH, TPT, TPC", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Owned Types & Values", title: "Owned Types & Value Converters", tail: "OwnsOne for value objects, HasConversion for enums and ids", priority: "⭐" },
+          { n: 16, file: "16.html", short: "Indexes & Unique Keys", title: "Indexes, Unique Constraints & Composite Keys in the Model", tail: "HasIndex, unique and composite indexes, alternate keys", priority: "⭐" },
+          { n: 17, file: "17.html", short: "Testing EF Core Code", title: "Testing EF Core Code: SQLite vs. InMemory vs. Real DB", tail: "InMemory vs. SQLite vs. a real database for tests", priority: "⭐" }
         ]
       }
     ]
@@ -340,14 +441,18 @@ window.NAV_INDEX = {
     tier: "Advanced",
     groups: [
       {
-        label: "Questions 1–6",
+        label: "Questions 1–9",
+        hot: 2,
         items: [
           { n: 1, file: "1.html", short: "Compiled Queries",  title: "Compiled Queries", tail: "caching the query plan itself.", priority: "🧠" },
           { n: 2, file: "2.html", short: "Query Splitting",   title: "Query Splitting", tail: "avoiding the cartesian explosion from multiple Includes.", priority: "🧠" },
           { n: 3, file: "3.html", short: "Optimistic Concurrency", title: "Optimistic Concurrency & Row Versioning", tail: "how EF Core detects a conflicting update.", priority: "🔥" },
           { n: 4, file: "4.html", short: "Beyond N+1",        title: "Beyond N+1 — Common Performance Pitfalls", tail: "over-fetching, tracking overhead, missing indexes.", priority: "🔥" },
           { n: 5, file: "5.html", short: "Bulk Operations",   title: "Bulk Operations", tail: "why SaveChanges() doesn't scale to a big batch.", priority: "⭐" },
-          { n: 6, file: "6.html", short: "Connection Management", title: "Connection Management", tail: "one connection per query, per DbContext, or something else.", priority: "⭐" }
+          { n: 6, file: "6.html", short: "Connection Management", title: "Connection Management", tail: "one connection per query, per DbContext, or something else.", priority: "⭐" },
+          { n: 7, file: "7.html", short: "Connection Resiliency", title: "Connection Resiliency & Execution Strategies", tail: "Retry transient failures with execution strategies", priority: "⭐" },
+          { n: 8, file: "8.html", short: "Interceptors & Audit", title: "Interceptors & Audit Trails", tail: "Auto-stamp CreatedAt/ModifiedBy with an interceptor", priority: "⭐" },
+          { n: 9, file: "9.html", short: "Keyless Entities", title: "Keyless Entities & Views", tail: "Map a SQL view or no-key query result with HasNoKey", priority: "🧠" }
         ]
       }
     ]
@@ -374,19 +479,17 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–11",
+        label: "Questions 11–18",
+        hot: 3,
         items: [
-          { n: 11, file: "11.html", short: "Views", title: "Views", tail: "how it differs from just saving a query as text.", priority: "⭐" }
-        ]
-      },
-      {
-        label: "Questions 12–15",
-        hot: 2,
-        items: [
+          { n: 11, file: "11.html", short: "Views", title: "Views", tail: "how it differs from just saving a query as text.", priority: "⭐" },
           { n: 12, file: "12.html", short: "UNION vs UNION ALL", title: "UNION vs. UNION ALL", tail: "and why one of them is slower.", priority: "🔥" },
           { n: 13, file: "13.html", short: "Logical Query Order", title: "Logical Query Execution Order", tail: "the order clauses actually run in, not the order you type them.", priority: "🔥" },
           { n: 14, file: "14.html", short: "FK Referential Actions", title: "Foreign Key Referential Actions", tail: "CASCADE, SET NULL, and RESTRICT.", priority: "⭐" },
-          { n: 15, file: "15.html", short: "Transaction Control", title: "Transaction Control Mechanics", tail: "what BEGIN/COMMIT/ROLLBACK actually do.", priority: "⭐" }
+          { n: 15, file: "15.html", short: "Transaction Control", title: "Transaction Control Mechanics", tail: "what BEGIN/COMMIT/ROLLBACK actually do.", priority: "⭐" },
+          { n: 16, file: "16.html", short: "TRUNCATE/DELETE/DROP", title: "TRUNCATE vs. DELETE vs. DROP", tail: "DELETE some rows, TRUNCATE all rows, DROP the table", priority: "🔥" },
+          { n: 17, file: "17.html", short: "CASE WHEN", title: "CASE WHEN", tail: "If/else logic inside a SELECT, plus conditional aggregation", priority: "⭐" },
+          { n: 18, file: "18.html", short: "Constraints", title: "Constraints: UNIQUE, CHECK, DEFAULT & NOT NULL", tail: "UNIQUE, CHECK, DEFAULT, NOT NULL; primary key vs. unique", priority: "⭐" }
         ]
       }
     ]
@@ -413,15 +516,26 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–16",
-        hot: 1,
+        label: "Questions 11–20",
+        hot: 4,
         items: [
           { n: 11, file: "11.html", short: "EXISTS vs IN vs JOIN", title: "EXISTS vs. IN vs. JOIN", tail: "how NULLs and duplicates change which one is safe.", priority: "⭐" },
           { n: 12, file: "12.html", short: "Recursive CTEs", title: "Recursive CTEs", tail: "walking a hierarchy without a loop in application code.", priority: "⭐" },
           { n: 13, file: "13.html", short: "Temp Tables vs Table Vars vs CTEs", title: "Temp Tables vs. Table Variables vs. CTEs", tail: "scope, statistics, and when each one is the right call.", priority: "⭐" },
           { n: 14, file: "14.html", short: "Index Seek vs Scan", title: "Index Seek vs. Scan vs. Table Scan", tail: "what the execution plan is actually telling you.", priority: "🔥" },
           { n: 15, file: "15.html", short: "Materialized/Indexed Views", title: "Materialized/Indexed Views vs. Regular Views", tail: "and the staleness trade-off you're accepting.", priority: "⭐" },
-          { n: 16, file: "16.html", short: "Triggers", title: "Triggers", tail: "and why they're a common source of hidden side effects.", priority: "⭐" }
+          { n: 16, file: "16.html", short: "Triggers", title: "Triggers", tail: "and why they're a common source of hidden side effects.", priority: "⭐" },
+          { n: 17, file: "17.html", short: "Self/FULL/CROSS Joins", title: "Self, FULL & CROSS Joins", tail: "Self join, FULL OUTER JOIN and CROSS JOIN with row counts", priority: "🔥" },
+          { n: 18, file: "18.html", short: "Nth Highest / Top-N", title: "Nth Highest & Top-N per Group", tail: "Second highest salary and top N per group with DENSE_RANK", priority: "🔥" },
+          { n: 19, file: "19.html", short: "Find/Delete Duplicates", title: "Finding & Deleting Duplicates", tail: "Find duplicates with GROUP BY, delete extras with ROW_NUMBER", priority: "🔥" },
+          { n: 20, file: "20.html", short: "EXCEPT & INTERSECT", title: "Set Operators: EXCEPT & INTERSECT", tail: "Rows in A not B, or in both — distinct, NULL-safe", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 21–22",
+        items: [
+          { n: 21, file: "21.html", short: "MERGE & Upsert", title: "MERGE & Upsert", tail: "Insert-or-update in one statement, plus the race risk", priority: "⭐" },
+          { n: 22, file: "22.html", short: "Proc vs. Function", title: "Stored Procedure vs. Function", tail: "EXEC an action, or use a value inside a query", priority: "⭐" }
         ]
       }
     ]
@@ -444,10 +558,13 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 7–8",
+        label: "Questions 7–10",
+        hot: 2,
         items: [
           { n: 7, file: "7.html", short: "Bulk Operations", title: "Bulk Operations from the Database's Own Side", tail: "minimal logging and why batch size matters.", priority: "⭐" },
-          { n: 8, file: "8.html", short: "Table Partitioning", title: "Table Partitioning", tail: "partition elimination and when it actually pays off.", priority: "🧠" }
+          { n: 8, file: "8.html", short: "Table Partitioning", title: "Table Partitioning", tail: "partition elimination and when it actually pays off.", priority: "🧠" },
+          { n: 9, file: "9.html", short: "Parameter Sniffing", title: "Parameter Sniffing", tail: "Plan cached for the first value, slow for the next", priority: "🔥" },
+          { n: 10, file: "10.html", short: "SQL Injection", title: "Dynamic SQL & SQL Injection", tail: "Keep input as data with sp_executesql parameters", priority: "🔥" }
         ]
       }
     ]
@@ -495,8 +612,8 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–17",
-        hot: 3,
+        label: "Questions 11–20",
+        hot: 4,
         items: [
           { n: 11, file: "11.html", short: "Rendering Behaviour",       title: "Rendering Behaviour",            tail: "what actually causes a re-render.", priority: "🔥" },
           { n: 12, file: "12.html", short: "Performance Basics",        title: "Performance Optimization Basics", tail: "profile first, memoize second.", priority: "🔥" },
@@ -504,7 +621,16 @@ window.NAV_INDEX = {
           { n: 14, file: "14.html", short: "Testing Components",        title: "Testing React Components",       tail: "test what the user sees, not internals.", priority: "⭐" },
           { n: 15, file: "15.html", short: "Accessibility",             title: "Accessibility",                  tail: "React gives you none of it for free.", priority: "⭐" },
           { n: 16, file: "16.html", short: "forwardRef & Imperative",   title: "Refs — Forwarding & Imperative APIs", tail: "exposing an API, not the whole node.", priority: "⭐" },
-          { n: 17, file: "17.html", short: "Automatic Batching",        title: "Automatic Batching & flushSync", tail: "React 18 widened where batching happens.", priority: "⭐" }
+          { n: 17, file: "17.html", short: "Automatic Batching",        title: "Automatic Batching & flushSync", tail: "React 18 widened where batching happens.", priority: "⭐" },
+          { n: 18, file: "18.html", short: "useReducer vs useState", title: "useReducer vs. useState", tail: "Many related fields, one reducer as the front door for changes", priority: "🔥" },
+          { n: 19, file: "19.html", short: "Server vs Client State", title: "Server State vs. Client State (TanStack Query / SWR)", tail: "Why a query cache beats useEffect + fetch + useState", priority: "⭐" },
+          { n: 20, file: "20.html", short: "Redux/Zustand/Context", title: "Redux vs. Zustand vs. Context", tail: "Choosing client state tools by re-renders, scale, and team", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 21",
+        items: [
+          { n: 21, file: "21.html", short: "Vite vs Next.js", title: "Vite vs. Next.js (Choosing a React Setup)", tail: "Replacing Create React App: SPA tooling or a framework?", priority: "⭐" }
         ]
       }
     ]
@@ -591,7 +717,7 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–17",
+        label: "Questions 11–20",
         hot: 0,
         items: [
           { n: 11, file: "11.html", short: "DI — Advanced Usage",       title: "Dependency Injection — Advanced Usage", tail: "every injector in the tree gets a chance to answer first.", priority: "⭐" },
@@ -600,7 +726,10 @@ window.NAV_INDEX = {
           { n: 14, file: "14.html", short: "Routing — Advanced",        title: "Routing — Advanced",                tail: "a guard is just a function now, not a class.", priority: "⭐" },
           { n: 15, file: "15.html", short: "Forms — Advanced",          title: "Forms — Advanced",                  tail: "teaching a custom control to speak Angular's forms language.", priority: "⭐" },
           { n: 16, file: "16.html", short: "Accessibility",             title: "Accessibility",                    tail: "Angular gives you zero of this for free.", priority: "⭐" },
-          { n: 17, file: "17.html", short: "Testing",                   title: "Testing",                          tail: "what a user would see, not how it's wired inside.", priority: "⭐" }
+          { n: 17, file: "17.html", short: "Testing",                   title: "Testing",                          tail: "what a user would see, not how it's wired inside.", priority: "⭐" },
+          { n: 18, file: "18.html", short: "Test Runners", title: "Test Runners — Karma/Jasmine vs. Jest vs. Vitest", tail: "Karma is deprecated — Jest and Vitest run in Node", priority: "⭐" },
+          { n: 19, file: "19.html", short: "Content Projection", title: "Content Projection (ng-content, ng-container, ng-template)", tail: "Reusable card/modal with slots from the parent", priority: "⭐" },
+          { n: 20, file: "20.html", short: "View Encapsulation", title: "View Encapsulation & Component Styles", tail: "Scoped component styles, :host and ::ng-deep", priority: "🧠" }
         ]
       }
     ]
@@ -699,7 +828,8 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–19",
+        label: "Questions 11–20",
+        hot: 1,
         items: [
           { n: 11, file: "11.html", short: "RG Lifecycle", title: "Resource Group Lifecycle", tail: "what it actually groups.", priority: "⭐" },
           { n: 12, file: "12.html", short: "Durable Functions", title: "Durable Functions", tail: "orchestrator, activity & entity patterns.", priority: "⭐" },
@@ -709,7 +839,16 @@ window.NAV_INDEX = {
           { n: 16, file: "16.html", short: "Caching", title: "Caching", tail: "at an architecture level.", priority: "⭐" },
           { n: 17, file: "17.html", short: "Idempotent Deployment", title: "Idempotent Deployment", tail: "why IaC has to be safe to re-run.", priority: "⭐" },
           { n: 18, file: "18.html", short: "Cosmos Consistency Levels", title: "Cosmos DB Consistency Levels", tail: "the tradeoff behind the 5 levels.", priority: "🧠" },
-          { n: 19, file: "19.html", short: "Service Bus Architecture", title: "Service Bus Architecture", tail: "wiring producers & consumers.", priority: "🧠" }
+          { n: 19, file: "19.html", short: "Service Bus Architecture", title: "Service Bus Architecture", tail: "wiring producers & consumers.", priority: "🧠" },
+          { n: 20, file: "20.html", short: "Functions Plans", title: "Azure Functions — Triggers, Bindings & Hosting Plans", tail: "Triggers, bindings, hosting plans and cold starts", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 21–23",
+        items: [
+          { n: 21, file: "21.html", short: "SQL HA & Pools", title: "Azure SQL High Availability — Geo-Replication, Failover Groups & Elastic Pools", tail: "Geo-replication, failover groups and elastic pools", priority: "⭐" },
+          { n: 22, file: "22.html", short: "Storage Redundancy", title: "Storage Redundancy & Access Tiers", tail: "LRS, ZRS, GRS, GZRS and Hot, Cool, Archive tiers", priority: "⭐" },
+          { n: 23, file: "23.html", short: "Conditional Access", title: "Entra Conditional Access, MFA & External Identities", tail: "Conditional Access, MFA, B2B guests and External ID", priority: "⭐" }
         ]
       }
     ]
@@ -720,7 +859,7 @@ window.NAV_INDEX = {
     tier: "Advanced",
     groups: [
       {
-        label: "Questions 1–7",
+        label: "Questions 1–8",
         hot: 3,
         items: [
           { n: 1, file: "1.html", short: "Well-Architected Framework", title: "Well-Architected Framework", tail: "the 5 pillars.", priority: "🔥" },
@@ -729,7 +868,8 @@ window.NAV_INDEX = {
           { n: 4, file: "4.html", short: "Hub-Spoke & Peering", title: "Hub-Spoke Topology", tail: "& VNet Peering.", priority: "⭐" },
           { n: 5, file: "5.html", short: "Cost Optimization", title: "Cost Optimization", tail: "the levers beyond a cheaper SKU.", priority: "⭐" },
           { n: 6, file: "6.html", short: "Landing Zones & Governance", title: "Landing Zones", tail: "& Governance.", priority: "⭐" },
-          { n: 7, file: "7.html", short: "Requirements-First", title: "Requirements-First Architecture", tail: "the questions before the design.", priority: "🧠" }
+          { n: 7, file: "7.html", short: "Requirements-First", title: "Requirements-First Architecture", tail: "the questions before the design.", priority: "🧠" },
+          { n: 8, file: "8.html", short: "AKS Architecture", title: "AKS Architecture — Node Pools, Networking, Ingress & Autoscaling", tail: "Node pools, networking, ingress and autoscaling in AKS", priority: "⭐" }
         ]
       }
     ]
@@ -783,7 +923,8 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11 – 19",
+        label: "Questions 11 – 20",
+        hot: 6,
         items: [
           { n: 11, file: "11.html", short: "Messaging (SQS/SNS)", title: "Messaging", tail: "SQS vs. SNS, FIFO vs. standard, idempotent consumers.", priority: "🔥" },
           { n: 12, file: "12.html", short: "EventBridge", title: "EventBridge", tail: "event buses, rules, event patterns.", priority: "⭐" },
@@ -793,7 +934,15 @@ window.NAV_INDEX = {
           { n: 16, file: "16.html", short: "Infra as Code", title: "Infrastructure as Code", tail: "CloudFormation vs. Terraform vs. CDK, drift.", priority: "🔥" },
           { n: 17, file: "17.html", short: "CI/CD & Deployment", title: "CI/CD & Deployment", tail: "blue/green, canary, zero-downtime rollback.", priority: "⭐" },
           { n: 18, file: "18.html", short: "Backup & DR", title: "Backup & Disaster Recovery", tail: "RPO/RTO, pilot light vs. warm standby.", priority: "🔥" },
-          { n: 19, file: "19.html", short: "CloudFront & CDN", title: "CloudFront & Content Delivery", tail: "origins, cache invalidation, signed URLs.", priority: "🔥" }
+          { n: 19, file: "19.html", short: "CloudFront & CDN", title: "CloudFront & Content Delivery", tail: "origins, cache invalidation, signed URLs.", priority: "🔥" },
+          { n: 20, file: "20.html", short: "Step Functions", title: "Step Functions in Depth", tail: "Standard vs. Express, Retry/Catch, long waits, saga", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 21–22",
+        items: [
+          { n: 21, file: "21.html", short: "KMS & Envelope", title: "KMS & Envelope Encryption", tail: "Envelope encryption, key policy vs. IAM, rotation", priority: "⭐" },
+          { n: 22, file: "22.html", short: "EBS, EFS & FSx", title: "Block & File Storage — EBS, EFS & FSx", tail: "gp3 vs. io2, EBS vs. EFS vs. instance store, FSx", priority: "⭐" }
         ]
       }
     ]
@@ -819,12 +968,15 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11 – 14",
+        label: "Questions 11 – 16",
+        hot: 2,
         items: [
           { n: 11, file: "11.html", short: "Prod. Troubleshooting", title: "Production Troubleshooting", tail: "13 real production-break scenarios, EC2 to billing spikes.", priority: "🔥" },
           { n: 12, file: "12.html", short: "Architecture Design", title: "Architecture Design Questions", tail: "whiteboard designs with interviewer pushback chains.", priority: "🔥" },
           { n: 13, file: "13.html", short: "Trade-off Questions", title: "Architect-Level Trade-off Questions", tail: "requirement → constraints → options → trade-off → decision.", priority: "🧠" },
-          { n: 14, file: "14.html", short: "Sustainability", title: "Sustainability", tail: "the sixth pillar, and where it conflicts with cost/performance.", priority: "⭐" }
+          { n: 14, file: "14.html", short: "Sustainability", title: "Sustainability", tail: "the sixth pillar, and where it conflicts with cost/performance.", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Account Governance", title: "Multi-Account Governance — Organizations, Control Tower & Config", tail: "Organizations SCPs, Control Tower, Config drift", priority: "⭐" },
+          { n: 16, file: "16.html", short: "DynamoDB Modeling", title: "DynamoDB Data Modeling — Access Patterns, Single-Table & Streams", tail: "Access patterns, single-table, GSI, Streams, TTL", priority: "⭐" }
         ]
       }
     ]
@@ -878,12 +1030,15 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11 – 14",
+        label: "Questions 11 – 16",
+        hot: 2,
         items: [
           { n: 11, file: "11.html", short: "Logging", title: "Logging", tail: "levels, Logger/Handler/Formatter, why not print().", priority: "⭐" },
           { n: 12, file: "12.html", short: "Testing", title: "Testing", tail: "pytest, fixtures, mocking, what NOT to mock.", priority: "🔥" },
           { n: 13, file: "13.html", short: "Virtual Envs & Packaging", title: "Virtual Environments & Packaging", tail: "venv, pyproject.toml, build backends.", priority: "🔥" },
-          { n: 14, file: "14.html", short: "Pythonic Code", title: "Pythonic Code", tail: "EAFP vs. LBYL, pathlib vs. os.path.", priority: "⭐" }
+          { n: 14, file: "14.html", short: "Pythonic Code", title: "Pythonic Code", tail: "EAFP vs. LBYL, pathlib vs. os.path.", priority: "⭐" },
+          { n: 15, file: "15.html", short: "functools.cache", title: "functools.cache & lru_cache", tail: "Memoization, hashable args, maxsize and cached_property", priority: "⭐" },
+          { n: 16, file: "16.html", short: "match Statement", title: "match Statement (Structural Pattern Matching)", tail: "Shape matching and unpacking, not a C-style switch", priority: "⭐" }
         ]
       }
     ]
@@ -909,7 +1064,8 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11 – 18",
+        label: "Questions 11 – 20",
+        hot: 4,
         items: [
           { n: 11, file: "11.html", short: "Performance & Profiling", title: "Performance & Profiling", tail: "cProfile, timeit, finding the real bottleneck.", priority: "🔥" },
           { n: 12, file: "12.html", short: "Caching", title: "Caching", tail: "lru_cache, invalidation, cache stampede.", priority: "⭐" },
@@ -918,7 +1074,9 @@ window.NAV_INDEX = {
           { n: 15, file: "15.html", short: "Production Troubleshooting", title: "Production Troubleshooting", tail: "11 real production-break scenarios.", priority: "🔥" },
           { n: 16, file: "16.html", short: "Python Web / API", title: "Python Web / API", tail: "WSGI vs. ASGI, FastAPI vs. Django.", priority: "⭐" },
           { n: 17, file: "17.html", short: "Python + Databases", title: "Python + Databases", tail: "ORM, N+1 queries, async DB access.", priority: "⭐" },
-          { n: 18, file: "18.html", short: "Architecture / Senior Scenarios", title: "Python Architecture / Senior Scenarios", tail: "designing a high-throughput API.", priority: "🧠" }
+          { n: 18, file: "18.html", short: "Architecture / Senior Scenarios", title: "Python Architecture / Senior Scenarios", tail: "designing a high-throughput API.", priority: "🧠" },
+          { n: 19, file: "19.html", short: "TaskGroup & timeout", title: "asyncio TaskGroup & timeout", tail: "Structured concurrency, cancelling siblings, deadlines", priority: "🔥" },
+          { n: 20, file: "20.html", short: "ExceptionGroup", title: "ExceptionGroup & except*", tail: "Several errors at once, handled by type with except*", priority: "🧠" }
         ]
       }
     ]
@@ -977,7 +1135,8 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11 – 18",
+        label: "Questions 11 – 20",
+        hot: 1,
         items: [
           { n: 11, file: "11.html", short: "LoRA / QLoRA", title: "LoRA / QLoRA", tail: "low-rank, low-cost fine-tuning without touching every weight.", priority: "⭐" },
           { n: 12, file: "12.html", short: "MCP", title: "MCP — Model Context Protocol", tail: "a standard way to connect an agent to tools and data, once.", priority: "⭐" },
@@ -986,7 +1145,15 @@ window.NAV_INDEX = {
           { n: 15, file: "15.html", short: "Semantic Kernel & MEAI", title: "Semantic Kernel & Microsoft.Extensions.AI", tail: "the .NET-native way to build AI features.", priority: "⭐" },
           { n: 16, file: "16.html", short: "Azure OpenAI & AI Search", title: "Azure OpenAI & Azure AI Search for RAG", tail: "hosting the model and the retrieval index on Azure.", priority: "⭐" },
           { n: 17, file: "17.html", short: "Query Transformation", title: "Query Transformation", tail: "rewriting the user's question before you ever search.", priority: "⭐" },
-          { n: 18, file: "18.html", short: "Multi-Agent Patterns", title: "Multi-Agent Patterns", tail: "planner/worker and supervisor patterns, and their real cost.", priority: "⭐" }
+          { n: 18, file: "18.html", short: "Multi-Agent Patterns", title: "Multi-Agent Patterns", tail: "planner/worker and supervisor patterns, and their real cost.", priority: "⭐" },
+          { n: 19, file: "19.html", short: "Reasoning Models", title: "Reasoning (\"Thinking\") Models — Test-Time Compute", tail: "Extra thinking: better on hard tasks, slower and pricier", priority: "🔥" },
+          { n: 20, file: "20.html", short: "Context & Memory", title: "Context Engineering & Conversation Memory", tail: "Budget the window each turn; keep memory outside it", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 21",
+        items: [
+          { n: 21, file: "21.html", short: "A2A & Computer Use", title: "Beyond MCP — A2A and Computer-Use Agents", tail: "MCP = agent-to-tool; A2A = agent-to-agent; GUI agents last", priority: "🧠" }
         ]
       }
     ]
@@ -1012,12 +1179,13 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11 – 14",
+        label: "Questions 11 – 15",
         items: [
           { n: 11, file: "11.html", short: "Advanced RAG", title: "Advanced RAG — GraphRAG & Agentic RAG", tail: "GraphRAG and agentic RAG, for when basic RAG isn't enough.", priority: "⭐" },
           { n: 12, file: "12.html", short: "Async/Queue-Based Inference", title: "Async/Queue-Based Inference", tail: "bounded worker pools and idempotent retries for bulk jobs.", priority: "⭐" },
           { n: 13, file: "13.html", short: "Self-Hosted vs. Managed", title: "Self-Hosted vs. Managed Models", tail: "who owns the GPU, the inference server, and the uptime.", priority: "⭐" },
-          { n: 14, file: "14.html", short: "Responsible AI", title: "Responsible AI", tail: "bias, transparency, red-teaming, EU AI Act awareness.", priority: "⭐" }
+          { n: 14, file: "14.html", short: "Responsible AI", title: "Responsible AI", tail: "bias, transparency, red-teaming, EU AI Act awareness.", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Inference Performance", title: "LLM Inference Performance — KV Cache, Batching & Speculative Decoding", tail: "Prefill vs. decode, KV cache, batching, speculative decoding", priority: "⭐" }
         ]
       }
     ]
@@ -1065,10 +1233,13 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11 – 12",
+        label: "Questions 11 – 14",
+        hot: 1,
         items: [
           { n: 11, file: "11.html", short: "Balanced Trees", title: "Balanced Trees", tail: "why balance matters, AVL/Red-Black at a glance.", priority: "⭐" },
-          { n: 12, file: "12.html", short: "Tries", title: "Tries", tail: "prefix search, autocomplete-style use cases.", priority: "⭐" }
+          { n: 12, file: "12.html", short: "Tries", title: "Tries", tail: "prefix search, autocomplete-style use cases.", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Kadane's Algorithm", title: "Kadane's Algorithm (Maximum Subarray)", tail: "Max-sum contiguous subarray in O(n): extend or restart.", priority: "🔥" },
+          { n: 14, file: "14.html", short: "Quickselect", title: "Quickselect (Kth Largest Element)", tail: "Kth largest without a full sort; quickselect vs. heap.", priority: "⭐" }
         ]
       }
     ]
@@ -1079,7 +1250,8 @@ window.NAV_INDEX = {
     tier: "Advanced",
     groups: [
       {
-        label: "Questions 1 – 8",
+        label: "Questions 1 – 9",
+        hot: 4,
         items: [
           { n: 1, file: "1.html", short: "Pattern Recognition", title: "Pattern Recognition", tail: "the \"how do I recognize the solution\" layer.", priority: "🔥" },
           { n: 2, file: "2.html", short: "Data Structure Trade-offs", title: "Data Structure Trade-offs", tail: "why HashMap over TreeMap, heap vs. sorting.", priority: "🔥" },
@@ -1088,7 +1260,8 @@ window.NAV_INDEX = {
           { n: 5, file: "5.html", short: "External / Distributed Processing", title: "External / Distributed Processing", tail: "external sort, when data doesn't fit in RAM.", priority: "⭐" },
           { n: 6, file: "6.html", short: "Scale & Performance Scenarios", title: "Scale & Performance Scenarios", tail: "100M records, when O(n) becomes unacceptable.", priority: "⭐" },
           { n: 7, file: "7.html", short: "Segment Tree & Fenwick Tree", title: "Segment Tree & Fenwick Tree", tail: "range-query/range-update — Deep Dive.", priority: "🧠" },
-          { n: 8, file: "8.html", short: "String Algorithms", title: "String Algorithms", tail: "KMP, Rabin-Karp — Deep Dive.", priority: "🧠" }
+          { n: 8, file: "8.html", short: "String Algorithms", title: "String Algorithms", tail: "KMP, Rabin-Karp — Deep Dive.", priority: "🧠" },
+          { n: 9, file: "9.html", short: "Design an LRU Cache", title: "Design an LRU Cache", tail: "Hash map + doubly linked list for O(1) get and put.", priority: "🔥" }
         ]
       }
     ]
@@ -1114,9 +1287,12 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11",
+        label: "Questions 11–13",
+        hot: 1,
         items: [
-          { n: 11, file: "11.html", short: "Error Handling", title: "Error Handling", tail: "try/catch/finally, custom errors, async errors.", priority: "⭐" }
+          { n: 11, file: "11.html", short: "Error Handling", title: "Error Handling", tail: "try/catch/finally, custom errors, async errors.", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Array sort()", title: "Array sort() — Mutation & Default Order", tail: "Sorts as text by default and mutates the original array", priority: "🔥" },
+          { n: 13, file: "13.html", short: "Modern JS ES2022–24", title: "Modern JS Additions (ES2022–2024)", tail: "at, findLast, Object.groupBy, Promise.withResolvers", priority: "⭐" }
         ]
       }
     ]
@@ -1142,13 +1318,15 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11 – 15",
+        label: "Questions 11 – 17",
         items: [
           { n: 11, file: "11.html", short: "Classes & Inheritance", title: "Classes & Inheritance", tail: "class syntax over the prototype system.", priority: "⭐" },
           { n: 12, file: "12.html", short: "Higher-Order & Functional", title: "Higher-Order & Functional JavaScript", tail: "composition, currying, memoization.", priority: "⭐" },
           { n: 13, file: "13.html", short: "Iterators & Generators", title: "Iterators & Generators", tail: "Symbol.iterator, yield, lazy evaluation.", priority: "⭐" },
           { n: 14, file: "14.html", short: "Browser Storage", title: "Browser Storage", tail: "cookies, localStorage, sessionStorage.", priority: "⭐" },
-          { n: 15, file: "15.html", short: "Testing Fundamentals", title: "Testing Fundamentals", tail: "Jest/Vitest basics, mocking, testing async code.", priority: "⭐" }
+          { n: 15, file: "15.html", short: "Testing Fundamentals", title: "Testing Fundamentals", tail: "Jest/Vitest basics, mocking, testing async code.", priority: "⭐" },
+          { n: 16, file: "16.html", short: "Implement curry(fn)", title: "Implement curry(fn)", tail: "Collect args until args.length >= fn.length, then call", priority: "⭐" },
+          { n: 17, file: "17.html", short: "for await…of", title: "for await…of & Async Iterators", tail: "Loop over async iterables one value at a time", priority: "⭐" }
         ]
       }
     ]
@@ -1202,13 +1380,15 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 10 – 14",
+        label: "Questions 10 – 15",
+        hot: 1,
         items: [
           { n: 10, file: "10.html", short: "Document Structure & Metadata", title: "Document Structure & Metadata", tail: "doctype, head/meta, viewport, favicons.", priority: "⭐" },
           { n: 11, file: "11.html", short: "Tables & Lists", title: "Tables & Lists", tail: "table semantics, ordered/unordered/description lists.", priority: "⭐" },
           { n: 12, file: "12.html", short: "HTML5 Elements & Browser APIs", title: "HTML5 Elements & Browser APIs", tail: "canvas/video/audio, data attributes, template.", priority: "⭐" },
           { n: 13, file: "13.html", short: "SEO & Web Semantics", title: "SEO & Web Semantics", tail: "meta tags, structured data, how semantics help SEO.", priority: "⭐" },
-          { n: 14, file: "14.html", short: "Inheritance", title: "Inheritance", tail: "which CSS properties inherit, and which don’t.", priority: "⭐" }
+          { n: 14, file: "14.html", short: "Inheritance", title: "Inheritance", tail: "which CSS properties inherit, and which don’t.", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Script Loading", title: "Script Loading — defer vs. async", tail: "plain vs async vs defer — who stops the parser", priority: "🔥" }
         ]
       }
     ]
@@ -1233,12 +1413,16 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 10 – 13",
+        label: "Questions 10 – 16",
+        hot: 1,
         items: [
           { n: 10, file: "10.html", short: "Container Queries", title: "Container Queries", tail: "sizing by container instead of viewport.", priority: "⭐" },
           { n: 11, file: "11.html", short: "Modern CSS Layout", title: "Modern CSS Layout", tail: ":has(), subgrid, and newer layout primitives.", priority: "⭐" },
           { n: 12, file: "12.html", short: "Transitions & Animations", title: "Transitions & Animations", tail: "transition vs. animation, which properties are cheap to animate.", priority: "⭐" },
-          { n: 13, file: "13.html", short: "Colors, Backgrounds & Gradients", title: "Colors, Backgrounds & Gradients", tail: "color formats, background shorthand, gradients.", priority: "⭐" }
+          { n: 13, file: "13.html", short: "Colors, Backgrounds & Gradients", title: "Colors, Backgrounds & Gradients", tail: "color formats, background shorthand, gradients.", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Margin Collapsing", title: "Margin Collapsing", tail: "20px + 30px leaves 30px — when margins merge", priority: "🔥" },
+          { n: 15, file: "15.html", short: "Float & Clearfix", title: "Float & Clearfix (Legacy Layout)", tail: "why the parent collapses and how to clear floats", priority: "⭐" },
+          { n: 16, file: "16.html", short: "Lazy Loading & Hints", title: "Lazy Loading & Resource Hints", tail: "loading=lazy, width/height, fetchpriority, preload", priority: "⭐" }
         ]
       }
     ]
@@ -1258,11 +1442,12 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 5 – 7",
+        label: "Questions 5 – 8",
         items: [
           { n: 5, file: "5.html", short: "CSS Cascade Layers", title: "CSS Cascade Layers", tail: "@layer, taming specificity wars at scale.", priority: "⭐" },
           { n: 6, file: "6.html", short: "CSS Architecture", title: "CSS Architecture", tail: "BEM, utility-first, component-scoped styles at scale.", priority: "⭐" },
-          { n: 7, file: "7.html", short: "Cross-Browser Compatibility", title: "Cross-Browser Compatibility", tail: "vendor prefixes, feature detection, graceful degradation.", priority: "⭐" }
+          { n: 7, file: "7.html", short: "Cross-Browser Compatibility", title: "Cross-Browser Compatibility", tail: "vendor prefixes, feature detection, graceful degradation.", priority: "⭐" },
+          { n: 8, file: "8.html", short: "Core Web Vitals", title: "Core Web Vitals (LCP, INP, CLS)", tail: "loads, reacts, jumps — LCP, INP and CLS and how to fix each", priority: "⭐" }
         ]
       }
     ]

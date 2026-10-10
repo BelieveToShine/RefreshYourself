@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="When would you return a ValueTask instead of a Task, and what are the rules for consuming one?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Task vs. ValueTask — C# Advanced — RefreshYourself">
+<meta property="og:description" content="When would you return a ValueTask instead of a Task, and what are the rules for consuming one?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Task vs. ValueTask — C# Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="csharp/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#dbeafe;--crumb-ink:#1d4ed8;">🎵 C#</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Task vs. ValueTask</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ C# · Advanced · Should Know</div>
+    <h1><code>ValueTask</code> — <span class="hl hl-adv">skip the allocation when the answer is already there</span></h1>
+    <p class="interview-q">"When would you return a ValueTask instead of a Task, and what are the rules for consuming one?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+        <div class="wc-head">🧳 <code>ValueTask</code></div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Every async method that returns <code>Task&lt;T&gt;</code> allocates a <code>Task</code> object — even when the result is already known, like a cache hit that finishes instantly. On a very hot path, that is a lot of short-lived garbage.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Return <code>ValueTask&lt;T&gt;</code>: it is a struct that can hold the result directly when the call finishes synchronously, and only falls back to a heap-backed task when it truly has to wait. In exchange, it must be consumed carefully.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">ValueTask = no allocation when the result is already there; the price is stricter usage rules.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline"><code>ValueTask</code> = <b>"a Task that can skip the allocation when the answer is ready."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <b>Default to <code>Task</code>.</b> Reach for <b><code>ValueTask</code></b> only when a <b>profiler</b> shows allocations and the sync path is <b>common</b>. Then: <b>await it once</b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 680 245" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA15" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA15" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+      <text x="20" y="28" text-anchor="start" font-size="12" font-weight="700" fill="#166534">Sync path — the result is already there (cache hit)</text>
+      <g filter="url(#shA15)"><rect x="20" y="40" width="120" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="80" y="62" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">Call</text>
+      <text x="80" y="78" text-anchor="middle" font-size="10.5" fill="#5b6472">GetAsync()</text>
+      <path d="M140,65 H190" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA15)"/>
+      <g filter="url(#shA15)"><rect x="190" y="40" width="220" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="300" y="62" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">ValueTask&lt;T&gt;</text>
+      <text x="300" y="78" text-anchor="middle" font-size="10.5" fill="#5b6472">holds the result inline</text>
+      <path d="M410,65 H450" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA15)"/>
+      <g filter="url(#shA15)"><rect x="450" y="40" width="210" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="555" y="62" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">No Task allocated ✅</text>
+      <text x="555" y="78" text-anchor="middle" font-size="10.5" fill="#5b6472">nothing on the heap</text>
+      <text x="20" y="128" text-anchor="start" font-size="12" font-weight="700" fill="#92400e">Async path — it really has to wait (cache miss)</text>
+      <g filter="url(#shA15)"><rect x="20" y="140" width="120" height="50" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="80" y="162" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Call</text>
+      <text x="80" y="178" text-anchor="middle" font-size="10.5" fill="#5b6472">GetAsync()</text>
+      <path d="M140,165 H190" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA15)"/>
+      <g filter="url(#shA15)"><rect x="190" y="140" width="220" height="50" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="300" y="162" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">ValueTask&lt;T&gt;</text>
+      <text x="300" y="178" text-anchor="middle" font-size="10.5" fill="#5b6472">wraps a Task / heap object</text>
+      <path d="M410,165 H450" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA15)"/>
+      <g filter="url(#shA15)"><rect x="450" y="140" width="210" height="50" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="555" y="162" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Allocates like Task</text>
+      <text x="555" y="178" text-anchor="middle" font-size="10.5" fill="#5b6472">no saving here</text>
+      <text x="340" y="228" text-anchor="middle" font-size="11" fill="#5b6472">Rule: await a ValueTask once — never twice, never .Result before it is done</text>
+    </svg>
+    <figcaption>When the result is ready, a ValueTask carries it inline; when it has to wait, it costs about the same as a Task.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A <code>ValueTask</code> is not a drop-in <code>Task</code>.</b> Don't await it twice, don't await it from several places at once, and don't call <code>.Result</code> or <code>.GetAwaiter().GetResult()</code> before it has completed. Need any of that? Call <code>.AsTask()</code> once and use the <code>Task</code>.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Then why not use it everywhere?"</b> It is a larger struct that is copied around, it has those usage rules, and for code that is usually really async it saves nothing. See <a href="13.html">C# Performance Checklist</a> — measure first.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>ValueTask</code> avoids allocating a <code>Task</code> when a result is often available synchronously, such as a cache hit. The rules: await it once, never use it concurrently, and don't read <code>.Result</code> before it completes — otherwise call <code>.AsTask()</code>. I'd only use it after measuring."</p>
+    <ul>
+      <li>Purpose → <span class="hl hl-adv">no <code>Task</code> allocation when the result is already available</span>.</li>
+      <li>It is a <span class="hl hl-blue">struct</span> wrapping either a result or a task — so no heap object on the fast path.</li>
+      <li>Rule → <span class="hl hl-hot">await it exactly once</span>; never twice, never concurrently.</li>
+      <li>Don't block on it → <span class="hl hl-hot">no <code>.Result</code> until it is complete</span>; use <code>.AsTask()</code> if you need a real Task.</li>
+      <li>Decision → <span class="hl hl-teal">default to <code>Task</code></span>; switch only when a profiler shows it matters.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>An <code>async</code> method returning <code>Task&lt;T&gt;</code> always gives you a <code>Task</code> object on the heap. That is fine most of the time. But imagine a method that reads from a cache: nearly every call finishes immediately, and each one still allocates a <code>Task</code> just to carry a value that was ready from the start.</p>
+
+      <p><code>ValueTask&lt;T&gt;</code> is a struct that holds either the finished result or a reference to a real task (or similar object). If the call completes synchronously, the result sits right in the struct and nothing is allocated for it. If the call really has to wait, it wraps a heap object and costs about the same as a normal <code>Task</code>.</p>
+
+      <p>The trade-off is the usage contract. A <code>ValueTask</code> may be backed by a reused object, so awaiting it more than once, awaiting it concurrently, or reading the result before it finishes can give wrong results or throw. When you need to do any of that, call <code>.AsTask()</code> once and use the <code>Task</code> it returns.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> ValueTask&lt;User&gt; GetUserAsync(<span class="kw">int</span> id)
+{
+    <span class="kw">if</span> (_cache.TryGetValue(id, <span class="kw">out</span> <span class="kw">var</span> user))
+        <span class="kw">return</span> <span class="kw">new</span> ValueTask&lt;User&gt;(user);        <span class="cx-ok">// ✅ sync: no Task allocated</span>
+
+    <span class="kw">return</span> <span class="kw">new</span> ValueTask&lt;User&gt;(LoadAsync(id));   <span class="cx-cmt">// async: wraps a real Task&lt;User&gt;</span>
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>LoadAsync</code> returns a <code>Task&lt;User&gt;</code> that actually goes to the database.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> vt = GetUserAsync(<span class="num">1</span>);
+<span class="kw">var</span> u = <span class="kw">await</span> vt;                  <span class="cx-ok">// ✅ await it once</span>
+<span class="cx-err">// var u2 = await vt;              // ❌ second await is not allowed</span>
+
+<span class="kw">var</span> task = GetUserAsync(<span class="num">1</span>).AsTask();   <span class="cx-ok">// ✅ need to share or await twice? convert once</span></code></pre>
+      </div>
+      <p class="cx-note">Treat a <code>ValueTask</code> like a one-time ticket.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world scenario <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A high-traffic service looks up a user on every request, and 95% of lookups hit the in-memory cache.</b> After a profiler showed millions of tiny <code>Task</code> allocations, the lookup method was changed to return <code>ValueTask&lt;User&gt;</code> and the allocations on the cached path went away.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="14.html">← Dictionary / HashSet Internals</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to C# Advanced</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · C# · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

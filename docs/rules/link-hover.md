@@ -20,8 +20,12 @@ a::after{
   background:currentColor; transform:scaleX(0); transform-origin:left;
   transition:transform .18s ease; pointer-events:none;
 }
-a:hover::after{ transform:scaleX(1); }
+a:hover::after, a:focus-visible::after{ transform:scaleX(1); }
 ```
+
+The underline also reveals on **`:focus-visible`** (keyboard focus), so keyboard users get the same
+link affordance as hover. Under `prefers-reduced-motion: reduce` the transition is effectively
+instant (a global block at the end of `style.css`), and `scroll-behavior:smooth` is switched off.
 
 `background:currentColor` means the underline always matches whatever color that specific link
 already renders in — no per-page color to maintain, and it automatically matches this site's own
@@ -49,7 +53,9 @@ base rule:
 }
 ```
 
-**When adding a new chip/tile/pill/button-style anchor, add it to this exclusion list too** —
+The exclusion list also covers the newer tier-nav rows (`.tn-item a`) and the fixed bottom pager
+(`.fixed-pager .fp-side`, `.fp-mid`); a component that isn't listed here and isn't a plain text link
+will grow an underline. **When adding a new chip/tile/pill/button-style anchor, add it to this exclusion list too** —
 the global `a::after` rule applies to every anchor by default, so a new card-style link that
 isn't added here will silently grow an underline bar across its whole clickable area on hover,
 on top of whatever lift/color treatment it already has.

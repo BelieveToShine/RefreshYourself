@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 43 pages written
+## Status — Phases 1–7 complete, all 46 pages written (43 original + 3 gap pages added 2026-10-07)
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): built from the user's own
   detailed, already Basic/Intermediate/Advanced-organized outline (36 content groups), kept as
@@ -62,7 +62,7 @@ keeping it in sync with the live pages.
 | 9 | Forms Fundamentals | 🔥 | ✅ |
 | 10 | HTTP Fundamentals | 🔥 | ✅ |
 
-## Intermediate (17 topics) — 17 written
+## Intermediate (20 topics) — 20 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -83,6 +83,9 @@ keeping it in sync with the live pages.
 | 15 | Forms — Advanced | ⭐ | ✅ |
 | 16 | Accessibility | ⭐ | ✅ |
 | 17 | Testing | ⭐ | ✅ |
+| 18 | Test Runners — Karma/Jasmine vs. Jest vs. Vitest | ⭐ | ✅ |
+| 19 | Content Projection (ng-content, ng-container, ng-template) | ⭐ | ✅ |
+| 20 | View Encapsulation & Component Styles | 🧠 | ✅ |
 
 ## Advanced (16 topics) — 16 written
 
@@ -156,3 +159,5 @@ folded into the initial pass rather than needing a later addendum) in one build,
 passed the mandatory independent diagram-verification sweep (43/43, `issueCount: 0`, run one
 page at a time, not sampled). Expect a review/feedback pass once the user goes through it, same
 as every other completed track.
+
+- **Gap pages added 2026-10-07 (planned 2026-10-06):** 3 gap pages written and wired (43 -> 46) — Intermediate 18 Test Runners — Karma/Jasmine vs. Jest vs. Vitest, 19 Content Projection (ng-content, ng-container, ng-template), 20 View Encapsulation & Component Styles - see the `Addendum 2026-10-06` section in [`roadmap.md`](roadmap.md). Counts: Basic 10, Intermediate 20, Advanced 16.

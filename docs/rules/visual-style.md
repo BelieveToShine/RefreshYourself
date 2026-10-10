@@ -3,7 +3,12 @@
 Locked decisions from the working session. The site has to feel inviting, not like plain
 documentation — this is what makes that happen.
 
-## Fonts (all loaded once in `assets/style.css`, don't add more)
+## Fonts (one Google Fonts `<link>` set in every page's `<head>`, added by `scripts/add-head-meta.js`)
+
+Every page head carries two `preconnect` links plus one `<link rel="stylesheet">` to the Google Fonts CSS,
+placed before `assets/style.css`. (Changed 2026-10-06 from a render-blocking CSS `@import`; `style.css` no longer
+imports fonts.) To change a font, edit the URL in `scripts/add-head-meta.js`'s `FONT_HREF` and the per-page links
+(re-run needs a replace — the script only inserts when no `fonts.googleapis.com` link exists).
 
 - **Baloo 2** (700/800) — big, playful, display font. Used for the brand logo and every `.hero
   h1` (site home title, track title, tier title, topic title). This is the font doing the "make
@@ -29,7 +34,8 @@ word — colour behind the text, not just bold.
 - `.hl-hot` (red) — hot topics, warnings, "this is the tricky part."
 - `.hl-basic` (green) — correct/kept/the right answer.
 - `.hl-teal` — used sparingly for a third contrasting idea when a topic needs more than two.
-- `.hl-adv` (purple) — reserved for Advanced-tier topics later.
+- `.hl-adv` (purple) — used on Advanced-tier topics (e.g. AI Advanced) for the "advanced/architecture"
+  idea; keep it to that role.
 
 **Tie the highlight colour to the diagram's colour**, when the topic page has a diagram — e.g. on
 "Value vs. Reference Types," the diagram's blue box and the text's `hl-blue` span both mean
@@ -115,3 +121,26 @@ touch more visual weight than plain body text: a soft gradient background on the
 white card per point with its own border, and the `.hl` highlight on the one keyword the bullet
 is actually testing. See [content-writing.md](content-writing.md) for what the bullet text itself
 should say.
+
+## Focus and motion
+
+- A global `:focus-visible` ring (`2px solid var(--accent)`) covers every interactive element; do not
+  add `outline:none` without a `:focus-visible` replacement (the search input keeps its own pill-shaped
+  ring).
+- `style.css` ends with a `@media (prefers-reduced-motion: reduce)` block that turns off smooth
+  scrolling and shortens transitions/animations; `site.js` also uses instant scrolling in that mode.
+  New animations need no extra work, but never rely on motion alone to convey state.
+
+## Brand logo (changed 2026-10-07)
+
+The header logo is the external file `assets/images/brand-mark.svg`, referenced as `<img class="brand-mark" width="24" height="24" alt="">` on every page (`scripts/add-head-meta.js` swaps old inline copies). Edit the logo once in that file. `.brand .brand-mark` in `style.css` still sizes it.
+
+## Roadmap icon on a tile — click target (fixed 2026-10-07)
+
+`.roadmap-badge` (the circle in a tile's top-right) must **always** open that track's `roadmap.html` — wherever you click on it. The bug: the tile's title link (`.tile-head`, an `inline-flex` anchor that was stretching the full tile width) is `position:relative` (every anchor is, for the underline animation) and comes *after* the badge in the DOM, so it painted on top of the badge's centre and only the right edge reached the badge. Fix, now in `style.css`:
+
+- `.roadmap-badge{ z-index:5 }` (also `.hero-roadmap-link`) so it is above any positioned sibling link;
+- `.tile-head{ align-self:flex-start; max-width:calc(100% - 64px) }` so the title link shrink-wraps and never runs under the badge;
+- the badge is 44px (icon 28px) with an invisible `::before{ inset:-6px }` extra hit area (≈56px target).
+
+**Rule:** any absolutely-positioned corner control inside a tile/card that also contains a stretched link must have an explicit `z-index` above that link. Verify with `document.elementFromPoint` at the centre, edges and just outside the control (all 15 tiles were checked this way) — a screenshot can't show it.

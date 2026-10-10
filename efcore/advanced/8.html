@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How would you add audit fields (CreatedAt/ModifiedBy) automatically?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Interceptors &amp; Audit Trails — EF Core Advanced — RefreshYourself">
+<meta property="og:description" content="How would you add audit fields (CreatedAt/ModifiedBy) automatically?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Interceptors &amp; Audit Trails — EF Core Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Interceptors &amp; Audit</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ EF Core · Advanced · Should Know</div>
+    <h1><code>SaveChangesInterceptor</code> — <span class="hl hl-adv">stamp every save in one place</span></h1>
+    <p class="interview-q">"How would you add audit fields (CreatedAt/ModifiedBy) automatically?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+        <div class="wc-head">🧾 Interceptors & Audit Trails</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Setting <code>CreatedAt</code> and <code>ModifiedBy</code> by hand in every method gets forgotten, and one missed spot leaves a hole in your audit data.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Hook into <code>SaveChanges()</code> once. An interceptor sees every changed entity just before it is written and stamps it — nothing to remember at the call site.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">One hook before every save → stamp the changed entities. Bulk <code>ExecuteUpdate</code> skips it.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Audit trail = <b>"stamp the entities just before they are saved."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>SaveChangesInterceptor</code></b> → a reusable hook on every save</span>
+      <span class="tc-line"><b><code>ChangeTracker.Entries()</code></b> → the entities that are about to change</span>
+      <span class="tc-line"><b><code>ExecuteUpdate</code> / raw SQL</b> → bypass it, stamp by hand</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 224" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA8" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA8" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arRA8" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">SAVECHANGES PIPELINE WITH AN INTERCEPTOR</text>
+      <g filter="url(#shA8)"><rect x="16" y="50" width="130" height="64" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="81" y="74" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">💻 SaveChanges()</text>
+      <text x="81" y="92" text-anchor="middle" font-size="10" fill="#5b6472">your code calls it</text>
+      
+      <path d="M146,82 H176" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+      <g filter="url(#shA8)"><rect x="176" y="50" width="170" height="64" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="261" y="74" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🪝 Interceptor</text>
+      <text x="261" y="92" text-anchor="middle" font-size="10" fill="#5b6472">stamps CreatedAt / UpdatedAt</text>
+      
+      <path d="M346,82 H376" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+      <g filter="url(#shA8)"><rect x="376" y="50" width="120" height="64" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="436" y="74" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📤 SQL sent</text>
+      <text x="436" y="92" text-anchor="middle" font-size="10" fill="#5b6472">INSERT / UPDATE</text>
+      
+      <path d="M496,82 H526" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA8)"/>
+      <g filter="url(#shA8)"><rect x="526" y="50" width="98" height="64" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="575" y="74" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🗄️ Database</text>
+      <text x="575" y="92" text-anchor="middle" font-size="10" fill="#5b6472">rows saved</text>
+      
+      <g filter="url(#shA8)"><rect x="176" y="160" width="250" height="44" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="301" y="182" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">⚡ ExecuteUpdate / ExecuteDelete</text>
+      <text x="301" y="200" text-anchor="middle" font-size="10" fill="#5b6472">or raw SQL</text>
+      
+      <path d="M426,182 H575 V114" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arRA8)"/>
+      <text x="500" y="174" text-anchor="middle" font-size="10" fill="#991b1b">skips the interceptor</text>
+    </svg>
+    <figcaption>The interceptor runs inside the SaveChanges path; bulk and raw-SQL writes never enter it.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"The interceptor sees every write to the database."</b> Only writes that go through <code>SaveChanges()</code>. <code>ExecuteUpdate</code>, <code>ExecuteDelete</code> and raw SQL skip the change tracker, so no audit stamp is added unless you set it yourself.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How would you also keep the old values?"</b> Each tracked entry exposes its original and current values, so the same hook can compare them and write audit rows. A database feature such as temporal tables is another route.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I add a <code>SaveChangesInterceptor</code> that loops over <code>ChangeTracker.Entries()</code> and, for added or modified entities, sets <code>CreatedAt</code>, <code>UpdatedAt</code> and the current user. I register it once on the context options. Bulk <code>ExecuteUpdate</code> and <code>ExecuteDelete</code> skip the change tracker, so for those I set the audit values by hand."</p>
+    <ul>
+      <li><code>SaveChangesInterceptor</code> → <span class="hl hl-adv">one reusable hook</span> on every save.</li>
+      <li><code>Entries&lt;IAuditable&gt;()</code> → <span class="hl hl-inter">find the changed entities</span> by an interface.</li>
+      <li>Overriding <code>SaveChanges</code> → <span class="hl hl-basic">simpler, but tied to one context</span>.</li>
+      <li><code>ExecuteUpdate</code> / raw SQL → <span class="hl hl-hot">no stamp</span> unless you add it.</li>
+      <li>Current user → <span class="hl hl-blue">comes from an injected service</span>, not a static.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>The change tracker already knows which entities are <code>Added</code> or <code>Modified</code> when you call <code>SaveChanges()</code>. A <span class="hl hl-blue">SaveChangesInterceptor</span> is a class EF Core calls just before it writes — you override <code>SavingChanges</code> (and <code>SavingChangesAsync</code> for async callers), loop over <code>ChangeTracker.Entries()</code>, and set the audit fields. You register it once with <code>AddInterceptors(...)</code>, and the call sites never think about it.</p>
+
+      <p>The older alternative is to override <code>SaveChanges</code> and <code>SaveChangesAsync</code> inside your <code>DbContext</code>. It works, but the logic lives inside that one context class. An interceptor is a separate, reusable class — easier to share and to give services like "who is the current user".</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Interceptor</th><th>Override <code>SaveChanges</code></th></tr></thead>
+        <tbody>
+          <tr><th>Where the code lives</th><td>its own class</td><td>inside the <code>DbContext</code></td></tr>
+          <tr><th>Reuse across contexts</th><td>✅ yes</td><td class="no">no</td></tr>
+          <tr><th>Sync and async</th><td>override both methods</td><td>override both methods</td></tr>
+          <tr><th>Catches <code>ExecuteUpdate</code>?</th><td class="no">no</td><td class="no">no</td></tr>
+        </tbody>
+      </table>
+
+      <p>The blind spot is bulk work. <code>ExecuteUpdate</code> and <code>ExecuteDelete</code> send SQL straight to the database without tracking entities, so neither approach sees them.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> AuditInterceptor : SaveChangesInterceptor
+{
+    <span class="kw">public</span> <span class="kw">override</span> ValueTask&lt;InterceptionResult&lt;<span class="kw">int</span>&gt;&gt; SavingChangesAsync(
+        DbContextEventData eventData, InterceptionResult&lt;<span class="kw">int</span>&gt; result,
+        CancellationToken cancellationToken = default)
+    {
+        <span class="kw">foreach</span> (<span class="kw">var</span> e <span class="kw">in</span> eventData.Context!.ChangeTracker.Entries&lt;IAuditable&gt;())
+        {
+            <span class="kw">if</span> (e.State == EntityState.Added)    e.Entity.CreatedAt = DateTime.UtcNow;   <span class="cx-ok">// ✅ new rows</span>
+            <span class="kw">if</span> (e.State == EntityState.Modified) e.Entity.UpdatedAt = DateTime.UtcNow;   <span class="cx-ok">// ✅ changed rows</span>
+        }
+        <span class="kw">return</span> base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">One class stamps every added or modified entity right before it is written (override the sync <code>SavingChanges</code> too if anyone calls <code>SaveChanges()</code>).</p>
+
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>optionsBuilder
+    .UseSqlServer(connectionString)
+    .AddInterceptors(<span class="kw">new</span> AuditInterceptor());   <span class="cx-ok">// ✅ registered once</span></code></pre>
+      </div>
+      <p class="cx-note">Register it on the context options — no call site changes.</p>
+
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">await</span> db.Orders
+    .Where(o =&gt; o.Status == <span class="str">"Old"</span>)
+    .ExecuteUpdateAsync(s =&gt; s
+        .SetProperty(o =&gt; o.Status, <span class="str">"Archived"</span>)
+        .SetProperty(o =&gt; o.UpdatedAt, DateTime.UtcNow));   <span class="cx-ok">// ✅ stamped by hand — no interceptor runs here</span></code></pre>
+      </div>
+      <p class="cx-note">Bulk updates bypass the change tracker, so set the audit column in the update itself.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Compliance asks "who last changed this order, and when?"</b> The interceptor answers it for every normal save. The one gap: a nightly cleanup job that uses <code>ExecuteUpdate</code> changes rows without touching <code>UpdatedAt</code> — unless the job sets it explicitly.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="7.html">← Connection Resiliency &amp; Execution Strategies</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="9.html">Keyless Entities &amp; Views →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

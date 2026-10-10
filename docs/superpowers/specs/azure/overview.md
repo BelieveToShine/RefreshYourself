@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 44 pages written
+## Status — Phases 1–7 complete, all 49 pages written (44 original + 5 gap pages added 2026-10-07)
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): built from the user's own later,
   simplified Azure section of the interview-prep plan (12 concept groups), deliberately kept
@@ -88,7 +88,7 @@ keeping it in sync with the live pages.
 | 17 | Azure API Management | ⭐ | ✅ |
 | 18 | Load Balancing | ⭐ | ✅ |
 
-## Intermediate (19 topics) — 19 written
+## Intermediate (23 topics) — 23 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -111,8 +111,12 @@ keeping it in sync with the live pages.
 | 17 | Idempotent Deployment for IaC | ⭐ | ✅ |
 | 18 | Cosmos DB Consistency Levels | 🧠 | ✅ |
 | 19 | Service Bus Architecture | 🧠 | ✅ |
+| 20 | Azure Functions — Triggers, Bindings & Hosting Plans | 🔥 | ✅ |
+| 21 | Azure SQL High Availability — Geo-Replication, Failover Groups & Elastic Pools | ⭐ | ✅ |
+| 22 | Storage Redundancy & Access Tiers | ⭐ | ✅ |
+| 23 | Entra Conditional Access, MFA & External Identities | ⭐ | ✅ |
 
-## Advanced (7 topics) — 7 written
+## Advanced (8 topics) — 8 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -123,6 +127,7 @@ keeping it in sync with the live pages.
 | 5 | Cost Optimization Levers | ⭐ | ✅ |
 | 6 | Landing Zones & Governance | ⭐ | ✅ |
 | 7 | Requirements-First Architecture Questions | 🧠 | ✅ |
+| 8 | AKS Architecture — Node Pools, Networking, Ingress & Autoscaling | ⭐ | ✅ |
 
 ## Where the roadmap came from
 
@@ -178,3 +183,5 @@ passed the mandatory independent diagram-verification sweep (44/44, `issueCount:
 sweep, with the one genuine finding during the process — `intermediate/17.html`'s text
 overflow — found and fixed, not glossed over). Expect a review/feedback pass once the user goes
 through it, same as every other completed track.
+
+> **2026-10-06 gap-hunt — written and wired 2026-10-07:** 5 new pages (44 -> 49): Intermediate 20 Azure Functions — Triggers, Bindings & Hosting Plans, 21 Azure SQL High Availability — Geo-Replication, Failover Groups & Elastic Pools, 22 Storage Redundancy & Access Tiers, 23 Entra Conditional Access, MFA & External Identities; Advanced 8 AKS Architecture — Node Pools, Networking, Ingress & Autoscaling - see the "Addendum 2026-10-06" in [`roadmap.md`](roadmap.md). Counts: Basic 18, Intermediate 23, Advanced 8.

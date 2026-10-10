@@ -30,7 +30,7 @@ plans, isolation levels as a database feature) stay in the `sql/` track. This tr
 EF Core's own side of things — what SQL it generates, how it tracks/loads/migrates — never how
 the database itself executes that SQL.
 
-## Phase 3 — Grouping into pages (21 pages)
+## Phase 3 — Grouping into pages (21 pages at Phase 3; track total is now 35 after the 2026-10-07 gap pages — see the addendum at the end)
 
 Two deliberate bundles, both because the source bullets don't carry enough independent depth to
 justify their own page:
@@ -53,9 +53,9 @@ Everything else is one taxonomy bullet → one page.
 
 | Tier | Count | Pages |
 |---|---|---|
-| Basic | 7 | What Is EF Core; `DbContext` & `DbSet`; Migrations & `SaveChanges()` — the Basics; Primary Keys & Relationships by Convention; The N+1 Problem; Projection — Selecting into a DTO; Configuring Relationships |
-| Intermediate | 8 | LINQ → SQL Translation & Inspecting Generated SQL; Tracking vs. `AsNoTracking()`; The Change Tracker & `SaveChanges()`; Eager vs. Explicit vs. Lazy Loading; `IQueryable<T>` vs. `IEnumerable<T>`; Fluent API vs. Data Annotations; Migrations, Mechanically; Transactions Around `SaveChanges()` |
-| Advanced | 6 | Compiled Queries; Query Splitting; Optimistic Concurrency & Row Versioning; Beyond N+1 — Common Performance Pitfalls; Bulk Operations; Connection Management |
+| Basic | 7 (9 after the 2026-10-07 addendum) | What Is EF Core; `DbContext` & `DbSet`; Migrations & `SaveChanges()` — the Basics; Primary Keys & Relationships by Convention; The N+1 Problem; Projection — Selecting into a DTO; Configuring Relationships |
+| Intermediate | 8 (17 after the 2026-10-07 addendum) | LINQ → SQL Translation & Inspecting Generated SQL; Tracking vs. `AsNoTracking()`; The Change Tracker & `SaveChanges()`; Eager vs. Explicit vs. Lazy Loading; `IQueryable<T>` vs. `IEnumerable<T>`; Fluent API vs. Data Annotations; Migrations, Mechanically; Transactions Around `SaveChanges()` |
+| Advanced | 6 (9 after the 2026-10-07 addendum) | Compiled Queries; Query Splitting; Optimistic Concurrency & Row Versioning; Beyond N+1 — Common Performance Pitfalls; Bulk Operations; Connection Management |
 
 Reasoning for the less-obvious calls:
 
@@ -137,4 +137,39 @@ category, not tier — the site-wide convention). Numbering below is the tier-fo
 
 ## Known gaps
 
-None — Phase 7 (writing the 21 pages) is the next and only remaining phase for this track.
+None among the original 21 pages (all written); the 14 gap pages found afterwards were written 2026-10-07 — see the addendum below.
+
+## Addendum 2026-10-06 — gap pages (Phases 2–6)
+
+Source: [`review-2026-10-06.md`](../../../review-2026-10-06.md) §5 candidate list, checked against the
+21 live pages (grep of `efcore/*`) per [`gap-hunting.md`](../../../rules/gap-hunting.md). Existing pages are
+**not edited**; each gap gets a new page taking the next free number in its tier (numbering is
+permanent — recounted from disk: Basic 7, Intermediate 8, Advanced 6 before this addendum). Tier =
+question type; priority = interview likelihood; rows within a tier are ordered hot-first by number.
+**Status: all pages in this addendum were written and wired on 2026-10-07.** Total after: 21 + 14 = **35** (Basic 9,
+Intermediate 17, Advanced 9).
+
+| Page | Tier | Pri | Title | Interview question | Scope (one sentence) | Diagram idea | Cross-links |
+|---|---|---|---|---|---|---|---|
+| basic/8 | Basic | ⭐ | Cascade Delete Behaviours | "What happens to child rows when you delete the parent?" | Required vs. optional FK defaults (`Cascade`, `ClientSetNull`), and `Restrict`/`SetNull`/`NoAction` set via `OnDelete`. | Parent with 3 children, four panels showing each behaviour's outcome. | basic/7, sql/basic/14 |
+| basic/9 | Basic | ⭐ | Code-First vs. Database-First | "Code-first or database-first — and how do you reverse-engineer an existing DB?" | Model-drives-schema (migrations) vs. `dotnet ef dbcontext scaffold` from an existing schema, and when each fits. | Two arrows: C# model → migration → DB, and DB → scaffold → C# model. | basic/3, intermediate/7 |
+| intermediate/9 | Intermediate | 🔥 | Raw SQL in EF Core & Injection | "How do you run raw SQL or a stored procedure in EF Core, and is it safe?" | `FromSql` (interpolated = parameterized) vs. `FromSqlRaw` concatenation trap, `ExecuteSql`, composability limits, stored-proc calls. | Same user input flowing through concatenation (breaks out) vs. parameter (stays data). | sql/advanced/10, sql/basic/10, advanced/5 |
+| intermediate/10 | Intermediate | 🔥 | Repository & Unit of Work over EF Core | "Do you need a repository pattern on top of EF Core?" | `DbSet` is already a repository and `DbContext` a unit of work; when a thin wrapper still earns its place (testing seam, query reuse) and when it only hides features. | Layer stack: controller → repo → DbContext, with the redundant layer highlighted. | basic/2, intermediate/3, intermediate/17 |
+| intermediate/11 | Intermediate | ⭐ | Global Query Filters & Soft Delete | "How would you implement soft delete or multi-tenancy once, for every query?" | `HasQueryFilter`, `IsDeleted` flag via interceptor/override, `IgnoreQueryFilters()`, and the required-navigation filter gotcha. | Query pipeline with an automatic WHERE injected; bypass arrow for `IgnoreQueryFilters`. | intermediate/1, advanced/8 |
+| intermediate/12 | Intermediate | ⭐ | Find vs. FirstOrDefault vs. SingleOrDefault | "What's the difference between `Find` and `FirstOrDefault`?" | `Find` checks the tracker first and is key-only (no DB hit if tracked); `First*`/`Single*` always query, differ on duplicates. | Flow: tracker hit short-circuits vs. query always going to DB. | intermediate/2, intermediate/3 |
+| intermediate/13 | Intermediate | ⭐ | Disconnected Entities: Attach vs. Update | "A detached entity comes in from an API — how do you save it?" | `Attach`, `Update` (marks all columns), setting `EntityState`, vs. load-then-patch; what each emits as SQL. | Detached object entering context; three branches to different UPDATE shapes. | intermediate/3, advanced/3 |
+| intermediate/14 | Intermediate | ⭐ | Inheritance Mapping: TPH, TPT & TPC | "How does EF Core map a class hierarchy to tables?" | Table-per-hierarchy (default, discriminator), per-type, per-concrete-type: join cost vs. nullable columns trade-off. | Three table layouts of the same Animal/Dog/Cat hierarchy side by side. | intermediate/6, sql/basic/3 |
+| intermediate/15 | Intermediate | ⭐ | Owned Types & Value Converters | "How do you map a value object or store an enum as a string?" | `OwnsOne` (same-table value objects) and `HasConversion` for enum/strongly-typed-id/JSON mapping, and the comparer caveat. | Object with nested Address mapped to columns; converter box between C# and DB type. | intermediate/6, basic/4 |
+| intermediate/16 | Intermediate | ⭐ | Indexes, Unique Constraints & Composite Keys in the Model | "How do you add an index or unique constraint in EF Core?" | `HasIndex` (unique, composite, filtered, included columns), `HasAlternateKey`, composite PKs, and why key order matters. | Model snippet → CREATE INDEX output with column-order arrow. | intermediate/6, advanced/4, sql/intermediate/8 |
+| intermediate/17 | Intermediate | ⭐ | Testing EF Core Code: SQLite vs. InMemory vs. Real DB | "How do you unit-test code that uses EF Core?" | InMemory ignores relational behaviour (constraints, transactions), SQLite in-memory is closer, a real DB container is most faithful; pick by what you must prove. | Fidelity ladder: InMemory → SQLite → real DB against speed. | intermediate/1, intermediate/10 |
+| advanced/7 | Advanced | ⭐ | Connection Resiliency & Execution Strategies | "How do you handle transient database failures in EF Core?" | `EnableRetryOnFailure`, execution strategy, why user-initiated transactions must run inside `strategy.ExecuteAsync`, idempotency risk. | Timeline of failed attempt → backoff → retry, with a transaction wrapped around the retry unit. | advanced/6, intermediate/8 |
+| advanced/8 | Advanced | ⭐ | Interceptors & Audit Trails | "How would you add audit fields (CreatedAt/ModifiedBy) automatically?" | `SaveChangesInterceptor` vs. overriding `SaveChanges`, reading `ChangeTracker.Entries()`, and what bulk `ExecuteUpdate` bypasses. | SaveChanges pipeline with an interceptor hook stamping entities. | intermediate/3, intermediate/11, advanced/5 |
+| advanced/9 | Advanced | 🧠 | Keyless Entities & Views | "How do you map a SQL view or query result with no primary key?" | `HasNoKey` / `ToView`, read-only and untracked, vs. `FromSql` projections for reporting. | Table-backed entity vs. view-backed keyless entity, with the tracker bypassed. | intermediate/9, sql/basic/11 |
+
+### Dropped / merged (with reasons)
+
+- **Seeding (`HasData`)** — dropped: tutorial-level, rarely a standalone interview question; a one-line fact about migrations.
+- **Raw SQL + injection** merged into one page (injection is the "so what" of raw SQL).
+- **Owned types + value converters** merged (both are "map a non-entity C# shape to columns").
+- **Repository + Unit of Work** merged (one question: "is the wrapper worth it?").
+- Own gap-hunt additions: **Code-First vs. Database-First**, **Indexes/Unique/Composite Keys**. Considered and rejected: shadow properties, JSON columns, temporal tables (niche); DbContext pooling/thread-safety (already in basic/2 and advanced/6).

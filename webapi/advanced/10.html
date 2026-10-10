@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What happens to a request when the client disconnects, and how do you stop wasted work?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Cancellation, Timeouts &amp; Client Disconnects — Web API Advanced — RefreshYourself">
+<meta property="og:description" content="What happens to a request when the client disconnects, and how do you stop wasted work?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Cancellation, Timeouts &amp; Client Disconnects — Web API Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Cancellation, Timeouts &amp; Client Disconnects</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Web API · Advanced · Should Know</div>
+    <h1>The client hung up — does your API <span class="hl hl-hot">keep working</span> or <span class="hl hl-basic">stop</span>?</h1>
+    <p class="interview-q">"What happens to a request when the client disconnects, and how do you stop wasted work?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🚦 CancellationToken</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>When a client disconnects, your code does not stop by itself — a slow query or downstream call keeps using the database and connections for an answer nobody will read.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>ASP.NET Core signals the disconnect through <code>RequestAborted</code>; take a <code>CancellationToken</code> and pass it to every async call so that work stops too.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">The token is only a signal — it helps only where you pass it.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>RequestAborted</code> <span class="rarrow">→</span> fires when the <b>client leaves</b></p>
+      <p class="rrow"><code>CancellationToken ct</code> <span class="rarrow">→</span> the action parameter <b>bound to it</b></p>
+      <p class="rrow"><code>Pass ct</code> <span class="rarrow">→</span> to <b>every</b> EF and HttpClient call</p>
+      <p class="rrow"><code>OperationCanceledException</code> <span class="rarrow">→</span> <b>expected</b>, not a server fault</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> The client left. <b><code>The token</code></b> is the
+    only way your code finds out — and only if you <b><code>pass it down</code></b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 255" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA10" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA10" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+        <marker id="arA10Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arA10Rose" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">CLIENT DISCONNECTS — DOES THE WORK STOP?</text>
+
+      <g filter="url(#shA10)"><rect x="14" y="100" width="110" height="70" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="69" y="124" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">📱 Client</text>
+      <text x="69" y="141" text-anchor="middle" font-size="10.5" fill="#5b6472">disconnects</text>
+      <text x="69" y="156" text-anchor="middle" font-size="10.5" fill="#5b6472">nobody is waiting</text>
+
+      <g filter="url(#shA10)"><rect x="170" y="100" width="140" height="70" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="240" y="124" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🚦 Token fires</text>
+      <text x="240" y="141" text-anchor="middle" font-size="10.5" fill="#5b6472">RequestAborted</text>
+      <text x="240" y="156" text-anchor="middle" font-size="10.5" fill="#5b6472">= CancellationToken</text>
+
+      <g filter="url(#shA10)"><rect x="400" y="40" width="226" height="70" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="513" y="64" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ Token passed down</text>
+      <text x="513" y="81" text-anchor="middle" font-size="10.5" fill="#5b6472">DB query + HTTP call cancelled</text>
+      <text x="513" y="96" text-anchor="middle" font-size="10.5" fill="#5b6472">work stops, resources freed</text>
+
+      <g filter="url(#shA10)"><rect x="400" y="160" width="226" height="70" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="513" y="184" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">❌ Token ignored</text>
+      <text x="513" y="201" text-anchor="middle" font-size="10.5" fill="#5b6472">query keeps running to the end</text>
+      <text x="513" y="216" text-anchor="middle" font-size="10.5" fill="#5b6472">result is thrown away</text>
+
+      <path d="M124,135 H170" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arA10)"/>
+      <path d="M310,135 H355" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M355,135 V75 H400" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA10Green)"/>
+      <path d="M355,135 V195 H400" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arA10Rose)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="2s" repeatCount="indefinite"/>
+      </path>
+    </svg>
+    <figcaption>The disconnect is the same either way — only passing the token decides whether the work stops.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Adding <code>CancellationToken ct</code> to the action cancels nothing by itself.</b>
+    It is only a signal — until you pass it into every awaited call, the work still runs to the end.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"The client's own <code>HttpClient</code> times out — does your server stop?"</b>
+    Only if you pass the token. When the connection closes, <code>RequestAborted</code> fires, but
+    nothing stops on its own; the client timeout and your server code are two separate things.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"When a client disconnects, ASP.NET Core cancels <code>HttpContext.RequestAborted</code>.
+    I take a <code>CancellationToken</code> parameter in the action, pass it to every EF Core and
+    <code>HttpClient</code> call, and treat the resulting <code>OperationCanceledException</code> as
+    normal, not as an error."</p>
+    <ul>
+      <li><code>RequestAborted</code> → <span class="hl hl-blue">fires when the client disconnects</span>.</li>
+      <li>Action parameter <code>CancellationToken</code> → <span class="hl hl-basic">bound to that same token</span>.</li>
+      <li>Pass it down → <span class="hl hl-hot">to every EF and HttpClient call</span>, or the work continues.</li>
+      <li><code>OperationCanceledException</code> → <span class="hl hl-inter">expected, not a 500</span>, so don't alert on it.</li>
+      <li>Server timeouts → <span class="hl hl-adv">request timeouts middleware (.NET 8)</span> cancels the same token.</li>
+      <li>Writes → <span class="hl hl-teal">decide deliberately</span> whether a half-done change should be cancelled.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>When a client closes the connection, the server does <b>not</b> kill your code. ASP.NET Core
+      only <b>cancels a token</b>: <code>HttpContext.RequestAborted</code>. A
+      <code>CancellationToken</code> parameter on a controller action or minimal API handler is
+      bound to it. If you pass that token to <code>ToListAsync(ct)</code> or
+      <code>HttpClient.GetAsync(url, ct)</code>, those calls stop and throw
+      <b><code>OperationCanceledException</code></b>. If you don't, they run on and the database
+      keeps working for nobody.</p>
+
+      <p><b>Client timeouts and server timeouts are different things.</b> A client timeout
+      (for example <code>HttpClient.Timeout</code>) only makes the caller stop waiting. On the
+      server, ASP.NET Core has a <b>request timeouts middleware</b> (.NET 8 and later) that
+      cancels that same <code>RequestAborted</code> token after a limit you choose — a default policy for all endpoints, or
+      <code>[RequestTimeout]</code> / <code>WithRequestTimeout</code> per endpoint. It does nothing until you configure a limit, and if your code
+      doesn't handle the cancellation and write a response, the default status is 504. Either way, your code stops only where the token is used.
+      <a href="2.html">Retry vs. Resilience</a> covers the caller's side of timeouts; the host
+      shutdown token is on <a href="../../dotnet/intermediate/16.html">The Generic Host</a>.</p>
+
+      <p>Two cautions. A cancelled call is <b>not an error</b> — don't log it as one or return
+      a 500 for it. And for <b>writes</b>, think before wiring the token through: cancelling a
+      multi-step change halfway is a design decision, not a default. For a per-call limit of your own, link a
+      <code>CancellationTokenSource</code> to the request token and call <code>CancelAfter</code>.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Client timeout</th><th>Server request timeout</th></tr></thead>
+        <tbody>
+          <tr><th>Who sets it</th><td>the caller (e.g. <code>HttpClient.Timeout</code>)</td><td>your API (request timeouts middleware, .NET 8+)</td></tr>
+          <tr><th>What happens</th><td>caller stops waiting; the server sees a disconnect</td><td>the request's token is cancelled</td></tr>
+          <tr><th>Does your code stop?</th><td>only if the token is passed down</td><td>only if the token is passed down</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>[<span class="ty">HttpGet</span>(<span class="str">"reports/{id}"</span>)]
+<span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="ty">IActionResult</span>&gt; GetReport(<span class="kw">int</span> id, <span class="ty">CancellationToken</span> ct) <span class="cx-cmt">// = RequestAborted</span>
+{
+    <span class="kw">var</span> rows = <span class="kw">await</span> _db.Sales
+        .Where(s =&gt; s.ReportId == id)
+        .ToListAsync(ct);                                  <span class="cx-ok">// ✅ the DB call can be cancelled</span>
+
+    <span class="kw">var</span> rate = <span class="kw">await</span> _http.GetStringAsync(<span class="str">"https://rates.example/usd"</span>, ct); <span class="cx-ok">// ✅ so can this</span>
+    <span class="kw">return</span> Ok(Build(rows, rate));
+}</code></pre>
+      </div>
+      <p class="cx-note">Take the token in the signature, then hand it to every awaited call. Leave
+      <code>ct</code> out of <code>ToListAsync()</code> and the query runs to the end even after the client is gone.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>builder.Services.AddRequestTimeouts(o =&gt;
+    o.DefaultPolicy = <span class="kw">new</span> <span class="ty">RequestTimeoutPolicy</span>
+    {
+        Timeout = <span class="ty">TimeSpan</span>.FromSeconds(<span class="num">10</span>)       <span class="cx-ok">// ✅ server-side limit per request</span>
+    });
+
+<span class="kw">var</span> app = builder.Build();
+app.UseRequestTimeouts();                       <span class="cx-cmt">// cancels the request's token on timeout</span></code></pre>
+      </div>
+      <p class="cx-note">A server-side limit (.NET 8+) — it cancels the same token, so code that ignores
+      the token still isn't stopped. It does not fire while a debugger is attached, and with an explicit <code>UseRouting</code> it must come after it.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A user opens a heavy report, gets impatient, and hits refresh five times.</b> Without the token,
+      five expensive queries all run to the end for pages nobody sees. With it passed down, the four
+      abandoned requests are cancelled the moment their connections close, and the database only does
+      the work that someone is still waiting for.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="9.html">← Webhooks</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Advanced</a>
+    <div class="side next"></div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

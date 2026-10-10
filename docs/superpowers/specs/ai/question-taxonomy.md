@@ -77,7 +77,7 @@ used for a source bullet that overlapped an existing page.)
 | Candidate | Why it's a real gap | Where it's folded |
 |---|---|---|
 | **Provider-native prompt caching** (Anthropic prompt caching, OpenAI cached input tokens — caching the exact repeated prefix of a request, distinct from "semantic caching" which caches across *different* but similar requests) | A specific, frequently-asked cost/latency lever that's easy to confuse with semantic caching if left unnamed | Group 38 (Cost Control) — call out explicitly as a third caching layer alongside exact-match and semantic caching |
-| **Speculative decoding** (a small draft model proposes tokens, the main model verifies them in one pass) | A real inference-serving latency technique that comes up in "how do you make inference faster" architect discussions | Group 47 (Self-Hosted vs. Managed Models) — mention as one of the serving-side latency levers alongside batching/quantization |
+| **Speculative decoding** (a small draft model proposes tokens, the main model verifies them in one pass) | A real inference-serving latency technique that comes up in "how do you make inference faster" architect discussions | Group 47 (Self-Hosted vs. Managed Models) — mention as one of the serving-side latency levers alongside batching/quantization. **Correction 2026-10-07:** this was never actually done — no existing page covered speculative decoding; it now has its own page, `ai/advanced/15` "LLM Inference Performance" |
 | **Constrained/grammar-based decoding** (e.g. via a grammar/FSM at the token-sampling level, the actual mechanism beneath most "guaranteed JSON" tooling) | The concrete mechanism behind "how do you force a model to return valid JSON" beyond just "JSON mode exists" | Group 8 (Structured Output) — mention as the mechanism beneath JSON-mode/schema tooling, contrasted with post-hoc parse-and-retry |
 
 **Considered and excluded** (real GenAI topics, deliberately left out — the site's own
@@ -89,5 +89,5 @@ already fully covered by an existing group):
 - **Transformer positional-encoding math (RoPE, ALiBi) in detail** — the source's own Transformer Basics group (12) is explicitly scoped to "high level," and the source's reality-check paragraph explicitly says the bar is "applied GenAI engineering... not research" — going deeper into positional-encoding math would violate that stated scope.
 - **Specific eval tooling deep-dives (Ragas/DeepEval/promptfoo internals)** — the source lists these as "good to know" tool names under Evaluation (Part A §7), not a dedicated concept; Building an Eval Set (37) covers the underlying methodology these tools implement, which is the actually-testable interview knowledge.
 
-No new pages added. Final count stays 48 (16 Basic / 18 Intermediate / 14 Advanced), matching
+No new pages added at Phase 2. Final count stayed 48 (16 Basic / 18 Intermediate / 14 Advanced) at that point, matching
 `docs/superpowers/specs/ai/overview.md`'s existing tables.

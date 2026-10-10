@@ -58,7 +58,7 @@ their **own new pages** rather than edits to the 27 already-verified ones (see
 every other track). Phases 3–6 below are extended for exactly these 12; the original 27 rows
 are unchanged.
 
-## Phase 3 — Grouping into pages (27 + 12 = 39 pages)
+## Phase 3 — Grouping into pages (27 + 12 = 39 pages at Phase 3; track total is now 50 after the 2026-10-07 gap pages — see the addendum at the end)
 
 One deliberate merge, from Phase 2 above:
 
@@ -77,9 +77,9 @@ the taxonomy's gap-hunt log for why each was judged real enough to stand alone).
 
 | Tier | Count | Pages |
 |---|---|---|
-| Basic | 15 | Primary Key vs. Foreign Key; WHERE vs. HAVING; INNER JOIN vs. LEFT JOIN; GROUP BY; NULL in Comparisons; Aggregate Functions; ACID; ORDER BY; DISTINCT; Stored Procedures; Views; **UNION vs. UNION ALL; Logical Query Execution Order; Foreign Key Referential Actions; Transaction Control Mechanics** |
-| Intermediate | 16 | Subqueries vs. Joins; CTEs; Window Functions; Clustered vs. Non-Clustered Index; Normalization vs. Denormalization; ROW_NUMBER() vs. RANK() vs. DENSE_RANK(); Covering Index; Composite Index; Pagination & OFFSET; SARGable Queries; **EXISTS vs. IN vs. JOIN; Recursive CTEs; Temp Tables vs. Table Variables vs. CTEs; Index Seek vs. Scan vs. Table Scan; Materialized/Indexed Views vs. Regular Views; Triggers** |
-| Advanced | 8 | Isolation Levels; Deadlock vs. Blocking; Execution Plans; Performance Degraded Over Time; Locking; How the Optimizer Picks an Index; **Bulk Operations from the Database's Own Side; Table Partitioning** |
+| Basic | 15 (18 after the 2026-10-07 addendum) | Primary Key vs. Foreign Key; WHERE vs. HAVING; INNER JOIN vs. LEFT JOIN; GROUP BY; NULL in Comparisons; Aggregate Functions; ACID; ORDER BY; DISTINCT; Stored Procedures; Views; **UNION vs. UNION ALL; Logical Query Execution Order; Foreign Key Referential Actions; Transaction Control Mechanics** |
+| Intermediate | 16 (22 after the 2026-10-07 addendum) | Subqueries vs. Joins; CTEs; Window Functions; Clustered vs. Non-Clustered Index; Normalization vs. Denormalization; ROW_NUMBER() vs. RANK() vs. DENSE_RANK(); Covering Index; Composite Index; Pagination & OFFSET; SARGable Queries; **EXISTS vs. IN vs. JOIN; Recursive CTEs; Temp Tables vs. Table Variables vs. CTEs; Index Seek vs. Scan vs. Table Scan; Materialized/Indexed Views vs. Regular Views; Triggers** |
+| Advanced | 8 (10 after the 2026-10-07 addendum) | Isolation Levels; Deadlock vs. Blocking; Execution Plans; Performance Degraded Over Time; Locking; How the Optimizer Picks an Index; **Bulk Operations from the Database's Own Side; Table Partitioning** |
 
 Bold entries are the 12 gap-hunt additions. Tier reasoning for them:
 
@@ -201,7 +201,7 @@ category, not tier — the site-wide convention). Numbering below is the tier-fo
 | 6.4 | Bulk Operations from the Database's Own Side | Advanced | ⭐ | advanced/7.html |
 | 6.5 | Table Partitioning | Advanced | 🧠 | advanced/8.html |
 
-New totals: **Basic 15, Intermediate 16, Advanced 8 — 39 pages.**
+New totals at that point: **Basic 15, Intermediate 16, Advanced 8 — 39 pages** (now 50 after the 2026-10-07 gap pages: Basic 18, Intermediate 22, Advanced 10).
 
 ## Track-specific decisions and boundaries
 
@@ -223,3 +223,34 @@ New totals: **Basic 15, Intermediate 16, Advanced 8 — 39 pages.**
 
 None in the 27 original pages, already written and live. The 12 gap-hunt additions above are
 the next and only remaining Phase 7 work for this track.
+
+## Addendum 2026-10-06 — gap pages (Phases 2–6)
+
+Source: [`review-2026-10-06.md`](../../../review-2026-10-06.md) §5 candidate list, checked against the
+39 live pages (grep of `sql/*`) per [`gap-hunting.md`](../../../rules/gap-hunting.md). Existing pages are
+**not edited**; each gap takes the next free number in its tier (numbering is permanent — recounted
+from disk: Basic 15, Intermediate 16, Advanced 8 before this addendum). T-SQL flavour throughout.
+**Status: all pages in this addendum were written and wired on 2026-10-07.** Total after: 39 + 11 = **50** (Basic 18, Intermediate 22, Advanced 10).
+Rows ordered hot-first by number within each tier.
+
+| Page | Tier | Pri | Title | Interview question | Scope (one sentence) | Diagram idea | Cross-links |
+|---|---|---|---|---|---|---|---|
+| basic/16 | Basic | 🔥 | TRUNCATE vs. DELETE vs. DROP | "What's the difference between TRUNCATE, DELETE and DROP?" | Row-by-row logged DELETE (WHERE, triggers) vs. page-deallocating TRUNCATE (identity reset, FK limits, still rollbackable inside a transaction in SQL Server) vs. DROP removing the object. | Three-column table of the same table: rows removed, structure kept, structure gone. | basic/14, basic/15, advanced/8 |
+| basic/17 | Basic | ⭐ | CASE WHEN | "How do you do if/else logic inside a SELECT?" | Searched vs. simple `CASE`, in SELECT/ORDER BY, and conditional aggregation (`SUM(CASE ...)`) for pivot-style counts. | Rows flowing through a CASE diamond into labelled buckets. | basic/4, basic/6, basic/5 |
+| basic/18 | Basic | ⭐ | Constraints: UNIQUE, CHECK, DEFAULT & NOT NULL | "Which constraints exist beyond PK/FK, and PRIMARY KEY vs. UNIQUE?" | What each enforces; UNIQUE allows a NULL (one, in SQL Server) while PK never does; the DB as last line of defence. | Insert row hitting four gates, each rejecting a different bad value. | basic/1, basic/14 |
+| intermediate/17 | Intermediate | 🔥 | Self, FULL & CROSS Joins | "Explain a self join, a FULL OUTER JOIN and a CROSS JOIN." | Employee-manager self join, FULL JOIN to reconcile two tables, CROSS JOIN Cartesian product and its legitimate uses (calendars, combinations). | Three mini join diagrams with result row counts. | basic/3, intermediate/1 |
+| intermediate/18 | Intermediate | 🔥 | Nth Highest & Top-N per Group | "Find the second highest salary / top 3 per department." | `DENSE_RANK()` filter, `OFFSET/FETCH` and correlated-subquery alternatives, tie handling, NULL-when-missing edge. | Ranked salary list with the Nth row highlighted and ties sharing a rank. | intermediate/3, intermediate/6, intermediate/9 |
+| intermediate/19 | Intermediate | 🔥 | Finding & Deleting Duplicates | "How do you find duplicate rows, and delete all but one?" | `GROUP BY ... HAVING COUNT(*) > 1` to find; `ROW_NUMBER()` partition + delete-via-CTE to remove; prevent with UNIQUE. | Rows grouped, copies numbered 1..n, n>1 struck out. | basic/4, basic/2, intermediate/2, basic/18 |
+| intermediate/20 | Intermediate | ⭐ | Set Operators: EXCEPT & INTERSECT | "How do you find rows in A not in B, or in both?" | `EXCEPT`/`INTERSECT` semantics (distinct, NULLs compare equal, matching column count/types) vs. `NOT EXISTS`/`INNER JOIN`; recap with UNION. | Two-circle Venn per operator. | basic/12, intermediate/11 |
+| intermediate/21 | Intermediate | ⭐ | MERGE & Upsert | "How do you insert-or-update in one statement?" | `MERGE` WHEN MATCHED / NOT MATCHED, `OUTPUT`, and why many teams use UPDATE-then-INSERT with proper locking given MERGE's concurrency pitfalls (verify wording against docs at write time). | Source/target rows routed to UPDATE vs. INSERT branches. | basic/15, advanced/5 |
+| intermediate/22 | Intermediate | ⭐ | Stored Procedure vs. Function | "Stored procedure vs. user-defined function?" | Procs can have side effects, transactions and multiple result sets; functions are composable inside queries (scalar vs. inline TVF) with write restrictions. | Side-by-side: EXEC-only vs. usable inside SELECT/JOIN. | basic/10, intermediate/16 |
+| advanced/9 | Advanced | 🔥 | Parameter Sniffing | "Same procedure fast for one customer, slow for another — why?" | Plan compiled for the first parameter value is cached and reused; fixes: `OPTION (RECOMPILE)`, `OPTIMIZE FOR`, local-variable trick, Query Store hints/plan forcing. | Cached plan tuned to a small value, then hit by a huge value. | advanced/3, advanced/4, advanced/6, basic/10 |
+| advanced/10 | Advanced | 🔥 | Dynamic SQL & SQL Injection | "What is SQL injection and how do you prevent it?" | String concatenation turns input into code; prevent with parameterization (`sp_executesql`), least privilege, `QUOTENAME` for identifiers, never relying on sanitising. | Input crossing from the data lane into the code lane via concatenation. | basic/10, efcore/intermediate/9 |
+
+### Dropped / merged (with reasons)
+
+- **EXCEPT/INTERSECT** merged into one "Set Operators" page (UNION already live at basic/12; linked, not repeated).
+- **Nth-highest salary** folded with **Top-N per group** (same technique, one scenario page); **duplicates** stays its own page (different pattern: find + delete).
+- **Self/FULL/CROSS joins** merged into one page (RIGHT/FULL already named briefly in basic/3, which stays untouched).
+- No candidate was dropped outright.
+- Own gap-hunt additions: **Stored Procedure vs. Function**, **Constraints**. Considered and rejected: PIVOT/STRING_AGG/COALESCE (syntax trivia, covered by CASE + NULL pages), cursors (anti-pattern, a mention suffices), `NOLOCK` (a follow-up on the isolation-levels page), date/time functions (tutorial-level).

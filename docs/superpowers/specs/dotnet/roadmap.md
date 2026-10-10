@@ -28,7 +28,7 @@ Two more near-neighbors checked and confirmed as genuinely distinct (not merged)
 No other dedupe or gaps — all 8 subsections from the user's original breakdown are represented,
 and the coverage note in the taxonomy doc already confirmed nothing was invented beyond it.
 
-## Phase 3 — Grouping into pages (23 pages)
+## Phase 3 — Grouping into pages (23 pages at Phase 3; track total is now 38 after the 2026-10-07 split/gap pages — see the addendum at the end)
 
 Mostly one concept per page, with two deliberate bundles kept from how the taxonomy already
 grouped thin, definition-only sub-topics:
@@ -44,9 +44,9 @@ grouped thin, definition-only sub-topics:
 
 | Tier | Count | Pages |
 |---|---|---|
-| Basic | 5 | .NET vs. .NET Framework; CLR, BCL & Managed Code; SDK vs. Runtime/.csproj/NuGet; What Is MVC; Filters, CORS, HTTPS & Logging |
-| Intermediate | 16 | What Happens When a .NET App Starts; The Built-in DI Container; Service Lifetimes; Middleware; Authentication vs. Authorization (Pipeline Stages); Routing; Model Binding & Validation; ViewBag vs. ViewData vs. TempData; Razor & Routing (MVC); MVC-Specific Filters; Views, Layouts & Organization; Configuration Sources; Authentication Schemes; Authorization Policies & Claims; Global Exception Handling; The Generic Host & Application Lifetime |
-| Advanced | 2 | Kestrel & Reverse Proxies; Model Binding Internals & MVC vs. Web API vs. Razor Pages |
+| Basic | 5 (6 final, +1 testing page 2026-09-18) | .NET vs. .NET Framework; CLR, BCL & Managed Code; SDK vs. Runtime/.csproj/NuGet; What Is MVC; Filters, CORS, HTTPS & Logging |
+| Intermediate | 16 (17 final, +1 testing page 2026-09-18) | What Happens When a .NET App Starts; The Built-in DI Container; Service Lifetimes; Middleware; Authentication vs. Authorization (Pipeline Stages); Routing; Model Binding & Validation; ViewBag vs. ViewData vs. TempData; Razor & Routing (MVC); MVC-Specific Filters; Views, Layouts & Organization; Configuration Sources; Authentication Schemes; Authorization Policies & Claims; Global Exception Handling; The Generic Host & Application Lifetime |
+| Advanced | 2 (4 after the 2026-10-07 addendum) | Kestrel & Reverse Proxies; Model Binding Internals & MVC vs. Web API vs. Razor Pages |
 
 Reasoning for the less-obvious calls:
 - **"What Is MVC" is Basic**, unlike most of the rest of the MVC group — it's the classic
@@ -151,3 +151,44 @@ more pages, following the same tier/priority logic as the rest of the track:
 
 None — every subsection from the user's original breakdown, plus the Testing gap the user
 reported afterward, now has a written page.
+
+## Addendum 2026-10-06 — splits & gap pages (Phases 2–6)
+
+**Status: all pages in this addendum were written and wired on 2026-10-07** (track total 25 -> 38: Basic 9, Intermediate 25, Advanced 4; basic/5 and advanced/2 were retitled/split as described below). Source: `docs/review-2026-10-06.md` §4 (grab-bag pages) and §5
+(candidate gaps), plus a fresh gap hunt. Numbers are the **next free number in the tier**, counted
+from the real files on disk (dotnet: basic 6, intermediate 17, advanced 2 — re-counted after this edit).
+Existing pages keep their numbers; nothing is renumbered or deleted. New pages are appended in the tier
+folders and, as with the post-launch Testing addition, get a row in the matching concept category on
+`dotnet/roadmap.html` (splits go in the category of the page they came out of).
+
+### New pages
+
+| Page | Tier | Pri | Title | Quoted interview question | Scope (one sentence) | Diagram idea | Cross-links |
+|---|---|---|---|---|---|---|---|
+| basic/7 *(split of basic/5)* | Basic | ⭐ | HTTPS Redirection & HSTS | "What's the difference between `UseHttpsRedirection` and HSTS, and why can't redirection alone protect the first request?" | Redirect-vs-HSTS roles, middleware position (early), dev cert vs prod TLS terminated at the proxy, `UseForwardedHeaders` caveat. | Browser → HTTP request → 307/308 → HTTPS, with HSTS header caching "never try HTTP again" for max-age. | basic/5, intermediate/4, advanced/1 (Kestrel & proxies) |
+| basic/8 *(split of basic/5)* | Basic | 🔥 | Logging — ILogger, Levels & Providers | "How does logging work in ASP.NET Core, and what is structured logging?" | `ILogger<T>` via DI, log levels + `appsettings` filtering, message templates (not string interpolation), providers/sinks (Serilog named as a replacement provider). | `ILogger<T>` fan-out to console / file / App Insights provider boxes, with a level-filter gate in front. | intermediate/2, intermediate/12, webapi/advanced/6 |
+| basic/9 | Basic | ⭐ | LTS vs. STS & .NET Standard | "What's the difference between LTS and STS releases, and what is .NET Standard — do you still use it?" | Release cadence/support windows (verify against Microsoft's current support policy before writing — never guess dates), what .NET Standard was for and why modern targeting replaced it. | Timeline of yearly releases with LTS/STS support-length bars; second mini-diagram: one netstandard lib consumed by Framework + .NET. | basic/1, basic/3 |
+| intermediate/18 *(split of advanced/2)* | Intermediate | ⭐ | MVC vs. Web API vs. Razor Pages | "When would you reach for MVC, a Web API controller, or Razor Pages?" | The three shapes on one endpoint-routing base, what each returns, auto-400 vs manual `ModelState`, mixing all three in one project. | The existing "one request, three pipelines" trio condensed to one side-by-side flow. | basic/4, intermediate/7, intermediate/9, advanced/2, webapi/basic/1 |
+| intermediate/19 | Intermediate | 🔥 | Minimal APIs | "What are minimal APIs, and when would you pick them over controllers?" | `MapGet`/`MapGroup`, parameter binding without attributes, endpoint filters instead of MVC filters, no automatic `[ApiController]` 400 behaviour, trade-offs vs controllers. | Same request through a controller pipeline vs a minimal-API pipeline (fewer boxes), lost/kept features labelled. | intermediate/6, intermediate/10, intermediate/7, webapi/intermediate/6 |
+| intermediate/20 | Intermediate | 🔥 | IHttpClientFactory | "Why not `new HttpClient()` per request, and what does `IHttpClientFactory` fix?" | Socket exhaustion + stale-DNS problem, handler pooling/rotation, named vs typed clients, `DelegatingHandler` pipeline; resilience handlers cross-linked, not taught here. | Left: `new HttpClient()` per call leaking sockets; right: factory pool of handlers reused, rotated on a timer. | intermediate/2, intermediate/3, webapi/advanced/8 (resilience) |
+| intermediate/21 | Intermediate | ⭐ | BackgroundService Patterns | "How do you run recurring background work in ASP.NET Core — and how do you use a scoped service from it?" | `ExecuteAsync` loop, `PeriodicTimer`, a DI scope per iteration (scoped-in-singleton trap), unhandled-exception host behaviour, graceful stop via token. Partly overlaps the code on intermediate/16 — this page owns *how to write one*; 16 keeps lifecycle/shutdown. | Host start → `ExecuteAsync` loop; each tick opens/disposes a DI scope; stop token cancels the loop. | intermediate/16, intermediate/3, webapi/intermediate/12 |
+| intermediate/22 | Intermediate | ⭐ | Health Checks | "How do you expose liveness and readiness for an ASP.NET Core app?" | `AddHealthChecks`/`MapHealthChecks`, liveness vs readiness (tag filtering), dependency checks (DB, downstream), how Kubernetes/load balancers consume them. | Orchestrator probing `/health/live` and `/health/ready`; ready fans out to DB/cache checks. | intermediate/16, webapi/advanced/3, webapi/advanced/6 |
+| intermediate/23 | Intermediate | ⭐ | Options Pattern Validation | "How do you make the app fail at startup if a config section is invalid?" | `AddOptions<T>().Bind().ValidateDataAnnotations().ValidateOnStart()`, `IValidateOptions<T>`; the lifetime comparison stays on intermediate/12. | appsettings → bound options → validator gate → app starts / startup throws. | intermediate/12, intermediate/1 |
+| intermediate/24 | Intermediate | ⭐ | HttpContext & IHttpContextAccessor *(own gap-hunt)* | "How do you get the current user or request outside a controller, and what's wrong with `IHttpContextAccessor`?" | What `HttpContext` carries, per-request lifetime, accessor use (`AsyncLocal`), why not to read it in singletons/background threads. | One request's `HttpContext` shared by middleware → controller → service via accessor; dashed "background thread = null" branch. | intermediate/4, intermediate/3, intermediate/16 |
+| intermediate/25 | Intermediate | ⭐ | SignalR vs. WebSockets vs. SSE *(own gap-hunt)* | "How would you push real-time updates to browsers from ASP.NET Core?" | Transports + fallback, hubs, groups, scale-out needs a backplane; when plain polling or SSE is enough. | Client ↔ hub with transport negotiation arrows; second instance needing a backplane. | intermediate/4, webapi/intermediate/12 |
+| advanced/3 *(split of advanced/2)* | Advanced | ⭐ | Slow MVC App Under Load — Triage | "You inherit a slow MVC app — what's your first diagnostic step?" | Profile/APM first, then the usual suspects (sync-over-async, N+1, chatty calls, missing caching, large views); never a blind checklist. | Funnel: symptom → measure (APM/trace) → hot path → fix class, no code before measurement. | advanced/1, webapi/advanced/5, webapi/advanced/6, efcore N+1 pages |
+| advanced/4 | Advanced | 🔥 | Identity, OAuth2 & OpenID Connect | "What's the difference between OAuth2 and OIDC, and where does ASP.NET Core Identity fit?" | OAuth2 = delegated authorisation, OIDC = identity layer (ID token), auth-code + PKCE flow, external IdP vs ASP.NET Core Identity as the local user store, scope/claims mapping. | Auth-code + PKCE sequence: browser → app → IdP → code → token exchange. | intermediate/13, intermediate/14, intermediate/5, webapi/intermediate/9, webapi/intermediate/20 |
+
+### Retitles / scope changes to existing pages
+
+| Page | Old title | New title | What moves out |
+|---|---|---|---|
+| basic/5 | Filters, CORS, HTTPS & Logging | Filters — Hooks Around an Action *(nav short: "Filters")* | CORS is **dropped from this page** (fully covered by webapi/basic/3 — leave a one-line cross-link); HTTPS → new basic/7; Logging → new basic/8. Page keeps the umbrella filter concept (action/exception/authorization filters, filter vs middleware); the existing Common Trap becomes a pointer to webapi/basic/3. Stays ⭐; add filter-vs-middleware only if it does not duplicate intermediate/10. |
+| advanced/2 | Model Binding Internals & MVC vs. Web API vs. Razor Pages | Model Binding Internals | MVC/Web API/Razor comparison + its three-pipeline diagrams → new intermediate/18; the "slow MVC app" follow-up → new advanced/3. Keeps binder source priority (form > body > route > query), `[FromHeader]`/`[FromServices]` outside the race, custom `IModelBinder`. Stays 🧠. |
+| intermediate/16 | The Generic Host & Application Lifetime | *(unchanged)* | Scope note only: how to *write* a `BackgroundService` is owned by new intermediate/21; 16 keeps host lifecycle/shutdown. |
+
+### Gap-hunt log (this addendum)
+
+- **Added:** Minimal APIs, IHttpClientFactory, BackgroundService patterns, Health Checks, Options validation, Identity/OAuth2/OIDC, LTS vs STS & .NET Standard; own hunt: HttpContext/`IHttpContextAccessor`, SignalR.
+- **Dropped:** IExceptionHandler/ProblemDetails — dotnet/intermediate/15 already covers global handling and names RFC 7807; the dedicated ProblemDetails page belongs to the Web API track (webapi/intermediate/16). CORS as a .NET page — webapi/basic/3 owns it. Serilog/log-sink setup as its own page — folded into basic/8. Output caching / rate limiting — webapi intermediate/11 and basic/5 own them.
+- **Open check before Phase 7:** exact LTS/STS support windows must be verified against Microsoft's current policy (accuracy.md).

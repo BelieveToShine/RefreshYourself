@@ -31,7 +31,7 @@ each such pair gets cross-linked rather than re-taught.
 specific third-party library's own API (Redux, TanStack Query, etc.) stay out — see the
 taxonomy's own "Scope boundary" section.
 
-## Phase 3 — Grouping into pages (41 pages)
+## Phase 3 — Grouping into pages (41 pages at this phase; 43 after the post-Phase-7 gap-hunt; 47 after the 2026-10-07 gap pages)
 
 Default is one taxonomy section → one page, same as every other track. Three sections were
 large or broad enough after Phase 1's additions to need a split, and one was split into five
@@ -81,7 +81,7 @@ scenario) during Phase 1 and already matches it; nothing needed to move tiers.
 | Tier | Count | Pages |
 |---|---|---|
 | Basic | 8 | What Is React; Components & JSX; Props; State; Events; Conditional Rendering; Lists & Keys; Hooks — Rules & Overview |
-| Intermediate | 15 | useEffect — Fundamentals & Cleanup; Effect Timing Variants & StrictMode; useRef & Ref Callbacks; useMemo, useCallback & React.memo; Custom Hooks; Context API; Component Communication & Composition; Forms; Data Fetching; Routing; Rendering Behaviour; Performance Optimization Basics; Error Handling & Error Boundaries; Testing React Components; Accessibility |
+| Intermediate | 15 (17 final — see overview.md) | useEffect — Fundamentals & Cleanup; Effect Timing Variants & StrictMode; useRef & Ref Callbacks; useMemo, useCallback & React.memo; Custom Hooks; Context API; Component Communication & Composition; Forms; Data Fetching; Routing; Rendering Behaviour; Performance Optimization Basics; Error Handling & Error Boundaries; Testing React Components; Accessibility |
 | Advanced | 18 | Reconciliation & Fiber; Concurrent Rendering; Suspense; Server-Side Rendering & Hydration; Server Components; Actions, useOptimistic & the use() Hook; State Management Architecture; React Architecture — Structure Within One App; React Architecture — Beyond One App; Design Patterns; Testing at Scale; Security; Production Performance; and the 5 Real-world Scenario pages |
 
 ## Phase 5 — Priority (🔥 Must Know / ⭐ Should Know / 🧠 Deep Dive — independent of tier)
@@ -105,7 +105,7 @@ and stays 🧠.
 | ⭐ Should Know | Events; Conditional Rendering; Effect Timing Variants & StrictMode; useRef & Ref Callbacks; useMemo, useCallback & React.memo; Component Communication & Composition; Forms; Routing; Testing React Components; Accessibility; Suspense; Design Patterns; Testing at Scale; Scenario: Codebase & Team Growing Pains; **Refs — Forwarding & Imperative APIs; Automatic Batching & flushSync** |
 | 🧠 Deep Dive | Reconciliation & Fiber; Concurrent Rendering; Server Components; Actions, useOptimistic & the use() Hook; React Architecture — Beyond One App |
 
-22 🔥 / 14 ⭐ / 5 🧠 across 41 pages — more 🔥-heavy than other tracks, proportionally, which
+22 🔥 / 14 ⭐ / 5 🧠 across the original 41 pages (43 final) — more 🔥-heavy than other tracks, proportionally, which
 tracks reality: a much larger share of experienced-level React interview content is genuinely
 "expect this," not a rare deep-cut, especially through Basic and Intermediate. The 2 gap-hunt
 additions are both ⭐ — real, commonly-asked practical topics, but neither is the kind of thing
@@ -163,7 +163,7 @@ section, not tier — the site-wide convention). Numbering below is the tier-fol
 | 36 | Refs — Forwarding & Imperative APIs | Intermediate | ⭐ | intermediate/16.html |
 | 37 | Automatic Batching & flushSync | Intermediate | ⭐ | intermediate/17.html |
 
-New totals: **Basic 8, Intermediate 17, Advanced 18 — 43 pages.**
+New totals at that point: **Basic 8, Intermediate 17, Advanced 18 — 43 pages** (now 47 after the 2026-10-07 gap pages: Intermediate 21).
 
 Both tiered Intermediate, not Basic or Advanced: each is a practical-usage/comparison question
 (the exact shape [`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)
@@ -196,3 +196,19 @@ already in place. Neither is internals/architecture-depth enough for Advanced.
 None in the 41 original pages, already written, verified, and live. The 2 gap-hunt additions
 above (Refs — Forwarding & Imperative APIs; Automatic Batching & flushSync) are the next and
 only remaining Phase 7 work for this track.
+
+
+## Addendum 2026-10-06 — gap pages (Phases 2–6)
+
+Source: `docs/review-2026-10-06.md` §5 + a fresh gap-hunt against the real pages (grep-checked 2026-10-06). **Status: all pages in this addendum were written and wired on 2026-10-07** (track total 43 -> 47: Basic 8, Intermediate 21, Advanced 18). Numbers = next free in tier (numbering permanent, per `content-writing.md` 2026-10-06 amendment); on-disk counts before this addendum: Basic 8, Intermediate 17, Advanced 18 = 43. All are interview-level concept pages: no library API tours (see Track-specific decisions above).
+
+| # | Tier | Pri | Title | Interview question | Scope (one sentence) | Diagram idea | Cross-links |
+|---|---|---|---|---|---|---|---|
+| 38 | Intermediate (`intermediate/18.html`) | 🔥 | useReducer vs. useState | "When would you reach for `useReducer` instead of `useState`?" | Many related fields or transitions that depend on previous state go through one reducer (state, action) -> new state; not Redux; dispatch identity is stable. | Actions flowing into one reducer box -> new state, vs. several scattered setters. | basic/4, basic/8, intermediate/6, advanced/10, advanced/6 |
+| 39 | Intermediate (`intermediate/19.html`) | ⭐ | Server State vs. Client State (TanStack Query / SWR) | "Why use React Query or SWR instead of useEffect + fetch + useState?" | Server data is a cache you do not own: caching, dedupe, staleTime/refetch, retries, invalidation after mutation — concept only, no API tour. | Components A and B ask the same key -> one cache entry -> one request; stale -> background refetch arrow. | intermediate/9, intermediate/1, advanced/7, advanced/6 |
+| 40 | Intermediate (`intermediate/20.html`) | ⭐ | Redux vs. Zustand vs. Context | "Context, Redux or Zustand — how do you choose for client state?" | Context re-renders all consumers and suits low-frequency values; Redux = single store + reducers + devtools + discipline; Zustand = small selector-subscribed store; choose by scale/team, not fashion. | Three small store shapes showing which components re-render on one update. | intermediate/6, advanced/7, intermediate/18, intermediate/19 |
+| 41 | Intermediate (`intermediate/21.html`) | ⭐ | Vite vs. Next.js (Choosing a React Setup) | "Create React App is deprecated — what do you start a project with, and when Next.js?" | Vite = fast dev server/bundler for a client-rendered SPA; Next.js = framework adding routing, SSR/RSC, data loading; the question is "do I need server/framework features". | Decision flow: SPA/no SEO -> Vite; SEO/SSR/RSC/routing included -> framework. | advanced/4, advanced/5, intermediate/10 |
+
+New totals once written: Basic 8, Intermediate 21, Advanced 18 = **47**. Accuracy flags: CRA is no longer recommended by react.dev — word softly; assert no library versions.
+
+**Dropped / folded:** React Compiler (already in advanced/13); TypeScript-with-React (language scope); Storybook, i18n libs (third-party API); `useSyncExternalStore` (already advanced/7).

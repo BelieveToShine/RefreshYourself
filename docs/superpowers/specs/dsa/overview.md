@@ -3,7 +3,7 @@
 **Start here for anything DSA-related.** See [`docs/superpowers/specs/README.md`](../README.md)
 for what this file is and the process for keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 30 pages written
+## Status — Phases 1–7 complete, all 33 pages written (30 original + 3 gap pages added 2026-10-07)
 
 - **Phase 1** — this session drafted an initial 19-group taxonomy (organized by data-structure/
   algorithm family), shared it with the user for review.
@@ -94,7 +94,7 @@ for what this file is and the process for keeping it in sync with the live pages
 | 9 | Sorting | 🔥 | ✅ |
 | 10 | Bit Manipulation | ⭐ | ✅ |
 
-## Intermediate (12 topics) — 12 written
+## Intermediate (14 topics) — 14 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -110,8 +110,10 @@ for what this file is and the process for keeping it in sync with the live pages
 | 10 | Intervals & Sweep Line | ⭐ | ✅ |
 | 11 | Balanced Trees | ⭐ | ✅ |
 | 12 | Tries | ⭐ | ✅ |
+| 13 | Kadane's Algorithm (Maximum Subarray) | 🔥 | ✅ |
+| 14 | Quickselect (Kth Largest Element) | ⭐ | ✅ |
 
-## Advanced (8 topics) — 8 written
+## Advanced (9 topics) — 9 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -123,6 +125,7 @@ for what this file is and the process for keeping it in sync with the live pages
 | 6 | Scale & Performance Scenarios | ⭐ | ✅ |
 | 7 | Segment Tree & Fenwick Tree | 🧠 | ✅ |
 | 8 | String Algorithms | 🧠 | ✅ |
+| 9 | Design an LRU Cache | 🔥 | ✅ |
 
 ## Where the roadmap came from
 
@@ -167,3 +170,17 @@ found and fixed along the way, not glossed over). The 29 files with at least one
 the one manual terminal-page pager fix, and the `assets/nav-index.js` tier entries added during
 site wiring are also documented above, not silently corrected. Expect a review/feedback pass once
 the user goes through it, same as every other completed track.
+
+## Code-language convention (decided with the user 2026-10-06)
+
+DSA pages use three code-card languages, deliberately:
+
+- **C#** — the default for *implementations* (matches the user's .NET stack); chip says `C#`.
+- **Pseudocode** — for *algorithm ideas* where the shape matters more than syntax (chip says `Pseudocode`).
+- **Python** — only where it is the clearest way to show the idea (e.g. short stable counting sort);
+  chip says `Python` and comments use `#`.
+
+Every code card's language chip must name its real language, and comments must use that language's
+comment syntax. New DSA pages follow this split; existing pages are not rewritten to match.
+
+- **Gap pages added 2026-10-07 (planned 2026-10-06):** 3 gap pages written and wired (30 -> 33) — Intermediate 13 Kadane's Algorithm (Maximum Subarray), 14 Quickselect (Kth Largest Element); Advanced 9 Design an LRU Cache - see the `Addendum 2026-10-06` section in [`roadmap.md`](roadmap.md). Counts: Basic 10, Intermediate 14, Advanced 9.

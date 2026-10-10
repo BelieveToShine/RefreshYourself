@@ -3,40 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How does Aurora's storage architecture let it scale reads further than standard RDS?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Aurora & Database Architecture — AWS Intermediate — RefreshYourself">
+<meta property="og:description" content="How does Aurora's storage architecture let it scale reads further than standard RDS?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <title>Aurora & Database Architecture — AWS Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body data-root="../../" data-tier-key="aws/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
 
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
-      <span class="gicon">🔎</span>
+      <span class="gicon" aria-hidden="true">🔎</span>
       <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
-      <span class="gkey">/</span>
+      <span class="gkey" aria-hidden="true">/</span>
       <div class="gsearch-results" role="listbox"></div>
     </div>
   </div>
@@ -54,7 +46,7 @@
   </nav>
 </div>
 
-<main class="wrap">
+<main class="wrap" id="main">
   <section class="hero">
     <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ AWS · Intermediate · Should Know</div>
     <h1>Aurora's replicas share <span class="hl hl-basic">one storage layer</span> — that's the whole trick</h1>
@@ -77,7 +69,7 @@
           <div class="wc-head">🔗 Aurora</div>
           <div class="wc-ps">
             <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Standard RDS read replicas each keep their own copy and catch up asynchronously, which caps how many replicas you can add before lag and failover time both get worse.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Aurora puts one shared, self-healing storage layer under the primary and every replica, so up to 15 replicas all read the same live data — lag stays single-digit ms, and failover just repoints traffic instead of re-attaching storage.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Aurora puts one shared, self-healing storage layer under the primary and every replica, so up to 15 replicas all read the same live data — lag is usually much less than 100 milliseconds, and failover just repoints traffic instead of waiting on a separate copy.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Aurora = one shared storage layer under many computes.</span></div>
         </div>
@@ -138,7 +130,7 @@
       <text x="155" y="204" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">🗄️ Shared storage layer</text>
       <text x="155" y="222" text-anchor="middle" font-size="9.5" fill="#5b6472">6 copies · 3 AZs · auto-healing</text>
 
-      <text x="155" y="252" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">✅ replica lag: single-digit ms</text>
+      <text x="155" y="252" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">✅ replica lag: typically ms</text>
 
       <!-- Right: standard RDS — each replica, own copy -->
       <g filter="url(#shA)"><rect x="352" y="40" width="268" height="250" rx="16" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
@@ -172,7 +164,7 @@
 
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
-    <p class="tline"><b>"Aurora replicas lag the same way RDS read replicas do."</b> They don't — Aurora replicas read from the same shared storage layer as the primary, so lag is typically single-digit milliseconds, while standard RDS read replicas copy over the network asynchronously, so their lag is real and meaningfully higher.</p>
+    <p class="tline"><b>"Aurora replicas lag the same way RDS read replicas do."</b> They don't — Aurora replicas read from the same shared storage layer as the primary, so lag is usually much less than 100 milliseconds, while standard RDS read replicas copy over the network asynchronously, so their lag depends on the replication and can be higher.</p>
   </div>
 
   <div class="followup">
@@ -195,14 +187,14 @@
   <details class="explain toggle">
     <summary>📖 Explanation <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <p>Aurora <b>decouples compute from storage</b>. Underneath the primary and every read replica sits one distributed, self-healing storage layer, automatically replicated across 6 copies in 3 Availability Zones. Because replicas read that same shared layer instead of keeping their own copy, replication lag is typically single-digit milliseconds, and Aurora supports up to 15 read replicas without each one duplicating the primary's data.</p>
-      <p><b>Aurora Serverless</b> auto-scales compute capacity up and down — even close to zero — based on load, which fits unpredictable or intermittent workloads well. Failover is faster than standard RDS Multi-AZ for the same reason replicas scale further: the storage layer is already shared, so promoting a replica means pointing traffic at data that's already current, not re-attaching storage first.</p>
+      <p>Aurora <b>decouples compute from storage</b>. Underneath the primary and every read replica sits one distributed, self-healing storage layer, automatically replicated across 6 copies in 3 Availability Zones. Because replicas read that same shared layer instead of keeping their own copy, replication lag is usually much less than 100 milliseconds (it can rise during heavy writes), and Aurora supports up to 15 read replicas without each one duplicating the primary's data.</p>
+      <p><b>Aurora Serverless</b> auto-scales compute capacity up and down — even close to zero — based on load, which fits unpredictable or intermittent workloads well. Failover is quick because the storage layer is already shared: promoting a replica means pointing traffic at data it already reads, with no replication to catch up.</p>
       <table class="cmp-table">
         <thead><tr><th></th><th>RDS</th><th>Aurora</th><th>DynamoDB</th></tr></thead>
         <tbody>
           <tr><th>Storage model</th><td>each replica keeps its own copy, replicated over the network</td><td>one shared, distributed storage layer under the primary and every replica</td><td>key-value/document storage, not the same relational "replica" model</td></tr>
-          <tr><th>Read scaling</th><td>a handful of replicas, each copying asynchronously</td><td>up to 15 replicas, all reading the same live storage</td><td>scales reads by partitioning, not by adding relational replicas</td></tr>
-          <tr><th>Failover speed</th><td>promotes a standby, has to re-attach storage</td><td>promotes a replica whose data is already current — no storage re-attach</td><td>no single primary to fail over the same way — requests hit a different partition/node</td></tr>
+          <tr><th>Read scaling</th><td>separate read replicas, each copying asynchronously</td><td>up to 15 replicas, all reading the same live storage</td><td>scales reads by partitioning, not by adding relational replicas</td></tr>
+          <tr><th>Failover speed</th><td>fails over to a standby that holds its own synchronously replicated copy of the data</td><td>promotes a replica that already reads the same shared storage</td><td>no single primary to fail over the same way — requests hit a different partition/node</td></tr>
           <tr><th>Best fit</th><td>a standard relational workload without Aurora's premium</td><td>relational workloads that need read scaling, fast failover, or serverless elasticity</td><td>massive scale, simple access patterns, no cross-table joins/transactions</td></tr>
         </tbody>
       </table>

@@ -3,40 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What is a descriptor? How does property actually work internally?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Descriptors — Python Advanced — RefreshYourself">
+<meta property="og:description" content="What is a descriptor? How does property actually work internally?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <title>Descriptors — Python Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body data-root="../../" data-tier-key="python/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
 
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
-      <span class="gicon">🔎</span>
+      <span class="gicon" aria-hidden="true">🔎</span>
       <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
-      <span class="gkey">/</span>
+      <span class="gkey" aria-hidden="true">/</span>
       <div class="gsearch-results" role="listbox"></div>
     </div>
   </div>
@@ -54,7 +46,7 @@
   </nav>
 </div>
 
-<main class="wrap">
+<main class="wrap" id="main">
   <section class="hero">
     <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 Python · Advanced · Deep Dive</div>
     <h1><code>property</code> is just a <span class="hl hl-adv">descriptor</span> with a friendlier syntax — that's the whole trick behind ORM field definitions too</h1>
@@ -64,11 +56,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Separates "used <code>@property</code>" from "understands how Python's attribute lookup actually works" — a common way interviewers test real object-model depth.</li>
-        <li>Comes up any time framework internals get discussed — Django model fields, SQLAlchemy columns, and even <code>classmethod</code>/<code>staticmethod</code> lean on this exact mechanism.</li>
-        <li>A frequent follow-up right after any <code>property</code> question, since most candidates can use it but few can explain what it actually is underneath.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🪝 Descriptor</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Python normally just hands back whatever value sits in <code>__dict__</code>, so a class cannot customize reading or writing an attribute.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A descriptor is a class attribute with <code>__get__</code> (and maybe <code>__set__</code>) that Python calls instead of returning a plain value.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Descriptor = <code>__get__</code> / <code>__set__</code> on a class attribute.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🔓 Non-data descriptor</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A method must still be overridable on a single instance.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It defines only <code>__get__</code>, so an instance <code>__dict__</code> entry of the same name shadows it — a plain method is one.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Non-data: instance <code>__dict__</code> wins.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🔒 Data descriptor</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Something like a property must not be bypassed by an instance attribute of the same name.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It defines <code>__get__</code> plus <code>__set__</code> (or <code>__delete__</code>), so it always wins over the instance <code>__dict__</code> — <code>property</code> is one.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Data: the descriptor always wins.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -266,6 +279,63 @@
       <code>quantity</code> on the class. That object <b>is</b> the same mechanism as
       <code>PositiveNumber</code> above, just written for you.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You want to check a value every time someone sets an attribute</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="15" y="14" width="205" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="117" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">✏️ order.quantity = -1</text>
+              <path d="M220,33 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="14" width="175" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="377" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🛡️ setter raises error</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>@property</code> builds a data descriptor on the class. Assigning to the attribute calls its setter, so your check runs on every write.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>@property</code> = a ready-made descriptor.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> You need the same check on many attributes, in many classes</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="15" y="14" width="205" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="117" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#16a34a">🧱 PositiveNumber()</text>
+              <path d="M220,33 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="14" width="175" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="377" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#16a34a">♻️ reused on each field</text>
+            </svg>
+          </div>
+          <p class="uc-what">A descriptor class is written once and used as a class attribute many times. <code>__set_name__</code> tells it which attribute name it was given.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One descriptor class, many fields.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">3</span> An instance already has an entry with the same name as a class attribute</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="15" y="14" width="205" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="117" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#b45309">📦 instance __dict__</text>
+              <path d="M220,33 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="14" width="175" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="377" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#b45309">⚖️ data descriptor wins</text>
+            </svg>
+          </div>
+          <p class="uc-what">A data descriptor (<code>__get__</code> plus <code>__set__</code>, like <code>property</code>) beats the instance <code>__dict__</code>. A plain method is a non-data descriptor, so an instance entry hides it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Data descriptor beats instance; a method does not.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

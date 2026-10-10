@@ -3,40 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LINQ → SQL Translation — EF Core Intermediate — RefreshYourself</title>
+<meta name="description" content="How does EF Core turn a LINQ query into SQL?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="LINQ → SQL Translation &amp; Inspecting Generated SQL — EF Core Intermediate — RefreshYourself">
+<meta property="og:description" content="How does EF Core turn a LINQ query into SQL?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>LINQ → SQL Translation &amp; Inspecting Generated SQL — EF Core Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body data-root="../../" data-tier-key="efcore/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
 
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
-      <span class="gicon">🔎</span>
+      <span class="gicon" aria-hidden="true">🔎</span>
       <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
-      <span class="gkey">/</span>
+      <span class="gkey" aria-hidden="true">/</span>
       <div class="gsearch-results" role="listbox"></div>
     </div>
   </div>
@@ -54,11 +46,11 @@
   </nav>
 </div>
 
-<main class="wrap">
+<main class="wrap" id="main">
   <section class="hero">
     <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ EF Core · Intermediate · Should Know</div>
     <h1><code>LINQ</code> → SQL — <span class="hl hl-inter">what happens when it won't translate?</span></h1>
-    <p class="interview-q">"How does EF Core turn a LINQ query into SQL, and how would you inspect the actual SQL it generates?"</p>
+    <p class="interview-q">"How does EF Core turn a LINQ query into SQL?"</p>
   </section>
 
   <details class="topic-hook toggle">
@@ -175,10 +167,10 @@
 
   <div class="keypoints">
     <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
-    <p class="kp-primary">"My LINQ query builds an expression tree, and EF Core's relational provider walks that tree and translates the operators it recognizes into parameterized SQL. Anything it doesn't recognize throws by default from EF Core 3.0 onward — it doesn't silently fall back to running in memory. To see the actual SQL, I call <code>ToQueryString()</code> before running it, or turn on <code>LogTo()</code> to see it as it executes."</p>
+    <p class="kp-primary">"My LINQ query builds an expression tree, and EF Core's relational provider walks that tree and translates the operators it recognizes into parameterized SQL. Anything it doesn't recognize in a filter or sort throws by default from EF Core 3.0 onward — it doesn't silently fall back to running in memory (only the final <code>Select</code> can still run in memory). To see the actual SQL, I call <code>ToQueryString()</code> before running it, or turn on <code>LogTo()</code> to see it as it executes."</p>
     <ul>
       <li><code>ToQueryString()</code> <span class="hl hl-blue">→ prints the SQL without running it</span> (EF Core 5+).</li>
-      <li><code>LogTo(...)</code> <span class="hl hl-inter">→ shows the SQL as it actually executes</span>, parameters included.</li>
+      <li><code>LogTo(...)</code> <span class="hl hl-inter">→ shows the SQL as it actually executes</span>; parameter values show only with <code>EnableSensitiveDataLogging()</code>.</li>
       <li>Untranslatable code <span class="hl hl-hot">→ throws by default</span> since EF Core 3.0, no silent fallback.</li>
       <li>Genuinely need it client-side? <span class="hl hl-basic">→ materialize first</span> (<code>.ToList()</code>/<code>.AsEnumerable()</code>), then run it.</li>
     </ul>
@@ -200,7 +192,8 @@
       real performance problems — pulling far more rows than intended and filtering them client-
       side without anyone noticing. <span class="hl hl-inter">EF Core 3.0 changed that default</span>:
       a piece of the query it can't translate now throws at runtime instead, so a hidden fallback
-      never happens by accident.</p>
+      never happens by accident. One exception: a method call in the <em>final</em> <code>Select</code>
+      can still run in memory, because it only shapes rows that already came back.</p>
 
       <p>Seeing the generated SQL is a separate, everyday skill worth having on hand:</p>
 
@@ -208,7 +201,7 @@
         <thead><tr><th></th><th><code>ToQueryString()</code></th><th><code>LogTo()</code></th></tr></thead>
         <tbody>
           <tr><th>Runs the query?</th><td class="no">❌ no, just builds the string</td><td>✅ yes, logs real executions</td></tr>
-          <tr><th>Shows parameter values?</th><td>✅ yes, as a runnable snippet</td><td>✅ yes, inline in the log</td></tr>
+          <tr><th>Shows parameter values?</th><td>✅ yes, as a runnable snippet</td><td>✅ only with <code>EnableSensitiveDataLogging()</code></td></tr>
           <tr><th>Best for</th><td>checking a query while writing it</td><td>watching everything the app sends live</td></tr>
           <tr><th>Available since</th><td>EF Core 5.0</td><td>EF Core 5.0</td></tr>
         </tbody>
@@ -242,9 +235,9 @@ Console.WriteLine(sql);</code></pre>
     .LogTo(Console.WriteLine, LogLevel.Information);  <span class="cx-cmt">// logs real SQL as it runs</span>
 
 <span class="kw">var</span> orders = context.Orders.Where(o =&gt; o.Total &gt; <span class="num">100</span>).ToList();
-<span class="cx-ok">// ✅ console now shows the exact SQL, with parameter values, right when it executes</span></code></pre>
+<span class="cx-ok">// ✅ console now shows the exact SQL right when it executes (values need EnableSensitiveDataLogging)</span></code></pre>
       </div>
-      <p class="cx-note"><code>LogTo()</code> shows the SQL <b>as it actually executes</b> — including real parameter values.</p>
+      <p class="cx-note"><code>LogTo()</code> shows the SQL <b>as it actually executes</b>; real parameter values appear only if you also turn on <code>EnableSensitiveDataLogging()</code>.</p>
 
       <div class="code-card">
         <div class="cc-head">
@@ -316,8 +309,8 @@ Console.WriteLine(sql);</code></pre>
               <text x="385" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#134e4a">📜 LogTo() console</text>
             </svg>
           </div>
-          <p class="uc-what">Turning on <code>LogTo()</code> logs every real SQL statement, parameter values included, exactly as it executes — the way to watch everything the app actually sends while it runs.</p>
-          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Watching it run → <code>LogTo()</code> shows the SQL with real parameter values.</span></div>
+          <p class="uc-what">Turning on <code>LogTo()</code> logs every real SQL statement exactly as it executes — the way to watch everything the app actually sends while it runs.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Watching it run → <code>LogTo()</code> shows the SQL as it executes.</span></div>
         </div>
 
       </div>

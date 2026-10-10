@@ -1,6 +1,7 @@
 # Rule: Tier Side Navigation (topic-to-topic left menu)
 
-Shipped feature (not a prototype) — live on all 14 `csharp/basic` pages. Read this fully
+Shipped feature (not a prototype) — live on every tier of every track (every topic page that
+carries `data-tier-key`; `assets/nav-index.js` has an entry per tier). Read this fully
 before wiring it up for a new tier (e.g. Azure Basic) — it explains three real bugs that were
 found and fixed while building it, and the pattern that avoids them.
 
@@ -12,8 +13,11 @@ every topic in the current track+tier, in order, grouped the same way the tier i
 them ("Questions 1–10" / "11–14" / …), with the current page highlighted. Requested so a reader
 can jump topic-to-topic without going back to the index every time.
 
-- **Desktop only.** Below `960px` it's hidden entirely (`style.css`, `@media (max-width:960px)`
-  under the `.tier-nav` rules) — the existing sticky bottom `.fixed-pager` (see
+- **Rail on desktop, toggle panel on narrow screens (changed 2026-10-07).** Above `960px` it is the
+  sticky left rail. At or below `960px` the rail is hidden and `site.js` instead renders a full-width
+  **"☰ Topics in this tier"** button (`.tn-toggle`, `aria-expanded`/`aria-controls`) above the topic;
+  tapping it adds `body.tn-open`, which shows the same list as a normal block (max 60vh, scrollable).
+  Before this, tablets/phones had only the pager. The existing sticky bottom `.fixed-pager` (see
   [content-structure.md](content-structure.md)) is the mobile equivalent. They are two
   independent mechanisms reading two different sources (`.fixed-pager` reads the page's own
   `.pager` block; `.tier-nav` reads `assets/nav-index.js`) — not a fallback of one another, so
@@ -129,10 +133,17 @@ These three cost real iteration time. Do not re-introduce them.
    instead.
 
 There's a fourth thing worth knowing but not a bug: item text is inserted via `innerHTML`
-through an `esc()` helper (escapes `&`, `<`, `>`) because titles can contain literal
-angle brackets (`Array vs. List<T>`). `assets/search-index.js`'s own dropdown has this exact
-unescaped-title problem already (it inserts `item.title` raw) — don't copy that pattern here;
-always route new text through `esc()` before it goes into an HTML string.
+through the shared top-level `esc()` helper in `site.js` (escapes `&`, `<`, `>`, `"`) because
+titles can contain literal angle brackets (`Array vs. List<T>`). The search dropdown uses the same
+helper — always route new text through `esc()` before it goes into an HTML string.
+
+## Accessibility
+
+- The `<aside class="tier-nav">` carries `role="navigation"` and an `aria-label` ("<Track> <Tier>
+  topics"), so it is a landmark.
+- The current topic's link gets `aria-current="page"` (alongside the `.active` class).
+- Keyboard focus uses `:focus-visible` (a ring on the row, and the hover-detail expands on
+  `:focus-visible` too), not plain `:focus`, so mouse clicks don't leave a ring behind.
 
 ## Visual design (approved)
 

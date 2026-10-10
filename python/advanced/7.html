@@ -3,40 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What is the GIL, and why does CPython have one? Does async sidestep the GIL problem, or not?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="GIL — Python Advanced — RefreshYourself">
+<meta property="og:description" content="What is the GIL, and why does CPython have one? Does async sidestep the GIL problem, or not?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <title>GIL — Python Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body data-root="../../" data-tier-key="python/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
 
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
-      <span class="gicon">🔎</span>
+      <span class="gicon" aria-hidden="true">🔎</span>
       <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
-      <span class="gkey">/</span>
+      <span class="gkey" aria-hidden="true">/</span>
       <div class="gsearch-results" role="listbox"></div>
     </div>
   </div>
@@ -54,7 +46,7 @@
   </nav>
 </div>
 
-<main class="wrap">
+<main class="wrap" id="main">
   <section class="hero">
     <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Python · Advanced · Must Know</div>
     <h1>The GIL is a real constraint on <span class="hl hl-hot">CPU-bound threads</span> — but it's not, and has never quite been, <span class="hl hl-inter">"Python can't use more than one core, period"</span></h1>
@@ -64,14 +56,32 @@
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Separates people who understand CPython's actual constraint from people who've only
-        memorized "Python is single-threaded" as a blanket rule.</li>
-        <li>Comes up the moment a candidate proposes threading to speed up a CPU-heavy loop, or
-        calls <code>asyncio</code> "true parallelism."</li>
-        <li>A common opener before a "how would you scale a CPU-bound Python service" architecture
-        question.</li>
-      </ul>
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🧵 Threading</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Splitting a CPU-heavy loop across threads shows no speedup, because the GIL lets only one thread run Python bytecode at a time.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Threads still help I/O-bound work, since a thread releases the GIL while it waits.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Threads help I/O waits, not CPU work.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🏭 Multiprocessing</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>CPU-bound work needs real parallelism, which threads in one process cannot give.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Each process has its own interpreter and its own GIL, so the work runs on several cores at once — at the cost of passing data between processes.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Separate processes = separate GILs.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">⚡ asyncio</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Treating <code>asyncio</code> as true parallelism leaves CPU-heavy code just as slow as before.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It is one thread switching at <code>await</code> points — good for many I/O waits, but still one thing running at a time.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">asyncio = cooperative, not parallel.</span></div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -85,7 +95,7 @@
     </div>
     <p class="rthink"><b class="tc-label">Think:</b>
       <span class="tc-line"><b><code>I/O-bound</code></b> → threading or asyncio help</span>
-      <span class="tc-line"><b><code>CPU-bound</code></b> → needs multiprocessing (or a still-experimental free-threaded build)</span>
+      <span class="tc-line"><b><code>CPU-bound</code></b> → needs multiprocessing (or an opt-in free-threaded build)</span>
     </p>
   </div>
 
@@ -182,7 +192,7 @@
     <p class="tline"><b>"Python can only use one CPU core, period" is not quite right.</b> That's
     true only for CPU-bound bytecode execution inside one standard, GIL-holding CPython process —
     multiprocessing has always given genuine parallel execution across cores, and free-threaded
-    CPython (PEP 703, still experimental) is actively changing even the GIL-bound picture.</p>
+    CPython (PEP 703, an optional build) is actively changing even the GIL-bound picture.</p>
   </div>
 
   <div class="followup">
@@ -208,8 +218,8 @@
       needs multiprocessing (separate GILs) instead.</li>
       <li><code>asyncio</code> is <span class="hl hl-teal">single-threaded, cooperative</span>
       concurrency — it helps I/O concurrency, it doesn't add parallel CPU execution.</li>
-      <li><span class="hl hl-adv">Free-threaded CPython (PEP 703)</span> is real but still
-      experimental, starting with Python 3.13 — not yet the mainstream default.</li>
+      <li><span class="hl hl-adv">Free-threaded CPython (PEP 703)</span> is officially
+      supported from Python 3.14 (experimental in 3.13) — but still an optional, opt-in build, not the default.</li>
     </ul>
   </div>
 
@@ -235,9 +245,9 @@
       execution — it's still single-threaded, cooperative concurrency: one thing runs at a time,
       everything else waits its turn at an <code>await</code> point. It helps I/O-bound
       concurrency for essentially the same underlying reason threading does, not by escaping the
-      GIL's CPU-bound limitation. Separately, <b>free-threaded CPython (PEP 703)</b> is an active,
-      still-experimental development — a no-GIL build shipping starting with Python 3.13 — worth
-      knowing about, but not yet a settled, mainstream default.</p>
+      GIL's CPU-bound limitation. Separately, <b>free-threaded CPython (PEP 703)</b> is a no-GIL
+      build that was experimental in Python 3.13 and is officially supported from Python 3.14 — it
+      is still an optional, opt-in build, not the default. PEP 779 calls this stage &ldquo;officially supported but still optional&rdquo;; making it the default would be a later phase. The 3.14 release notes put the single-thread slowdown at roughly 5&ndash;10%, and some libraries may not support it yet.</p>
 
       <table class="cmp-table">
         <thead><tr><th></th><th>Threading</th><th>Multiprocessing</th><th><code>asyncio</code></th></tr></thead>
@@ -248,6 +258,63 @@
           <tr><th>Main cost</th><td>no CPU speedup for CPU-bound code</td><td>serialization overhead between processes</td><td>code must be written around <code>await</code></td></tr>
         </tbody>
       </table>
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your program spends its time waiting on network calls or disk</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="15" y="14" width="205" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="117" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#16a34a">🌐 threads waiting on I/O</text>
+              <path d="M220,33 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="290" y="14" width="175" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="377" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#16a34a">🔓 GIL released</text>
+            </svg>
+          </div>
+          <p class="uc-what">A thread that is waiting on I/O releases the GIL, so other threads can run Python code meanwhile. That is why threads really do help I/O-bound work.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">I/O-bound: threads help.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You add more threads to speed up a CPU-heavy pure-Python loop</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="15" y="14" width="205" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="117" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626">🧵 4 threads, CPU loop</text>
+              <path d="M220,33 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="290" y="14" width="175" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="377" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626">🔒 one runs at a time</text>
+            </svg>
+          </div>
+          <p class="uc-what">The GIL lets only one thread run Python bytecode at a time in one process. Extra threads just take turns, so there is no real speedup for CPU-bound code.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">CPU-bound threads don't run in parallel.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">3</span> You need real parallel CPU work across cores</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#6d28d9"/></marker></defs>
+              <rect x="15" y="14" width="205" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="117" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#6d28d9">⚙️ separate processes</text>
+              <path d="M220,33 H290" stroke="#6d28d9" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="290" y="14" width="175" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="377" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#6d28d9">🔒 each has own GIL</text>
+            </svg>
+          </div>
+          <p class="uc-what">Each process has its own interpreter and its own GIL, so CPU-bound work can run on several cores at once. The cost is passing data between processes.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Processes sidestep the GIL.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

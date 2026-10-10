@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How would you design an API that calls the client back? How do you secure and retry webhooks?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Webhooks — Web API Advanced — RefreshYourself">
+<meta property="og:description" content="How would you design an API that calls the client back? How do you secure and retry webhooks?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Webhooks — Web API Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Webhooks</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Web API · Advanced · Should Know</div>
+    <h1>Webhooks — your API <span class="hl hl-blue">calls the client back</span>, so <span class="hl hl-hot">prove it's really you</span></h1>
+    <p class="interview-q">"How would you design an API that calls the client back? How do you secure and retry webhooks?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔔 Webhook</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A callback URL is open to anyone, so a fake event can trigger real actions, and a delivery that fails while the receiver is down is simply lost.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Sign every payload (HMAC), retry with backoff until a 2xx, and make the receiver idempotent so a repeated delivery does no harm.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Webhook = signed POST, retried until 2xx, safe to receive twice.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Signature</code> <span class="rarrow">→</span> <b>HMAC</b> of the body + timestamp</p>
+      <p class="rrow"><code>Replay</code> <span class="rarrow">→</span> reject <b>old</b> timestamps</p>
+      <p class="rrow"><code>Retry</code> <span class="rarrow">→</span> <b>backoff + jitter</b>, then dead-letter</p>
+      <p class="rrow"><code>Receiver</code> <span class="rarrow">→</span> <b>2xx fast</b>, dedupe by event ID</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Signature</code></b> proves who sent it.
+    <b><code>Timestamp</code></b> proves it is new. <b><code>Event ID</code></b> proves you haven't done it already.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA9" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA9" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+        <marker id="arA9Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arA9Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arA9Rose" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">WEBHOOK DELIVERY — AT LEAST ONCE</text>
+
+      <g filter="url(#shA9)"><rect x="14" y="70" width="120" height="70" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="74" y="94" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🏭 Provider</text>
+      <text x="74" y="111" text-anchor="middle" font-size="10.5" fill="#5b6472">signs the body</text>
+      <text x="74" y="126" text-anchor="middle" font-size="10.5" fill="#5b6472">HMAC + timestamp</text>
+
+      <g filter="url(#shA9)"><rect x="265" y="70" width="140" height="70" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="335" y="94" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">📥 Receiver</text>
+      <text x="335" y="111" text-anchor="middle" font-size="10.5" fill="#5b6472">verify → dedupe → 2xx</text>
+      <text x="335" y="126" text-anchor="middle" font-size="10.5" fill="#5b6472">work happens later</text>
+
+      <g filter="url(#shA9)"><rect x="500" y="70" width="126" height="70" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="563" y="94" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ Delivered</text>
+      <text x="563" y="111" text-anchor="middle" font-size="10.5" fill="#5b6472">got a 2xx</text>
+      <text x="563" y="126" text-anchor="middle" font-size="10.5" fill="#5b6472">stop retrying</text>
+
+      <g filter="url(#shA9)"><rect x="250" y="200" width="170" height="56" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="335" y="222" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🔁 Retry later</text>
+      <text x="335" y="240" text-anchor="middle" font-size="10.5" fill="#5b6472">backoff + jitter</text>
+
+      <g filter="url(#shA9)"><rect x="500" y="200" width="126" height="56" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="563" y="222" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">☠️ Dead-letter</text>
+      <text x="563" y="240" text-anchor="middle" font-size="10.5" fill="#5b6472">after N tries</text>
+
+      <path d="M134,90 H265" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arA9)"/>
+      <text x="200" y="80" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">signed POST</text>
+
+      <path d="M405,105 H500" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA9Green)"/>
+      <text x="452" y="94" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">2xx</text>
+
+      <path d="M335,140 V200" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arA9Amber)"/>
+      <text x="345" y="174" text-anchor="start" font-size="10" font-weight="700" fill="#92400e">no 2xx / timeout</text>
+
+      <path d="M420,228 H500" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA9Rose)"/>
+
+      <path d="M250,228 H225 V122 H265" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arA9Amber)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="2s" repeatCount="indefinite"/>
+      </path>
+      <text x="215" y="180" text-anchor="end" font-size="10" font-weight="700" fill="#92400e">try again</text>
+    </svg>
+    <figcaption>Same event, sent again until a 2xx arrives — so the receiver must cope with duplicates.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A valid signature doesn't mean the request is new.</b> The signature only proves who
+    sent it — an attacker who captured a real request can send it again, so also check the timestamp
+    and skip event IDs you have already handled.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"The provider may deliver the same event twice — what does your receiver do?"</b>
+    It stores each event ID, skips one it has already seen, and still returns a 2xx so the provider
+    stops retrying. That is the same <a href="../basic/2.html">idempotency</a> idea, applied to a
+    callback.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd sign each webhook body with an HMAC and a timestamp, retry with
+    exponential backoff and jitter until the receiver returns a 2xx, move it to a dead-letter queue
+    after a limit, and make the receiver verify, dedupe by event ID, and acknowledge fast."</p>
+    <ul>
+      <li><code>Signature</code> → <span class="hl hl-blue">HMAC over the raw body</span>, compared in constant time.</li>
+      <li><code>Replay</code> → <span class="hl hl-hot">reject old timestamps</span> and event IDs already seen.</li>
+      <li><code>Retries</code> → <span class="hl hl-inter">backoff plus jitter</span>, then a dead-letter queue.</li>
+      <li><code>Receiver</code> → <span class="hl hl-basic">return 2xx fast</span>, do the work off the request.</li>
+      <li>Delivery is at least once → <span class="hl hl-adv">the receiver must be idempotent</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <b>webhook</b> flips polling around: the client registers a URL, and your API
+      <b>POSTs to it</b> when something happens. It is the callback option from
+      <a href="../intermediate/12.html">Async APIs</a> in depth. Two problems follow straight away:
+      the URL is public, so who is calling? And the receiver can be down, so what happens to the
+      event?</p>
+
+      <p>For <b>trust</b>, the provider signs the raw body (plus a timestamp) with a secret both
+      sides share, using <b>HMAC-SHA256</b>, and sends the result in a header. The receiver
+      recomputes it and compares in constant time. Putting the timestamp inside the signed data
+      stops <b>replay</b>: an old captured request fails the age check. For <b>failure</b>, the
+      provider retries with exponential backoff and jitter, and parks the event in a dead-letter
+      queue after a limit so a human can look. The same retry rules from
+      <a href="2.html">Retry vs. Resilience</a> apply.</p>
+
+      <p>Retries mean <b>at-least-once</b> delivery, and order is not guaranteed. So the receiver
+      checks the signature, checks the timestamp, <b>dedupes by event ID</b>, puts the work on a
+      queue, and returns a <b>2xx quickly</b> — a slow receiver looks like a failed one and gets
+      retried. See <a href="../intermediate/1.html">HTTP Verbs</a> for why repeat-safety matters.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Provider (sender)</th><th>Receiver</th></tr></thead>
+        <tbody>
+          <tr><th>Trust</th><td>signs the raw body with a shared secret</td><td>recomputes it and compares in constant time</td></tr>
+          <tr><th>Replay</th><td>includes a timestamp in the signed data</td><td>rejects requests that are too old</td></tr>
+          <tr><th>Failure</th><td>retries with backoff + jitter, then dead-letters</td><td>returns 2xx fast so it isn't retried needlessly</td></tr>
+          <tr><th>Duplicates</th><td>sends a stable event ID on every retry</td><td>stores the ID and skips repeats</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">static</span> <span class="kw">bool</span> IsValid(<span class="kw">byte</span>[] secret, <span class="kw">string</span> timestamp, <span class="kw">string</span> body, <span class="kw">string</span> sent)
+{
+    <span class="kw">var</span> signed = <span class="ty">Encoding</span>.UTF8.GetBytes($<span class="str">"{timestamp}.{body}"</span>); <span class="cx-cmt">// time + raw body</span>
+    <span class="kw">var</span> expected = <span class="ty">Convert</span>.ToHexString(<span class="ty">HMACSHA256</span>.HashData(secret, signed)).ToLowerInvariant();
+    <span class="kw">return</span> <span class="ty">CryptographicOperations</span>.FixedTimeEquals(       <span class="cx-ok">// ✅ constant-time compare</span>
+        <span class="ty">Encoding</span>.UTF8.GetBytes(expected), <span class="ty">Encoding</span>.UTF8.GetBytes(sent));
+}</code></pre>
+      </div>
+      <p class="cx-note">The receiver recomputes the signature itself — a plain <code>==</code> on
+      strings is the wrong tool for comparing secrets. The header names and signing format here are
+      an example (lowercase hex here); each provider documents its own.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>[<span class="ty">HttpPost</span>(<span class="str">"webhooks/orders"</span>)]
+<span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="ty">IActionResult</span>&gt; Receive()
+{
+    <span class="kw">var</span> body = <span class="kw">await</span> <span class="kw">new</span> <span class="ty">StreamReader</span>(Request.Body).ReadToEndAsync(); <span class="cx-cmt">// raw body</span>
+    <span class="kw">var</span> ts = Request.Headers[<span class="str">"X-Timestamp"</span>].ToString();
+
+    <span class="kw">if</span> (!IsValid(_secret, ts, body, Request.Headers[<span class="str">"X-Signature"</span>].ToString()))
+        <span class="kw">return</span> Unauthorized();                  <span class="cx-err">// ❌ not from the provider</span>
+
+    <span class="kw">if</span> (!<span class="kw">long</span>.TryParse(ts, <span class="kw">out</span> <span class="kw">var</span> sec) ||
+        <span class="ty">Math</span>.Abs(<span class="ty">DateTimeOffset</span>.UtcNow.ToUnixTimeSeconds() - sec) &gt; <span class="num">300</span>)
+        <span class="kw">return</span> BadRequest();                    <span class="cx-err">// ❌ too old: replay</span>
+
+    <span class="kw">var</span> evt = <span class="ty">JsonSerializer</span>.Deserialize&lt;<span class="ty">WebhookEvent</span>&gt;(body)!;
+    <span class="kw">if</span> (!<span class="kw">await</span> _seen.TryAddAsync(evt.Id))   <span class="cx-cmt">// event ID already stored?</span>
+        <span class="kw">return</span> Ok();                            <span class="cx-ok">// ✅ duplicate: ack, do nothing</span>
+
+    <span class="kw">await</span> _queue.EnqueueAsync(evt);            <span class="cx-cmt">// the real work happens later</span>
+    <span class="kw">return</span> Ok();                                <span class="cx-ok">// ✅ fast 2xx</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Verify, check age, dedupe, enqueue, answer — the receiver does almost nothing
+      before the 2xx. <code>_seen</code> and <code>_queue</code> stand in for your own store and queue.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A payment provider tells your shop "order paid" through a webhook, and your site is mid-deploy
+      when the first attempt arrives.</b> It fails, the provider tries again a little later, and this time
+      it lands. If the provider happens to send the same event twice, your stored event ID makes the
+      second one a harmless no-op — the order ships once.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="8.html">← Polly &amp; Resilience</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="10.html">Cancellation →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

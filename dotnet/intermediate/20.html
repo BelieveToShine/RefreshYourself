@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Why not new HttpClient() per request, and what does IHttpClientFactory fix?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="IHttpClientFactory — .NET Intermediate — RefreshYourself">
+<meta property="og:description" content="Why not new HttpClient() per request, and what does IHttpClientFactory fix?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>IHttpClientFactory — .NET Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dotnet/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#7c3aed;">🧱 .NET / ASP.NET Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">IHttpClientFactory</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 .NET · Intermediate · Must Know</div>
+    <h1><code>IHttpClientFactory</code> — <span class="hl hl-hot">why <code>new HttpClient()</code> per call leaks sockets</span></h1>
+    <p class="interview-q">"Why not <code>new HttpClient()</code> per request, and what does <code>IHttpClientFactory</code> fix?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+          <div class="wc-head">🔌 Socket exhaustion</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Creating and disposing a <code>new HttpClient()</code> per request leaves closed connections lingering, and under load the machine runs out of sockets.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The factory reuses pooled handlers, so connections are reused instead of opened for every call.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">New per call = sockets pile up.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🌐 Stale DNS</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A single long-lived client avoids that, but it keeps its connections forever and never notices a DNS change.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The factory recycles each handler after a lifetime (two minutes by default), so new connections pick up fresh DNS.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Static client = stale DNS.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🧩 Central setup</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Base address, headers, and cross-cutting logic copied around every <code>HttpClient</code> usage is easy to get inconsistent.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Named or typed clients are configured once at startup, and <code>DelegatingHandler</code>s add shared logic to the outgoing pipeline.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Configure once, inject anywhere.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>new HttpClient()</code> per call <span class="rarrow">→</span> <b>socket exhaustion</b></p>
+      <p class="rrow"><code>static HttpClient</code> <span class="rarrow">→</span> <b>stale DNS</b></p>
+      <p class="rrow"><code>IHttpClientFactory</code> <span class="rarrow">→</span> <b>pools and rotates</b> handlers</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line">The <b>handler</b> is the expensive part, not the HttpClient object.</span>
+      <span class="tc-line">The factory <b>owns the handler</b>, you just use the client.</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 262" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+      <filter id="shI20" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+      </filter>
+      <marker id="arI20Red" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+      <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#ef4444"/>
+      </marker>
+      <marker id="arI20Grn" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+      <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+      </marker>
+      </defs>
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">SAME CALLS — VERY DIFFERENT CONNECTION HANDLING</text>
+      <rect x="20" y="34" width="290" height="214" rx="14" fill="#fef2f2" stroke="#ef4444" stroke-width="1.8"/>
+      <text x="165" y="58" text-anchor="middle" font-size="12.5" font-weight="700" fill="#b91c1c">❌ new HttpClient() per call</text>
+      <rect x="36" y="76" width="116" height="30" rx="9" fill="#ffffff" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="94" y="95" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">HttpClient #1</text>
+      <path d="M152,91 H206" fill="none" stroke="#ef4444" stroke-width="1.8" marker-end="url(#arI20Red)"/>
+      <rect x="206" y="76" width="84" height="30" rx="9" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="248" y="95" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">socket</text>
+      <rect x="36" y="114" width="116" height="30" rx="9" fill="#ffffff" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="94" y="133" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">HttpClient #2</text>
+      <path d="M152,129 H206" fill="none" stroke="#ef4444" stroke-width="1.8" marker-end="url(#arI20Red)"/>
+      <rect x="206" y="114" width="84" height="30" rx="9" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="248" y="133" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">socket</text>
+      <rect x="36" y="152" width="116" height="30" rx="9" fill="#ffffff" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="94" y="171" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">HttpClient #3</text>
+      <path d="M152,167 H206" fill="none" stroke="#ef4444" stroke-width="1.8" marker-end="url(#arI20Red)"/>
+      <rect x="206" y="152" width="84" height="30" rx="9" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="248" y="171" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">socket</text>
+      <text x="165" y="206" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">each call opens a new connection;</text>
+      <text x="165" y="222" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">closed sockets linger → exhaustion</text>
+      <rect x="330" y="34" width="290" height="214" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.8"/>
+      <text x="475" y="58" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ IHttpClientFactory</text>
+      <rect x="346" y="76" width="100" height="30" rx="9" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="396" y="95" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">HttpClient #1</text>
+      <path d="M446,91 H496" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arI20Grn)"/>
+      <rect x="346" y="114" width="100" height="30" rx="9" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="396" y="133" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">HttpClient #2</text>
+      <path d="M446,129 H496" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arI20Grn)"/>
+      <rect x="346" y="152" width="100" height="30" rx="9" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="396" y="171" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">HttpClient #3</text>
+      <path d="M446,167 H496" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arI20Grn)"/>
+      <rect x="496" y="76" width="110" height="106" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+      <text x="551" y="112" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">♻️ Pooled</text>
+      <text x="551" y="130" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">handlers reused,</text>
+      <text x="551" y="144" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">rotated on a</text>
+      <text x="551" y="158" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">timer (DNS-safe)</text>
+      <text x="475" y="206" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">handlers are reused → no pile-up;</text>
+      <text x="475" y="222" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">rotation picks up DNS changes</text>
+    </svg>
+    <figcaption>The factory manages the expensive part — the handler and its connections — so your code can create clients freely.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Thinking <code>using var client = new HttpClient()</code> is the safe, tidy way.</b> Disposing the client does not release its connections right away — they linger in a closed-but-waiting state, so a busy service still runs out of sockets.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"So why not just keep one static <code>HttpClient</code>?"</b> It avoids the socket pile-up, but the connections live forever and miss DNS changes. The factory rotates handlers for you; a static client can get the same effect with <code>SocketsHttpHandler.PooledConnectionLifetime</code> set.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Creating a new <code>HttpClient</code> for every request exhausts sockets under load, and a single static one never notices DNS changes. <code>IHttpClientFactory</code> pools the underlying handlers, reuses them, and recycles them on a timer, so you get both. I register named or typed clients once at startup and add a <code>DelegatingHandler</code> for cross-cutting logic. Retries and circuit breakers plug in as handlers too."</p>
+    <ul>
+      <li><code>new per call</code> → <span class="hl hl-hot">socket exhaustion</span> — disposing the client does not free connections immediately.</li>
+      <li><code>Factory</code> → <span class="hl hl-basic">pooled handlers, recycled on a timer</span> — two minutes by default, changeable.</li>
+      <li><code>Named vs. typed</code> → <span class="hl hl-blue">configured once at startup</span> — a typed client is a class that takes an <code>HttpClient</code> in its constructor.</li>
+      <li><code>DelegatingHandler</code> → <span class="hl hl-inter">middleware for outgoing calls</span> — logging, auth headers, and retries live here.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-hot">The problem</span> is the handler underneath <code>HttpClient</code>, which owns the connections. A fresh client per call opens fresh connections, and closed ones linger for a while, so a busy service runs out of sockets. A single static client avoids that, but its connections never recycle, so it can keep talking to an old IP address after DNS changes.</p>
+
+      <p><span class="hl hl-basic">IHttpClientFactory</span> creates lightweight <code>HttpClient</code> objects but manages the expensive handlers itself: it pools them and retires each after a lifetime (two minutes by default, changeable with <code>SetHandlerLifetime</code>). A <em>named</em> client is fetched by a string with <code>CreateClient("name")</code>; a <em>typed</em> client is your own class that receives an <code>HttpClient</code> by constructor injection. A typed client is registered as transient, so avoid injecting it into a singleton: the factory loses control of it and it can miss DNS changes.</p>
+
+      <p><code>AddHttpMessageHandler&lt;T&gt;()</code> adds a <code>DelegatingHandler</code> to the client's outgoing pipeline, a bit like middleware for outbound calls. Resilience (retry, circuit breaker, timeout) attaches the same way but is taught on <a href="../../webapi/advanced/2.html">Retry vs. Resilience</a>. Background: <a href="2.html">The Built-in DI Container</a> and <a href="3.html">Service Lifetimes</a>.</p>
+
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err">// ❌ per call: connections pile up under load</span>
+<span class="kw">using</span> <span class="kw">var</span> client = <span class="kw">new</span> HttpClient();
+<span class="kw">var</span> json = <span class="kw">await</span> client.GetStringAsync(<span class="str">"https://api.example.com/items"</span>);</code></pre>
+      </div>
+      <p class="cx-note">Looks harmless, and works fine in a quick test — the damage only shows under sustained load.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// named: configure once, ask the factory by name</span>
+builder.<span class="ty">Services</span>.AddHttpClient(<span class="str">"github"</span>, c =&gt; c.BaseAddress = <span class="kw">new</span> Uri(<span class="str">"https://api.github.com/"</span>));
+
+<span class="cx-cmt">// later, with an injected IHttpClientFactory:</span>
+<span class="kw">var</span> client = factory.CreateClient(<span class="str">"github"</span>);</code></pre>
+      </div>
+      <p class="cx-note">The name is just a string, so a typo is a runtime problem — typed clients avoid that.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>builder.<span class="ty">Services</span>.AddTransient&lt;<span class="ty">LoggingHandler</span>&gt;();
+builder.<span class="ty">Services</span>.AddHttpClient&lt;<span class="ty">GitHubClient</span>&gt;(c =&gt;
+    c.BaseAddress = <span class="kw">new</span> Uri(<span class="str">"https://api.github.com/"</span>))
+    .AddHttpMessageHandler&lt;<span class="ty">LoggingHandler</span>&gt;();                <span class="cx-cmt">// outgoing pipeline step</span>
+
+<span class="kw">public</span> <span class="kw">class</span> <span class="ty">GitHubClient</span>
+{
+    <span class="kw">private</span> <span class="kw">readonly</span> <span class="ty">HttpClient</span> _http;                       <span class="cx-cmt">// handler managed by the factory</span>
+    <span class="kw">public</span> GitHubClient(<span class="ty">HttpClient</span> http) =&gt; _http = http;
+
+    <span class="kw">public</span> <span class="ty">Task</span>&lt;<span class="kw">string</span>&gt; GetRepoAsync(<span class="kw">string</span> name) =&gt; _http.GetStringAsync(<span class="str">$"repos/{name}"</span>);
+}
+
+<span class="kw">public</span> <span class="kw">class</span> <span class="ty">LoggingHandler</span> : <span class="ty">DelegatingHandler</span>
+{
+    <span class="kw">protected</span> <span class="kw">override</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="ty">HttpResponseMessage</span>&gt; SendAsync(
+        <span class="ty">HttpRequestMessage</span> request, <span class="ty">CancellationToken</span> ct)
+    {
+        <span class="ty">Console</span>.WriteLine(<span class="str">$"-&gt; {request.Method} {request.RequestUri}"</span>);   <span class="cx-cmt">// before sending</span>
+        <span class="kw">return</span> <span class="kw">await</span> base.SendAsync(request, ct);
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>GitHubClient</code> is a typed client: inject it anywhere, and it never sees how connections are pooled.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A call centre switchboard.</b> A new <code>HttpClient</code> per call is dialling a fresh phone line for every sentence and leaving it off the hook afterwards; the factory is a switchboard with a pool of lines that are reused and swapped out every few minutes, so the building never runs out of lines.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="19.html">← Minimal APIs</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to .NET Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="21.html">BackgroundService Patterns →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · .NET / ASP.NET Core · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

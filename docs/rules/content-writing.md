@@ -8,14 +8,14 @@ questions, however many real interview topics that tier actually has — not jus
 already have a finished page. This is deliberate: the roadmap has to be visible up front so
 progress is obvious and nothing gets forgotten.
 
-- A topic with a finished page is a normal linked row (its file exists, hot-first order, numbered
+- A topic with a finished page is a normal linked row (its file exists, tier order, numbered
   to match position — see [content-structure.md](content-structure.md)).
 - A topic that's listed but not yet written is a **`.topic-row.planned`** row: no link (it's a
   `<span class="ttitle">`, not an `<a>`), muted, tagged `<span class="badge planned">📝 Coming
-  soon</span>` instead of Hot/Normal. It still occupies its real numbered slot in hot-first order
+  soon</span>` instead of Hot/Normal. It still occupies its real numbered slot in tier order
   — a planned Hot topic still sits above a written Normal one.
 - Numbering never gets reshuffled just because a topic isn't written yet — the number is the
-  topic's permanent position in the hot-first list, written or not.
+  topic's permanent position in the tier list, written or not.
 - Group every 10 topics (written + planned together) into one `.qgroup` accordion — see
   [content-structure.md](content-structure.md). The first group defaults `open`, later groups
   default closed.
@@ -24,18 +24,23 @@ progress is obvious and nothing gets forgotten.
 
 Locked decisions from the working session that set this project up. Don't re-derive them.
 
-## Ordering: hot topics before normal topics — everywhere
+## Ordering: priority badge + teaching order (amended 2026-10-06)
 
-- On **every** tier index page, in **every** track: list the hot/most-asked topics first, then
-  the normal ones after. This was called out twice by the user as a rule for the whole site, not
-  just one track.
-- "Hot" = commonly asked in real interviews / comes up again and again. "Normal" = good to know,
-  less likely to be the actual question asked.
-- Mark each row on the tier index with a badge: `🔥 Hot` or `Normal`. The file number
-  (`1.html`, `2.html`, …) always matches its position in this hot-first order — see
+- **Original rule:** every tier lists hot topics first. **Amended with the user on 2026-10-06** after
+  a scan showed ~20 of 45 tiers (including the reference C# track) were really built in *teaching /
+  dependency order within concept groups*, with the 🔥 badge carrying the interview-likelihood signal.
+  Renumbering them all would break every link/index for no reader benefit.
+- **Current rule:** within a tier, order pages so each one only relies on pages above it (teaching
+  order), and keep the **most-asked (🔥) topics as early as that order allows** — never bury a
+  🔥 page behind a long run of ⭐/🧠 pages without a dependency reason. Every row carries its
+  🔥/⭐/🧠 priority badge (see [interview-depth-and-priority.md](interview-depth-and-priority.md)).
+- **New pages added later** take the next free number in their tier (numbering is permanent — never
+  reshuffle) and are placed visually by teaching order on the tier index only if that doesn't change
+  existing numbers; otherwise they simply append.
+- "Hot" = commonly asked in real interviews. "Normal" = good to know. Mark each tier-index row with
+  its priority badge. The file number (`1.html`, `2.html`, …) is the page's permanent slot — see
   [content-structure.md](content-structure.md).
-- Within Basic specifically, this matters most — the original note says basic/hot topics have to
-  be covered before moving on to intermediate/advanced content at all.
+- Within Basic specifically, cover the hot topics before moving on to intermediate/advanced content.
 
 ## Words: very simple, no jargon left unexplained
 
@@ -54,7 +59,7 @@ interview-recall system, not a documentation site — SCAN → SEE → RECALL �
 READ → STUDY → MEMORIZE. This is the template for **new pages under the interview-question-bank
 rebuild** (locked 2026-09-15/16); the 14 live C# Basic pages were written under the previous
 version and are frozen, not retrofitted — see [tier-navigation.md](tier-navigation.md)'s note on
-what "frozen" means in practice.
+what "frozen" means in practice. *(Update 2026-10-07: C# Basic 1–14 were migrated to the new template — the “frozen” status no longer applies.)*
 
 Six things earn a permanent, always-visible spot: the "❓ Interview Question" line, the "🔥 Easy
 interview recall" line, the "🧠 Visual Mental Model" diagram, the "⚠️ Common Trap" warning, the
@@ -211,7 +216,7 @@ In this exact order:
      prose read as dense and duller than what a good chat assistant produces off the same
      question — the fix is tighter sentences and more scannable structure (bold, short lines,
      tables), not more words.
-11. **"💻 See the code" — collapsed toggle, closed by default.** `<details class="codebox toggle">`
+11. **"💻 See the code" — collapsed toggle, closed by default. Optional: omit it entirely when a topic has no honest code to show (most AWS/Azure concept pages do — about 35 of 44 AWS pages have none); never invent filler. The language chip names the page's language (`C#`, `JavaScript`, `SQL`, `YAML`…), not always `C#`.** `<details class="codebox toggle">`
    with `<summary>💻 See the code</summary>`, containing one or more `.code-card` blocks (see
    `.code-card` in `assets/style.css` — a **light** card, never a dark console: a `C#` language
    chip, a copy button, `Fira Code`, syntax-colored spans `.kw`/`.ty`/`.str`/`.num` and comment
@@ -261,7 +266,7 @@ In this exact order:
      just applied to a real-world problem instead of an analogy.
    - A page can use either shape or both (analogy first, scenario after) — never neither; every
      page still ends with something in this section.
-14. **Prev / Next** — links to the previous and next topic in this tier's hot-first order, plus a
+14. **Prev / Next** — links to the previous and next topic in this tier's tier order, plus a
    link back up to the tier index. First topic has no "prev", last has no "next." **If the
    neighbouring topic is still `planned` (not written), don't link to its not-yet-existing file**
    — show its title muted, pointing at the tier index instead, labelled "(coming soon)."

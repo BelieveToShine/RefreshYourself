@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What happens to child rows when you delete the parent?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Cascade Delete Behaviours — EF Core Basic — RefreshYourself">
+<meta property="og:description" content="What happens to child rows when you delete the parent?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Cascade Delete Behaviours — EF Core Basic — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/basic">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Cascade Delete Behaviours</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ EF Core · Basic · Should Know</div>
+    <h1><code>OnDelete</code> — delete the parent, and <span class="hl hl-hot">what happens to the children?</span></h1>
+    <p class="interview-q">"What happens to child rows when you delete the parent?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+        <div class="wc-head">🗑️ Delete behaviour</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Delete a parent row that other rows point to and those child rows are left orphaned — or the database refuses the delete with a foreign-key error.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Every relationship has a <b>delete behaviour</b>, set with <code>OnDelete</code>, that says whether the children are deleted, get their key set to null, or block the delete.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Required FK → <code>Cascade</code> by default. Optional FK → <code>ClientSetNull</code>.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Required FK <span class="rarrow">→</span> <b>Cascade</b> — children deleted too</p>
+      <p class="rrow">Optional FK <span class="rarrow">→</span> <b>ClientSetNull</b> — FK nulled, no database cascade</p>
+      <p class="rrow"><code>Restrict</code> <span class="rarrow">→</span> <b>blocked</b> while children exist</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <span class="tc-line">Delete parent → children are <b>deleted</b>, <b>nulled</b>, or <b>blocking</b>.</span><span class="tc-line">The <b><code>OnDelete</code></b> setting picks which.</span></p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 262" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shB8a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arB8a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">DELETE THE PARENT — FOUR POSSIBLE OUTCOMES</text>
+      <rect x="16" y="34" width="146" height="188" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="89" y="52" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Cascade</text>
+      <text x="89" y="66" text-anchor="middle" font-size="9.5" font-weight="400" fill="#5b6472">default: required FK</text>
+      <g filter="url(#shB8a)"><rect x="49" y="76" width="80" height="26" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.7"/></g>
+      <text x="89" y="93" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">Parent ✕</text>
+      <path d="M89,102 V108 M44,108 H134 M44,108 V114 M89,108 V114 M134,108 V114" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <g filter="url(#shB8a)"><rect x="24" y="114" width="40" height="34" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.7"/></g>
+      <text x="44" y="127" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">C1</text>
+      <text x="44" y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#5b6472">✕</text>
+      <g filter="url(#shB8a)"><rect x="69" y="114" width="40" height="34" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.7"/></g>
+      <text x="89" y="127" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">C2</text>
+      <text x="89" y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#5b6472">✕</text>
+      <g filter="url(#shB8a)"><rect x="114" y="114" width="40" height="34" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.7"/></g>
+      <text x="134" y="127" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">C3</text>
+      <text x="134" y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#5b6472">✕</text>
+      <g filter="url(#shB8a)"><rect x="24" y="160" width="130" height="48" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.7"/></g>
+      <text x="89" y="180" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">all 4 rows deleted</text>
+      <text x="89" y="196" text-anchor="middle" font-size="10" font-weight="400" fill="#5b6472">(parent + children)</text>
+      <rect x="170" y="34" width="146" height="188" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="243" y="52" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">SetNull</text>
+      <text x="243" y="66" text-anchor="middle" font-size="9.5" font-weight="400" fill="#5b6472">needs a nullable FK</text>
+      <g filter="url(#shB8a)"><rect x="203" y="76" width="80" height="26" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.7"/></g>
+      <text x="243" y="93" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">Parent ✕</text>
+      <path d="M243,102 V108 M198,108 H288 M198,108 V114 M243,108 V114 M288,108 V114" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <g filter="url(#shB8a)"><rect x="178" y="114" width="40" height="34" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.7"/></g>
+      <text x="198" y="127" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">C1</text>
+      <text x="198" y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#5b6472">null</text>
+      <g filter="url(#shB8a)"><rect x="223" y="114" width="40" height="34" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.7"/></g>
+      <text x="243" y="127" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">C2</text>
+      <text x="243" y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#5b6472">null</text>
+      <g filter="url(#shB8a)"><rect x="268" y="114" width="40" height="34" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.7"/></g>
+      <text x="288" y="127" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">C3</text>
+      <text x="288" y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#5b6472">null</text>
+      <g filter="url(#shB8a)"><rect x="178" y="160" width="130" height="48" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.7"/></g>
+      <text x="243" y="180" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">children stay,</text>
+      <text x="243" y="196" text-anchor="middle" font-size="10" font-weight="400" fill="#5b6472">FK set to NULL</text>
+      <rect x="324" y="34" width="146" height="188" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="397" y="52" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Restrict</text>
+      <text x="397" y="66" text-anchor="middle" font-size="9.5" font-weight="400" fill="#5b6472">blocks the delete</text>
+      <g filter="url(#shB8a)"><rect x="357" y="76" width="80" height="26" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.7"/></g>
+      <text x="397" y="93" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Parent</text>
+      <path d="M397,102 V108 M352,108 H442 M352,108 V114 M397,108 V114 M442,108 V114" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <g filter="url(#shB8a)"><rect x="332" y="114" width="40" height="34" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.7"/></g>
+      <text x="352" y="127" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">C1</text>
+      <text x="352" y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#5b6472">kept</text>
+      <g filter="url(#shB8a)"><rect x="377" y="114" width="40" height="34" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.7"/></g>
+      <text x="397" y="127" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">C2</text>
+      <text x="397" y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#5b6472">kept</text>
+      <g filter="url(#shB8a)"><rect x="422" y="114" width="40" height="34" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.7"/></g>
+      <text x="442" y="127" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">C3</text>
+      <text x="442" y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#5b6472">kept</text>
+      <g filter="url(#shB8a)"><rect x="332" y="160" width="130" height="48" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.7"/></g>
+      <text x="397" y="180" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">delete is rejected</text>
+      <text x="397" y="196" text-anchor="middle" font-size="10" font-weight="400" fill="#5b6472">while children exist</text>
+      <rect x="478" y="34" width="146" height="188" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="551" y="52" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">ClientSetNull</text>
+      <text x="551" y="66" text-anchor="middle" font-size="9.5" font-weight="400" fill="#5b6472">default: optional FK</text>
+      <g filter="url(#shB8a)"><rect x="511" y="76" width="80" height="26" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.7"/></g>
+      <text x="551" y="93" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">Parent ✕</text>
+      <path d="M551,102 V108 M506,108 H596 M506,108 V114 M551,108 V114 M596,108 V114" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <g filter="url(#shB8a)"><rect x="486" y="114" width="40" height="34" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.7"/></g>
+      <text x="506" y="127" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">C1</text>
+      <text x="506" y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#5b6472">null</text>
+      <g filter="url(#shB8a)"><rect x="531" y="114" width="40" height="34" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.7"/></g>
+      <text x="551" y="127" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">C2</text>
+      <text x="551" y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#5b6472">null</text>
+      <g filter="url(#shB8a)"><rect x="576" y="114" width="40" height="34" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.7"/></g>
+      <text x="596" y="127" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">C3</text>
+      <text x="596" y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#5b6472">error</text>
+      <g filter="url(#shB8a)"><rect x="486" y="160" width="130" height="48" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.7"/></g>
+      <text x="551" y="180" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">loaded → FK nulled</text>
+      <text x="551" y="196" text-anchor="middle" font-size="10" font-weight="400" fill="#5b6472">not loaded → DB error</text>
+      <text x="320" y="246" text-anchor="middle" font-size="11" font-weight="400" fill="#5b6472">Chosen per relationship with OnDelete(DeleteBehavior.…)</text>
+    </svg>
+    <figcaption>Same parent delete, four outcomes — the <code>DeleteBehavior</code> decides whether children are deleted, nulled, or protect the parent.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Deleting a parent always deletes its children" is only the default for a <i>required</i> relationship.</b> An optional one (nullable FK) defaults to <code>ClientSetNull</code>: EF Core nulls the key on children it has loaded, but the database does not cascade — so a child it never loaded can make the delete fail.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How do you stop a parent being deleted while it still has children?"</b> Configure <code>OnDelete(DeleteBehavior.Restrict)</code> — the database then rejects the delete (<code>SaveChanges()</code> throws) while any child row exists. This is the required-relationship case; with an optional FK and the children already loaded, EF Core nulls their keys first instead.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"By convention a required relationship cascades — deleting the parent deletes its children — while an optional one defaults to <code>ClientSetNull</code>, which nulls the foreign key on tracked children. I can override either with <code>OnDelete</code>: <code>Cascade</code>, <code>SetNull</code>, <code>Restrict</code> or <code>NoAction</code>."</p>
+    <ul>
+      <li>Required FK → <span class="hl hl-hot"><code>Cascade</code> by default</span>, children deleted with the parent.</li>
+      <li>Optional FK → <span class="hl hl-inter"><code>ClientSetNull</code></span>, only <b>tracked</b> children get a null key.</li>
+      <li><code>SetNull</code> → <span class="hl hl-inter">the database nulls the key</span>, so the FK must be nullable.</li>
+      <li><code>Restrict</code> → <span class="hl hl-basic">delete is blocked</span> while children exist — the safe choice for important data.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>When you delete a <b>parent</b> row, every <b>child</b> row that points at it through a foreign key needs a plan. The <span class="hl hl-hot">delete behaviour</span> is that plan: delete the children, null their key, or refuse the delete. You set it per relationship with <code>OnDelete(...)</code>.</p>
+
+      <p>The default depends on whether the foreign key is required. A <b>required</b> relationship (non-nullable FK) defaults to <code>Cascade</code>. An <b>optional</b> one (nullable FK) defaults to <code>ClientSetNull</code>: EF Core sets the key to null on children it is tracking, but the database foreign key does not cascade, so a child EF Core never loaded can still make the database reject the delete.</p>
+
+      <p><code>SetNull</code> hands that job to the database, and needs a nullable FK. <code>Restrict</code> and <code>NoAction</code> leave the children alone and let the database reject the delete while any exist — the safe choice when deleting a parent should be deliberate. (The exception is an optional FK whose children are already tracked: EF Core nulls their keys first, as with <code>ClientSetNull</code>.) Related: <a href="7.html">Configuring Relationships</a> and the SQL side, <a href="../../sql/basic/14.html">Foreign Key Referential Actions</a>.</p>
+
+      <div style="overflow-x:auto;">
+        <table class="cmp-table">
+          <thead><tr><th></th><th><code>Cascade</code></th><th><code>SetNull</code></th><th><code>ClientSetNull</code></th><th><code>Restrict</code></th></tr></thead>
+          <tbody>
+            <tr><th>Children</th><td>deleted</td><td>kept, FK = NULL</td><td>kept; FK nulled if tracked</td><td>kept</td></tr>
+            <tr><th>FK must be nullable?</th><td class="no">❌ no</td><td class="yes">✅ yes</td><td class="yes">✅ yes</td><td class="no">❌ no</td></tr>
+            <tr><th>Who does the work</th><td>database cascade (EF Core too, for tracked children)</td><td>the database</td><td>EF Core, in memory only</td><td>nobody — the delete is rejected</td></tr>
+            <tr><th>Default for</th><td>required relationship</td><td>—</td><td>optional relationship</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>modelBuilder.Entity&lt;<span class="ty">Order</span>&gt;()
+    .HasMany(o =&gt; o.Lines)
+    .WithOne(l =&gt; l.<span class="ty">Order</span>)
+    .HasForeignKey(l =&gt; l.OrderId)
+    .OnDelete(<span class="ty">DeleteBehavior</span>.Restrict);   <span class="cx-ok">// ✅ blocks deleting an Order that has lines</span></code></pre>
+      </div>
+      <p class="cx-note"><code>OnDelete</code> is configured on the relationship — pick the behaviour you want, don't rely on the default by accident.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> order = <span class="kw">await</span> db.Orders.FindAsync(id);
+db.Orders.Remove(order);
+<span class="kw">await</span> db.SaveChangesAsync();   <span class="cx-cmt">// required FK + default Cascade: its OrderLines are deleted too</span></code></pre>
+      </div>
+      <p class="cx-note">With the default on a required relationship, one <code>Remove</code> takes the children with it.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Deleting a customer who has orders.</b> With cascade, one click silently wipes their whole order history. Teams usually set <code>Restrict</code> on that relationship (delete refused) and keep <code>Cascade</code> only for true parts-of-a-whole, like an order and its lines.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="7.html">← Configuring Relationships</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="9.html">Code-First vs. Database-First →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -3,40 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What's the actual tradeoff between strong consistency and the weaker levels, and why would you ever pick weaker on purpose?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Cosmos DB Consistency Levels — Azure Intermediate — RefreshYourself">
+<meta property="og:description" content="What's the actual tradeoff between strong consistency and the weaker levels, and why would you ever pick weaker on purpose?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <title>Cosmos DB Consistency Levels — Azure Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body data-root="../../" data-tier-key="azure/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
 
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
-      <span class="gicon">🔎</span>
+      <span class="gicon" aria-hidden="true">🔎</span>
       <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
-      <span class="gkey">/</span>
+      <span class="gkey" aria-hidden="true">/</span>
       <div class="gsearch-results" role="listbox"></div>
     </div>
   </div>
@@ -54,7 +46,7 @@
   </nav>
 </div>
 
-<main class="wrap">
+<main class="wrap" id="main">
   <section class="hero">
     <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 Azure · Intermediate · Deep Dive</div>
     <h1>5 <span class="hl hl-blue">consistency levels</span> — how much <span class="hl hl-inter">correctness</span> are you actually paying for?</h1>
@@ -279,7 +271,7 @@
 
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
-    <p class="tline"><b>"Just use Strong everywhere to be safe."</b> In a multi-region Cosmos DB account, Strong consistency significantly raises write latency and can reduce availability during a regional failure — a guarantee most applications never actually need.</p>
+    <p class="tline"><b>"Just use Strong everywhere to be safe."</b> In a multi-region Cosmos DB account, Strong consistency significantly raises write latency and can reduce availability during a regional failure — a guarantee most applications never actually need. And if the account is configured for <b>multi-region writes</b> (multiple write regions), it's not just costly — Strong isn't an option at all: it can only be selected with a <b>single write region</b> (any number of read regions is still fine). A multi-write account is limited to Session, Bounded Staleness, Consistent Prefix, or Eventual.</p>
   </div>
 
   <div class="followup">
@@ -322,6 +314,7 @@
             <tr><th>What it guarantees</th><td>always the latest committed write</td><td>lag bounded by time/version count</td><td>the writing client always sees its own writes</td><td>writes never seen out of order (may be stale)</td><td>no ordering guarantee at all</td></tr>
             <tr><th>Latency / availability cost</th><td>highest latency, lowest availability during a partition</td><td>higher than Session, bounded by the staleness window</td><td>low — close to Eventual for the common case</td><td>low, close to Eventual</td><td>lowest latency, highest availability</td></tr>
             <tr><th>Reach for it when</th><td>correctness can never lag — rare for most apps</td><td>a known, bounded lag is acceptable</td><td>default — users need to see their own actions</td><td>order matters more than freshness</td><td>raw speed matters more than freshness or order</td></tr>
+            <tr><th>Works with multi-region writes?</th><td class="no">❌ no — single write region only</td><td>✅ yes</td><td>✅ yes</td><td>✅ yes</td><td>✅ yes</td></tr>
           </tbody>
         </table>
       </div>
@@ -339,11 +332,11 @@
         </div>
         <pre><code><span class="kw">var</span> options = <span class="kw">new</span> CosmosClientOptions
 {
-    ConsistencyLevel = ConsistencyLevel.<span class="ty">Session</span> <span class="cx-cmt">// ✅ matches the account default</span>
+    ConsistencyLevel = ConsistencyLevel.<span class="ty">Session</span> <span class="cx-cmt">// ✅ per-client; same or weaker than the account default</span>
 };
 <span class="kw">var</span> client = <span class="kw">new</span> CosmosClient(endpoint, key, options);</code></pre>
       </div>
-      <p class="cx-note">Setting <code>ConsistencyLevel</code> here picks the level per request — it doesn't change what the account itself defaults to.</p>
+      <p class="cx-note"><code>CosmosClientOptions.ConsistencyLevel</code> sets the level for every request this <b>client</b> makes — it doesn't change the account default, it can only be the same or weaker than it, and it affects how reads are served (writes still replicate as the account is configured). To change it for one request, set <code>ConsistencyLevel</code> on that call's <code>ItemRequestOptions</code> instead.</p>
 
     </div>
   </details>

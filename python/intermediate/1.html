@@ -3,40 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What happens across repeated calls to add_item(1) then add_item(2) , and why?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Mutable vs. Immutable — Python Intermediate — RefreshYourself">
+<meta property="og:description" content="What happens across repeated calls to add_item(1) then add_item(2) , and why?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <title>Mutable vs. Immutable — Python Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body data-root="../../" data-tier-key="python/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
 
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
-      <span class="gicon">🔎</span>
+      <span class="gicon" aria-hidden="true">🔎</span>
       <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
-      <span class="gkey">/</span>
+      <span class="gkey" aria-hidden="true">/</span>
       <div class="gsearch-results" role="listbox"></div>
     </div>
   </div>
@@ -54,31 +46,24 @@
   </nav>
 </div>
 
-<main class="wrap">
+<main class="wrap" id="main">
   <section class="hero">
     <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Python · Intermediate · Must Know</div>
     <h1>A default argument is evaluated <span class="hl hl-hot">ONCE</span>, at <span class="hl hl-blue">function-definition time</span> — not on every call</h1>
-
-    <div class="code-card">
-      <div class="cc-head">
-        <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
-        <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-      </div>
-      <pre><code><span class="kw">def</span> add_item(item, items=[]):
-    items.append(item)
-    <span class="kw">return</span> items</code></pre>
-    </div>
     <p class="interview-q">"What happens across repeated calls to <code>add_item(1)</code> then <code>add_item(2)</code>, and why?"</p>
   </section>
 
   <details class="topic-hook toggle">
     <summary>Why it matters <span class="chev">▾</span></summary>
     <div class="toggle-body">
-      <ul>
-        <li>Tests whether you actually know a default argument is built once, at def-time, not rebuilt on every call.</li>
-        <li>Explains a real class of "why does my function remember state from a completely unrelated call" bugs.</li>
-        <li>One of the most commonly cited Python interview gotchas — expect it live, as a predict-the-output question, not a plain definition ask.</li>
-      </ul>
+      <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+        <div class="wc-head">⚠️ Default arguments</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A mutable default like <code>[]</code> is built once, so every call that omits it shares the same list and state leaks between unrelated calls.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Default to <code>None</code> and build a fresh object inside the function body when none was passed.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Built once at def-time — use the <code>None</code> sentinel.</span></div>
+      </div>
     </div>
   </details>
 
@@ -148,6 +133,26 @@
     <figcaption>The default list is created exactly once, when <code>def</code> runs. Every call that skips the <code>items</code> argument reuses that exact same object — so items pile up across calls instead of starting fresh.</figcaption>
   </figure>
 
+  <div class="predict-box" style="background:linear-gradient(155deg, #dbeafe 0%, #ffffff 130%); border:1px solid rgba(59,130,246,.3); border-radius:16px; padding:16px 20px; margin:0 0 26px;">
+    <div style="font-family:'Poppins'; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:#1d4ed8; display:flex; align-items:center; gap:7px; margin-bottom:10px;">🔮 Predict the Output</div>
+
+    <div class="code-card" style="margin-bottom:12px;">
+      <div class="cc-head">
+        <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Python</span>
+        <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+      </div>
+      <pre><code><span class="kw">def</span> add_item(item, items=[]):
+    items.append(item)
+    <span class="kw">return</span> items
+
+<span class="kw">print</span>(add_item(<span class="num">1</span>))
+<span class="kw">print</span>(add_item(<span class="num">2</span>))</code></pre>
+    </div>
+
+    <p style="margin:0 0 10px; font-size:15px; color:var(--ink); border-left:3px solid #3b82f6; padding-left:12px;"><b>What does this print, and why?</b></p>
+    <p style="margin:0; font-size:14.5px; color:var(--ink-soft); border-left:3px solid #3b82f6; padding-left:12px;"><b style="color:#1d4ed8;">Answer:</b> <code>[1]</code> then <code>[1, 2]</code> — not <code>[1]</code> then <code>[2]</code>. The default list <code>items=[]</code> is built exactly once, when <code>def</code> runs, and every call that skips the <code>items</code> argument reuses that exact same object, so items pile up across unrelated calls.</p>
+  </div>
+
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b><code>add_item(2)</code> does not return <code>[2]</code>.</b> Both calls share the exact same default list object created once at def-time, so it returns <code>[1, 2]</code> — state silently persists across calls that look completely unrelated.</p>
@@ -205,6 +210,63 @@
       </div>
       <p class="cx-note">Every call that skips <code>items</code> now gets its <b>own</b> fresh list — nothing carries over from a previous call.</p>
 
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your function has a parameter that defaults to <code>[]</code> or <code>{}</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="8" y="14" width="215" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115.5" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#dc2626">def f(items=[])</text>
+              <path d="M223,33 H257" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc1)"/>
+              <rect x="257" y="14" width="215" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="364.5" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#dc2626">ONE list, shared by calls</text>
+            </svg>
+          </div>
+          <p class="uc-what">The default list is built once, when <code>def</code> runs, and every call that skips the argument reuses it. So <code>add_item(1)</code> gives <code>[1]</code> and <code>add_item(2)</code> gives <code>[1, 2]</code>, not <code>[2]</code>.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Mutable default = one shared object.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> You want each call to start with its own fresh list</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="8" y="14" width="215" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115.5" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#16a34a">items=None default</text>
+              <path d="M223,33 H257" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc2)"/>
+              <rect x="257" y="14" width="215" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="364.5" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#16a34a">new [] built in the body</text>
+            </svg>
+          </div>
+          <p class="uc-what">Default to <code>None</code>, then build a new list inside the function when none was passed. The body runs on every call, so each call gets a different list.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Default <code>None</code>, build inside.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your tuple holds a list and you change that list</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="8" y="14" width="215" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115.5" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">t[0].append(2)</text>
+              <path d="M223,33 H257" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc3)"/>
+              <rect x="257" y="14" width="215" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="364.5" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">works: the list mutates</text>
+            </svg>
+          </div>
+          <p class="uc-what">A tuple cannot be resized and its slots cannot be reassigned, so <code>t[0] = []</code> raises <code>TypeError</code>. But the list sitting in a slot is its own mutable object, so appending to it still works.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Tuple fixes the slots, not what is in them.</span></div>
+        </div>
+
+      </div>
     </div>
   </details>
 

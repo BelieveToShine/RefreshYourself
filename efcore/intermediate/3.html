@@ -3,40 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What is the Change Tracker, and how does SaveChanges() use it to know what to write?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="The Change Tracker &amp; SaveChanges() — EF Core Intermediate — RefreshYourself">
+<meta property="og:description" content="What is the Change Tracker, and how does SaveChanges() use it to know what to write?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <title>The Change Tracker &amp; SaveChanges() — EF Core Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body data-root="../../" data-tier-key="efcore/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
 
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
-      <span class="gicon">🔎</span>
+      <span class="gicon" aria-hidden="true">🔎</span>
       <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
-      <span class="gkey">/</span>
+      <span class="gkey" aria-hidden="true">/</span>
       <div class="gsearch-results" role="listbox"></div>
     </div>
   </div>
@@ -54,7 +46,7 @@
   </nav>
 </div>
 
-<main class="wrap">
+<main class="wrap" id="main">
   <section class="hero">
     <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ EF Core · Intermediate · Should Know</div>
     <h1>The Change Tracker &amp; <code>SaveChanges()</code> — <span class="hl hl-inter">it only writes what actually changed</span></h1>
@@ -68,32 +60,32 @@
         <div class="why-card" style="--why-color:#475569; --why-bg:#f1f5f9">
           <div class="wc-head">⚪ Unchanged</div>
           <div class="wc-ps">
-            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>How does <code>SaveChanges()</code> know an entity needs zero work?</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>No difference from the snapshot → nothing gets generated at all.</span></div>
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>If every save re-sent every loaded entity, untouched rows would still cost a round trip — so how does <code>SaveChanges()</code> know an entity needs zero work?</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The Change Tracker compares it with its snapshot, and no difference means no SQL gets generated for it at all.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Unchanged → <code>SaveChanges()</code> writes nothing for this entity.</span></div>
         </div>
         <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
           <div class="wc-head">🆕 Added</div>
           <div class="wc-ps">
-            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A brand-new object doesn't exist as a row yet.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Add()</code> marks it Added → INSERT of every mapped column.</span></div>
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A brand-new object has no row in the table yet, so there is nothing to update — the database has to be told to create one.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Add()</code> marks it Added, and <code>SaveChanges()</code> sends an INSERT of every mapped column, then reads back generated values like the new ID.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Added → one INSERT, then Unchanged with the new ID.</span></div>
         </div>
         <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
           <div class="wc-head">✏️ Modified</div>
           <div class="wc-ps">
-            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Rewriting every column on every save wastes bandwidth and locks.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A tracked property changes → UPDATE sets only what differs.</span></div>
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Rewriting every column on every save wastes bandwidth and can overwrite values someone else just changed.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>When a tracked property changes, the entity becomes Modified and the UPDATE sets only the columns that differ — unless you call <code>Update()</code> or <code>Attach()</code> on it, which marks all columns.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Modified → UPDATE, only the columns that actually changed.</span></div>
         </div>
         <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
           <div class="wc-head">🗑️ Deleted</div>
           <div class="wc-ps">
-            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A row still in the table needs to actually disappear.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Remove()</code> marks it Deleted → DELETE runs, then it's detached.</span></div>
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A row that is still in the table has to actually go away, not just vanish from your C# list.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Remove()</code> marks it Deleted, and <code>SaveChanges()</code> runs the DELETE and then detaches the entity.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Deleted → one DELETE, entity detached afterward.</span></div>
         </div>
@@ -219,7 +211,7 @@
 
   <div class="trap">
     <div class="thead">⚠️ Common Trap</div>
-    <p class="tline"><b>A Modified entity's UPDATE does not set every mapped column.</b> EF Core's generated <code>SET</code> clause only lists the columns whose value actually differs from the tracked snapshot — not the whole row.</p>
+    <p class="tline"><b>A Modified entity's UPDATE does not set every mapped column.</b> When you change tracked properties, EF Core's generated <code>SET</code> clause only lists the columns whose value actually differs from the snapshot — not the whole row. (Calling <code>Update()</code> on a detached or newly attached entity is different: it marks every column, so all of them are written.)</p>
   </div>
 
   <div class="followup">
@@ -232,7 +224,7 @@
     <p class="kp-primary">"The Change Tracker keeps each tracked entity's current state — Added, Modified, Deleted, or Unchanged — plus a snapshot of its original values. <code>SaveChanges()</code> reads those states, diffs against the snapshot, and generates exactly the INSERT, UPDATE, or DELETE each entity needs, then flips it back to Unchanged."</p>
     <ul>
       <li><code>Added</code> <span class="hl hl-blue">→ becomes an INSERT</span> when <code>SaveChanges()</code> runs.</li>
-      <li><code>Modified</code> <span class="hl hl-inter">→ UPDATE, only the changed columns</span> in the SET clause.</li>
+      <li><code>Modified</code> <span class="hl hl-inter">→ UPDATE, only the changed columns</span> in the SET clause (not after <code>Update()</code>, which marks all).</li>
       <li><code>Deleted</code> <span class="hl hl-hot">→ becomes a DELETE</span>, then the entity is detached.</li>
       <li>Default tracking is <span class="hl hl-blue">snapshot-based</span> — current values diffed against the original snapshot.</li>
       <li>After a successful save, state flips back to <span class="hl hl-basic">Unchanged</span>, and database-generated values are written back.</li>
@@ -253,7 +245,7 @@
       <p><code>SaveChanges()</code> walks every tracked entity, reads its state, and turns that
       into SQL: an <b>INSERT</b> for each Added entity, a <b>DELETE</b> for each Deleted one, and
       for Modified entities an <b>UPDATE</b> whose <code>SET</code> clause is built from the
-      snapshot diff — only the columns that actually changed. Once the database confirms the
+      snapshot diff — only the columns that actually changed. (If you call <code>Update()</code> or <code>Attach()</code> on an untracked entity, EF Core has no snapshot to diff, so it marks every column as modified.) Once the database confirms the
       write, EF Core flips each entity's state back to Unchanged and copies back anything the
       database generated, such as a new identity value, so the C# object matches the row that's
       now actually in the table.</p>

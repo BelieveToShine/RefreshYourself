@@ -5,7 +5,7 @@
 [`diagram-style.md`](diagram-style.md) for the mandatory verification script itself. This file
 is the operational half — *how* a session actually drives Phase 7 to completion using parallel
 subagents, safely, on a machine other sessions may also be using. Every track from OOP onward
-(OOP, .NET/ASP.NET Core, Web API, EF Core) was built this exact way; a track built any other way
+(all 14 tracks after C#) was built this exact way; a track built any other way
 is not following the established process, even if the output looks similar.
 
 ## Before Phase 7: Phases 2–6 are the orchestrating session's own work, not delegated
@@ -37,7 +37,7 @@ targets:
   lives on each tier's own index page instead.
 - Root `index.html`'s tile for the track: drop the `tile soon`/`Coming soon`/disabled-link
   styling, make the tier badges real `<a>` links.
-- `assets/nav-index.js` and `assets/search-index.js` entries for the track's index pages (the 21
+- `assets/nav-index.js` and `assets/search-index.js` entries for the track's index pages (the
   individual topic-page entries get added as pages are written, in the same pass as the page).
 - `docs/superpowers/specs/<track>/overview.md` and a new row in
   `docs/superpowers/specs/README.md`'s table.
@@ -160,7 +160,7 @@ then dispatch exactly one replacement at a time until every page in the track is
    roadmap entry), `roadmap.html` renders with every link resolving, and the root `index.html`
    tile shows no "Coming soon" with live tier links.
 2. `git status --short` — confirm exactly the expected new/modified file set and nothing stray.
-3. Commit with a message describing the pipeline, any genuine defects found/fixed during the
+3. (Per CLAUDE.md, only commit/push when the user asks that turn — CLAUDE.md wins over this step.) Commit with a message describing the pipeline, any genuine defects found/fixed during the
    independent sweep, and the site wiring performed (see the OOP/.NET/Web API/EF Core commits in
    this repo's history for the exact tone and structure to match) — then push, following
    whatever attribution convention the current session has been given for this repo.

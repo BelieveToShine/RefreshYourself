@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How do you map a SQL view or query result with no primary key?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Keyless Entities &amp; Views — EF Core Advanced — RefreshYourself">
+<meta property="og:description" content="How do you map a SQL view or query result with no primary key?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Keyless Entities &amp; Views — EF Core Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="efcore/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ccfbf1;--crumb-ink:#0f766e;">🗄️ EF Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Keyless Entities</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 EF Core · Advanced · Deep Dive</div>
+    <h1><code>HasNoKey</code> — <span class="hl hl-adv">a read-only shape for views and queries</span></h1>
+    <p class="interview-q">"How do you map a SQL view or query result with no primary key?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+        <div class="wc-head">👁️ Keyless Entities & Views</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A database view or report query has no primary key, but EF Core entities normally need one — so the usual mapping simply does not fit.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Map it as a keyless entity with <code>HasNoKey()</code> (and <code>ToView()</code> for a view). You can query it with LINQ, but it is never tracked, so it is read-only by design.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Keyless = query it, never save it. <code>HasNoKey().ToView("...")</code>; the change tracker is bypassed.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Keyless entity = <b>"a read-only shape: query it, never save it."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>HasNoKey().ToView("vw_...")</code></b> → map to a view</span>
+      <span class="tc-line"><b>Never tracked</b> → no insert, update or delete through it</span>
+      <span class="tc-line"><b>One-off report</b> → <code>SqlQuery</code> / <code>FromSql</code> projection instead</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 216" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA9" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA9" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arRA9" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">TABLE-BACKED ENTITY vs. VIEW-BACKED KEYLESS ENTITY</text>
+      <g filter="url(#shA9)"><rect x="16" y="36" width="150" height="52" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="91" y="58" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">🗄️ Orders table</text>
+      <text x="91" y="76" text-anchor="middle" font-size="10" fill="#5b6472">a real table</text>
+      
+      <path d="M166,62 H206" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA9)"/>
+      <g filter="url(#shA9)"><rect x="206" y="36" width="190" height="52" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="301" y="58" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📦 Order (has a key)</text>
+      <text x="301" y="76" text-anchor="middle" font-size="10" fill="#5b6472">regular entity</text>
+      
+      <path d="M396,62 H436" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA9)"/>
+      <g filter="url(#shA9)"><rect x="436" y="36" width="188" height="52" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="530" y="58" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🔍 Change tracker</text>
+      <text x="530" y="76" text-anchor="middle" font-size="10" fill="#5b6472">✅ tracked · can be saved</text>
+      
+      <g filter="url(#shA9)"><rect x="16" y="124" width="150" height="52" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="91" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">🗄️ Database view</text>
+      <text x="91" y="164" text-anchor="middle" font-size="10" fill="#5b6472">vw_OrderSummary</text>
+      
+      <path d="M166,150 H206" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA9)"/>
+      <g filter="url(#shA9)"><rect x="206" y="124" width="190" height="52" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="301" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">📄 OrderSummary</text>
+      <text x="301" y="164" text-anchor="middle" font-size="10" fill="#5b6472">HasNoKey + ToView</text>
+      
+      <path d="M396,150 H436" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arRA9)"/>
+      <g filter="url(#shA9)"><rect x="436" y="124" width="188" height="52" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="530" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🔍 Change tracker</text>
+      <text x="530" y="164" text-anchor="middle" font-size="10" fill="#5b6472">🚫 never tracked · read-only</text>
+      
+      <text x="320" y="204" text-anchor="middle" font-size="10" fill="#5b6472">Keyless = a read-only shape: query it, never save it</text>
+    </svg>
+    <figcaption>A keyless entity skips the change tracker, so it can be read but never saved.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"A keyless entity works like any other — I can <code>Add</code> and <code>SaveChanges()</code>."</b> Keyless types are never tracked, so EF Core cannot insert, update or delete through them. Write through the normal entities on the underlying tables.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Keyless view mapping, or a <code>FromSql</code> projection — which one?"</b> Map the view when you reuse the shape and want to build LINQ on top of it. Use a raw-SQL projection for a one-off report that does not deserve a permanent spot in the model.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"For a view or a report query with no primary key, I map a keyless entity with <code>HasNoKey()</code>, and <code>ToView()</code> when it is backed by a database view. I can query it with LINQ, but it is never tracked, so it is read-only. For a one-off report I might use a raw-SQL projection instead."</p>
+    <ul>
+      <li><code>HasNoKey()</code> → <span class="hl hl-adv">entity with no primary key</span>.</li>
+      <li><code>ToView("...")</code> → <span class="hl hl-inter">read from a database view</span>; migrations do not create a table for it.</li>
+      <li>Never tracked → <span class="hl hl-hot">read-only</span>; no insert, update or delete.</li>
+      <li>One-off report → <span class="hl hl-blue">raw-SQL projection</span>, no model entry needed.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <span class="hl hl-blue">keyless entity</span> is an ordinary class that you register with <code>HasNoKey()</code> (or the <code>[Keyless]</code> attribute). EF Core can query it with LINQ — <code>Where</code>, <code>OrderBy</code> and so on — but with no key it has no identity, so the change tracker never follows it. That is why it can be read but never inserted, updated or deleted through EF Core.</p>
+
+      <p><code>ToView("vw_OrderSummary")</code> tells EF Core the data comes from a database view, which is the usual home for keyless types, and EF Core will not create a table for it in migrations. <code>ToSqlQuery(...)</code> can map it to a query instead. For a one-off result you do not want in the model at all, a raw-SQL projection (<code>FromSql</code> on a mapped type, or <code>Database.SqlQuery&lt;T&gt;</code>, which returns non-entity types from EF Core 8) returns the rows directly.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Normal entity</th><th>Keyless entity</th></tr></thead>
+        <tbody>
+          <tr><th>Primary key</th><td>✅ yes</td><td class="no">none</td></tr>
+          <tr><th>Change-tracked</th><td>yes</td><td class="no">never</td></tr>
+          <tr><th><code>SaveChanges()</code> can write it</th><td>yes</td><td class="no">no</td></tr>
+          <tr><th>Typical source</th><td>a table</td><td>a view or a query</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> OrderSummary { <span class="kw">public</span> <span class="kw">int</span> OrderId { <span class="kw">get</span>; <span class="kw">set</span>; } <span class="kw">public</span> <span class="kw">decimal</span> Total { <span class="kw">get</span>; <span class="kw">set</span>; } }
+
+modelBuilder.Entity&lt;OrderSummary&gt;()
+    .HasNoKey()
+    .ToView(<span class="str">"vw_OrderSummary"</span>);              <span class="cx-ok">// ✅ backed by a view, no key</span></code></pre>
+      </div>
+      <p class="cx-note">Register the shape as keyless and point it at the view.</p>
+
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> big = <span class="kw">await</span> db.Set&lt;OrderSummary&gt;()
+    .Where(s =&gt; s.Total &gt; <span class="num">100</span>)               <span class="cx-ok">// ✅ LINQ composes over the view</span>
+    .ToListAsync();
+
+db.Set&lt;OrderSummary&gt;().Add(<span class="kw">new</span> OrderSummary());   <span class="cx-err">// ❌ not allowed — keyless types are never tracked</span></code></pre>
+      </div>
+      <p class="cx-note">Query it freely; saving through it is not possible.</p>
+
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> min = <span class="num">100</span>;
+<span class="kw">var</span> rows = <span class="kw">await</span> db.Database
+    .SqlQuery&lt;SalesRow&gt;(<span class="str">$"SELECT Region, SUM(Total) AS Total FROM Orders WHERE Total &gt; {min} GROUP BY Region"</span>)
+    .ToListAsync();                          <span class="cx-ok">// ✅ one-off report, value is a parameter (EF Core 8+)</span></code></pre>
+      </div>
+      <p class="cx-note">For a one-off report, project raw SQL straight into a type — the interpolated value becomes a parameter.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A reporting screen needs per-customer order totals that a database view already computes and the DBA maintains.</b> Map a keyless <code>OrderSummary</code> to the view and page and filter it with LINQ — no table, no tracking, nothing to accidentally save.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="8.html">← Interceptors &amp; Audit Trails</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to EF Core Advanced</a>
+    <div class="side next"></div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · EF Core · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

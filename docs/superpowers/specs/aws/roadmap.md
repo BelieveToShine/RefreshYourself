@@ -4,7 +4,7 @@ Phase 1 output: [`question-taxonomy.md`](question-taxonomy.md) — 44 concept gr
 user's own source, 6 added by this file's own Phase 2 gap-hunt, one of which is a whole new
 group). This file is Phases 2–6: review, page grouping, tier, priority, and the final roadmap —
 see [`specs/README.md`](../README.md) for what each phase means. **Phase 7 (writing the actual
-pages) has not started** — see "Known gaps" at the bottom.
+pages) is complete** — all 44 pages were written (49 after the 2026-10-07 gap pages — see the addendum at the end); see `overview.md`.
 
 ## Phase 2 — Review & gap-hunt
 
@@ -33,8 +33,8 @@ grouping is already page-sized (SQL, Angular, React all default to this; only sp
 a single group is clearly two distinct pages' worth of content, which none of these 44 are).
 
 - **Basic**: 11 pages (taxonomy groups 1–11).
-- **Intermediate**: 19 pages (taxonomy groups 12–30, including the new CloudFront group).
-- **Advanced**: 14 pages (taxonomy groups 31–44).
+- **Intermediate**: 19 pages (taxonomy groups 12–30, including the new CloudFront group; 22 after the 2026-10-07 gap pages).
+- **Advanced**: 14 pages (taxonomy groups 31–44; 16 after the 2026-10-07 gap pages).
 
 ## Phase 4 — Tier (by question type, not difficulty)
 
@@ -123,7 +123,7 @@ naming):
 
 ## Phase 6 — Final roadmap
 
-**New totals: Basic 11, Intermediate 19, Advanced 14 — 44 pages.**
+**New totals at Phase 6: Basic 11, Intermediate 19, Advanced 14 — 44 pages** (now 49 after the 2026-10-07 gap pages: Basic 11, Intermediate 22, Advanced 16).
 
 | # | Concept group | Tier | Priority | Page |
 |---|---|---|---|---|
@@ -226,9 +226,27 @@ roadmap doc vs. its live page.
 
 ## Known gaps
 
-**Phase 7 has not started — zero pages are written.** This file and `question-taxonomy.md` are
+**Status (updated 2026-10-06): Phase 7 is complete — all pages are written; see `overview.md` for the count. The text below is the Phase 6 plan as locked.** This file and `question-taxonomy.md` are
 Phases 1–6 only. `aws/roadmap.html`, the three tier `index.html` skeleton pages, and the root
 tile's roadmap-badge are wired per the Phase-1 mandate (see
 [`specs/README.md`](../README.md)), honestly labeled as draft/not-yet-written — the root tile
-stays in its "Coming soon" state and none of the 44 pages exist yet. Nothing here should be
-mistaken for a completed track.
+was "Coming soon" at the Phase 6 stage. (Historical note — all 44 pages have since been written
+and wired; this section is kept as the Phase 6 record.)
+
+## Addendum 2026-10-06 — gap pages (Phases 2–6)
+
+Active gap-hunt against the 44 live pages and `docs/review-2026-10-06.md` §4/§5. Numbering takes the **next free number in each tier** (permanent, never renumber). Counts on disk at time of writing: Basic 11, Intermediate 19, Advanced 14. **Status: all pages in this addendum were written and wired on 2026-10-07** (track total 44 -> 49: Basic 11, Intermediate 22, Advanced 16).
+
+| # | Tier | Pri | Title | Quoted interview question | Scope (one sentence) | Diagram idea | Cross-links |
+|---|---|---|---|---|---|---|---|
+| Intermediate 20 | Intermediate | ⭐ | Step Functions in Depth | "Step Functions Standard vs. Express — and how do you handle retries, errors and long waits?" | State types (Task/Choice/Parallel/Map/Wait), Standard vs. Express (duration, execution semantics, cost model), Retry/Catch, and the saga-with-compensation use; today it is only a mention in two pages. | A small state machine with a Choice + Retry/Catch branch to a compensation state, with Standard/Express badges. | advanced/4, advanced/5 (saga), intermediate/12, basic/9 |
+| Intermediate 21 | Intermediate | ⭐ | KMS & Envelope Encryption | "How does envelope encryption work, and how do KMS key policies differ from IAM policies?" | KMS keys (AWS-managed vs. customer-managed), envelope encryption (data key encrypts data, KMS key encrypts the data key), key policy + grants, rotation; "envelope" appears on no page today. | Plaintext -> data key -> ciphertext, with the encrypted data key stored beside the data and KMS wrapping it. | basic/5 (SSE-KMS), intermediate/3, intermediate/4, advanced/9 |
+| Intermediate 22 | Intermediate | ⭐ | Block & File Storage — EBS, EFS & FSx | "gp3 vs. io2, EBS vs. EFS vs. instance store — which for a database and which for shared files?" | Closes the EBS-volume-types promise: gp3/io2/st1/sc1 trade-offs, snapshots, Multi-Attach caveats, vs. EFS (shared NFS) and FSx options; verify current limits before writing. | Decision tree: shared across instances? / IOPS-critical? / throughput-heavy? -> volume or file service. | basic/4, basic/5, intermediate/18, intermediate/5 |
+| Advanced 15 | Advanced | ⭐ | Multi-Account Governance — Organizations, Control Tower & Config | "How do you govern 50 AWS accounts — guardrails, baseline, and continuous compliance?" | Organizations OUs + SCPs, Control Tower landing zone and guardrails, Config rules/conformance packs for drift detection; closes the Control Tower/Config roadmap promise (Config is a one-line mention today). | OU tree with SCPs flowing down, Control Tower baseline in each account, Config feeding a central audit account. | intermediate/3, intermediate/4, advanced/9, advanced/1 |
+| Advanced 16 | Advanced | ⭐ | DynamoDB Data Modeling — Access Patterns, Single-Table & Streams | "Model orders, customers and items in DynamoDB — how do you design keys, and when single-table?" | Access-patterns-first design, composite sort keys, single-table vs. multi-table trade-off, LSI vs. GSI choice, transactions, Streams and TTL as design tools; extends the basics on `intermediate/7` rather than repeating them. | One table with mixed item types sharing a partition key, and arrows from three access patterns to key/GSI lookups. | intermediate/7, advanced/6, advanced/13, intermediate/13 |
+
+**Dropped, with reasons**
+- **Session Manager, ACM+HTTPS (as separate pages)** — Session Manager is explained in `basic/4` and ACM in `basic/7`; both are one-liners at interview depth, so the roadmap promise is treated as met and the stale roadmap wording should be trimmed, not paged. EBS volume types get the wider storage page above.
+- **Route 53 routing policies, CloudFront** — already pages (`basic/11` lists simple/weighted/latency/failover; `intermediate/19`).
+- **Secrets Manager vs. Parameter Store, Cognito, WAF, GuardDuty, X-Ray** — covered inside existing security/IaC/observability pages.
+- **Athena/Glue/Redshift analytics page** — data architecture (`advanced/6`) covers it at interview depth.

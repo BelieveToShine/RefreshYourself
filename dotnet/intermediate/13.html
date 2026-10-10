@@ -3,40 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What's the difference between cookie-based and token-based (JWT) authentication, and what does [Authorize] actually check?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Authentication Schemes — .NET Intermediate — RefreshYourself">
+<meta property="og:description" content="What's the difference between cookie-based and token-based (JWT) authentication, and what does [Authorize] actually check?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <title>Authentication Schemes — .NET Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body data-root="../../" data-tier-key="dotnet/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
 
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
-      <span class="gicon">🔎</span>
+      <span class="gicon" aria-hidden="true">🔎</span>
       <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
-      <span class="gkey">/</span>
+      <span class="gkey" aria-hidden="true">/</span>
       <div class="gsearch-results" role="listbox"></div>
     </div>
   </div>
@@ -54,7 +46,7 @@
   </nav>
 </div>
 
-<main class="wrap">
+<main class="wrap" id="main">
   <section class="hero">
     <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 .NET · Intermediate · Must Know</div>
     <h1>Cookie or Bearer token — <span class="hl hl-hot">who's actually carrying your login?</span></h1>
@@ -69,15 +61,15 @@
           <div class="wc-head">🍪 Cookie</div>
           <div class="wc-ps">
             <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A server-rendered browser app needs to know who's calling on every request, without asking client code to manually attach that identity each time.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The server issues an encrypted cookie holding the identity on login, the browser resends it automatically on every request, and the server checks it with a session lookup — which is also why killing that session revokes access instantly.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The server issues an encrypted cookie holding the identity on login, the browser resends it automatically on every request, and the server decrypts it to know who's calling — and if the app also keeps a server-side session store, killing that session can revoke access.</span></div>
           </div>
-          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Cookie = server-issued identity, browser auto-resends, kill the session to revoke.</span></div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Cookie = server-issued identity, browser auto-resends; revoke early only with a server-side store.</span></div>
         </div>
         <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
           <div class="wc-head">🎫 JWT (Bearer)</div>
           <div class="wc-ps">
             <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>APIs, mobile apps, and service-to-service calls have no browser to auto-resend a cookie, and a server-side session lookup on every call doesn't scale across many independent services.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The client stores a signed token itself and attaches it manually as a Bearer header, and the server verifies only the signature with no session lookup — the same statelessness that makes revocation hard: it stays valid until it expires unless a denylist is built.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The client stores a signed token itself and attaches it manually as a Bearer header, and the server verifies only the signature with no session lookup — which is also why it can't be cancelled early.</span></div>
           </div>
           <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">JWT = client-held, manually attached, verified by signature only — hard to kill early.</span></div>
         </div>
@@ -91,7 +83,7 @@
       <p class="rrow"><code>Cookie</code> <span class="rarrow">→</span> <b>server</b> remembers you</p>
       <p class="rrow"><code>JWT</code> <span class="rarrow">→</span> <b>you</b> carry the proof</p>
     </div>
-    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Cookie</code></b> is stateful — the browser resends it for you. <b><code>JWT</code></b> is stateless — the client has to attach it itself.</p>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Cookie</code></b> is resent by the browser for you. <b><code>JWT</code></b> is stateless — the client has to attach it itself.</p>
   </div>
 
   <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
@@ -135,7 +127,7 @@
 
       <g filter="url(#shI13)"><rect x="30" y="212" width="260" height="44" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
       <text x="160" y="231" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🔓 Server decrypts cookie</text>
-      <text x="160" y="246" text-anchor="middle" font-size="10.5" fill="#5b6472">session state lives server-side</text>
+      <text x="160" y="246" text-anchor="middle" font-size="10.5" fill="#5b6472">server decrypts it, no client code</text>
 
       <text x="160" y="284" text-anchor="middle" font-size="11" fill="#5b6472">Browser and server keep bouncing the</text>
       <text x="160" y="299" text-anchor="middle" font-size="11" fill="#5b6472">same cookie back and forth</text>
@@ -168,7 +160,7 @@
       <text x="480" y="284" text-anchor="middle" font-size="11" fill="#5b6472">Token carries its own proof — the</text>
       <text x="480" y="299" text-anchor="middle" font-size="11" fill="#5b6472">server never stores a session for it</text>
     </svg>
-    <figcaption>Same shape, opposite ownership — the server keeps the cookie's session, the client keeps the token's proof.</figcaption>
+    <figcaption>Same shape, opposite ownership — the server issues the cookie, the client keeps the token's proof.</figcaption>
   </figure>
 
   <div class="trap">
@@ -178,18 +170,18 @@
 
   <div class="followup">
     <div class="fhead">🔄 Likely Follow-up</div>
-    <p class="ftline"><b>"If a JWT is stolen, what can you actually do about it before it expires?"</b> Short expiry plus a refresh-token rotation pattern is the standard mitigation — a stolen short-lived token limits the exposure window; true instant revocation typically needs a server-side denylist, which reintroduces some of the statefulness JWT was meant to avoid.</p>
+    <p class="ftline"><b>"If a JWT is stolen, what can you actually do about it before it expires?"</b> Not much on the token itself — that is exactly why access tokens are kept short-lived and paired with a server-checked refresh token. The full token lifecycle and revocation story is on <a href="../../webapi/intermediate/9.html">JWT &amp; Refresh Tokens</a> in Web API.</p>
   </div>
 
   <div class="keypoints">
     <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
     <p class="kp-primary">"Cookie auth has the server create an encrypted cookie holding the user's identity on login, and the browser resends it automatically on every request. Token-based (JWT) auth has the server issue a signed token that the client stores and attaches itself as a Bearer header, with no server-side session lookup. <code>[Authorize]</code> just checks whether <code>HttpContext.User</code> — populated by the authentication middleware — is an authenticated identity, and that check happens in the authorization stage, right after authentication already ran."</p>
     <ul>
-      <li><code>Cookie</code> <span class="hl hl-blue">→ server-managed session</span>, the browser resends it for you.</li>
+      <li><code>Cookie</code> <span class="hl hl-blue">→ server-issued encrypted cookie</span>, the browser resends it for you.</li>
       <li><code>JWT</code> <span class="hl hl-inter">→ client-managed, self-contained</span>, no server lookup needed.</li>
       <li>Multiple schemes can run together → <span class="hl hl-teal">cookies + bearer, side by side</span>, chosen per endpoint.</li>
       <li><code>[Authorize]</code> checks <span class="hl hl-hot">HttpContext.User</span>, after authentication middleware already ran.</li>
-      <li>Revocation → <span class="hl hl-hot">a JWT is hard to kill early</span>; short expiry plus refresh rotation is the standard fix.</li>
+      <li>Revoking a JWT early → <span class="hl hl-hot">covered under token lifecycle</span> — see <a href="../../webapi/intermediate/9.html">JWT &amp; Refresh Tokens</a>.</li>
     </ul>
   </div>
 
@@ -199,7 +191,7 @@
       <p><span class="hl hl-blue">Cookie-based auth</span> has the server create an encrypted
       authentication cookie containing the user's claims on a successful login, and send it to the
       browser. The browser automatically re-sends that cookie on every later request, and the
-      server decrypts it each time to know who's calling — a server-managed session. That's an
+      server decrypts it each time to know who's calling — a server-issued login. That's an
       easy fit for a traditional browser-rendered app, but cookies don't travel naturally to
       non-browser clients — a mobile app, or a SPA calling an API on a different origin — without
       extra work.</p>
@@ -209,10 +201,9 @@
       it and attaching it (<code>Authorization: Bearer &lt;token&gt;</code>) to every later
       request. The server only verifies the signature — no server-side session lookup is
       needed, because the token is self-contained. That statelessness is exactly why JWT fits
-      APIs, mobile apps, SPAs, and service-to-service calls so well, at the cost of harder
-      revocation: a JWT stays valid until it expires, with no simple "log this session out right
-      now" the way killing a server-side cookie session provides, unless extra infrastructure is
-      built for it.</p>
+      APIs, mobile apps, SPAs, and service-to-service calls so well. The cost is that a JWT can't be
+      individually cancelled once issued — how short-lived access tokens and refresh tokens work around
+      that is covered on <a href="../../webapi/intermediate/9.html">JWT &amp; Refresh Tokens</a>.</p>
 
       <p><code>[Authorize]</code> checks whether <code>HttpContext.User</code> — populated by
       whichever authentication middleware actually ran, cookie or JWT bearer or both — represents
@@ -229,9 +220,9 @@
         <tbody>
           <tr><th>Where identity lives</th><td>encrypted cookie, issued by server</td><td>signed token, held by client</td></tr>
           <tr><th>Who resends it</th><td>browser, automatically</td><td>client code, manually</td></tr>
-          <tr><th>Server-side check</th><td>decrypts cookie, session lookup</td><td>verifies signature, no lookup</td></tr>
+          <tr><th>Server-side check</th><td>decrypts cookie (no lookup by default)</td><td>verifies signature, no lookup</td></tr>
           <tr><th>Best fit</th><td>server-rendered browser apps</td><td>APIs, mobile, SPAs, cross-service</td></tr>
-          <tr><th>Revocation</th><td>kill the server session instantly</td><td class="no">❌ valid until expiry, unless denylisted</td></tr>
+          <tr><th>Revocation</th><td>instant only with a server-side session store</td><td class="no">❌ valid until expiry, unless denylisted</td></tr>
         </tbody>
       </table>
     </div>
@@ -343,18 +334,18 @@
               <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">REVOKE RIGHT NOW</text>
               <rect x="20" y="22" width="185" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
               <text x="112" y="40" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🍪 Cookie</text>
-              <text x="112" y="54" text-anchor="middle" font-size="9" fill="#166534">kill session now ✅</text>
+              <text x="112" y="54" text-anchor="middle" font-size="9" fill="#166534">with a session store ✅</text>
               <path d="M240,20 V64" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="3 3" fill="none"/>
               <rect x="275" y="22" width="185" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
               <text x="368" y="40" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🎫 JWT</text>
               <text x="368" y="54" text-anchor="middle" font-size="9" fill="#991b1b">valid until expiry ❌</text>
             </svg>
           </div>
-          <p class="uc-what">A cookie session can be killed server-side instantly. A JWT can't — it
-          stays valid until it naturally expires unless a denylist has been built, which
-          reintroduces the server-side state JWT was meant to avoid. <b>Candidates often assume
-          revoking a JWT is as easy as revoking a cookie session — it isn't.</b></p>
-          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Cookie revokes instantly; JWT needs a denylist or a short expiry.</span></div>
+          <p class="uc-what">A cookie can be revoked right away only if the app keeps a server-side session store
+          to kill. A JWT has no such store — it stays valid until it expires. <b>Candidates often assume
+          revoking a JWT is as easy as killing a server-side cookie session — it isn't.</b> The workaround
+          is on <a href="../../webapi/intermediate/9.html">JWT &amp; Refresh Tokens</a>.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Cookie revokes instantly only with a session store; a JWT can't be cancelled early.</span></div>
         </div>
 
       </div>
@@ -365,8 +356,8 @@
     <summary>🌍 Real-world example <span class="chev">▾</span></summary>
     <div class="toggle-body">
       <p><b>A cookie is a coat-check ticket; a JWT is a stamped wristband.</b> Hand the coat-check
-      ticket back and the venue (the server) looks up what's yours — it's the one keeping the
-      record. A stamped wristband you carry yourself — anyone can check the stamp is genuine
+      ticket back and the venue (the server) can look up what's yours if it keeps
+      a record. A stamped wristband you carry yourself — anyone can check the stamp is genuine
       without ever calling the venue.</p>
       <p><b>Scenario:</b> your team ships a browser-rendered admin dashboard and a public mobile
       app against the same ASP.NET Core backend. The dashboard uses the cookie scheme because the

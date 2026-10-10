@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 34 pages written
+## Status — Phases 1–7 complete, all 39 pages written (34 original + 5 gap pages added 2026-10-07)
 
 - **Phase 1** — the user shared a fully detailed, vendor-style 32-group plan directly (a compact
   ASCII overview tree across HTML / CSS Fundamentals / Layout / Styling & UI / Advanced-Production
@@ -77,7 +77,7 @@ keeping it in sync with the live pages.
   and color `#e11d48` (both reserved when the tile was first added to the "🎨 Frontend" homepage
   section, 2026-09-18) preserved.
 
-## Basic (14 topics) — 14 written
+## Basic (15 topics) — 15 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -95,8 +95,9 @@ keeping it in sync with the live pages.
 | 12 | HTML5 Elements & Browser APIs | ⭐ | ✅ |
 | 13 | SEO & Web Semantics | ⭐ | ✅ |
 | 14 | Inheritance | ⭐ | ✅ |
+| 15 | Script Loading — defer vs. async | 🔥 | ✅ |
 
-## Intermediate (13 topics) — 13 written
+## Intermediate (16 topics) — 16 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -113,8 +114,11 @@ keeping it in sync with the live pages.
 | 11 | Modern CSS Layout | ⭐ | ✅ |
 | 12 | Transitions & Animations | ⭐ | ✅ |
 | 13 | Colors, Backgrounds & Gradients | ⭐ | ✅ |
+| 14 | Margin Collapsing | 🔥 | ✅ |
+| 15 | Float & Clearfix (Legacy Layout) | ⭐ | ✅ |
+| 16 | Lazy Loading & Resource Hints | ⭐ | ✅ |
 
-## Advanced (7 topics) — 7 written
+## Advanced (8 topics) — 8 written
 
 | # | Topic | Priority | Written? |
 |---|---|---|---|
@@ -125,6 +129,7 @@ keeping it in sync with the live pages.
 | 5 | CSS Cascade Layers | ⭐ | ✅ |
 | 6 | CSS Architecture | ⭐ | ✅ |
 | 7 | Cross-Browser Compatibility | ⭐ | ✅ |
+| 8 | Core Web Vitals (LCP, INP, CLS) | ⭐ | ✅ |
 
 ## Where the roadmap came from
 
@@ -174,3 +179,5 @@ None — this track went through the full 7-phase pipeline, and every page passe
 independent diagram-verification sweep (34/34 pages, 43/43 diagrams, `issueCount: 0` on the final
 sweep, re-confirmed clean after the pager-consistency and site-wiring edits — see the Status
 section above for the real defects found and fixed along the way, not glossed over).
+
+- **Gap pages added 2026-10-07 (planned 2026-10-06):** 5 gap pages written and wired (34 -> 39) — Basic 15 Script Loading — defer vs. async; Intermediate 14 Margin Collapsing, 15 Float & Clearfix (Legacy Layout), 16 Lazy Loading & Resource Hints; Advanced 8 Core Web Vitals (LCP, INP, CLS) - see the `Addendum 2026-10-06` section in [`roadmap.md`](roadmap.md). Counts: Basic 15, Intermediate 16, Advanced 8.

@@ -3,40 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Beyond N+1, what else commonly causes EF Core performance problems?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Beyond N+1 — Common Performance Pitfalls — EF Core Advanced — RefreshYourself">
+<meta property="og:description" content="Beyond N+1, what else commonly causes EF Core performance problems?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <title>Beyond N+1 — Common Performance Pitfalls — EF Core Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body data-root="../../" data-tier-key="efcore/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
 
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
-      <span class="gicon">🔎</span>
+      <span class="gicon" aria-hidden="true">🔎</span>
       <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
-      <span class="gkey">/</span>
+      <span class="gkey" aria-hidden="true">/</span>
       <div class="gsearch-results" role="listbox"></div>
     </div>
   </div>
@@ -54,7 +46,7 @@
   </nav>
 </div>
 
-<main class="wrap">
+<main class="wrap" id="main">
   <section class="hero">
     <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 EF Core · Advanced · Must Know</div>
     <h1>No N+1 in sight — so why is the query still <span class="hl hl-hot">slow</span>?</h1>
@@ -85,9 +77,9 @@
           <div class="wc-head">🔍 Missing indexes</div>
           <div class="wc-ps">
             <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>An unindexed filtered/sorted column forces a full table scan.</span></div>
-            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Add a database index — EF Core can't fix this itself.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Add an index — declared with <code>HasIndex()</code> and created by a migration; EF Core can't detect the need for it.</span></div>
           </div>
-          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Missing indexes → EF Core can't see or fix them; that's the DBA's job.</span></div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Missing indexes → EF Core can't spot them; you add the index (<code>HasIndex()</code> + migration).</span></div>
         </div>
       </div>
     </div>
@@ -98,7 +90,7 @@
     <div class="rgrid">
       <p class="rrow">No <b>projection</b> <span class="rarrow">→</span> loading more than you need</p>
       <p class="rrow">No <b>AsNoTracking</b> <span class="rarrow">→</span> tracking rows you'll never save</p>
-      <p class="rrow">No <b>index</b> <span class="rarrow">→</span> a scan EF Core can't see or fix</p>
+      <p class="rrow">No <b>index</b> <span class="rarrow">→</span> a scan EF Core can't see — you add the index</p>
     </div>
     <p class="rthink"><b class="tc-label">Think:</b> fixing <b><code>N+1</code></b> kills the extra
     round trips. These three are about what happens on the <b>one</b> round trip that's left.</p>
@@ -181,7 +173,7 @@
     <div class="thead">⚠️ Common Trap</div>
     <p class="tline"><b>A clean LINQ query is not the same as a fast SQL query.</b> EF Core's job
     ends at generating correct, reasonably-shaped SQL — whether that SQL actually runs fast is a
-    database and indexing question EF Core has zero visibility into or control over.</p>
+    database and indexing question EF Core can't see into — it won't warn you about a missing index, though you can add one with <code>HasIndex()</code>.</p>
   </div>
 
   <div class="followup">
@@ -198,11 +190,11 @@
     <p class="kp-primary">"Past N+1, I check three things: projection — am I loading only the
     fields I need; tracking — should this be <code>AsNoTracking</code> since it's read-only; and
     indexing — are the <code>WHERE</code> and <code>ORDER BY</code> columns actually indexed,
-    because that last one is entirely outside EF Core's control."</p>
+    because EF Core can't see that one — I add the index myself, through a migration."</p>
     <ul>
       <li>Over-fetching → <span class="hl hl-blue">project into a DTO, don't load the whole entity</span>.</li>
       <li>Unneeded tracking → <span class="hl hl-basic">use AsNoTracking for read-only queries at scale</span>.</li>
-      <li>Missing indexes → <span class="hl hl-hot">EF Core can't see or fix the database's own indexing</span>.</li>
+      <li>Missing indexes → <span class="hl hl-hot">EF Core can't detect them</span> — you add the index (<code>HasIndex()</code> + migration).</li>
       <li>Clean LINQ ≠ fast SQL → <span class="hl hl-inter">always check the real execution plan under load</span>.</li>
       <li>At architect depth → <span class="hl hl-adv">ask for the execution plan before proposing a code change</span>.</li>
     </ul>
@@ -227,9 +219,9 @@
 
       <p>The third cause sits outside EF Core entirely. EF Core will generate a
       <code>WHERE</code> or <code>ORDER BY</code> against any column referenced in LINQ, but it
-      has no visibility into — and no control over — whether that column is actually indexed in
-      the database. An unindexed column still forces a full table scan no matter how clean the
-      generated SQL looks. That's a schema/DBA-side fix — the indexing mechanics themselves belong
+      has no visibility into whether that column is actually indexed in
+      the database, and it won't warn you. An unindexed column still forces a full table scan no matter how clean the
+      generated SQL looks. The fix is a schema change — you declare the index with <code>HasIndex()</code> and a migration creates it; the indexing mechanics themselves belong
       to the <a href="../../sql/roadmap.html">SQL track</a>, still early in its own build-out.</p>
 
       <table class="cmp-table">
@@ -237,8 +229,8 @@
         <tbody>
           <tr><th>What happens</th><td>every mapped column and included navigation comes back, used or not</td><td>a full snapshot of every tracked row, kept for changes that never happen</td><td>the database scans the whole table on the filtered/sorted column</td></tr>
           <tr><th>Cost</th><td>wasted bandwidth &amp; memory</td><td>memory and CPU for a comparison that never runs</td><td>query time grows with table size, not rows returned</td></tr>
-          <tr><th>Fixed by</th><td><code>Select()</code> into a DTO</td><td><code>AsNoTracking()</code></td><td>a database index — schema side</td></tr>
-          <tr><th>Who can fix it</th><td>the developer, in LINQ</td><td>the developer, in LINQ</td><td>❌ not EF Core — the DB schema/DBA</td></tr>
+          <tr><th>Fixed by</th><td><code>Select()</code> into a DTO</td><td><code>AsNoTracking()</code></td><td>an index — <code>HasIndex()</code> + migration</td></tr>
+          <tr><th>Who can fix it</th><td>the developer, in LINQ</td><td>the developer, in LINQ</td><td>⚠️ EF Core can't detect it — you add the index, with the DBA's help</td></tr>
         </tbody>
       </table>
     </div>

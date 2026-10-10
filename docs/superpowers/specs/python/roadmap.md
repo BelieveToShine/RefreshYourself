@@ -4,7 +4,7 @@ Phase 1 output: [`question-taxonomy.md`](question-taxonomy.md) — 43 concept gr
 user's own source, 8 added by this file's own Phase 2 gap-hunt). This file is Phases 2–6:
 review, page grouping, tier, priority, and the final roadmap — see
 [`specs/README.md`](../README.md) for what each phase means. **Phase 7 (writing the actual
-pages) has not started** — see "Known gaps" at the bottom.
+pages) is complete** — all 43 pages were written (47 after the 2026-10-07 gap pages — see the addendum at the end); see `overview.md`.
 
 ## Phase 2 — Review & gap-hunt
 
@@ -44,8 +44,8 @@ One page per concept group, the same 1:1 default every other track uses when the
 grouping is already page-sized.
 
 - **Basic**: 11 pages (taxonomy groups 1–11).
-- **Intermediate**: 14 pages (taxonomy groups 12–25).
-- **Advanced**: 18 pages (taxonomy groups 26–43).
+- **Intermediate**: 14 pages (taxonomy groups 12–25; 16 after the 2026-10-07 gap pages).
+- **Advanced**: 18 pages (taxonomy groups 26–43; 20 after the 2026-10-07 gap pages).
 
 ## Phase 4 — Tier (by question type, not difficulty)
 
@@ -135,7 +135,7 @@ naming):
 
 ## Phase 6 — Final roadmap
 
-**New totals: Basic 11, Intermediate 14, Advanced 18 — 43 pages.**
+**New totals at Phase 6: Basic 11, Intermediate 14, Advanced 18 — 43 pages** (now 47 after the 2026-10-07 gap pages: Basic 11, Intermediate 16, Advanced 20).
 
 | # | Concept group | Tier | Priority | Page |
 |---|---|---|---|---|
@@ -234,7 +234,23 @@ If a page is later added, renamed, or moved during Phase 7, update this table **
 
 ## Known gaps
 
-**Phase 7 has not started — zero pages are written.** This file and `question-taxonomy.md` are
+**Status (updated 2026-10-06): Phase 7 is complete — all pages are written; see `overview.md` for the count. The text below is the Phase 6 plan as locked.** This file and `question-taxonomy.md` are
 Phases 1–6 only. `python/roadmap.html`, the three tier `index.html` skeleton pages, and the root
 tile's roadmap-badge are wired per the Phase-1 mandate, honestly labeled as draft/not-yet-written
-— the root tile stays in its "Coming soon" state and none of the 43 pages exist yet.
+— (historical Phase 6 note: at that point the tile was "Coming soon"; all 43 pages have since been written and wired.)
+
+
+## Addendum 2026-10-06 — gap pages (Phases 2–6)
+
+**Status: all pages in this addendum were written and wired on 2026-10-07** (track total 43 -> 47). On-disk counts before the addendum: Basic 11, Intermediate 14, Advanced 18 = 43. Checked and **dropped**: `X | None` / `Optional` / `TypeVar` (intermediate/9 covers them; the 3.12 `type` statement is a one-line fold-in there, not a page). `functools.lru_cache` is only a bullet inside advanced/12 (app-level caching), so a focused page is kept.
+
+| # | Tier | Pri | Title | Interview question | Scope (one sentence) | Diagram idea | Cross-links |
+|---|---|---|---|---|---|---|---|
+| 44 | Intermediate (`intermediate/15.html`) | ⭐ | functools.cache & lru_cache | "How do you memoize a function in Python, and what are the limits of `lru_cache`?" | `@cache` (unbounded) vs. `@lru_cache(maxsize)`, hashable args, `cache_clear`, `cached_property`; memory growth and method pitfalls. | Call -> key lookup -> hit/miss paths with LRU eviction. | intermediate/5, advanced/12, basic/4 |
+| 45 | Intermediate (`intermediate/16.html`) | ⭐ | match Statement (Structural Pattern Matching) | "What is `match`/`case` in Python — is it just a switch?" | Matches shape and destructures (sequences, mappings, classes, guards); not a C-style switch; 3.10+. | Value flowing through case patterns with destructured bindings. | basic/1, intermediate/9, basic/11 |
+| 46 | Advanced (`advanced/19.html`) | 🔥 | asyncio TaskGroup & timeout | "How do you run concurrent tasks safely in asyncio and cancel them on failure or timeout?" | 3.11+ `async with asyncio.TaskGroup()` (structured concurrency: a failing task cancels siblings) and `asyncio.timeout()` vs. `gather`/`wait_for`. | Parent scope with child tasks; one fails -> siblings cancelled. | advanced/10, advanced/20, basic/9 |
+| 47 | Advanced (`advanced/20.html`) | 🧠 | ExceptionGroup & except* | "What is `except*` and why was `ExceptionGroup` added?" | Several unrelated errors raised together (e.g. from a TaskGroup); `except*` handles by type and leaves the rest; 3.11+. | Group box split into matched / unmatched subgroups. | advanced/19, basic/9 |
+
+New totals: Basic 11, Intermediate 16, Advanced 20 = **47**.
+
+**Dropped / folded:** typing syntax (covered), walrus (basic/1), `__slots__`, pathlib/enum/itertools (all covered).

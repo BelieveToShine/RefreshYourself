@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How do you make Azure SQL survive a regional outage, and when would you use an elastic pool?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Azure SQL High Availability — Geo-Replication, Failover Groups &amp; Elastic Pools — Azure Intermediate — RefreshYourself">
+<meta property="og:description" content="How do you make Azure SQL survive a regional outage, and when would you use an elastic pool?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Azure SQL High Availability — Geo-Replication, Failover Groups &amp; Elastic Pools — Azure Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="azure/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0f2fe;--crumb-ink:#0078D4;">☁️ Azure</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Azure SQL HA — Geo-Replication &amp; Pools</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Azure · Intermediate · Should Know</div>
+    <h1>Copy it to <span class="hl hl-hot">another region</span>, put one <span class="hl hl-blue">listener</span> in front</h1>
+    <p class="interview-q">"How do you make Azure SQL survive a regional outage, and when would you use an elastic pool?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+<div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🌍 Active geo-replication</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Built-in high availability protects against a failure inside a region, but if the whole region goes down, a single database has nowhere else to run.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Geo-replication keeps a readable secondary copy in another region, continuously updated, that you can fail over to.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Geo-replication = a readable copy in another region.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+          <div class="wc-head">🔗 Failover group</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>With plain geo-replication each database fails over separately and apps must switch connection strings by hand mid-incident.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A failover group fails over a set of databases together and gives you listener endpoints whose names stay the same, so the app does not change.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Failover group = group failover + one stable endpoint.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🏊 Elastic pool</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Many small databases with different busy times each sized for their own peak waste money, since most sit idle most of the time.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An elastic pool lets them share one set of resources, so one database's busy hour uses what the quiet ones are not.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Pool = shared budget for many small, uneven databases.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">In-region failure <span class="rarrow">→</span> <b>built-in HA covers it</b></p>
+      <p class="rrow">Region outage <span class="rarrow">→</span> <b>geo-replica / failover group</b></p>
+      <p class="rrow">Apps keep one name <span class="rarrow">→</span> <b>failover group listener</b></p>
+      <p class="rrow">Many small DBs <span class="rarrow">→</span> <b>elastic pool</b></p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> copy it <b>across regions</b>, front it with a <b>listener</b>, pool the <b>small ones</b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 680 252" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shSq" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arSq" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arSqG" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arSqR" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="340" y="14" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.5">SURVIVING A REGION OUTAGE</text>
+      <g filter="url(#shSq)"><rect x="230" y="26" width="200" height="36" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8"/></g>
+      <text x="330" y="49" text-anchor="middle" font-size="11" font-weight="700" fill="#6d28d9">🔗 Failover group listener</text>
+      <path d="M260,62 V80 H139 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSq)"/>
+      <path d="M400,62 V80 H521 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSq)" stroke-dasharray="6 4"/>
+      <rect x="24" y="100" width="230" height="100" rx="14" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="139" y="117" text-anchor="middle" font-size="10" font-weight="700" fill="#334155">Region A — primary</text>
+      <g filter="url(#shSq)"><rect x="44" y="126" width="190" height="58" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="139" y="153.5" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">🗄️ Primary database</text>
+      <text x="139" y="167.5" text-anchor="middle" font-size="9" fill="#5b6472">read-write · zone copies inside</text>
+      <rect x="406" y="100" width="230" height="100" rx="14" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="521" y="117" text-anchor="middle" font-size="10" font-weight="700" fill="#334155">Region B — secondary</text>
+      <g filter="url(#shSq)"><rect x="426" y="126" width="190" height="58" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="521" y="153.5" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🗄️ Secondary database</text>
+      <text x="521" y="167.5" text-anchor="middle" font-size="9" fill="#5b6472">readable · takes over on failover</text>
+      <path d="M234,155 H426" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSq)"/>
+      <text x="330" y="148" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">async copy</text>
+      <rect x="190" y="212" width="300" height="30" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+      <text x="340" y="231" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">🏊 Elastic pool: many small DBs share one budget</text>
+    </svg>
+    <figcaption>The app talks to the failover group listener, which points at whichever region is primary. The copy between regions is asynchronous. The pool is a separate cost idea, shown as an inset.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Geo-replication means zero data loss."</b> The copy to the other region is asynchronous, so a failover after a real outage can lose the most recent writes — your recovery point is not zero. Never promise zero data loss for a forced failover.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Automatic or manual failover?"</b> Microsoft recommends the customer-managed policy (<code>Manual</code> in the CLI, and the CLI default), so you decide when to fail over. The <code>Automatic</code> value means Microsoft-managed: Microsoft fails over only in a widespread regional outage, after a grace period that cannot be set below one hour, and may act only in extreme cases. Do not rely on it; test your own failover regularly.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Built-in high availability handles failures inside a region. For a regional outage I would use a failover group — geo-replicated databases with a listener endpoint that stays the same after failover. An elastic pool is a different tool, for many small databases that share resources."</p>
+    <ul>
+      <li>In-region HA <span class="hl hl-basic">→ built in</span>, zone-redundant options on supported tiers.</li>
+      <li>Geo-replication <span class="hl hl-blue">→ readable secondary</span> in another region.</li>
+      <li>Failover group <span class="hl hl-hot">→ one listener</span> that survives the failover.</li>
+      <li>Replication is async <span class="hl hl-inter">→ RPO is not zero</span>, so recent writes can be lost.</li>
+      <li>Elastic pool <span class="hl hl-teal">→ cost sharing</span>, not a disaster-recovery feature.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Azure SQL already keeps your database highly available <b>inside a region</b>, and some tiers can spread copies across availability zones. That does not help if the whole region is lost, so you add a second region on purpose. <b>Active geo-replication</b> keeps a readable secondary copy of a database in another region; you fail it over yourself when you need to.</p>
+
+      <p>A <b>failover group</b> builds on that for a set of databases on a pair of servers. It fails them over together and exposes <b>listener endpoints</b> that keep the same name after a failover: <code>&lt;name&gt;.database.windows.net</code> for read-write and <code>&lt;name&gt;.secondary.database.windows.net</code> for read-only. The app's connection string does not change. The secondary server must be in a different region. Because replication is <b>asynchronous</b>, a forced failover can lose the latest writes.</p>
+
+      <p>An <b>elastic pool</b> is about cost, not resilience: many small databases with busy times at different hours share one pool of resources instead of each being sized for its own peak. It suits many tenants with uneven load, not one big steady database.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Azure CLI</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt"># group two servers in different regions so the listener name survives a failover</span>
+<span class="cx-cmt"># Manual = customer-managed policy (recommended, and the default)</span>
+<span class="kw">az sql failover-group create</span> --name orders-fg --resource-group rg-data --server sql-eastus --partner-server sql-westus --add-db ordersdb --failover-policy Manual</code></pre>
+      </div>
+      <p class="cx-note">Apps connect to <code>orders-fg.database.windows.net</code>, not to either server, so the connection string stays the same after a failover. The group name must be globally unique under <code>.database.windows.net</code>; server names here are made up. To fail over yourself, run <code>az sql failover-group set-primary</code> against the secondary server.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A SaaS vendor hosts hundreds of small tenant databases in an elastic pool so quiet tenants fund the busy ones, and puts the pool's important databases in a failover group so one region outage does not take every customer down.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="20.html">← Azure Functions — Triggers, Bindings &amp; Hosting Plans</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Azure Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="22.html">Storage Redundancy &amp; Access Tiers →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Azure · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

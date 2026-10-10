@@ -3,40 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What's the difference between just retrying on failure and genuine resilience — circuit breaking, timeouts, and fallback?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Retry vs. Resilience — Web API Advanced — RefreshYourself">
+<meta property="og:description" content="What's the difference between just retrying on failure and genuine resilience — circuit breaking, timeouts, and fallback?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <title>Retry vs. Resilience — Web API Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body data-root="../../" data-tier-key="webapi/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
 
 <header class="topbar">
   <div class="bar wrap">
     <a class="brand" href="../../index.html">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#a5b4fc"/>
-            <stop offset=".5" stop-color="#6d5be0"/>
-            <stop offset="1" stop-color="#7c3aed"/>
-          </linearGradient>
-          <filter id="brandShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.4" flood-color="#1e1b2e" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-        <g filter="url(#brandShadow)" stroke="url(#brandGrad)">
-          <path d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M17.3 3.2v3.6h-3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <path d="M6.7 20.8v-3.6h3.6" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <path pathLength="100" d="M4 12a8 8 0 0 1 13.3-5.9" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round" stroke-dasharray="36 100"/>
-        <path pathLength="100" d="M20 12a8 8 0 0 1-13.3 5.9" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.95" stroke-linecap="round" stroke-dasharray="36 100"/>
-      </svg>
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
       Refresh<span class="dot">Yourself</span>
     </a>
     <div class="gsearch">
-      <span class="gicon">🔎</span>
+      <span class="gicon" aria-hidden="true">🔎</span>
       <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
-      <span class="gkey">/</span>
+      <span class="gkey" aria-hidden="true">/</span>
       <div class="gsearch-results" role="listbox"></div>
     </div>
   </div>
@@ -54,7 +46,7 @@
   </nav>
 </div>
 
-<main class="wrap">
+<main class="wrap" id="main">
   <section class="hero">
     <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Web API · Advanced · Must Know</div>
     <h1>Retry vs. Resilience — <span class="hl hl-hot">trying again</span> isn't <span class="hl hl-basic">staying up</span></h1>
@@ -195,6 +187,24 @@
       <g filter="url(#shA2)"><rect x="416" y="220" width="126" height="56" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
       <text x="479" y="242" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🧯 Fallback</text>
       <text x="479" y="258" text-anchor="middle" font-size="10.5" fill="#5b6472">degrade gracefully</text>
+
+      <!-- half-open: breaker's trial state between open and closed -->
+      <path d="M549,188 H565 V215 H580" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA2Amber)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="2.5s" repeatCount="indefinite"/>
+      </path>
+      <text x="562" y="179" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">cooldown ends</text>
+
+      <g filter="url(#shA2)"><rect x="580" y="188" width="130" height="62" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="645" y="212" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🔍 Half-Open</text>
+      <text x="645" y="230" text-anchor="middle" font-size="10" fill="#5b6472">one trial request</text>
+
+      <path d="M580,219 H570 V140 H554" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA2Green)"/>
+      <text x="640" y="158" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">trial succeeds → closes</text>
+
+      <path d="M600,250 V264 H542" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA2Amber)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="2.5s" repeatCount="indefinite"/>
+      </path>
+      <text x="571" y="279" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">trial fails → reopens</text>
     </svg>
     <figcaption>Only one path reaches the real dependency — the other degrades on purpose.</figcaption>
   </figure>
@@ -209,6 +219,10 @@
 
   <div class="followup">
     <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How does the circuit know when to go back to normal?"</b> After the
+    cooldown, the breaker moves to <code>Half-Open</code> and lets exactly one trial request
+    through — succeed and it closes, back to normal; fail and it reopens, restarting the
+    cooldown instead of assuming the dependency has recovered.</p>
     <p class="ftline"><b>"How do retry and idempotency relate?"</b> Retrying a non-idempotent
     call — a <code>POST</code> with no idempotency key — risks the exact duplicate-creation
     problem <a href="../basic/2.html">Idempotency</a> covers; resilience and idempotency have to
@@ -261,12 +275,12 @@
       show for it.</p>
 
       <table class="cmp-table">
-        <thead><tr><th></th><th>Timeout</th><th>Retry (backoff+jitter)</th><th>Circuit Breaker</th><th>Fallback</th></tr></thead>
+        <thead><tr><th></th><th>Timeout</th><th>Retry (backoff+jitter)</th><th>Circuit Breaker</th><th>Half-Open</th><th>Fallback</th></tr></thead>
         <tbody>
-          <tr><th>What it does</th><td>caps how long a call can wait</td><td>tries again, waiting longer + more randomly each time</td><td>stops calling entirely for a cooldown</td><td>returns something usable instead of failing</td></tr>
-          <tr><th>Triggers on</th><td>no response by a deadline</td><td>a failed or timed-out call</td><td>N consecutive failures to one dependency</td><td>the primary path failed, or the circuit is open</td></tr>
-          <tr><th>Protects</th><td>threads/connections from hanging forever</td><td>a single blip from becoming a user-visible failure</td><td>both the caller and the struggling dependency</td><td>the end user from seeing total failure</td></tr>
-          <tr><th>Risk if skipped</th><td>a hung call ties up resources indefinitely</td><td>an instant retry storm makes the outage worse</td><td>callers keep hammering a service that can't recover</td><td>every failure propagates straight to the user</td></tr>
+          <tr><th>What it does</th><td>caps how long a call can wait</td><td>tries again, waiting longer + more randomly each time</td><td>stops calling entirely for a cooldown</td><td>lets exactly one trial request through to test recovery</td><td>returns something usable instead of failing</td></tr>
+          <tr><th>Triggers on</th><td>no response by a deadline</td><td>a failed or timed-out call</td><td>N consecutive failures to one dependency</td><td>the open circuit's cooldown period elapsing</td><td>the primary path failed, or the circuit is open</td></tr>
+          <tr><th>Protects</th><td>threads/connections from hanging forever</td><td>a single blip from becoming a user-visible failure</td><td>both the caller and the struggling dependency</td><td>against guessing recovery instead of testing it</td><td>the end user from seeing total failure</td></tr>
+          <tr><th>Risk if skipped</th><td>a hung call ties up resources indefinitely</td><td>an instant retry storm makes the outage worse</td><td>callers keep hammering a service that can't recover</td><td>breaker stays open forever, or slams closed and fails again immediately</td><td>every failure propagates straight to the user</td></tr>
         </tbody>
       </table>
     </div>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What's the difference between UseHttpsRedirection and HSTS, and why can't redirection alone protect the first request?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="HTTPS Redirection &amp; HSTS — .NET Basic — RefreshYourself">
+<meta property="og:description" content="What's the difference between UseHttpsRedirection and HSTS, and why can't redirection alone protect the first request?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>HTTPS Redirection &amp; HSTS — .NET Basic — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dotnet/basic">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#7c3aed;">🧱 .NET / ASP.NET Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">HTTPS Redirection &amp; HSTS</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ .NET · Basic · Should Know</div>
+    <h1><code>UseHttpsRedirection</code> + HSTS — <span class="hl hl-hot">why redirecting alone leaves the first request exposed</span></h1>
+    <p class="interview-q">"What's the difference between <code>UseHttpsRedirection</code> and HSTS, and why can't redirection alone protect the first request?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔀 UseHttpsRedirection</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A request that arrives over plain http could be handled by the rest of the pipeline unencrypted.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The middleware answers it with a redirect to the https URL, early, so nothing downstream handles the plain version.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Redirection = the server bounces http to https.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🧠 HSTS</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Redirection still lets the browser send that first plain-http request every time it starts from an <code>http://</code> link.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The server sends a <code>Strict-Transport-Security</code> header over https; the browser then goes straight to https for that host until <code>max-age</code> runs out.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">HSTS = the browser remembers "never http again".</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>UseHttpsRedirection</code> <span class="rarrow">→</span> the server <b>redirects</b> http to https</p>
+      <p class="rrow"><code>UseHsts</code> <span class="rarrow">→</span> the browser <b>remembers</b> to skip http</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line">Redirection fixes <b>this</b> request's next hop.</span>
+      <span class="tc-line">HSTS fixes <b>future</b> first hops.</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 262" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+      <filter id="shB7" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+      </filter>
+      <marker id="arB7Red" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+      <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+      </marker>
+      <marker id="arB7Amb" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+      <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+      </marker>
+      <marker id="arB7Grn" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+      <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+      </marker>
+      <marker id="arB7Gry" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+      <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+      </marker>
+      </defs>
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">FIRST VISIT vs. EVERY VISIT AFTER</text>
+      <g filter="url(#shB7)">
+      <rect x="20" y="40" width="110" height="120" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/>
+      </g>
+      <text x="75" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🌐 Browser</text>
+      <text x="75" y="112" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">first visit</text>
+      <text x="75" y="126" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">to this host</text>
+      <g filter="url(#shB7)">
+      <rect x="510" y="40" width="110" height="120" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/>
+      </g>
+      <text x="565" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🖥️ Server</text>
+      <text x="565" y="112" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">ASP.NET Core</text>
+      <text x="565" y="126" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">HTTPS + HSTS</text>
+      <path d="M130,78 H510" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arB7Red)"/>
+      <text x="320" y="72" text-anchor="middle" font-size="10.5" font-weight="600" fill="#b91c1c">① plain http:// request (travels unencrypted)</text>
+      <path d="M510,108 H130" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arB7Amb)"/>
+      <text x="320" y="102" text-anchor="middle" font-size="10.5" font-weight="600" fill="#92400e">② 307 redirect to https://</text>
+      <path d="M130,138 H510" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arB7Grn)"/>
+      <text x="320" y="132" text-anchor="middle" font-size="10.5" font-weight="600" fill="#166534">③ https:// request — reply carries the HSTS header</text>
+      <path d="M75,160 V196" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arB7Gry)"/>
+      <text x="88" y="182" text-anchor="start" font-size="10" font-weight="400" fill="#5b6472">remembers it</text>
+      <g filter="url(#shB7)">
+      <rect x="20" y="196" width="300" height="52" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/>
+      </g>
+      <text x="170" y="218" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🧠 HSTS cache</text>
+      <text x="170" y="236" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">this host → https only, until max-age ends</text>
+      <path d="M320,222 H360" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arB7Grn)"/>
+      <g filter="url(#shB7)">
+      <rect x="360" y="196" width="260" height="52" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+      </g>
+      <text x="490" y="218" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ Next visit</text>
+      <text x="490" y="236" text-anchor="middle" font-size="10.5" font-weight="400" fill="#5b6472">browser upgrades to https itself</text>
+    </svg>
+    <figcaption>Redirection fixes the request after the first one; HSTS makes the browser skip plain http entirely next time.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Assuming the redirect protects the very first request.</b> It only answers a plain-http request that has already arrived, so that first request travelled unencrypted. HSTS cannot help that very first visit either, because the browser has not seen the header yet.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"The app sits behind a load balancer that handles TLS — what goes wrong?"</b> The app only ever sees plain http, so it can think every request needs a redirect and bounce forever. Run <code>UseForwardedHeaders</code> first so the app learns the original scheme from <code>X-Forwarded-Proto</code>.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>UseHttpsRedirection</code> answers a plain-http request with a redirect to https, but that first request has already left unencrypted. HSTS closes the gap for later visits: the server sends a <code>Strict-Transport-Security</code> header over https, and the browser then refuses to use http for that host until <code>max-age</code> expires. In production TLS usually ends at the proxy, so the app needs forwarded headers to know the original scheme."</p>
+    <ul>
+      <li><code>Redirection</code> → <span class="hl hl-blue">server bounces http to https</span> — a redirect (307 by default), placed early in the pipeline.</li>
+      <li><code>HSTS</code> → <span class="hl hl-inter">browser remembers "https only"</span> — via the <code>Strict-Transport-Security</code> header, for <code>max-age</code>.</li>
+      <li><code>Behind a proxy</code> → <span class="hl hl-hot">forwarded headers first</span> — otherwise the app thinks every request is plain http.</li>
+      <li><code>Dev vs. prod</code> → <span class="hl hl-basic">dev certificate locally, real certificate in production</span> — and <code>UseHsts</code> normally stays out of Development.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">UseHttpsRedirection</span> is middleware. When a request arrives over plain http, it replies with a redirect to the https address (status 307 by default; the status code is configurable). It sits early, so nothing later in the pipeline handles the plain request. It is a server-side fix: the browser still sent that first request unencrypted.</p>
+
+      <p><span class="hl hl-inter">HSTS</span> (<code>app.UseHsts()</code>) adds a <code>Strict-Transport-Security</code> header to https responses, with a <code>max-age</code> (30 days by default; change it with <code>AddHsts</code>). A browser that has seen it will upgrade http to https by itself before sending anything. Browsers ignore the header when it arrives over plain http, and the default setup skips <code>localhost</code>. The very first visit stays exposed unless the host is on the browser preload list.</p>
+
+      <p>Locally, Kestrel uses a development certificate (<code>dotnet dev-certs https --trust</code>). In production, TLS is usually ended by a reverse proxy or load balancer that forwards plain http to the app, so call <code>UseForwardedHeaders</code> first and only trust your own proxy. Many teams also redirect at the proxy. More on proxies: <a href="../advanced/1.html">Kestrel &amp; Reverse Proxies</a>; on why order matters: <a href="../intermediate/4.html">Middleware</a>; the filter side of the old combined page: <a href="5.html">Filters</a>.</p>
+
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> builder = <span class="ty">WebApplication</span>.CreateBuilder(args);
+builder.<span class="ty">Services</span>.AddHsts(o =&gt; o.MaxAge = <span class="ty">TimeSpan</span>.FromDays(365));
+builder.<span class="ty">Services</span>.Configure&lt;<span class="ty">ForwardedHeadersOptions</span>&gt;(o =&gt;
+    o.ForwardedHeaders = <span class="ty">ForwardedHeaders</span>.XForwardedProto);   <span class="cx-cmt">// trust only your own proxy</span>
+
+<span class="kw">var</span> app = builder.Build();
+app.UseForwardedHeaders();       <span class="cx-cmt">// behind a proxy: restore the original scheme first</span>
+<span class="kw">if</span> (!app.<span class="ty">Environment</span>.IsDevelopment())
+    app.UseHsts();               <span class="cx-cmt">// adds Strict-Transport-Security on https responses</span>
+app.UseHttpsRedirection();       <span class="cx-ok">// ✅ early: http in, redirect out</span>
+app.UseRouting();</code></pre>
+      </div>
+      <p class="cx-note">Order matters: forwarded headers first, then HSTS and redirection, then everything else.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> HTTP</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>GET  http:<span class="cx-cmt">//example.com/    -&gt;  307  Location: https://example.com/</span>
+GET  https:<span class="cx-cmt">//example.com/   -&gt;  200  Strict-Transport-Security: max-age=31536000</span></code></pre>
+      </div>
+      <p class="cx-note">The first line is the unprotected hop; the header on the second is what the browser caches.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A shop with two doors.</b> The redirect is the guard at the side door who walks you round to the secure entrance every single time; HSTS is the note you keep in your pocket after that, saying "always use the secure entrance for this shop," so you never bother the side door again.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="6.html">← Unit Testing Fundamentals</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to .NET Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="8.html">Logging — ILogger, Levels &amp; Providers →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · .NET / ASP.NET Core · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

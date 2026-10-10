@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How does an API decide between JSON and XML, and what happens on an unsupported Accept?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Content Negotiation &amp; Formatters — Web API Intermediate — RefreshYourself">
+<meta property="og:description" content="How does an API decide between JSON and XML, and what happens on an unsupported Accept?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Content Negotiation &amp; Formatters — Web API Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Content Negotiation &amp; Formatters</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Web API · Intermediate · Should Know</div>
+    <h1><code>Accept</code> vs. <code>Content-Type</code> — which one failed: <span class="hl hl-hot"><code>406</code> or <code>415</code>?</span></h1>
+    <p class="interview-q">How does an API decide between JSON and XML, and what happens on an unsupported Accept?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+<div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+  <div class="wc-head">🤝 Content negotiation</div>
+  <div class="wc-ps">
+    <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Clients and servers can speak different formats (JSON, XML, CSV), and without an agreed step the server either guesses one or fails in a confusing way.</span></div>
+    <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The client names what it wants back (<code>Accept</code>) and what it is sending (<code>Content-Type</code>); the server picks a matching formatter or answers <code>406</code> / <code>415</code>.</span></div>
+  </div>
+  <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>Accept</code> = what I want. <code>Content-Type</code> = what I'm sending.</span></div>
+</div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Accept</code> <span class="rarrow">→</span> what I <b>want</b> back (output formatter)</p>
+      <p class="rrow"><code>Content-Type</code> <span class="rarrow">→</span> what I'm <b>sending</b> (input formatter)</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>Content-Type</code></b> unsupported <span class="rarrow">→</span> <b><code>415</code></b></span>
+      <span class="tc-line"><b><code>Accept</code></b> unsupported <span class="rarrow">→</span> <b><code>406</code></b>, but only if you turn it on</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shI17" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arI17" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arI17r" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.5">TWO HEADERS PICK TWO FORMATTERS</text>
+      <g filter="url(#shI17)"><rect x="18" y="60" width="100" height="56" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="68.0" y="84" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">📥 Request</text>
+      <text x="68.0" y="102" text-anchor="middle" font-size="10" fill="#5b6472">two headers</text>
+      <g filter="url(#shI17)"><rect x="144" y="60" width="100" height="56" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="194.0" y="84" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">📖 Reads</text>
+      <text x="194.0" y="102" text-anchor="middle" font-size="10" fill="#5b6472">by Content-Type</text>
+      <g filter="url(#shI17)"><rect x="270" y="60" width="100" height="56" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320.0" y="84" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">⚙️ Action</text>
+      <text x="320.0" y="102" text-anchor="middle" font-size="10" fill="#5b6472">your code</text>
+      <g filter="url(#shI17)"><rect x="396" y="60" width="100" height="56" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="446.0" y="84" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">✍️ Writes</text>
+      <text x="446.0" y="102" text-anchor="middle" font-size="10" fill="#5b6472">by Accept</text>
+      <g filter="url(#shI17)"><rect x="522" y="60" width="100" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="572.0" y="84" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">📤 Response</text>
+      <text x="572.0" y="102" text-anchor="middle" font-size="10" fill="#5b6472">status + body</text>
+      <path d="M118,88 H144" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI17)"/>
+      <path d="M244,88 H270" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI17)"/>
+      <path d="M370,88 H396" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI17)"/>
+      <path d="M496,88 H522" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arI17)"/>
+      <path d="M194,116 V170" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arI17r)"/>
+      <path d="M446,116 V170" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arI17r)"/>
+      <g filter="url(#shI17)"><rect x="111" y="170" width="170" height="48" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="196.0" y="192" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🚫 415</text>
+      <text x="196.0" y="208" text-anchor="middle" font-size="10" fill="#5b6472">Unsupported Media Type</text>
+      <g filter="url(#shI17)"><rect x="359" y="170" width="170" height="48" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="444.0" y="192" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🚫 406</text>
+      <text x="444.0" y="208" text-anchor="middle" font-size="10" fill="#5b6472">Not Acceptable — if enabled</text>
+      <text x="206" y="148" text-anchor="start" font-size="10.5" font-weight="700" fill="#991b1b">no reader</text>
+      <text x="458" y="148" text-anchor="start" font-size="10.5" font-weight="700" fill="#991b1b">no writer match</text>
+      <text x="320" y="252" text-anchor="middle" font-size="11" fill="#5b6472">By default an unmatched Accept still returns 200 in JSON — 406 is opt-in.</text>
+    </svg>
+    <figcaption>The request body is read by a formatter chosen from <code>Content-Type</code>; the response is written by one chosen from <code>Accept</code>.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"An unsupported <code>Accept</code> returns <code>406</code> by default."</b> In ASP.NET Core it quietly falls back to the first formatter that can write the object (JSON by default) and returns <code>200</code> — you only get <code>406</code> after setting <code>ReturnHttpNotAcceptable = true</code>.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How would you add CSV output to an existing endpoint?"</b> Write a custom output formatter (derive from <code>TextOutputFormatter</code>), give it the <code>text/csv</code> media type, and register it in <code>MvcOptions.OutputFormatters</code> — clients then ask for it with <code>Accept: text/csv</code>.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Content negotiation is the client saying which format it wants back with <code>Accept</code>, and which format it's sending with <code>Content-Type</code>. The server picks an output or input formatter to match. JSON is the default in ASP.NET Core; an unsupported <code>Content-Type</code> gets <code>415</code>, and an unsupported <code>Accept</code> only gets <code>406</code> if I enable <code>ReturnHttpNotAcceptable</code> — otherwise it falls back to JSON."</p>
+    <ul>
+      <li><code>Accept</code> <span class="hl hl-blue">→ the format the client wants back</span>, picked by an output formatter.</li>
+      <li><code>Content-Type</code> <span class="hl hl-inter">→ the format of the request body</span>, read by an input formatter.</li>
+      <li><code>415</code> vs. <code>406</code> <span class="hl hl-hot">→ can't read what you sent vs. can't write what you asked for</span>.</li>
+      <li><code>ReturnHttpNotAcceptable</code> <span class="hl hl-basic">→ turns the silent JSON fallback into a real <code>406</code></span>.</li>
+      <li>Custom formatter <span class="hl hl-blue">→ add a new format</span> (CSV, XML) without touching actions.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Two headers, two jobs.</b> <span class="hl hl-blue">Accept</span> goes with a request and says which formats the client can take back, optionally ranked with <code>q</code> values (<code>application/json, application/xml;q=0.8</code>). <span class="hl hl-inter">Content-Type</span> describes the body the client is sending. ASP.NET Core uses <b>input formatters</b> to read a request body and <b>output formatters</b> to write the response; each handles specific media types.</p>
+
+      <p>Out of the box, JSON is the main format. Other formats — XML, for example — have to be added (<code>AddXmlSerializerFormatters</code>). When the client's <code>Accept</code> matches nothing, ASP.NET Core still answers with the first formatter that can write the object (JSON by default) unless <code>ReturnHttpNotAcceptable</code> is on. A browser-style <code>Accept: */*</code> is ignored unless <code>RespectBrowserAcceptHeader</code> is set. When the body's <code>Content-Type</code> matches no input formatter, the answer is <code>415</code>. <code>[Produces]</code> and <code>[Consumes]</code> narrow what one action offers or accepts.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>Accept</code></th><th><code>Content-Type</code></th></tr></thead>
+        <tbody>
+          <tr><th>It describes</th><td>the response the client wants</td><td>the body the client is sending</td></tr>
+          <tr><th>Handled by</th><td>output formatter</td><td>input formatter</td></tr>
+          <tr><th>No match gives</th><td><code>406</code> (opt-in); otherwise JSON <code>200</code></td><td><code>415</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>builder.Services.AddControllers(o =&gt;
+{
+    o.ReturnHttpNotAcceptable = <span class="kw">true</span>;                <span class="cx-ok">// ✅ unsupported Accept → 406, not JSON</span>
+    o.OutputFormatters.Add(<span class="kw">new</span> <span class="ty">CsvOutputFormatter</span>());   <span class="cx-ok">// ✅ adds text/csv output</span>
+}).AddXmlSerializerFormatters();                       <span class="cx-ok">// ✅ adds XML in and out</span></code></pre>
+      </div>
+      <p class="cx-note">One place decides which formats the whole API speaks — and whether a miss is a <code>406</code>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>[HttpPost]
+[Consumes(<span class="str">"application/json"</span>)]    <span class="cx-ok">// ✅ other Content-Type → 415</span>
+[Produces(<span class="str">"application/json"</span>)]    <span class="cx-ok">// ✅ this action only offers JSON</span>
+<span class="kw">public</span> <span class="ty">IActionResult</span> Create(<span class="ty">OrderDto</span> dto) =&gt; Ok(dto);</code></pre>
+      </div>
+      <p class="cx-note"><code>[Consumes]</code> and <code>[Produces]</code> narrow one action — handy when it must be JSON only.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">CsvOutputFormatter</span> : <span class="ty">TextOutputFormatter</span>
+{
+    <span class="kw">public</span> CsvOutputFormatter()
+    {
+        SupportedMediaTypes.Add(<span class="str">"text/csv"</span>);       <span class="cx-ok">// ✅ matches Accept: text/csv</span>
+        SupportedEncodings.Add(<span class="ty">Encoding</span>.UTF8);
+    }
+    <span class="kw">protected</span> <span class="kw">override</span> <span class="kw">bool</span> CanWriteType(<span class="ty">Type</span>? type) =&gt; type == <span class="kw">typeof</span>(<span class="ty">List</span>&lt;<span class="ty">OrderDto</span>&gt;);
+    <span class="kw">public</span> <span class="kw">override</span> <span class="ty">Task</span> WriteResponseBodyAsync(<span class="ty">OutputFormatterWriteContext</span> ctx, <span class="ty">Encoding</span> enc)
+        =&gt; ctx.HttpContext.Response.WriteAsync(ToCsv((<span class="ty">List</span>&lt;<span class="ty">OrderDto</span>&gt;)ctx.Object!), enc);   <span class="cx-cmt">// ToCsv = your helper</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">A custom formatter only says which type and media type it handles, and how to write the body.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A partner system needs the same data as XML while the web app uses JSON</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17r1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">SAME ENDPOINT, TWO FORMATS</text>
+              <rect x="20" y="24" width="220" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">Accept: application/xml</text>
+              <path d="M240,43 H280" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc17r1)"/>
+              <rect x="280" y="24" width="180" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="370" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🧾 XML body</text>
+            </svg>
+          </div>
+          <p class="uc-what">Once an XML formatter is added, the partner asks with <code>Accept: application/xml</code> and gets XML, while the web app's <code>Accept: application/json</code> still gets JSON — no second endpoint needed.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Different <code>Accept</code> → different body, same action.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> A client posts an XML body to an endpoint that only has JSON formatters</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17r2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">CAN'T READ WHAT YOU SENT</text>
+              <rect x="20" y="24" width="220" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">Content-Type: xml</text>
+              <path d="M240,43 H280" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc17r2)"/>
+              <rect x="280" y="24" width="180" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="370" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🚫 415</text>
+            </svg>
+          </div>
+          <p class="uc-what">No input formatter matches the body's <code>Content-Type</code>, so the request is rejected with <code>415 Unsupported Media Type</code> before the action runs.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Unreadable body → <code>415</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A client asks for <code>Accept: image/png</code> and still gets <code>200</code> JSON</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17r3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">NO 406 BY DEFAULT</text>
+              <rect x="20" y="24" width="220" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="130" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">Accept: image/png</text>
+              <path d="M240,43 H280" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc17r3)"/>
+              <rect x="280" y="24" width="180" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="370" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">200 JSON anyway</text>
+            </svg>
+          </div>
+          <p class="uc-what">That is the default behaviour, not a bug — the server falls back to a formatter it has. If you want a hard <code>406</code>, switch on <code>ReturnHttpNotAcceptable</code>. <b>A classic interview trap.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A hard <code>406</code> is opt-in.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A reporting partner wants the orders list as CSV while the web app wants JSON</b> — same endpoint, same data. The partner sends <code>Accept: text/csv</code>, the app sends <code>Accept: application/json</code>, and a CSV output formatter registered once serves the first; a client that posts XML to a JSON-only endpoint gets a clear <code>415</code>. See <a href="4.html">Request Body vs. Headers</a> for where each header sits and <a href="6.html">IActionResult vs. ActionResult&lt;T&gt;</a> for what an action returns.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="16.html">← ProblemDetails (RFC 9457)</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="18.html">ETag &amp; If-Match — Optimistic Concurrency →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
