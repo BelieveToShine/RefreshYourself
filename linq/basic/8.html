@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How do you sort a sequence by one key, then break ties with a second key?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="OrderBy vs. OrderByDescending vs. ThenBy — LINQ Basic — RefreshYourself">
+<meta property="og:description" content="How do you sort a sequence by one key, then break ties with a second key?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>OrderBy vs. OrderByDescending vs. ThenBy — LINQ Basic — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/basic">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">OrderBy vs. OrderByDescending vs. ThenBy</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 LINQ · Basic · Must Know</div>
+    <h1><code>OrderBy</code> vs. <code>OrderByDescending</code> vs. <code>ThenBy</code> — <span class="hl hl-hot">sorting with a tiebreaker</span></h1>
+    <p class="interview-q">"How do you sort a sequence by one key, then break ties with a second key?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔼 OrderBy / OrderByDescending</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A list needs a primary sort order — ascending or descending — before anything else about its order can be decided.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>OrderBy(key)</code> sorts ascending, <code>OrderByDescending(key)</code> sorts descending — both return an <code>IOrderedEnumerable&lt;T&gt;</code>, which is what makes chaining a tiebreaker possible next.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">OrderBy = the primary sort.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🎯 ThenBy / ThenByDescending</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Two elements that tie on the primary key land in an arbitrary-looking order unless you say what breaks the tie.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>ThenBy(key)</code> — only callable on an <code>IOrderedEnumerable&lt;T&gt;</code> — refines the order <i>within</i> each tied group, without touching groups that aren't tied.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">ThenBy = only fixes the ties.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>OrderBy</code>/<code>OrderByDescending</code> <span class="rarrow">→</span> <b>sets</b> the primary order</p>
+      <p class="rrow"><code>ThenBy</code> <span class="rarrow">→</span> <b>refines</b> ties only</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>OrderBy</code></b> sets the order. <b><code>ThenBy</code></b> fixes the ties inside it — a second <b><code>OrderBy</code></b> would reset everything instead.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh8" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar8" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="14" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.3">STEP 1 — OrderBy(Department)</text>
+
+      <rect x="132" y="20" width="184" height="46" rx="14" fill="none" stroke="#d97706" stroke-width="1.6" stroke-dasharray="5 4"/>
+
+      <g filter="url(#sh8)"><rect x="140" y="28" width="80" height="30" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/></g>
+      <text x="180" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#6d28d9">Zoe-M</text>
+      <g filter="url(#sh8)"><rect x="228" y="28" width="80" height="30" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/></g>
+      <text x="268" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#6d28d9">Bob-M</text>
+      <g filter="url(#sh8)"><rect x="332" y="28" width="80" height="30" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="372" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">Amy-S</text>
+      <g filter="url(#sh8)"><rect x="420" y="28" width="80" height="30" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="460" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">Cal-S</text>
+
+      <text x="320" y="82" text-anchor="middle" font-size="10" fill="#92400e">🔗 tie: Zoe-M &amp; Bob-M (same department)</text>
+
+      <path d="M320,92 V106" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M170,106 H470" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M170,106 V126" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar8)"/>
+      <path d="M470,106 V126" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar8)"/>
+
+      <rect x="40" y="126" width="260" height="140" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"/>
+      <rect x="340" y="126" width="260" height="140" rx="14" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6"/>
+
+      <text x="170" y="146" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ .ThenBy(Name)</text>
+      <text x="170" y="162" text-anchor="middle" font-size="10" fill="#5b6472">refines only the tie</text>
+
+      <text x="470" y="146" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">❌ OrderBy(Name) again</text>
+      <text x="470" y="162" text-anchor="middle" font-size="10" fill="#5b6472">resets the whole list</text>
+
+      <g filter="url(#sh8)"><rect x="61" y="176" width="50" height="30" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/></g>
+      <text x="86" y="195" text-anchor="middle" font-size="10.5" font-weight="700" fill="#6d28d9">Bob-M</text>
+      <g filter="url(#sh8)"><rect x="117" y="176" width="50" height="30" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/></g>
+      <text x="142" y="195" text-anchor="middle" font-size="10.5" font-weight="700" fill="#6d28d9">Zoe-M</text>
+      <g filter="url(#sh8)"><rect x="173" y="176" width="50" height="30" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="198" y="195" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Amy-S</text>
+      <g filter="url(#sh8)"><rect x="229" y="176" width="50" height="30" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="254" y="195" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Cal-S</text>
+      <text x="170" y="222" text-anchor="middle" font-size="9.3" fill="#166534">department blocks stay in place</text>
+
+      <g filter="url(#sh8)"><rect x="361" y="176" width="50" height="30" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="386" y="195" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Amy-S</text>
+      <g filter="url(#sh8)"><rect x="417" y="176" width="50" height="30" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/></g>
+      <text x="442" y="195" text-anchor="middle" font-size="10.5" font-weight="700" fill="#6d28d9">Bob-M</text>
+      <g filter="url(#sh8)"><rect x="473" y="176" width="50" height="30" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="498" y="195" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Cal-S</text>
+      <g filter="url(#sh8)"><rect x="529" y="176" width="50" height="30" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/></g>
+      <text x="554" y="195" text-anchor="middle" font-size="10.5" font-weight="700" fill="#6d28d9">Zoe-M</text>
+      <text x="470" y="222" text-anchor="middle" font-size="9.3" fill="#991b1b">department grouping is gone</text>
+
+      <text x="320" y="288" text-anchor="middle" font-size="10.3" fill="#5b6472">Purple = Marketing · Slate = Sales — only the green path keeps the two departments as blocks</text>
+    </svg>
+    <figcaption>Same tie, two different second calls — <code>.ThenBy(Name)</code> only reorders Zoe/Bob inside their tie; a second <code>.OrderBy(Name)</code> resorts the whole list and erases the department grouping.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Calling <code>OrderBy</code> a second time instead of <code>.OrderBy().ThenBy()</code>.</b> It compiles — <code>OrderBy</code> works on any <code>IEnumerable&lt;T&gt;</code>, including an already-sorted one — but the second call re-sorts the entire sequence from scratch by its own key, throwing away the first sort completely instead of refining it.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why does a second <code>OrderBy</code> even compile if it's wrong?"</b> Because <code>ThenBy</code>/<code>ThenByDescending</code> only exist on <code>IOrderedEnumerable&lt;T&gt;</code>, but plain <code>OrderBy</code> is declared on <code>IEnumerable&lt;T&gt;</code> — and <code>IOrderedEnumerable&lt;T&gt;</code> <i>is</i> an <code>IEnumerable&lt;T&gt;</code>, so nothing stops you from calling the wrong one.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>OrderBy</code>/<code>OrderByDescending</code> set the primary sort order, and <code>ThenBy</code>/<code>ThenByDescending</code> — which only exist on the <code>IOrderedEnumerable&lt;T&gt;</code> that OrderBy returns — refine the order within groups that tied on that key, without resorting the whole list. Calling <code>OrderBy</code> a second time instead of <code>ThenBy</code> throws away the first sort and starts over."</p>
+    <ul>
+      <li><code>OrderBy</code>/<code>OrderByDescending</code> → <span class="hl hl-blue">sets the primary order</span>, ascending or descending.</li>
+      <li><code>ThenBy</code> → <span class="hl hl-basic">only breaks ties</span> inside the groups already sorted.</li>
+      <li>A second <code>OrderBy</code> → <span class="hl hl-hot">resorts everything from scratch</span> — it's not a tiebreaker.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">OrderBy</span>/<span class="hl hl-blue">OrderByDescending</span>
+      establish the primary sort. Both return an <code>IOrderedEnumerable&lt;T&gt;</code> — a
+      sequence that remembers it's already sorted, which is exactly the type <code>ThenBy</code>
+      needs to exist on.</p>
+
+      <p><span class="hl hl-basic">ThenBy</span>/<span class="hl hl-basic">ThenByDescending</span>
+      only exist on <code>IOrderedEnumerable&lt;T&gt;</code> — they refine the order
+      <i>within</i> each group of equal primary-key values, leaving every group that wasn't tied
+      exactly where it was.</p>
+
+      <p>A second, plain <code>OrderBy</code> call compiles too, because it's declared on any
+      <code>IEnumerable&lt;T&gt;</code> — including an already-ordered one. But it re-sorts the
+      entire sequence from scratch by its own key, discarding the first sort's effect completely
+      instead of refining it.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>OrderBy</code></th><th><code>OrderByDescending</code></th><th><code>ThenBy</code></th></tr></thead>
+        <tbody>
+          <tr><th>Sorts</th><td>whole sequence, ascending</td><td>whole sequence, descending</td><td>only within existing tie groups</td></tr>
+          <tr><th>Callable on</th><td>any <code>IEnumerable&lt;T&gt;</code></td><td>any <code>IEnumerable&lt;T&gt;</code></td><td class="no">only <code>IOrderedEnumerable&lt;T&gt;</code></td></tr>
+          <tr><th>Calling it again instead of chaining</th><td class="no">❌ resorts everything</td><td class="no">❌ resorts everything</td><td>n/a — that's its whole job</td></tr>
+          <tr><th>Return type</th><td><code>IOrderedEnumerable&lt;T&gt;</code></td><td><code>IOrderedEnumerable&lt;T&gt;</code></td><td><code>IOrderedEnumerable&lt;T&gt;</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> sorted = people
+    .OrderBy(p => p.Dept)      <span class="cx-ok">// ✅ primary: by department</span>
+    .ThenBy(p => p.Name);      <span class="cx-ok">// ✅ tiebreaker: by name, inside each department</span></code></pre>
+      </div>
+      <p class="cx-note"><code>ThenBy</code> only <b>reorders the tied names</b> — the department grouping from <code>OrderBy</code> stays intact.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> broken = people
+    .OrderBy(p => p.Dept)
+    .OrderBy(p => p.Name);    <span class="cx-err">// ❌ compiles, but resorts everything by Name — Dept order is gone</span></code></pre>
+      </div>
+      <p class="cx-note">The second <code>OrderBy</code> <b>ignores</b> the first sort entirely — it doesn't chain, it replaces.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> mixed = people
+    .OrderByDescending(p => p.Score)  <span class="cx-ok">// ✅ primary: highest score first</span>
+    .ThenBy(p => p.Name);             <span class="cx-ok">// ✅ tiebreaker: A→Z, direction can differ</span></code></pre>
+      </div>
+      <p class="cx-note">The primary sort and the tiebreaker <b>don't need the same direction</b> — descending scores, ascending names.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're building a leaderboard — highest score first, name breaks ties</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">LEADERBOARD</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">OrderByDesc(Score)</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc8a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">.ThenBy(Name)</text>
+            </svg>
+          </div>
+          <p class="uc-what">Two players tied on score should still appear in a predictable order —
+          <code>OrderByDescending(Score).ThenBy(Name)</code> gives every tie a consistent,
+          alphabetical tiebreaker. <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Ranking with ties → primary key, then <code>ThenBy</code> as the tiebreaker.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A report's only real requirement is "newest first"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">SINGLE-KEY SORT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">📅 order dates</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc8b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">OrderByDesc(Date)</text>
+            </svg>
+          </div>
+          <p class="uc-what">When there's genuinely only one sort key that matters, a plain
+          <code>OrderByDescending(p =&gt; p.Date)</code> on its own is correct and complete — not
+          every sort needs a <code>ThenBy</code>.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Only one real key → <code>OrderBy</code>/<code>OrderByDescending</code> alone is fine.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You add a tiebreaker by chaining a second <code>OrderBy</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing=".03em">COMPILES, WRONG RESULT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">.OrderBy(Dept)</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc8c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">.OrderBy(Name) 🚫</text>
+            </svg>
+          </div>
+          <p class="uc-what">This compiles cleanly and looks like it adds a second sort key — but
+          it silently throws away the department order and resorts the whole list by name alone.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Second <code>OrderBy</code> ≠ tiebreaker — it's a full reset.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Sorting a stack of exam papers by grade, then alphabetically by last name within each
+      grade.</b> That's <code>OrderBy(grade).ThenBy(lastName)</code>. Grabbing the already-sorted
+      stack and resorting the <i>whole pile</i> by last name afterward — instead of just
+      straightening out the names within each grade — is exactly what a second
+      <code>OrderBy</code> does.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="7.html">← Where vs. OfType</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="9.html">Skip vs. Take →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

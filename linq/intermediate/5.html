@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Both group elements by a key — what's the real difference between GroupBy and ToLookup?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="GroupBy vs. ToLookup — LINQ Intermediate — RefreshYourself">
+<meta property="og:description" content="Both group elements by a key — what's the real difference between GroupBy and ToLookup?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>GroupBy vs. ToLookup — LINQ Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">GroupBy vs. ToLookup</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ LINQ · Intermediate · Should Know</div>
+    <h1><code>GroupBy</code> vs. <code>ToLookup</code> — <span class="hl hl-inter">deferred regrouping, or a built structure?</span></h1>
+    <p class="interview-q">"Both group elements by a key — what's the real difference between <code>GroupBy</code> and <code>ToLookup</code>?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#4f46e5; --why-bg:#e0e7ff">
+        <div class="wc-head">🔗 Grouping twice</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Looking up a group by key repeatedly, or enumerating the same grouped query more than once, either re-runs the entire grouping pass each time (if it's still a lazy <code>GroupBy</code>) or risks an exception on a missing key (if it's mistaken for a <code>Dictionary</code>).</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>ToLookup</code> builds the whole grouped structure once, immediately, and behaves like a read-only, multi-value dictionary you can index into directly (<code>lookup[key]</code>) — indexing a missing key never throws, it just returns an empty sequence, which is exactly the safety <code>GroupBy</code> doesn't give you on repeated access.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">GroupBy = re-groups every time. ToLookup = built once, indexed safely forever after.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>GroupBy</code> <span class="rarrow">→</span> <b>deferred</b>, re-groups every enumeration</p>
+      <p class="rrow"><code>ToLookup</code> <span class="rarrow">→</span> <b>immediate</b>, built once, indexed like a dictionary</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>lookup[missingKey]</code></b> never throws — it just hands back an empty sequence.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shLi5" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arLi5" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arLi5r" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arLi5g" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="160" y="18" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">GroupBy — RE-RUNS EACH TIME</text>
+      <text x="480" y="18" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">ToLookup — BUILT ONCE</text>
+      <path d="M320,26 V266" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <g filter="url(#shLi5)"><rect x="40" y="34" width="240" height="34" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="160" y="56" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">src.GroupBy(x => x.Key)</text>
+
+      <path d="M160,68 V84" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arLi5r)"/>
+      <rect x="95" y="84" width="130" height="26" rx="13" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/>
+      <text x="160" y="101" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">enumerate #1</text>
+      <path d="M160,110 V124" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arLi5r)"/>
+
+      <g filter="url(#shLi5)"><rect x="40" y="124" width="240" height="32" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="160" y="144" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">full grouping pass runs</text>
+
+      <path d="M160,156 V172" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arLi5r)"/>
+      <rect x="95" y="172" width="130" height="26" rx="13" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/>
+      <text x="160" y="189" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">enumerate #2</text>
+      <path d="M160,198 V212" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arLi5r)"/>
+
+      <g filter="url(#shLi5)"><rect x="40" y="212" width="240" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="232" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🐛 grouping pass runs AGAIN</text>
+      <text x="160" y="246" text-anchor="middle" font-size="9.5" fill="#5b6472">same work, done twice</text>
+
+      <g filter="url(#shLi5)"><rect x="360" y="34" width="240" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="56" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">src.ToLookup(x => x.Key)</text>
+
+      <path d="M480,68 V88" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arLi5g)"/>
+
+      <g filter="url(#shLi5)"><rect x="360" y="88" width="240" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="108" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ built once, right now</text>
+      <text x="480" y="122" text-anchor="middle" font-size="9.5" fill="#5b6472">immediate execution</text>
+
+      <path d="M480,128 V144" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arLi5g)"/>
+
+      <g filter="url(#shLi5)"><rect x="360" y="144" width="240" height="34" rx="9" fill="#fff" stroke="#16a34a" stroke-width="1.5"/></g>
+      <text x="480" y="165" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">lookup["x"] — real key</text>
+
+      <path d="M480,178 V194" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arLi5g)"/>
+      <path d="M480,178 H560 V194" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arLi5g)"/>
+
+      <g filter="url(#shLi5)"><rect x="360" y="194" width="110" height="46" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="415" y="212" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">its values</text>
+      <text x="415" y="226" text-anchor="middle" font-size="9" fill="#5b6472">no re-grouping</text>
+
+      <g filter="url(#shLi5)"><rect x="480" y="194" width="120" height="46" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="540" y="212" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">lookup["none"]</text>
+      <text x="540" y="226" text-anchor="middle" font-size="9" fill="#5b6472">empty, never throws</text>
+    </svg>
+    <figcaption><code>GroupBy</code> re-runs its grouping pass on every enumeration; <code>ToLookup</code> groups once and is indexed directly afterward.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A <code>Lookup</code> is not a <code>Dictionary</code>.</b> Indexing a missing key on a <code>Lookup</code> never throws — it just hands back an empty sequence; a <code>Dictionary</code> would throw <code>KeyNotFoundException</code> for the same missing key.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"So is <code>ToLookup</code> always the safer choice?"</b> Not automatically — it forces an immediate, full pass over the entire source up front, even if you only ever need one key's group, where a lazy <code>GroupBy</code> enumerated once would do the same amount of real work with none of the upfront cost if it's never enumerated twice.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>GroupBy</code> is deferred — it re-runs the grouping pass every time the result is enumerated, same as any other LINQ operator. <code>ToLookup</code> is immediate — it builds the whole grouped structure once, right away, and behaves like a read-only, multi-value dictionary: indexing it with a missing key never throws, it just returns an empty sequence."</p>
+    <ul>
+      <li><code>GroupBy</code> <span class="hl hl-hot">→ deferred, re-groups on every enumeration</span>.</li>
+      <li><code>ToLookup</code> <span class="hl hl-basic">→ immediate, grouped once up front</span>.</li>
+      <li><code>lookup[key]</code> <span class="hl hl-blue">→ indexable directly</span>, like a dictionary.</li>
+      <li>Missing key <span class="hl hl-inter">→ empty sequence, never an exception</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-hot">GroupBy</span> behaves like every other sequence-producing LINQ
+      operator: calling it builds a plan, not a result. Enumerating that plan — a <code>foreach</code>,
+      a <code>ToList()</code>, a second enumeration of the same variable — runs the entire grouping
+      pass over the source again, from scratch, every single time.</p>
+
+      <p><span class="hl hl-basic">ToLookup</span> is a materializing operator, like
+      <code>ToList()</code> or <code>ToDictionary()</code> — it forces an immediate, one-time pass
+      over the entire source and returns a concrete <code>ILookup&lt;TKey,TElement&gt;</code>. From
+      that point on, <code>lookup[someKey]</code> is a direct index into an already-built
+      structure — no re-grouping, no re-reading the source.</p>
+
+      <p>The key behavioral difference beyond timing is what a missing key does. A
+      <code>Lookup</code> is purpose-built for the "zero or more values per key" case — indexing a
+      key with no matches just returns an empty sequence, the same way <code>GroupBy</code> simply
+      wouldn't produce a group for a key with no matches. Neither one throws for "key not found" —
+      that behavior is specific to a true <code>Dictionary&lt;TKey,TValue&gt;</code>.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>GroupBy</code></th><th><code>ToLookup</code></th></tr></thead>
+        <tbody>
+          <tr><th>Execution</th><td>deferred — re-runs on every enumeration</td><td>immediate — runs once, right away</td></tr>
+          <tr><th>Shape of result</th><td><code>IEnumerable&lt;IGrouping&lt;TKey,TElement&gt;&gt;</code></td><td><code>ILookup&lt;TKey,TElement&gt;</code></td></tr>
+          <tr><th>Indexable by key?</th><td class="no">❌ no, has to be enumerated/filtered</td><td class="yes">✅ yes — <code>lookup[key]</code></td></tr>
+          <tr><th>Missing key</th><td>no group produced</td><td>empty sequence, never throws</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> grouped = orders.GroupBy(o => o.CustomerId);   <span class="cx-cmt">// still deferred</span>
+
+<span class="kw">foreach</span> (<span class="kw">var</span> g <span class="kw">in</span> grouped) { }   <span class="cx-err">// ❌ runs the grouping pass — once</span>
+<span class="kw">foreach</span> (<span class="kw">var</span> g <span class="kw">in</span> grouped) { }   <span class="cx-err">// ❌ runs it AGAIN — twice total</span></code></pre>
+      </div>
+      <p class="cx-note">Same as any lazy query — <b>two enumerations, two full grouping passes</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> lookup = orders.ToLookup(o => o.CustomerId);   <span class="cx-ok">// ✅ grouped once, right now</span>
+
+<span class="kw">var</span> mine = lookup[<span class="num">42</span>];       <span class="cx-ok">// ✅ real key — the matching orders</span>
+<span class="kw">var</span> none = lookup[<span class="num">-1</span>];       <span class="cx-ok">// ✅ missing key — empty sequence, no exception</span></code></pre>
+      </div>
+      <p class="cx-note"><code>lookup[-1]</code> is <b>safe by design</b> — a <code>Lookup</code> never throws for a key with no matches.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You need to look up several different groups by key, repeatedly, across a request</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcLi5a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">REPEATED KEY LOOKUPS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">ToLookup() once</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcLi5a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">lookup[k1], lookup[k2]...</text>
+            </svg>
+          </div>
+          <p class="uc-what">Building the lookup once pays for the grouping pass a single time;
+          every key access after that is a direct index, with no risk of re-grouping cost
+          multiplying with each lookup.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Many repeated key lookups → build a <code>ToLookup</code> once.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> You enumerate every group once, in a single pass, and never look anything up by key again</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcLi5b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">ONE-PASS foreach</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">GroupBy() once</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcLi5b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">foreach group</text>
+            </svg>
+          </div>
+          <p class="uc-what">A single <code>foreach</code> over a <code>GroupBy</code> result,
+          with no second enumeration, does the same amount of work as <code>ToLookup</code> would
+          — plain <code>GroupBy</code> is the simpler, equally correct choice here.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Enumerated exactly once → plain <code>GroupBy</code> is enough.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You treat a <code>Lookup</code>'s missing-key behavior like a <code>Dictionary</code>'s</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcLi5c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">lookup[missing] ≠ EXCEPTION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">try/catch around it</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcLi5c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 dead code, never throws</text>
+            </svg>
+          </div>
+          <p class="uc-what">Wrapping a <code>Lookup</code> indexer in a <code>try</code>/<code>catch</code>
+          for a missing key is dead code — it will never throw. Checking <code>.Any()</code> on the
+          returned sequence (or just iterating it, since it's empty either way) is the correct
+          pattern instead.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>Lookup</code> ≠ <code>Dictionary</code> — a missing key is empty, not an exception.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A report page needs each customer's orders, looked up by customer ID, dozens of times
+      while rendering the page.</b> Building a <code>ToLookup</code> once at the top of the request
+      and indexing into it for every customer avoids re-grouping the whole order list on every
+      single render call.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="4.html">← IEnumerable&lt;T&gt; vs. IQueryable&lt;T&gt;</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="6.html">Join vs. GroupJoin →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How does an innocent-looking foreach over navigation properties turn into hundreds of queries?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="N+1 Queries and Navigation Properties — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="How does an innocent-looking foreach over navigation properties turn into hundreds of queries?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>N+1 Queries and Navigation Properties — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">N+1 Queries and Navigation Properties</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 LINQ · Advanced · Must Know</div>
+    <h1>N+1 Queries and Navigation Properties — <span class="hl hl-hot">an innocent foreach</span>, hundreds of queries</h1>
+    <p class="interview-q">"How does an innocent-looking <code>foreach</code> over navigation properties turn into hundreds of queries?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">😱 N+1 queries</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A <code>foreach</code> that reads a navigation property on every loaded row looks like ordinary C# — but if that property isn't already loaded, each access is a brand-new database query, and the count scales with however many rows the outer query returned.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Shape the <b>LINQ query itself</b> to avoid the per-row trip — load the navigation up front with <code>Include</code>, or project exactly the field the loop needs with <code>Select</code> — so nothing inside the loop ever has to go back to the database.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">N+1 = 1 query to load rows, +1 more per row for the navigation.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">N+1 = <b>"1 query to load the rows, +1 more per row for the navigation."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> the query count scales with <b>how many rows came back</b>, not with anything the developer wrote as a loop count.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA11" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA11" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arA11Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shA11)"><rect x="190" y="14" width="260" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="34" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">1️⃣ context.Books.ToList()</text>
+      <text x="320" y="49" text-anchor="middle" font-size="10.5" fill="#5b6472">one query, the initial result set</text>
+
+      <path d="M320,60 V76" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M320,76 H120 V96" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA11)"/>
+      <path d="M320,76 V96" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA11)"/>
+      <path d="M320,76 H520 V96" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arA11)"/>
+
+      <g filter="url(#shA11)"><rect x="45" y="96" width="150" height="40" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="120" y="115" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">📘 Book A</text>
+      <text x="120" y="129" text-anchor="middle" font-size="9.5" fill="#5b6472">.Author not loaded yet</text>
+
+      <g filter="url(#shA11)"><rect x="245" y="96" width="150" height="40" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="320" y="115" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">📗 Book B</text>
+      <text x="320" y="129" text-anchor="middle" font-size="9.5" fill="#5b6472">.Author not loaded yet</text>
+
+      <g filter="url(#shA11)"><rect x="445" y="96" width="150" height="40" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="520" y="115" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">📙 Book C</text>
+      <text x="520" y="129" text-anchor="middle" font-size="9.5" fill="#5b6472">.Author not loaded yet</text>
+
+      <path d="M120,136 V160" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA11Red)"/>
+      <path d="M320,136 V160" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA11Red)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+      <path d="M520,136 V160" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA11Red)"/>
+
+      <g filter="url(#shA11)"><rect x="45" y="160" width="150" height="46" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="120" y="179" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🗄️ SELECT Author A</text>
+      <text x="120" y="193" text-anchor="middle" font-size="9.5" fill="#5b6472">+1 query, iteration 1</text>
+
+      <g filter="url(#shA11)"><rect x="245" y="160" width="150" height="46" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="320" y="179" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🗄️ SELECT Author B</text>
+      <text x="320" y="193" text-anchor="middle" font-size="9.5" fill="#5b6472">+1 query, iteration 2</text>
+
+      <g filter="url(#shA11)"><rect x="445" y="160" width="150" height="46" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="520" y="179" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🗄️ SELECT Author C</text>
+      <text x="520" y="193" text-anchor="middle" font-size="9.5" fill="#5b6472">+1 query, iteration 3</text>
+
+      <path d="M120,206 V228" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA11Red)"/>
+      <path d="M320,206 V228" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA11Red)"/>
+      <path d="M520,206 V228" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA11Red)"/>
+
+      <g filter="url(#shA11)"><rect x="120" y="228" width="400" height="46" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="248" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">😱 N+1 queries total</text>
+      <text x="320" y="263" text-anchor="middle" font-size="10.5" fill="#5b6472">1 for the books, +1 per book for Author</text>
+    </svg>
+    <figcaption>3 books in the result set means 1 + 3 = 4 queries — 300 books means 301.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>The <code>foreach</code> itself isn't the bug.</b> It's reading an un-included, un-projected navigation property inside it — the exact same loop over an already-projected or already-included result triggers nothing extra.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If <code>Include</code> fixes this, why would I ever use a <code>Select</code> projection instead?"</b> Because <code>Include</code> still loads the entire related entity. If the loop only reads one field off the navigation, a <code>Select</code> projection naming just that field avoids the per-row trip without pulling the whole related entity either.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Reading a lazy-loaded or un-included navigation property inside a loop fires one new round trip per iteration. The fix is shaping the query itself, up front, with <code>Include</code> or a <code>Select</code> projection — so nothing inside the loop ever has to go back to the database."</p>
+    <ul>
+      <li>Query count scales with → <span class="hl hl-hot">the outer result set's size</span>, not a loop count written in code.</li>
+      <li><code>Include</code> up front → <span class="hl hl-blue">loads the navigation before the loop even starts</span>.</li>
+      <li><code>Select</code> projection → <span class="hl hl-teal">names just the one field the loop actually needs</span>.</li>
+      <li>The <code>foreach</code> isn't the bug → <span class="hl hl-inter">an un-included navigation access inside it is</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Nothing about <code>foreach</code> itself talks to a database. The trigger is what happens <i>inside</i> the loop body: if <code>book.Author</code> wasn't loaded by the original query — no <code>Include</code>, no projection that already pulled it in — then reading <code>book.Author</code> for the first time on each iteration causes a lazy-loading proxy (if enabled) to go fetch it right then, one brand-new query per row.</p>
+
+      <p>The EF Core track already owns this from the database-performance side — see "The N+1 Problem" and "Beyond N+1 — Common Performance Pitfalls" for detecting it (query logging, counting statements) and the loading-strategy options in general. This page's job is narrower and LINQ-specific: the query-<b>shape</b> decision that causes or avoids it in the first place. Writing the original query as <code>.Select(b => b.Author.Name)</code> instead of navigating <code>book.Author.Name</code> inside a later loop moves the join into the <i>one</i> original SQL statement — there's nothing left for the loop to lazily trigger.</p>
+
+      <p><code>Include</code> works too, but loads the full related entity rather than just the field used — see "Include vs. Projection Using Select" for that trade-off. Either fix shares the same underlying move: decide what the loop needs <i>before</i> the loop runs, not while it's running.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">Book</span>&gt; books = context.Books.ToList();  <span class="cx-cmt">// 1 query</span>
+
+<span class="kw">foreach</span> (<span class="kw">var</span> book <span class="kw">in</span> books)
+    Console.WriteLine(book.Author.Name);       <span class="cx-err">// ❌ +1 query, every single book</span></code></pre>
+      </div>
+      <p class="cx-note"><code>book.Author</code> was never loaded, so each access lazily fetches it — one extra round trip per book.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="kw">string</span>&gt; authorNames = context.Books
+    .Select(b =&gt; b.Author.Name)   <span class="cx-ok">// ✅ one join, one SQL query</span>
+    .ToList();
+
+<span class="kw">foreach</span> (<span class="kw">var</span> name <span class="kw">in</span> authorNames)
+    Console.WriteLine(name);       <span class="cx-ok">// already in memory — no extra queries</span></code></pre>
+      </div>
+      <p class="cx-note">The join happens once, inside the original query — the loop afterward never touches the database.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> A <code>foreach</code> reads a lazy-loaded navigation property every iteration</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA11-1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">THE CLASSIC N+1</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🔁 book.Author.Name</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">inside the loop</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcA11-1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🗄️ N queries</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">one per book</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the <b>textbook N+1</b> — nothing about the code looks wrong on screen, and it gets slower in exact proportion to how many rows the outer query returned.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Navigation read inside a loop → one round trip per row.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> The loop only needs one field off the navigation</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA11-2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">PROJECT THE FIELD UP FRONT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🎯 Select(AuthorName)</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#0f766e">one join, one query</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUcA11-2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🔁 foreach(names)</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#0f766e">already in memory</text>
+            </svg>
+          </div>
+          <p class="uc-what">A projection naming just the one field the loop reads turns the whole operation into a single SQL join — there's nothing left for the loop to lazily trigger.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Only need one field → Select it up front, don't navigate in the loop.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> The loop genuinely needs the whole related entity</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA11-3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">INCLUDE UP FRONT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📦 .Include(Author)</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">before the loop starts</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcA11-3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🔁 foreach(books)</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">no per-row trip</text>
+            </svg>
+          </div>
+          <p class="uc-what">When the loop needs more than one field off the related entity, <code>Include</code> up front still avoids the per-row trip — the real decision is <code>Include</code> vs. <code>Select</code>, not whether to fix it at all.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need the whole related entity → Include it before the loop, not inside it.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>An order-list endpoint loops over 500 orders and reads <code>order.Customer.Name</code> inside the loop.</b> Nobody wrote "500 queries" anywhere in the code, but that's exactly what runs, because <code>Customer</code> was never included or projected up front — each access lazily fetches it. Changing the original query to <code>.Select(o => new { o.Id, o.Customer.Name })</code> collapses it back down to the single query it should have been.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="10.html">← Include vs. Projection Using Select</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="12.html">Offset Pagination vs. Keyset Pagination →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

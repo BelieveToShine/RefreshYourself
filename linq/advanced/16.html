@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What does .AsParallel() actually change about how a LINQ-to-Objects query runs?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="PLINQ: AsParallel, Ordering, and Trade-offs — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="What does .AsParallel() actually change about how a LINQ-to-Objects query runs?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>PLINQ: AsParallel, Ordering, and Trade-offs — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">PLINQ: AsParallel, Ordering, and Trade-offs</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 LINQ · Advanced · Deep Dive</div>
+    <h1><code>.AsParallel()</code> — real <span class="hl hl-blue">in-memory parallelism</span>, never <span class="hl hl-hot">database parallelism</span></h1>
+    <p class="interview-q">"What does <code>.AsParallel()</code> actually change about how a LINQ-to-Objects query runs?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+        <div class="wc-head">⚡ PLINQ</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A CPU-heavy LINQ-to-Objects query over a large in-memory collection runs on a single thread by default, leaving every other core idle while one thread grinds through genuinely expensive per-item work.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>.AsParallel()</code> partitions the source across multiple threads and merges the results back — real speedup for genuinely expensive, parallelizable per-item work, at the cost of losing default ordering and paying a real partition/merge overhead that can backfire on cheap work.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">AsParallel() = split the work across threads, merge it back — a real trade, not a free speedup.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>AsParallel()</code> <span class="rarrow">→</span> <b>partitions</b> across threads, merges back</p>
+      <p class="rrow"><code>AsOrdered()</code> <span class="rarrow">→</span> <b>restores order</b>, at a real cost</p>
+      <p class="rrow">cheap per-item work <span class="rarrow">→</span> can get <b>slower</b>, not faster</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>AsParallel()</code></b> only ever touches
+    in-memory LINQ-to-Objects — it has nothing to say about an <code>IQueryable</code> database query.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shL16" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arL16Gray" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arL16Amber" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="325" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">SOURCE PARTITIONED ACROSS THREADS, THEN MERGED BACK</text>
+
+      <g filter="url(#shL16)"><rect x="15" y="106" width="130" height="50" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="80" y="128" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📥 Source</text>
+      <text x="80" y="144" text-anchor="middle" font-size="9.5" fill="#5b6472">in-memory List&lt;T&gt;</text>
+
+      <path d="M145,131 H170 V43 H195" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arL16Gray)"/>
+      <path d="M145,131 H195" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arL16Gray)"/>
+      <path d="M145,131 H170 V219 H195" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arL16Gray)"/>
+
+      <g filter="url(#shL16)"><rect x="195" y="22" width="130" height="42" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="260" y="40" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">🧵 Thread 1</text>
+      <text x="260" y="54" text-anchor="middle" font-size="9" fill="#5b6472">processes a chunk</text>
+
+      <g filter="url(#shL16)"><rect x="195" y="110" width="130" height="42" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="260" y="128" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">🧵 Thread 2</text>
+      <text x="260" y="142" text-anchor="middle" font-size="9" fill="#5b6472">processes a chunk</text>
+
+      <g filter="url(#shL16)"><rect x="195" y="198" width="130" height="42" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="260" y="216" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">🧵 Thread 3</text>
+      <text x="260" y="230" text-anchor="middle" font-size="9" fill="#5b6472">processes a chunk</text>
+
+      <path d="M325,43 H350 V131 H375" fill="none" stroke="#d97706" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arL16Amber)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1.1s" repeatCount="indefinite"/></path>
+      <path d="M325,131 H375" fill="none" stroke="#d97706" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arL16Amber)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1.1s" repeatCount="indefinite"/></path>
+      <path d="M325,219 H350 V131 H375" fill="none" stroke="#d97706" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arL16Amber)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1.1s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shL16)"><rect x="375" y="106" width="130" height="50" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="440" y="128" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🔀 Merge</text>
+      <text x="440" y="144" text-anchor="middle" font-size="9.5" fill="#5b6472">order not guaranteed</text>
+
+      <path d="M505,131 H535" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arL16Gray)"/>
+
+      <g filter="url(#shL16)"><rect x="535" y="112" width="90" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="580" y="135" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ Result</text>
+
+      <rect x="325" y="176" width="230" height="20" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1"/>
+      <text x="440" y="190" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">AsOrdered() → restores order, a real cost</text>
+    </svg>
+    <figcaption>Partitioning and merging is real parallel work — the dashed amber paths are exactly where ordering gets lost unless you pay to restore it.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>.AsParallel()</code> does not speed up a database query.</b> It only
+    exists for <code>IEnumerable&lt;T&gt;</code> LINQ-to-Objects — it has no meaning at all over an
+    <code>IQueryable</code>, and the database is already doing its own query-level parallelism, if any,
+    completely independently of PLINQ.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Would you reach for PLINQ in a typical ASP.NET Core request handler?"</b>
+    Rarely — most request-handling work is I/O-bound (waiting on a database or network call), which
+    <code>async</code>/<code>await</code> already handles without burning extra threads. PLINQ earns its
+    keep for genuinely CPU-bound batch work over an in-memory collection, not for everyday request
+    processing.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>.AsParallel()</code> partitions an in-memory sequence across multiple
+    threads and merges the results back — real speedup for genuinely CPU-heavy per-item work, but
+    ordering isn't preserved by default, and <code>AsOrdered()</code> to get it back has a real cost.
+    It only applies to LINQ-to-Objects; it has no meaning over an <code>IQueryable</code> database
+    query."</p>
+    <ul>
+      <li>Genuinely CPU-heavy work, large collection <span class="hl hl-basic">→ real speedup is possible</span>.</li>
+      <li>Small or cheap-per-item work <span class="hl hl-hot">→ partition/merge overhead can make it slower</span>.</li>
+      <li>Order matters <span class="hl hl-inter">→ <code>AsOrdered()</code> restores it, at a real cost</span>.</li>
+      <li><code>IQueryable</code> database query <span class="hl hl-blue">→ <code>.AsParallel()</code> has no meaning there at all</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>PLINQ (<b>P</b>arallel <b>LINQ</b>) works by splitting the source sequence into partitions and
+      running the rest of the query's operators on each partition on a separate thread, drawn from the
+      thread pool. Once every partition finishes, the results are merged back into a single sequence —
+      that partition-then-merge step is real coordination work, not free, which is exactly why it only
+      pays off when the per-item work inside the query is expensive enough to outweigh it.</p>
+
+      <p><span class="hl hl-hot">Ordering</span> is the first casualty. Because partitions finish in
+      whatever order their threads happen to complete, the default merge doesn't preserve the source
+      sequence's original order at all. <code>AsOrdered()</code> tells PLINQ to track and restore that
+      original order — which is a real, meaningful cost, since now output can't be yielded until its
+      correct position is known, giving back some of the parallelism's benefit.</p>
+
+      <p>The trade only works out for work that's actually expensive <i>per item</i> — a non-trivial
+      CPU computation, not a cheap comparison or arithmetic op. On small collections or cheap per-item
+      work, the fixed cost of partitioning the source and merging the results can be larger than the
+      work being parallelized, making the parallel version measurably slower than the plain sequential
+      query it replaced.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Genuinely CPU-heavy per-item work — a real PLINQ win</span>
+<span class="kw">var</span> hashes = largeImageBatch
+    .AsParallel()                       <span class="cx-ok">// ✅ partitions across threads</span>
+    .Select(img => ComputePerceptualHash(img))
+    .ToList();</code></pre>
+      </div>
+      <p class="cx-note"><code>ComputePerceptualHash</code> is expensive enough per item that spreading
+      it across cores <b>outweighs</b> the partition/merge overhead.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Order matters — pay for it explicitly</span>
+<span class="kw">var</span> ranked = scores
+    .AsParallel()
+    .AsOrdered()                        <span class="cx-ok">// ✅ restores the original sequence order</span>
+    .Select(s => Normalize(s))
+    .ToList();</code></pre>
+      </div>
+      <p class="cx-note">Without <code>AsOrdered()</code>, <code>ranked</code> could come back in
+      <b>any</b> order the partitions happened to finish in.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// No meaning over a database query — doesn't parallelize the SQL</span>
+<span class="kw">var</span> active = db.Users
+    .Where(u => u.IsActive)
+    .AsParallel()                       <span class="cx-err">// ❌ IQueryable has no PLINQ behavior to opt into</span>
+    .ToList();</code></pre>
+      </div>
+      <p class="cx-note"><code>db.Users.Where(...)</code> is an <code>IQueryable&lt;T&gt;</code> —
+      <code>.AsParallel()</code> here is <b>meaningless</b>; the database, not PLINQ, controls any
+      parallelism in running the SQL.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A batch job hashes or resizes thousands of images already loaded into memory</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcL16a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">EXPENSIVE PER-ITEM WORK</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🖼 heavy per-image work</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcL16a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ real speedup</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is PLINQ's home turf: real, expensive CPU work per item, over a large
+          in-memory collection, where order genuinely doesn't matter. Spreading it across cores is a
+          straightforward win here.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Expensive per-item work + large collection → AsParallel() is a real win.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> The output has to stay in the same order it was read in</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcL16b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">ORDER MUST BE KEPT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📋 AsParallel()</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcL16b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">+ AsOrdered()</text>
+            </svg>
+          </div>
+          <p class="uc-what">A ranked report or a sequence that feeds into something position-sensitive
+          still needs the original order back. <code>AsOrdered()</code> gets it, but accept the trade —
+          some of the parallel speedup is spent restoring it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Order matters → AsOrdered(), and accept the real cost.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A small list with cheap, simple per-item logic gets <code>.AsParallel()</code> added "for speed"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcL16c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">CHEAP WORK, SMALL LIST</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">➕ x =&gt; x * 2</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcL16c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐢 actually slower</text>
+            </svg>
+          </div>
+          <p class="uc-what">Simple arithmetic over a short list finishes so fast sequentially that
+          partitioning it across threads and merging the pieces back costs more than the work itself
+          ever did. <b>A common interview trap:</b> assuming <code>.AsParallel()</code> is a free
+          speedup you can sprinkle anywhere.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Cheap work, small collection → the overhead can make it slower, not faster.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A nightly job recomputes a derived score for every product already loaded into memory, and
+      the calculation itself is genuinely expensive per product.</b> Adding <code>.AsParallel()</code>
+      cuts the job's wall-clock time roughly in proportion to available cores — a legitimate win,
+      because the per-item work is heavy enough to justify the partition/merge overhead, and the job
+      doesn't care what order the scores come back in.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="15.html">← Streaming vs. Buffering Large Results</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="17.html">Modern LINQ Operators →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

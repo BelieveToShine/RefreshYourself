@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Both SelectMany and Join can flatten/combine two sequences — when does each one actually apply?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="SelectMany vs. Join — LINQ Intermediate — RefreshYourself">
+<meta property="og:description" content="Both SelectMany and Join can flatten/combine two sequences — when does each one actually apply?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>SelectMany vs. Join — LINQ Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">SelectMany vs. Join</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ LINQ · Intermediate · Should Know</div>
+    <h1><code>SelectMany</code> vs. <code>Join</code> — <span class="hl hl-inter">a navigation, or a correlated key?</span></h1>
+    <p class="interview-q">"Both <code>SelectMany</code> and <code>Join</code> can flatten or combine two sequences — when does each one actually apply?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🪆 SelectMany</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Each <code>Customer</code> already carries its own <code>Orders</code> list — projecting that property with plain <code>Select</code> gives a sequence of sequences, not the flat list of orders you actually want.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>SelectMany</code> flattens a nested navigation that's already sitting on the object — no key comparison needed, because the relationship is already a property, not two separate collections to correlate.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">SelectMany = flatten a nested property you already have.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🔗 Join</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Two genuinely separate collections — say, a list of employees and a list of departments loaded from different sources — only relate through a shared id field; there's no nested property linking them.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Join</code> correlates two independent sequences by comparing a key on each side — exactly the shape SQL's <code>JOIN</code> solves, for data that isn't already nested together in memory.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Join = correlate two separate sequences by a shared key.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>SelectMany</code> <span class="rarrow">→</span> flatten a <b>nested navigation</b> you already have</p>
+      <p class="rrow"><code>Join</code> <span class="rarrow">→</span> correlate two <b>independent</b> sequences by key</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> If the "many" side is already <b><code>customer.Orders</code></b>, reach for <b><code>SelectMany</code></b>. If it's two unrelated lists sharing an id, reach for <b><code>Join</code></b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shLi8" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arLi8" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arLi8Blue" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#1d4ed8"/>
+        </marker>
+      </defs>
+
+      <text x="160" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.3">ALREADY A NESTED NAVIGATION</text>
+      <text x="480" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e" letter-spacing="0.3">TWO INDEPENDENT SEQUENCES</text>
+
+      <path d="M320,32 V228" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <g filter="url(#shLi8)"><rect x="35" y="36" width="250" height="56" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="58" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🧾 Customer</text>
+      <text x="160" y="75" text-anchor="middle" font-size="10.5" fill="#5b6472">.Orders = [ o1, o2, o3 ]</text>
+      <text x="160" y="87" text-anchor="middle" font-size="10" fill="#5b6472">(a property, already nested)</text>
+
+      <path d="M160,92 V110" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arLi8Blue)"/>
+
+      <rect x="85" y="110" width="150" height="30" rx="10" fill="#ffffff" stroke="#1d4ed8" stroke-width="1.5"/>
+      <text x="160" y="130" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">SelectMany</text>
+
+      <path d="M160,140 V158" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arLi8Blue)"/>
+
+      <g filter="url(#shLi8)"><rect x="35" y="158" width="250" height="40" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="182" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ flat: o1, o2, o3, …</text>
+
+      <g filter="url(#shLi8)"><rect x="355" y="36" width="115" height="44" rx="12" fill="#fef3c7" stroke="#b45309" stroke-width="1.8"/></g>
+      <text x="412" y="63" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">👤 Employees</text>
+      <g filter="url(#shLi8)"><rect x="490" y="36" width="115" height="44" rx="12" fill="#fef3c7" stroke="#b45309" stroke-width="1.8"/></g>
+      <text x="547" y="63" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🏢 Departments</text>
+      <text x="480" y="98" text-anchor="middle" font-size="10" fill="#5b6472">two separate lists, no nesting</text>
+
+      <path d="M412,80 V118" fill="none" stroke="#b45309" stroke-width="1.8"/>
+      <path d="M547,80 V118" fill="none" stroke="#b45309" stroke-width="1.8"/>
+      <path d="M412,118 H547" fill="none" stroke="#b45309" stroke-width="1.8"/>
+      <path d="M480,118 V140" fill="none" stroke="#b45309" stroke-width="1.8" marker-end="url(#arLi8)"/>
+
+      <rect x="405" y="140" width="150" height="30" rx="10" fill="#ffffff" stroke="#b45309" stroke-width="1.5"/>
+      <text x="480" y="160" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">Join on DeptId</text>
+
+      <path d="M480,170 V188" fill="none" stroke="#b45309" stroke-width="1.8" marker-end="url(#arLi8)"/>
+
+      <g filter="url(#shLi8)"><rect x="355" y="188" width="250" height="40" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="212" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ matched pairs by key</text>
+    </svg>
+    <figcaption><code>SelectMany</code> flattens a navigation already sitting on the object; <code>Join</code> correlates two separate sequences by a shared key.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>SelectMany</code> is not a substitute for correlating two unrelated lists.</b> It only flattens a collection that's already structurally nested (a navigation property) — if the data isn't nested, there's nothing for it to flatten, and <code>Join</code> is the operator that actually builds the relationship from a shared key.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Can <code>SelectMany</code> itself combine two independent sequences, without a navigation property?"</b> Yes — <code>SelectMany</code> has an overload that takes a second sequence-selector and a result-selector, which is actually how LINQ implements a cross join (every element of A paired with every element of B); that's a different use entirely from flattening an existing nested property.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>SelectMany</code> flattens a one-to-many relationship that's already shaped as a nested collection, like <code>customer.Orders</code>. <code>Join</code> correlates two genuinely independent sequences by comparing a key on each side, the way SQL's <code>JOIN</code> does."</p>
+    <ul>
+      <li><code>SelectMany</code> <span class="hl hl-blue">→ flattens an existing navigation</span>, no key comparison involved.</li>
+      <li><code>Join</code> <span class="hl hl-inter">→ correlates by a shared key</span> between two separate sequences.</li>
+      <li>If the "many" side is already a property on the object <span class="hl hl-basic">→ reach for SelectMany</span>, not Join.</li>
+      <li>If the relationship only exists through a matching id field <span class="hl hl-teal">→ reach for Join</span>, not SelectMany.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">SelectMany</span> solves a structural problem: when a sequence's
+      elements each hold their own nested sequence (a <code>Customer</code> with an
+      <code>Orders</code> list), projecting that nested property with plain <code>Select</code>
+      gives you a sequence of sequences — a jagged shape you'd still have to flatten by hand.
+      <code>SelectMany</code> does that flattening in one step, with no notion of a "key" anywhere
+      in the operation; the relationship was already there, sitting on the object.</p>
+
+      <p><span class="hl hl-inter">Join</span> solves a different problem: two sequences that have
+      no structural relationship to each other at all, only a value they happen to share — an
+      <code>Employee.DepartmentId</code> that matches a <code>Department.Id</code>, loaded from
+      two unrelated sources. <code>Join</code> is what builds the relationship, by comparing a key
+      selector on each side and emitting a row for every match.</p>
+
+      <p>The practical test: ask whether the "many" side already exists as a property on the "one"
+      side. If yes, it's a navigation and <code>SelectMany</code> is the right tool. If the two
+      sequences are only related by a value they happen to share — not an actual object reference
+      — that's a correlation, and <code>Join</code> is the right tool.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>SelectMany</code></th><th><code>Join</code></th></tr></thead>
+        <tbody>
+          <tr><th>What it needs</th><td>a nested collection already on the object</td><td>a key selector on each of two separate sequences</td></tr>
+          <tr><th>Relationship shape</th><td>navigation (one-to-many, already nested)</td><td>correlation (by matching key value)</td></tr>
+          <tr><th>Typical source</th><td><code>customer.Orders</code></td><td>two independently loaded lists/tables</td></tr>
+          <tr><th>Unmatched elements</th><td>n/a — nothing to "not match," it's already nested</td><td>dropped (inner join semantics)</td></tr>
+          <tr><th>Wrong tool symptom</th><td>trying to flatten data that was never nested</td><td>trying to key-compare data that's already a property</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> allOrders = customers.SelectMany(c =&gt; c.Orders);
+
+<span class="cx-ok">// ✅ Orders is already a nested property — nothing to correlate, just flatten</span></code></pre>
+      </div>
+      <p class="cx-note"><code>customer.Orders</code> is already a <b>navigation</b> — <code>SelectMany</code> just flattens it.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> staffByDept = employees.Join(
+    departments,
+    e =&gt; e.DepartmentId,
+    d =&gt; d.Id,
+    (e, d) =&gt; <span class="kw">new</span> { e.Name, d.DepartmentName });
+
+<span class="cx-ok">// ✅ Two separate lists — Join correlates them by the shared id</span></code></pre>
+      </div>
+      <p class="cx-note">Employees and departments are <b>independent sequences</b> — <code>Join</code> is what relates them.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You need one flat list of line items across every order on every invoice</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8aa" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">INVOICE.LINEITEMS, NESTED</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🧾 invoices (nested)</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc8aa)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📄 flat line items</text>
+            </svg>
+          </div>
+          <p class="uc-what">Each invoice already carries its own <code>LineItems</code> list — a
+          nested navigation, not two separate tables to correlate. <code>SelectMany</code> flattens
+          it in one call with no key comparison involved.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Already-nested property → <code>SelectMany</code>, not <code>Join</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're combining two lists loaded from different sources by a shared id</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8bb" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">TWO SOURCES, SHARED ID</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">📥 CSV import rows</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc8bb)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🗄️ existing DB records</text>
+            </svg>
+          </div>
+          <p class="uc-what">A nightly import file and the existing database rows have no object
+          relationship — they're only related because a column in each happens to hold the same
+          id. That's a correlation, not a navigation, so <code>Join</code> is the right tool.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Two separate sources sharing a key → <code>Join</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You reach for <code>Join</code> on data that's already a navigation property</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8cc" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">UNNECESSARY Join ON A NAVIGATION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🧾 customer.Orders</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc8cc)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">⚠️ re-deriving the key</text>
+            </svg>
+          </div>
+          <p class="uc-what">Writing <code>customers.Join(orders, c =&gt; c.Id, o =&gt;
+          o.CustomerId, ...)</code> works, but it's re-deriving a relationship that
+          <code>customer.Orders</code> already expresses directly — <code>SelectMany</code> says
+          the same thing with less code and no key comparison to get wrong.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Don't <code>Join</code> your way back to a relationship you already have as a property.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>An order-processing service needs every line item across every order for a report.</b>
+      Because <code>order.LineItems</code> is already loaded on each order object,
+      <code>orders.SelectMany(o =&gt; o.LineItems)</code> is the entire query. If the line items
+      instead lived in a totally separate table with only a shared <code>OrderId</code> linking
+      them, the same job would need <code>Join</code> to build that relationship first.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="7.html">← Inner Join vs. Left Outer Join</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="9.html">Zip vs. Join →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -297,5 +297,6 @@ category, not tier — the site-wide convention). Numbering below is the tier-fo
 
 ## Known gaps
 
-None — Phase 7 (scaffolding the site structure and writing the 59 pages) is the next and only
-remaining phase for this track, pending the user's review of this roadmap.
+None — Phase 7 (scaffolding the site structure and writing the 59 pages) is complete (see
+[`overview.md`](overview.md)'s Status section). No independent diagram-verification sweep found
+any genuine defect across the 59 pages (all confirmed `issueCount: 0`).

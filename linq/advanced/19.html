@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="You're looking up a user by email, where email is supposed to be unique but isn't actually enforced by a DB constraint — which of the four would you reach for, and why?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: Choosing First/FirstOrDefault/Single/SingleOrDefault — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="You're looking up a user by email, where email is supposed to be unique but isn't actually enforced by a DB constraint — which of the four would you reach for, and why?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: Choosing First/FirstOrDefault/Single/SingleOrDefault — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: Choosing First/FirstOrDefault/Single/SingleOrDefault</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 LINQ · Advanced · Must Know</div>
+    <h1>Scenario: when "unique" is only <span class="hl hl-inter">a promise</span>, reach for <span class="hl hl-blue">Single</span></h1>
+    <p class="interview-q">"You're looking up a user by email, where email is supposed to be unique but isn't actually enforced by a DB constraint — which of the four would you reach for, and why?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+        <div class="wc-head">🔎 Unique by promise, not by constraint</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Reaching for <code>FirstOrDefault</code> "to be safe" on a lookup that's supposed to be unique means a real duplicate — caused by a missing DB constraint, a race condition, or a bad migration — silently returns whichever row happened to come first, and the data bug keeps happening invisibly.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Single</code>/<code>SingleOrDefault</code> throw the moment there's more than one match — when uniqueness is supposed to be true, that exception is a feature: it surfaces the data-integrity problem immediately instead of hiding it behind a quietly wrong answer.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Single = "this MUST be unique — throw if it isn't." That throw is doing its job.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>FirstOrDefault</code> <span class="rarrow">→</span> <b>hides</b> a duplicate, returns row #1</p>
+      <p class="rrow"><code>SingleOrDefault</code> <span class="rarrow">→</span> <b>throws</b> on a duplicate, surfaces the bug</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> not found → <b>null</b> either way. Found twice →
+    <b><code>Single</code></b>/<code>SingleOrDefault</code> throw, and that's <i>correct</i>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 340" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shL19" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arL19" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arL19Red" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">LOOKUP BY EMAIL — "UNIQUE" IS A PROMISE, NOT A CONSTRAINT</text>
+
+      <g filter="url(#shL19)"><rect x="190" y="26" width="260" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="46" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">📧 Look up user by email</text>
+      <text x="320" y="62" text-anchor="middle" font-size="9.5" fill="#5b6472">email SHOULD be unique — not DB-enforced</text>
+
+      <path d="M320,72 V92" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M110,92 H530" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M110,92 V114" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arL19)"/>
+      <path d="M320,92 V114" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arL19)"/>
+      <path d="M530,92 V114" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arL19Red)"/>
+
+      <g filter="url(#shL19)"><rect x="35" y="114" width="150" height="52" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="110" y="134" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">0 matches</text>
+      <text x="110" y="150" text-anchor="middle" font-size="9.5" fill="#5b6472">→ null, all four agree</text>
+
+      <g filter="url(#shL19)"><rect x="245" y="114" width="150" height="52" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="320" y="132" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">1 match (expected)</text>
+      <text x="320" y="150" text-anchor="middle" font-size="9.5" fill="#5b6472">→ the user, all four agree</text>
+
+      <g filter="url(#shL19)"><rect x="455" y="114" width="150" height="52" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="530" y="132" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">2+ matches — bug!</text>
+      <text x="530" y="150" text-anchor="middle" font-size="9.5" fill="#991b1b">a real duplicate email</text>
+
+      <path d="M530,166 V196" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arL19Red)"/>
+
+      <g filter="url(#shL19)"><rect x="455" y="196" width="150" height="54" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="530" y="216" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">First(OrDefault)</text>
+      <text x="530" y="231" text-anchor="middle" font-size="9.5" fill="#5b6472">silently returns row #1</text>
+      <text x="530" y="244" text-anchor="middle" font-size="9.5" fill="#5b6472">🐛 bug stays hidden</text>
+
+      <path d="M530,250 V268" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arL19)"/>
+
+      <g filter="url(#shL19)"><rect x="455" y="268" width="150" height="54" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="530" y="288" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">Single(OrDefault)</text>
+      <text x="530" y="303" text-anchor="middle" font-size="9.5" fill="#5b6472">throws — on purpose</text>
+      <text x="530" y="316" text-anchor="middle" font-size="9.5" fill="#5b6472">✅ bug surfaces now</text>
+    </svg>
+    <figcaption>Zero or one match, all four agree. Two or more is the real fork: First hides the duplicate, Single surfaces it.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>SingleOrDefault</code> is not "the safe version of Single."</b> It only
+    tolerates the <i>zero</i>-match case by returning the type default instead of throwing — it still
+    throws on 2+ matches, exactly like <code>Single</code>, because the uniqueness claim is the same.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What would you actually do once that exception gets thrown in
+    production?"</b> Let it surface as a real error (log it with the offending email), not swallow it
+    with a try/catch that falls back to <code>FirstOrDefault</code> — that would just reintroduce the
+    exact bug <code>Single</code> was added to catch. The right fix is adding the missing unique
+    constraint at the database.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Since email is supposed to be unique, I'd use
+    <code>SingleOrDefault</code> — null on zero matches, the user on exactly one match, and a thrown
+    exception the moment there are two or more. That exception is intentional: it surfaces a real
+    data-integrity bug immediately instead of <code>FirstOrDefault</code> silently returning
+    whichever duplicate row happened to come first."</p>
+    <ul>
+      <li>Uniqueness is a real data rule <span class="hl hl-blue">→ reach for Single/SingleOrDefault</span>, not FirstOrDefault.</li>
+      <li>A thrown exception on a duplicate <span class="hl hl-basic">→ a feature here, not a bug to suppress</span>.</li>
+      <li><code>FirstOrDefault</code> on "unique" data <span class="hl hl-hot">→ hides a real duplicate instead of catching it</span>.</li>
+      <li>Zero matches <span class="hl hl-inter">→ null either way — that part isn't the decision point</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>This scenario is exactly where <span class="hl hl-blue">Single</span> earns its keep over
+      <span class="hl hl-inter">First</span>. <code>First</code>/<code>FirstOrDefault</code> say "I
+      expect at least one match, and I don't care if there's more" — the right contract when multiple
+      matches are a normal, expected outcome. <code>Single</code>/<code>SingleOrDefault</code> say "I
+      expect <i>exactly</i> one, and more than one is a bug" — the right contract here, because the
+      application's own data model claims email addresses are unique.</p>
+
+      <p>Without a real unique constraint on the <code>Email</code> column, nothing in the database
+      actually stops two rows from sharing one — a bad migration, a race between two concurrent
+      sign-ups, or manually edited data can all produce exactly that duplicate. If the lookup code uses
+      <code>FirstOrDefault</code>, that duplicate is invisible: the query still returns a user, the
+      request still succeeds, and the only symptom is whichever row happens to sort first quietly
+      winning every time — until two different parts of the system start disagreeing about which "the"
+      user with that email actually is.</p>
+
+      <p><code>SingleOrDefault</code> turns that same duplicate into a thrown
+      <code>InvalidOperationException</code> the instant it's hit — loud, immediate, and attributable
+      to the exact query that found it. That's strictly more useful than a silent wrong answer, even
+      though it means the endpoint fails instead of "working." The real fix is adding the unique
+      constraint the data model always should have had; the exception is just what surfaces that it's
+      missing.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Looks "safe," but hides a real duplicate</span>
+<span class="kw">var</span> user = <span class="kw">await</span> db.Users
+    .FirstOrDefaultAsync(u => u.Email == email); <span class="cx-err">// ❌ picks row #1 if two rows share this email</span></code></pre>
+      </div>
+      <p class="cx-note">If two rows share this email, this line <b>always</b> returns the same one —
+      silently, with no signal anything is wrong.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Documents the uniqueness assumption AND enforces it</span>
+<span class="kw">var</span> user = <span class="kw">await</span> db.Users
+    .SingleOrDefaultAsync(u => u.Email == email); <span class="cx-ok">// ✅ null if none, throws if 2+</span>
+
+<span class="kw">if</span> (user <span class="kw">is</span> <span class="kw">null</span>)
+    <span class="kw">return</span> NotFound(); <span class="cx-cmt">// zero matches — a normal, expected outcome</span></code></pre>
+      </div>
+      <p class="cx-note">A genuine duplicate now <b>throws</b> right here, with a stack trace pointing
+      at this exact query — not a quiet wrong answer three layers downstream.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> The email genuinely doesn't exist yet — a new sign-up check</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcL19a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">ZERO MATCHES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">SingleOrDefault()</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcL19a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">null → "not found"</text>
+            </svg>
+          </div>
+          <p class="uc-what">A clean "not found" case — behaves exactly like <code>FirstOrDefault</code>
+          here, returning the type default. This isn't the part of the decision that matters.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Zero matches → null either way, nothing special yet.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> Exactly one match — the common, expected case</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcL19b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">ONE MATCH</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">SingleOrDefault()</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcL19b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">the user, as expected</text>
+            </svg>
+          </div>
+          <p class="uc-what">The normal path, but <code>SingleOrDefault</code> still earns its keep
+          here — it documents, in the code itself, that this lookup assumes uniqueness, which
+          <code>FirstOrDefault</code> never communicates.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Even the happy path benefits — Single documents the uniqueness assumption.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A missing DB constraint let two rows end up with the same email</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcL19c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">2+ MATCHES — REAL BUG</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">duplicate email, 2 rows</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcL19c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">✅ throws immediately</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is exactly the case <code>Single</code>/<code>SingleOrDefault</code>
+          exist for. <code>FirstOrDefault</code> would silently return one of the two rows forever;
+          <code>SingleOrDefault</code> throws the moment it's hit. <b>A common interview trap:</b>
+          treating the thrown exception as the bug, when the duplicate data is the actual bug — the
+          exception is just the messenger.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A duplicate "unique" value → let it throw, then fix the missing constraint.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A login endpoint using <code>FirstOrDefaultAsync(u =&gt; u.Email == email)</code> has been
+      quietly authenticating users against whichever duplicate row sorts first, for months, after a
+      bad data migration created a handful of duplicate emails.</b> Switching to
+      <code>SingleOrDefaultAsync</code> doesn't fix the data — it makes the next duplicate throw
+      immediately instead of silently picking a winner, turning an invisible correctness bug into a
+      loud, fixable one.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="18.html">← Scenario: Flattening Customers and Orders</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="20.html">Scenario: Diagnosing Repeated Queries →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

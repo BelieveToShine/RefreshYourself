@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Why does a LINQ query that compiles fine sometimes throw at runtime with a translation error?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Why EF Core Cannot Translate Certain C# Methods — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="Why does a LINQ query that compiles fine sometimes throw at runtime with a translation error?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Why EF Core Cannot Translate Certain C# Methods — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Why EF Core Cannot Translate Certain C# Methods</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 LINQ · Advanced · Must Know</div>
+    <h1>Why <span class="hl hl-hot">EF Core</span> Cannot Translate Certain C# Methods — and why <code>.ToList()</code> <span class="hl hl-inter">isn't the fix</span></h1>
+    <p class="interview-q">"Why does a LINQ query that compiles fine sometimes throw at runtime with a translation error?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">🧩 Translation Failure</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>The C# compiler only checks that your lambda is valid C# — it has no idea whether EF Core's translator can turn any particular method call inside it into SQL, so a query can compile perfectly and still fail the moment it runs.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>EF Core's translator only recognizes a specific, documented set of .NET APIs and patterns it knows how to map to SQL — an arbitrary instance method, a custom extension method, or unsupported string/date logic has no SQL equivalent, so there's nothing to fall back to translate it with.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Translation failure = the method has no SQL equivalent the provider knows — not a bug in your C#.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Recognized pattern <span class="rarrow">→</span> translates to SQL, runs on the database</p>
+      <p class="rrow">Unrecognized pattern <span class="rarrow">→</span> throws a translation exception</p>
+      <p class="rrow"><code>.ToList()</code> "fix" <span class="rarrow">→</span> <b>not a fix</b> — pulls the WHOLE table first</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>.ToList()</code></b> doesn't fix the untranslatable call — it just moves it after loading everything.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 680 340" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shLa7" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arLa7" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arLa7Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arLa7Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arLa7Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shLa7)"><rect x="210" y="14" width="260" height="40" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="340" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">Where(x =&gt; x.SomeMethod())</text>
+
+      <path d="M340,54 V70" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M120,70 H560" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M120,70 V90" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arLa7)"/>
+      <path d="M340,70 V90" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arLa7)"/>
+      <path d="M560,70 V90" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arLa7)"/>
+
+      <g filter="url(#shLa7)"><rect x="25" y="90" width="190" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="120" y="107" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ Recognized pattern</text>
+      <text x="120" y="121" text-anchor="middle" font-size="9" fill="#5b6472">e.g. x.Name.Contains(...)</text>
+
+      <g filter="url(#shLa7)"><rect x="245" y="90" width="190" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="340" y="107" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">❌ Unrecognized pattern</text>
+      <text x="340" y="121" text-anchor="middle" font-size="9" fill="#5b6472">custom method, no SQL equivalent</text>
+
+      <g filter="url(#shLa7)"><rect x="465" y="90" width="190" height="40" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="560" y="107" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">.ToList() slapped in front</text>
+      <text x="560" y="121" text-anchor="middle" font-size="9" fill="#5b6472">"fixes" the exception</text>
+
+      <path d="M120,130 V150" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arLa7Green)"/>
+      <path d="M340,130 V150" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arLa7Red)"/>
+      <path d="M560,130 V150" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arLa7Amber)"/>
+
+      <g filter="url(#shLa7)"><rect x="25" y="150" width="190" height="42" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="120" y="168" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Maps to known SQL</text>
+      <text x="120" y="182" text-anchor="middle" font-size="9" fill="#5b6472">LIKE, comparisons...</text>
+
+      <g filter="url(#shLa7)"><rect x="245" y="150" width="190" height="42" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="340" y="168" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🛑 Translation exception</text>
+      <text x="340" y="182" text-anchor="middle" font-size="9" fill="#5b6472">thrown before anything runs</text>
+
+      <g filter="url(#shLa7)"><rect x="465" y="150" width="190" height="42" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="560" y="168" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">⚠️ WHOLE table pulled</text>
+      <text x="560" y="182" text-anchor="middle" font-size="9" fill="#5b6472">every row, every column</text>
+
+      <path d="M120,192 V214" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arLa7Green)"/>
+      <path d="M340,192 V214" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arLa7Red)"/>
+      <path d="M560,192 V214" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arLa7Amber)"/>
+
+      <g filter="url(#shLa7)"><rect x="25" y="214" width="190" height="48" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="120" y="234" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🗄️ Runs on the database</text>
+      <text x="120" y="249" text-anchor="middle" font-size="9" fill="#5b6472">correct AND fast</text>
+
+      <g filter="url(#shLa7)"><rect x="245" y="214" width="190" height="48" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="340" y="234" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">Query never runs</text>
+      <text x="340" y="249" text-anchor="middle" font-size="9" fill="#5b6472">loud failure — you know immediately</text>
+
+      <g filter="url(#shLa7)"><rect x="465" y="214" width="190" height="48" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="560" y="234" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🐌 Runs in memory</text>
+      <text x="560" y="249" text-anchor="middle" font-size="9" fill="#5b6472">correct, catastrophic at scale</text>
+
+      <rect x="460" y="282" width="200" height="30" rx="15" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+      <text x="560" y="302" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🚫 NOT A REAL FIX</text>
+    </svg>
+    <figcaption>Three paths from the same call — only the leftmost one is both correct and fast.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>.ToList()</code> does not fix a translation error — it's a different bug.</b> It forces EF Core to materialize the entire unfiltered table into memory first, then runs the untranslatable logic client-side; the result is correct, but performance becomes catastrophic on anything but a tiny table.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"So what IS the actual fix?"</b> Either rewrite the untranslatable piece using an API the provider recognizes, or push it after a deliberate, filtered materialization — apply every translatable <code>Where</code>/<code>OrderBy</code>/<code>Take</code> first, THEN call <code>ToList()</code>/<code>AsEnumerable()</code>, so only the already-narrowed result set gets pulled into memory (see Advanced #8).</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"EF Core's translator only recognizes a specific, documented set of .NET methods and patterns it can map to SQL. A custom instance method, a custom extension method, or unsupported string/date logic has no SQL equivalent, so there's nothing to translate it with — that's a compile-time-valid, runtime-translation-time failure, not a bug in your C#."</p>
+    <ul>
+      <li>Recognized pattern <span class="hl hl-basic">→ maps to SQL, runs on the database</span>.</li>
+      <li>Unrecognized pattern <span class="hl hl-hot">→ throws a translation exception — before any SQL runs</span>.</li>
+      <li>Slapping <code>.ToList()</code> in front <span class="hl hl-inter">→ is not a fix — it pulls the WHOLE unfiltered table into memory first</span>.</li>
+      <li>The real fix <span class="hl hl-blue">→ rewrite in translatable terms, or materialize only after every translatable filter/sort/Take has already run</span>.</li>
+      <li>A query that compiles <span class="hl hl-adv">→ tells you nothing about whether every method inside it can actually translate</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>EF Core's relational provider ships with a finite, documented translation table — it
+      recognizes specific .NET methods (certain string methods, date/time members, math
+      functions, comparison and logical operators) and knows exactly which SQL construct each
+      one maps to. An arbitrary instance method on your own class, a custom extension method, or
+      a string/date API outside that documented set simply isn't in that table — there's no SQL
+      the provider can generate for it, because nobody wrote a translation for it.</p>
+
+      <p>This is why the failure shows up at runtime, during translation, not at compile time:
+      the C# compiler only checks that the lambda is valid C#, which it is —
+      <code>IsPriorityCustomer(o)</code> compiles fine as a method call. EF Core's visitor only
+      discovers it can't map that node to SQL once it actually walks the tree, which happens
+      when a terminal operator asks for a result.</p>
+
+      <p>Adding <code>.ToList()</code> right before the untranslatable call looks like it fixes
+      the exception — and it does stop the exception — but it's a different, often worse, bug:
+      EF Core now has to materialize every row and every column of the underlying table into
+      memory before your C# method ever runs, because the filtering that method was supposed to
+      do can no longer happen in the database at all. The results end up correct; the
+      performance does not, on anything beyond a tiny table.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Recognized pattern</th><th>Unrecognized pattern</th><th><code>.ToList()</code> in front</th></tr></thead>
+        <tbody>
+          <tr><th>What happens</th><td>maps straight to SQL</td><td>throws a translation exception</td><td>avoids the exception, but pulls the whole table first</td></tr>
+          <tr><th>Runs where</th><td>the database</td><td>nowhere — never executes</td><td>in memory, after loading everything</td></tr>
+          <tr><th>Performance</th><td>fast — filtered at the source</td><td>n/a — fails before cost is paid</td><td>correct but often catastrophic</td></tr>
+          <tr><th>Is it a fix?</th><td>—</td><td class="no">❌ no, it's the signal something needs rewriting</td><td class="no">❌ no — never a real fix, just moves and hides the cost</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> vip = context.Customers
+    .Where(c =&gt; IsVip(c))   <span class="cx-cmt">// IsVip is a plain C# method</span>
+    .ToList();
+<span class="cx-err">// 🛑 throws: "could not be translated" — EF Core has no SQL for IsVip()</span></code></pre>
+      </div>
+      <p class="cx-note">The query compiled fine — the failure only shows up when it actually runs.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> vip = context.Customers
+    .ToList()                <span class="cx-err">// ⚠️ pulls EVERY customer, every column, first</span>
+    .Where(c =&gt; IsVip(c));   <span class="cx-cmt">// now runs in memory — the whole table already loaded</span>
+<span class="cx-err">// ❌ NOT A REAL FIX — just moved the cost, didn't remove it</span></code></pre>
+      </div>
+      <p class="cx-note">The exception disappears, but every row and column now loads every time, unfiltered.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// IsVip rewritten using properties the provider already recognizes</span>
+<span class="kw">var</span> vip = context.Customers
+    .Where(c =&gt; c.TotalSpend &gt; 10000 &amp;&amp; c.YearsActive &gt;= 2)   <span class="cx-ok">// ✅ fully translatable</span>
+    .ToList();</code></pre>
+      </div>
+      <p class="cx-note">The real fix: express the same decision in terms the translator already understands.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A <code>Where()</code> using only properties and operators EF Core recognizes</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcEf7a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">RECOGNIZED PROPERTIES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">TotalSpend &gt; 10000</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcEf7a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ clean translation</text>
+            </svg>
+          </div>
+          <p class="uc-what">Nothing to fix here — the whole expression is in the provider's
+          documented set, so it runs on the database.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">All recognized → clean SQL, no surprises.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#475569">
+          <div class="uc-sit"><span class="uc-flag">2</span> A <code>Where()</code> calling a genuinely custom method</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcEf7b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#475569"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155" letter-spacing=".03em">CUSTOM METHOD CALL</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">IsVip(c)</text>
+              <path d="M190,43 H290" stroke="#475569" stroke-width="1.6" fill="none" marker-end="url(#arUcEf7b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">🛑 throws now</text>
+            </svg>
+          </div>
+          <p class="uc-what">The correct, expected outcome for an untranslatable call — the
+          exception names it, the moment it runs.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Unrecognized method → throws immediately, loud and clear.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> "Fixing" that exception by adding <code>.ToList()</code> right before the call</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcEf7c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">.ToList() "FIX"</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">exception "gone"</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcEf7c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 whole table loads</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">every single call</text>
+            </svg>
+          </div>
+          <p class="uc-what">The exception disappears, but now the entire table loads into
+          memory every time this query runs — the exact trap this page exists to name.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">.ToList() "fix" → hides the exception, loads the whole table instead.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A pull request "fixes" a crashing endpoint by moving <code>.ToList()</code> earlier
+      in the chain</b> — the exception goes away in testing, where the table is small, and the
+      PR gets approved. In production, with a million-row table, the same endpoint now loads
+      every row on every request before applying the filter — the correct fix was rewriting the
+      untranslatable condition, not relocating where it crashes.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="6.html">← AsEnumerable vs. AsQueryable</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="8.html">Premature Materialization and ToList() Placement →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

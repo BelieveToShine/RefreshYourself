@@ -45,7 +45,7 @@ function esc(s) {
   }
 
   function iconFor(item) {
-    var icons = { "C#": "🔷", "OOP": "🧩", ".NET": "🧱", "Web API": "🔌", "EF Core": "🗃️", "SQL": "🗄️", "Azure": "☁️", "AWS": "☁️", "AI": "🤖", "React": "⚛️", "Angular": "🅰️", "DSA": "🧠", "Python": "🐍", "JavaScript": "⚡", "HTML & CSS": "🎨" };
+    var icons = { "C#": "🔷", "LINQ": "🔗", "OOP": "🧩", ".NET": "🧱", "Web API": "🔌", "EF Core": "🗃️", "SQL": "🗄️", "Azure": "☁️", "AWS": "☁️", "AI": "🤖", "React": "⚛️", "Angular": "🅰️", "DSA": "🧠", "Python": "🐍", "JavaScript": "⚡", "HTML & CSS": "🎨" };
     return icons[item.track] || "📄";
   }
 

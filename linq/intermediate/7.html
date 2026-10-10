@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LINQ has no LEFT JOIN keyword — how do you actually express one?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Inner Join vs. Left Outer Join — LINQ Intermediate — RefreshYourself">
+<meta property="og:description" content="LINQ has no LEFT JOIN keyword — how do you actually express one?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Inner Join vs. Left Outer Join — LINQ Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Inner Join vs. Left Outer Join</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 LINQ · Intermediate · Must Know</div>
+    <h1>Inner Join vs. Left Outer Join — <span class="hl hl-hot">faking the keyword LINQ doesn't have</span></h1>
+    <p class="interview-q">"LINQ has no <code>LEFT JOIN</code> keyword — how do you actually express one?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔗 Join (inner)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A report needs customers matched to their orders, and a customer with zero orders genuinely shouldn't appear in that report at all.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Join</code> produces exactly one output row per matching pair and silently excludes any left-side element with no match — exactly the inner-join contract SQL's <code>INNER JOIN</code> also follows.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Join = matches only, no match → no row.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🧩 Left Outer Join</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A "customers with zero orders" report needs every customer to show up, even the ones <code>Join</code> would quietly drop — and LINQ has no <code>LEFT JOIN</code> keyword to reach for.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>GroupJoin</code> followed by a <code>SelectMany</code> that calls <code>.DefaultIfEmpty()</code> on each inner group turns "no match" into one output row holding a default value instead of dropping the left element.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">GroupJoin + SelectMany().DefaultIfEmpty() = the left-join pattern.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Join</code> <span class="rarrow">→</span> no match = <b>row dropped</b></p>
+      <p class="rrow"><code>GroupJoin</code> + <code>SelectMany().DefaultIfEmpty()</code> <span class="rarrow">→</span> no match = <b>row kept</b>, default value</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Join</code></b> is SQL's <code>INNER JOIN</code>. <b><code>DefaultIfEmpty()</code></b> is the one call that turns it into a <code>LEFT JOIN</code>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shLi7" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arLi7" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arLi7Rose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arLi7Green" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">CUSTOMER "C" HAS 0 MATCHING ORDERS — WHAT HAPPENS?</text>
+
+      <g filter="url(#shLi7)"><rect x="190" y="34" width="260" height="42" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="54" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">👤 Customer C</text>
+      <text x="320" y="69" text-anchor="middle" font-size="10.5" fill="#5b6472">0 rows in Orders match CustomerId</text>
+
+      <path d="M320,76 V96" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,96 H480" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,96 V112" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arLi7)"/>
+      <path d="M480,96 V112" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arLi7)"/>
+
+      <g filter="url(#shLi7)"><rect x="40" y="112" width="240" height="40" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="160" y="136" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">.Join(...)</text>
+
+      <g filter="url(#shLi7)"><rect x="360" y="112" width="240" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="130" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">.GroupJoin(...).SelectMany(</text>
+      <text x="480" y="144" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">g =&gt; g.DefaultIfEmpty())</text>
+
+      <path d="M160,152 V180" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arLi7Rose)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+      <path d="M480,152 V180" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arLi7Green)"/>
+
+      <g filter="url(#shLi7)"><rect x="35" y="180" width="250" height="52" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="201" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">❌ dropped</text>
+      <text x="160" y="217" text-anchor="middle" font-size="10.5" fill="#5b6472">Customer C never appears</text>
+
+      <g filter="url(#shLi7)"><rect x="355" y="180" width="250" height="52" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="201" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ kept</text>
+      <text x="480" y="217" text-anchor="middle" font-size="10.5" fill="#5b6472">(Customer C, order: null)</text>
+
+      <text x="320" y="268" text-anchor="middle" font-size="11" fill="#5b6472">DefaultIfEmpty() is the step that turns "no match" into one row with a default value</text>
+      <text x="320" y="286" text-anchor="middle" font-size="11" fill="#5b6472">instead of erasing the left-side element entirely</text>
+    </svg>
+    <figcaption>Same customer with zero matching orders — <code>Join</code> drops the row, <code>GroupJoin</code> + <code>SelectMany().DefaultIfEmpty()</code> keeps it.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A plain <code>Join</code> does not keep unmatched left-side rows.</b> Writing <code>customers.Join(orders, ...)</code> and expecting a customer with no orders to still show up is wrong — <code>Join</code> drops it completely; that dropping behavior is the entire difference between it and a left join.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's the difference between <code>DefaultIfEmpty()</code> and <code>DefaultIfEmpty(someValue)</code>?"</b> With no argument it fills the gap with <code>default(T)</code> — <code>null</code> for a reference type, <code>0</code>/<code>false</code> for a value type. Passing an argument lets you supply your own placeholder instead, useful when <code>default(T)</code> would be ambiguous or you want a specific sentinel.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"LINQ has no <code>LEFT JOIN</code> keyword, so the standard pattern is <code>GroupJoin</code> followed by a <code>SelectMany</code> that calls <code>.DefaultIfEmpty()</code> on each inner group — that's what turns a zero-match left row into one output row holding a default value instead of a plain <code>Join</code> simply dropping it."</p>
+    <ul>
+      <li><code>Join</code> <span class="hl hl-blue">→ inner join</span>, unmatched left rows vanish.</li>
+      <li><code>GroupJoin</code> <span class="hl hl-inter">→ groups, not a flat row</span>, each left element paired with its full matching list.</li>
+      <li><code>SelectMany(g =&gt; g.DefaultIfEmpty())</code> <span class="hl hl-basic">→ flattens and fills gaps</span>, one row per match, or one default row if none.</li>
+      <li>Query syntax equivalent <span class="hl hl-teal">→ <code>join ... into grp from x in grp.DefaultIfEmpty()</code></span>, same pattern, different spelling.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Join</span> is LINQ's inner-join equivalent: it walks both sequences,
+      emits exactly one flattened row per matching key pair, and never emits anything for a
+      left-side element that matched nothing. That's correct when "no match" genuinely means "not
+      part of the answer" — but it's also exactly why a plain <code>Join</code> can't express a
+      left join on its own.</p>
+
+      <p>A left outer join needs every left-side element represented at least once, match or not.
+      <span class="hl hl-inter">GroupJoin</span> gets there in two steps: first it pairs each
+      left element with its <i>entire</i> group of matches — possibly an empty group — as a nested
+      sequence, not a flat row. <code>SelectMany</code> then flattens that nested shape back down,
+      and calling <code>.DefaultIfEmpty()</code> on each inner group before flattening is what
+      replaces an empty group with a single default-value placeholder instead of contributing
+      nothing at all.</p>
+
+      <p>Query syntax spells the same pattern as <code>join o in orders on c.Id equals o.CustomerId
+      into grp from o in grp.DefaultIfEmpty() select new { c, o }</code> — the <code>into grp</code>
+      is the <code>GroupJoin</code> half, and <code>from o in grp.DefaultIfEmpty()</code> is the
+      <code>SelectMany</code> + <code>DefaultIfEmpty()</code> half, just written without naming
+      either method directly.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>Join</code></th><th><code>GroupJoin</code> + <code>SelectMany().DefaultIfEmpty()</code></th></tr></thead>
+        <tbody>
+          <tr><th>Produces</th><td>flat rows, one per match</td><td>flat rows, one per match <i>or</i> one default row</td></tr>
+          <tr><th>Unmatched left row</th><td class="no">❌ dropped</td><td>✅ kept, paired with <code>default(T)</code></td></tr>
+          <tr><th>SQL equivalent</th><td><code>INNER JOIN</code></td><td><code>LEFT OUTER JOIN</code></td></tr>
+          <tr><th>Query syntax</th><td><code>join ... on ... equals ...</code></td><td><code>join ... into grp from x in grp.DefaultIfEmpty()</code></td></tr>
+          <tr><th>Risk if you pick wrong</th><td>rows silently missing from a report</td><td>extra default/null rows where none were expected</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> innerJoin = customers.Join(
+    orders,
+    c =&gt; c.Id,
+    o =&gt; o.CustomerId,
+    (c, o) =&gt; <span class="kw">new</span> { c.Name, o.Total });
+
+<span class="cx-err">// ❌ A customer with zero orders contributes no row at all</span></code></pre>
+      </div>
+      <p class="cx-note">Plain <code>Join</code> only ever emits <b>matched pairs</b> — a customer with no orders is invisible in the output.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> leftJoin = customers
+    .GroupJoin(orders, c =&gt; c.Id, o =&gt; o.CustomerId, (c, grp) =&gt; <span class="kw">new</span> { c, grp })
+    .SelectMany(
+        x =&gt; x.grp.DefaultIfEmpty(),             <span class="cx-ok">// ✅ empty group → one null placeholder</span>
+        (x, o) =&gt; <span class="kw">new</span> { x.c.Name, Total = o?.Total ?? <span class="num">0</span> });</code></pre>
+      </div>
+      <p class="cx-note"><code>DefaultIfEmpty()</code> is the single call that turns this into a real <b>left outer join</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> leftJoinQuery =
+    <span class="kw">from</span> c <span class="kw">in</span> customers
+    <span class="kw">join</span> o <span class="kw">in</span> orders <span class="kw">on</span> c.Id <span class="kw">equals</span> o.CustomerId <span class="kw">into</span> grp
+    <span class="kw">from</span> o <span class="kw">in</span> grp.DefaultIfEmpty()        <span class="cx-cmt">// same pattern, query syntax</span>
+    <span class="kw">select new</span> { c.Name, Total = o?.Total ?? <span class="num">0</span> };</code></pre>
+      </div>
+      <p class="cx-note">Query syntax's <code>join ... into</code> is <b>exactly</b> the method-syntax <code>GroupJoin</code> written differently.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A report must list every customer, even ones who never ordered</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">CUSTOMER WITH NO ORDERS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">👤 Customer, 0 orders</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc7a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📋 row: Total = 0</text>
+            </svg>
+          </div>
+          <p class="uc-what">A "customers and their spend" report is wrong if silent non-buyers
+          are missing — the business needs to see the zero, not a gap. The left-join pattern keeps
+          every customer row and fills the missing order total with a default.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Report needs every row → left join, not <code>Join</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're combining two independent lists where one is known-incomplete</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">PRODUCT WITH NO PRICE OVERRIDE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">📦 Product (no override)</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc7b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">💲 default price kept</text>
+            </svg>
+          </div>
+          <p class="uc-what">A product catalog joined against an optional "regional price
+          override" table shouldn't lose products that have no override row — the left join keeps
+          every product and falls back to a default price when there's nothing to join to.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Optional side table → left join so the main list survives intact.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A dashboard quietly undercounts because <code>Join</code> was used instead of a left join</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">Join SILENTLY DROPS ROWS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">📊 .Join(...) used</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc7c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">❌ 0-order rows missing</text>
+            </svg>
+          </div>
+          <p class="uc-what">No exception, no warning — the dashboard just ends up with fewer
+          rows than the business expects, because every zero-match customer was silently excluded.
+          This is the exact trap from the Common Trap box, surfacing as a production bug instead
+          of an interview question.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Undercounted rows, no error → check for a plain <code>Join</code> that should be a left join.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A churn report needs to count customers with zero orders in the last 90 days.</b> A
+      plain <code>Join</code> between customers and recent orders can never produce a "zero
+      orders" row by construction — those customers never match, so <code>Join</code> never emits
+      them. Only the <code>GroupJoin</code> + <code>SelectMany().DefaultIfEmpty()</code> pattern
+      can surface them, because it's built specifically to keep a left row even when nothing on
+      the right matches it.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="6.html">← Join vs. GroupJoin</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="8.html">SelectMany vs. Join →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

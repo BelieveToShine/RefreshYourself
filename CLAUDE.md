@@ -6,8 +6,8 @@ editing any page — details live in the linked files, read the relevant one for
 
 ## What this project is
 
-A set of "tracks" — as of 2026-10-07 **all 15 tracks are through all 7 phases, 649 pages written** (541 original + 108 gap pages added 2026-10-07):
-C# (60), OOP (26), .NET/ASP.NET Core (38), Web API (36), EF Core (35), SQL (50), Azure (49), AWS
+A set of "tracks" — as of 2026-10-10 **all 16 tracks are through all 7 phases, 708 pages written** (541 original + 108 gap pages added 2026-10-07 + 59 LINQ pages added 2026-10-10):
+C# (60), LINQ (59), OOP (26), .NET/ASP.NET Core (38), Web API (36), EF Core (35), SQL (50), Azure (49), AWS
 (49), React (47), Angular (46), Python (47), AI (52), DSA (33), JavaScript (42), HTML & CSS (39).
 Per-track detail: [`docs/superpowers/specs/README.md`](docs/superpowers/specs/README.md). More
 tracks can be added later. (This line is machine-checked against the overview by

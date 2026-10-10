@@ -6,7 +6,7 @@
    sections, and that every local href/src resolves. Also compares page counts to the docs. */
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const ROOT = path.resolve(__dirname, "..");
-const TRACKS = ["csharp","oops","dotnet","webapi","efcore","sql","azure","aws","react","angular","python","ai","dsa","javascript","htmlcss"];
+const TRACKS = ["csharp","linq","oops","dotnet","webapi","efcore","sql","azure","aws","react","angular","python","ai","dsa","javascript","htmlcss"];
 const TIERS = ["basic","intermediate","advanced"];
 const errors = [], warns = [];
 const err = (m) => errors.push(m), warn = (m) => warns.push(m);
@@ -89,7 +89,7 @@ for (const e of SEARCH) if (!exists(e.path)) err(`search-index.js: dead path ${e
 
 // docs: page counts mentioned in overview vs reality
 const overview = read("docs/refreshyourself-overview.md");
-const labels = { csharp: "C#", oops: "OOP", dotnet: ".NET / ASP.NET Core", webapi: "Web API", efcore: "EF Core", sql: "SQL", azure: "Azure", aws: "AWS", react: "React", angular: "Angular", python: "Python", ai: "AI", dsa: "DSA", javascript: "JavaScript", htmlcss: "HTML & CSS" };
+const labels = { csharp: "C#", linq: "LINQ", oops: "OOP", dotnet: ".NET / ASP.NET Core", webapi: "Web API", efcore: "EF Core", sql: "SQL", azure: "Azure", aws: "AWS", react: "React", angular: "Angular", python: "Python", ai: "AI", dsa: "DSA", javascript: "JavaScript", htmlcss: "HTML & CSS" };
 for (const t of TRACKS) {
   const at = overview.indexOf("**" + labels[t] + "** — **all 7 phases complete, ");
   const m = at < 0 ? null : overview.slice(at).match(/complete, (\d+)\/(\d+) pages/);

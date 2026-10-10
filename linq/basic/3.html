@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="list.Where(x => ...).First() vs. list.First(x => ...) — do they behave the same, and does it matter which you write?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Where vs. First(predicate) — LINQ Basic — RefreshYourself">
+<meta property="og:description" content="list.Where(x => ...).First() vs. list.First(x => ...) — do they behave the same, and does it matter which you write?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Where vs. First(predicate) — LINQ Basic — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/basic">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Where vs. First(predicate)</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ LINQ · Basic · Should Know</div>
+    <h1><code>Where(...).First()</code> vs. <code>First(predicate)</code> — <span class="hl hl-blue">same result</span>, so why pick one?</h1>
+    <p class="interview-q">"<code>list.Where(x =&gt; ...).First()</code> vs. <code>list.First(x =&gt; ...)</code> — do they behave the same, and does it matter which you write?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔍 Where(...).First() vs. First(predicate)</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>It looks like <code>Where(...).First()</code> must build a filtered list first, then grab the first entry — and so it looks slower than <code>First(predicate)</code>, which seems to go straight to the answer.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Where</code> is lazily evaluated — it streams one element at a time, never building an intermediate list. Both forms stop scanning at the exact same first match; the real reason to prefer <code>First(predicate)</code> is that one call states the intent directly.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Both forms stream and stop at the same element — First(predicate) wins on clarity, not speed.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline"><code>Where(...).First()</code> and <code>First(predicate)</code>
+    <b>stop at the same element</b> — both are lazy, neither builds a filtered list first.</p>
+    <p class="rthink"><b class="tc-label">Think:</b> pick <code>First(predicate)</code> for
+    <b>clarity</b>, not speed — over <code>IEnumerable&lt;T&gt;</code> there's nothing
+    measurable to win.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shL3" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.3">SAME SEQUENCE, SAME STOPPING POINT</text>
+
+      <text x="320" y="38" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Where(x =&gt; x &gt; 5).First()</text>
+      <g filter="url(#shL3)"><rect x="100" y="50" width="65" height="40" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="132.5" y="75" text-anchor="middle" font-size="13" fill="#475569">3</text>
+      <g filter="url(#shL3)"><rect x="175" y="50" width="65" height="40" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/></g>
+      <text x="207.5" y="75" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">7 🛑</text>
+      <rect x="250" y="50" width="65" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="4 3"/>
+      <text x="282.5" y="75" text-anchor="middle" font-size="13" fill="#94a3b8">2</text>
+      <rect x="325" y="50" width="65" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="4 3"/>
+      <text x="357.5" y="75" text-anchor="middle" font-size="13" fill="#94a3b8">9</text>
+      <rect x="400" y="50" width="65" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="4 3"/>
+      <text x="432.5" y="75" text-anchor="middle" font-size="13" fill="#94a3b8">4</text>
+      <rect x="475" y="50" width="65" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="4 3"/>
+      <text x="507.5" y="75" text-anchor="middle" font-size="13" fill="#94a3b8">6</text>
+
+      <path d="M207.5,90 V190" fill="none" stroke="#16a34a" stroke-width="1.6" stroke-dasharray="4 3"/>
+      <g filter="url(#shL3)"><rect x="220" y="126" width="180" height="28" rx="14" fill="#ffffff" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="310" y="145" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🛑 same stopping point</text>
+
+      <text x="320" y="178" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">First(x =&gt; x &gt; 5)</text>
+      <g filter="url(#shL3)"><rect x="100" y="190" width="65" height="40" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="132.5" y="215" text-anchor="middle" font-size="13" fill="#475569">3</text>
+      <g filter="url(#shL3)"><rect x="175" y="190" width="65" height="40" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/></g>
+      <text x="207.5" y="215" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">7 🛑</text>
+      <rect x="250" y="190" width="65" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="4 3"/>
+      <text x="282.5" y="215" text-anchor="middle" font-size="13" fill="#94a3b8">2</text>
+      <rect x="325" y="190" width="65" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="4 3"/>
+      <text x="357.5" y="215" text-anchor="middle" font-size="13" fill="#94a3b8">9</text>
+      <rect x="400" y="190" width="65" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="4 3"/>
+      <text x="432.5" y="215" text-anchor="middle" font-size="13" fill="#94a3b8">4</text>
+      <rect x="475" y="190" width="65" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="4 3"/>
+      <text x="507.5" y="215" text-anchor="middle" font-size="13" fill="#94a3b8">6</text>
+
+      <text x="320" y="255" text-anchor="middle" font-size="10.5" fill="#5b6472">⬜ scanned &nbsp;&nbsp; 🟩 match, stop &nbsp;&nbsp; ┄ never reached</text>
+    </svg>
+    <figcaption>Both forms scan left to right and stop at the exact same first match — the items after it are never touched, either way.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Assuming <code>Where(...).First()</code> silently builds a full filtered
+    list before <code>First()</code> runs.</b> It does not — <code>Where</code> is lazy and
+    streams one element at a time, so both forms short-circuit at the exact same point.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Does that still hold for an <code>IQueryable</code> over EF Core?"</b>
+    Yes, in effect — both forms translate to equivalent SQL (a <code>WHERE</code> clause plus a
+    row-limiting construct). Neither reliably produces cheaper SQL than the other, so don't treat
+    this as a performance decision there either.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>Where(...).First()</code> and <code>First(predicate)</code>
+    return the same element and scan the same way — <code>Where</code> streams lazily, so both
+    stop at the first match without building an intermediate list. I'd reach for
+    <code>First(predicate)</code> for clarity, not because it's faster."</p>
+    <ul>
+      <li><code>Where(...).First()</code> → <span class="hl hl-blue">same short-circuit</span> — Where streams one element at a time.</li>
+      <li><code>First(predicate)</code> → <span class="hl hl-basic">clearer intent</span>, one call instead of two.</li>
+      <li>Over <code>IQueryable</code> → both forms translate to <span class="hl hl-teal">equivalent SQL</span> — neither is reliably faster.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Over <code>IEnumerable&lt;T&gt;</code>, <span class="hl hl-blue">Where</span> doesn't run
+      eagerly. It returns a deferred pipeline that yields one element at a time as something else
+      pulls from it — <code>First()</code> pulls exactly until it gets one match, then stops. No
+      intermediate filtered list ever gets built, so <code>Where(...).First()</code> and
+      <code>First(predicate)</code> walk the same elements and stop at the same one.</p>
+
+      <p>What actually differs is <b>what the call says</b>. <code>First(predicate)</code> reads
+      as a single intent — "give me the first match" — while <code>Where(...).First()</code>
+      reads as two steps even though it runs as one streamed pass. Prefer
+      <code>First(predicate)</code> when the predicate is the only thing between you and the
+      answer; keep <code>Where</code> explicit when something else needs to sit in the chain
+      first (sorting, projecting, another filter).</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>Where(...).First()</code></th><th><code>First(predicate)</code></th></tr></thead>
+        <tbody>
+          <tr><th>Elements scanned</th><td>up to and including the first match</td><td>up to and including the first match</td></tr>
+          <tr><th>Builds an intermediate list?</th><td>❌ no — streamed</td><td>❌ no — streamed</td></tr>
+          <tr><th>Reads as</th><td>two steps, one pipeline</td><td>one direct intent</td></tr>
+          <tr><th>Works when other operators sit in between</th><td>✅ yes (<code>Where().OrderBy().First()</code>)</td><td>only if the predicate is the last thing before the result</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> firstBig = numbers
+    .Where(x =&gt; x &gt; <span class="num">5</span>)
+    .First();   <span class="cx-cmt">// streams, stops at the first match — no intermediate list</span></code></pre>
+      </div>
+      <p class="cx-note">Two operators, one streamed pass — <code>Where</code> never materializes anything.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> firstBig = numbers.First(x =&gt; x &gt; <span class="num">5</span>);  <span class="cx-ok">// ✅ same element, one call</span></code></pre>
+      </div>
+      <p class="cx-note">Same result, same scan order — just stated as one direct intent.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A single condition, nothing else in the chain</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcL3a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">ONLY ONE CONDITION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">just a predicate</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcL3a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">First(predicate)</text>
+            </svg>
+          </div>
+          <p class="uc-what">When the filter is the only thing standing between you and the
+          answer, <code>First(predicate)</code> is the idiomatic, direct way to write it.
+          <b>This is the #1 case you'll actually reach for it.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One condition, nothing else → First(predicate).</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> Other operators sit between the filter and the result (e.g. a sort)</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcL3b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">MORE STEPS IN BETWEEN</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e">Where().OrderBy()</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUcL3b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">.First() on the end</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>First(predicate)</code> can only express a single trailing
+          filter — it can't fold in a sort or a second filter. The moment anything else needs to
+          sit in the chain, <code>Where</code> has to stay explicit, with <code>First()</code>
+          just ending the pipeline.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Extra operators in between → keep Where explicit.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You benchmark the two forms expecting a clear winner</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcL3c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing=".03em">NO REAL WINNER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">A vs. B benchmark</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcL3c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">🐛 noise-level diff</text>
+            </svg>
+          </div>
+          <p class="uc-what">Both forms funnel through the same lazy enumeration (or, over
+          <code>IQueryable</code>, the same provider translation). A microbenchmark comparing them
+          is likely to show noise-level differences, not a real winner — treat this as a style
+          choice, not a performance one.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No measurable winner → pick by clarity, not a benchmark.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>It's like asking for "the first email from Sam" two ways</b> — filtering your inbox
+      down to Sam's messages and taking the top one, or scanning with "first email from Sam" as
+      a single instruction. You look at messages in the exact same order either way; only the
+      phrasing of the request differs.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="2.html">← Select vs. SelectMany</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="4.html">First vs. FirstOrDefault vs. Single vs. SingleOrDefault →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

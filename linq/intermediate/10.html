@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What can Aggregate do that the named aggregate methods (Sum, Count, etc.) can't?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Aggregate vs. Sum/Count — LINQ Intermediate — RefreshYourself">
+<meta property="og:description" content="What can Aggregate do that the named aggregate methods (Sum, Count, etc.) can't?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Aggregate vs. Sum/Count — LINQ Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Aggregate vs. Sum/Count</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ LINQ · Intermediate · Should Know</div>
+    <h1><code>Aggregate</code> vs. <code>Sum</code>/<code>Count</code> — <span class="hl hl-inter">when the named aggregates aren't enough</span></h1>
+    <p class="interview-q">"What can <code>Aggregate</code> do that the named aggregate methods (<code>Sum</code>, <code>Count</code>, etc.) can't?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🧮 Aggregate</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span><code>Sum</code>, <code>Count</code>, <code>Min</code>, and <code>Max</code> each do exactly one fixed thing — none of them has a parameter for "join these strings with a custom separator" or "build a running total with your own rule," because they were never designed to take custom fold logic.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Aggregate</code> takes a seed value plus an accumulator function and folds the whole sequence through it one element at a time, so it can express any custom running computation the named aggregates have no parameters to express.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Aggregate = your own fold, seed + accumulator, any logic you write.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Aggregate = <b>"a fold — a seed, plus a function that combines the running result with each next element."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <code>Sum</code> is one fixed fold already written for you. <code>Aggregate</code> is the fold operator itself, with the rule left blank for you to fill in.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 230" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shLi10" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arLi10" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#1d4ed8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">Aggregate(seed: 0, (acc, x) =&gt; acc + x * 2)</text>
+
+      <g filter="url(#shLi10)"><rect x="20" y="34" width="70" height="40" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="55" y="58" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">seed 0</text>
+      <path d="M90,54 H120" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arLi10)"/>
+
+      <g filter="url(#shLi10)"><rect x="120" y="34" width="110" height="40" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="175" y="54" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">acc=0, x=3</text>
+      <text x="175" y="67" text-anchor="middle" font-size="9.5" fill="#5b6472">→ 0+6=6</text>
+      <path d="M230,54 H260" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arLi10)"/>
+
+      <g filter="url(#shLi10)"><rect x="260" y="34" width="110" height="40" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="315" y="54" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">acc=6, x=4</text>
+      <text x="315" y="67" text-anchor="middle" font-size="9.5" fill="#5b6472">→ 6+8=14</text>
+      <path d="M370,54 H400" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arLi10)"/>
+
+      <g filter="url(#shLi10)"><rect x="400" y="34" width="110" height="40" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="455" y="54" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">acc=14, x=5</text>
+      <text x="455" y="67" text-anchor="middle" font-size="9.5" fill="#5b6472">→ 14+10=24</text>
+      <path d="M510,54 H540" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arLi10)"/>
+
+      <g filter="url(#shLi10)"><rect x="540" y="30" width="85" height="48" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="582" y="51" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ 24</text>
+      <text x="582" y="66" text-anchor="middle" font-size="9" fill="#5b6472">final result</text>
+
+      <text x="320" y="110" text-anchor="middle" font-size="11" fill="#5b6472">Source sequence: [3, 4, 5] — each element flows through the SAME accumulator once</text>
+
+      <g filter="url(#shLi10)"><rect x="100" y="130" width="90" height="34" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/></g>
+      <text x="145" y="151" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">x = 3</text>
+      <g filter="url(#shLi10)"><rect x="210" y="130" width="90" height="34" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/></g>
+      <text x="255" y="151" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">x = 4</text>
+      <g filter="url(#shLi10)"><rect x="320" y="130" width="90" height="34" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/></g>
+      <text x="365" y="151" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">x = 5</text>
+
+      <text x="320" y="200" text-anchor="middle" font-size="11" fill="#5b6472">Sum() can only ever add — Aggregate's accumulator can run ANY custom rule you write</text>
+    </svg>
+    <figcaption>Each element flows through the same accumulator once, carrying forward a running result — the rule inside the accumulator is yours to define.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>Aggregate</code> without a seed isn't always safe.</b> The no-seed overload uses the sequence's first element as the seed and throws <code>InvalidOperationException</code> on an empty sequence — the seeded overload avoids that by returning the seed untouched instead.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Can <code>Aggregate</code> replace <code>Sum</code> or <code>Count</code> entirely?"</b> Technically yes — both are just a fold with a specific accumulator — but you'd be reinventing a clearer, already-optimized named method for no benefit; reach for <code>Aggregate</code> only when the fold logic genuinely isn't one of the named aggregates.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>Aggregate</code> takes a seed value and an accumulator function and folds the whole sequence through it, so it can express any custom running computation — a weighted total, a string join with a custom separator — that the named aggregates have no parameters to express."</p>
+    <ul>
+      <li><code>Aggregate(seed, func)</code> <span class="hl hl-blue">→ a general-purpose fold</span>, logic fully custom.</li>
+      <li><code>Sum</code>/<code>Count</code>/<code>Min</code>/<code>Max</code> <span class="hl hl-inter">→ fixed, pre-built folds</span>, no custom rule possible.</li>
+      <li>No-seed overload <span class="hl hl-hot">→ throws on an empty sequence</span>; the seeded overload doesn't.</li>
+      <li>Reach for <code>Aggregate</code> <span class="hl hl-basic">→ only when the fold genuinely isn't a named aggregate</span>, not as a flex.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Aggregate</span> is LINQ's general-purpose fold: give it a
+      starting value (the seed) and a function that combines the running result with the next
+      element, and it walks the whole sequence applying that function once per element, carrying
+      the result forward each time. <code>Sum</code> is really just <code>Aggregate(0, (acc, x) =&gt;
+      acc + x)</code> with a friendlier name — the named aggregates are each one fixed accumulator
+      function, already written for the common cases.</p>
+
+      <p>That's exactly why <code>Aggregate</code> earns its spot: the moment the fold rule isn't
+      plain addition, counting, or a min/max comparison — a weighted running total, concatenating
+      strings with a custom separator, building up a formatted summary — there's no named method
+      with a parameter for that logic. <code>Aggregate</code> is where you write the rule yourself.</p>
+
+      <p>There's also a three-argument overload that adds a result selector, run once at the end
+      to transform the final accumulated value before returning it — useful when the accumulator's
+      natural type (say, a running total and a count packed together) isn't the shape you actually
+      want to hand back to the caller.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>Aggregate</code></th><th><code>Sum</code> / <code>Count</code> / <code>Min</code> / <code>Max</code></th></tr></thead>
+        <tbody>
+          <tr><th>Fold logic</th><td>fully custom, you write it</td><td>fixed, one built-in rule each</td></tr>
+          <tr><th>Empty sequence</th><td>no-seed overload throws; seeded overload returns the seed</td><td><code>Sum</code> → 0; <code>Min</code>/<code>Max</code> → throw; <code>Count</code> → 0</td></tr>
+          <tr><th>Readability</th><td>needs a comment — logic isn't obvious from the name</td><td>self-explanatory from the method name</td></tr>
+          <tr><th>Use when</th><td>the fold isn't one of the named aggregates</td><td>the fold is exactly sum, count, min, or max</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">int</span>[] numbers = { <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span> };
+
+<span class="kw">var</span> doubledSum = numbers.Aggregate(<span class="num">0</span>, (acc, x) =&gt; acc + x * <span class="num">2</span>);
+<span class="cx-ok">// ✅ 24 — Sum() has no parameter for "double each value first"</span></code></pre>
+      </div>
+      <p class="cx-note">A custom fold rule — <code>Sum()</code> <b>cannot</b> express "double each value first."</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">string</span>[] words = { <span class="str">"red"</span>, <span class="str">"green"</span>, <span class="str">"blue"</span> };
+
+<span class="kw">var</span> joined = words.Aggregate((acc, w) =&gt; acc + <span class="str">" | "</span> + w);
+<span class="cx-ok">// ✅ "red | green | blue" — custom separator, no seed needed (non-empty sequence)</span></code></pre>
+      </div>
+      <p class="cx-note">No-seed overload uses the <b>first element</b> as the starting value.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">int</span>[] empty = { };
+
+<span class="kw">var</span> crash = empty.Aggregate((acc, x) =&gt; acc + x);
+<span class="cx-err">// ❌ InvalidOperationException — no first element to use as a seed</span>
+
+<span class="kw">var</span> safe = empty.Aggregate(<span class="num">0</span>, (acc, x) =&gt; acc + x);
+<span class="cx-ok">// ✅ 0 — the seeded overload just returns the seed untouched</span></code></pre>
+      </div>
+      <p class="cx-note">Always pass a <b>seed</b> when the sequence might be empty.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You need a running total with a rule that isn't plain addition</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc10a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">WEIGHTED RUNNING TOTAL</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📦 orders + weights</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc10a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🧮 Aggregate total</text>
+            </svg>
+          </div>
+          <p class="uc-what">A shipping-cost calculation that weights each order differently
+          before summing has no named aggregate to reach for — <code>Aggregate</code>'s
+          accumulator is where that custom per-item rule actually lives.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Custom per-item math before summing → <code>Aggregate</code>, not <code>Sum</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're building a formatted summary string from a sequence</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc10b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">BUILD A SUMMARY STRING</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🏷️ tag names</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc10b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">📝 "a, b, c" style text</text>
+            </svg>
+          </div>
+          <p class="uc-what">Joining tag names with a custom separator and formatting, beyond what
+          <code>string.Join</code> alone offers (e.g. a different separator for the last item),
+          is a natural <code>Aggregate</code> accumulator.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Custom string-building logic → the accumulator can hold any rule you write.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You call the no-seed overload on a sequence that might be empty</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc10c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">NO SEED, EMPTY SEQUENCE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">📭 empty sequence</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc10c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">💥 Exception thrown</text>
+            </svg>
+          </div>
+          <p class="uc-what">Skipping the seed because "the sequence usually has data" is exactly
+          how this throws in production the one time it doesn't — always pass a seed unless the
+          sequence is guaranteed non-empty.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Unsure if the sequence could be empty → always pass a seed.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A pricing engine needs a running total where each line item's discount tier changes
+      how much it contributes.</b> <code>Sum()</code> has no way to express "apply this item's own
+      discount rule before adding it in" — <code>Aggregate(0m, (total, item) => total +
+      item.PriceAfterDiscount())</code> is the natural fit, because the accumulator function is
+      exactly where that per-item rule belongs.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="9.html">← Zip vs. Join</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="11.html">Append/Prepend vs. Collection Modification →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

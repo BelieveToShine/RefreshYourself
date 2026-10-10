@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Both Include and a Select projection can get you related data — what's the actual trade-off?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Include vs. Projection Using Select — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="Both Include and a Select projection can get you related data — what's the actual trade-off?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Include vs. Projection Using Select — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Include vs. Projection Using Select</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ LINQ · Advanced · Should Know</div>
+    <h1><code>Include</code> vs. Projection Using <code>Select</code> — <span class="hl hl-blue">the whole graph</span>, or <span class="hl hl-teal">just the shape you need</span></h1>
+    <p class="interview-q">"Both <code>Include</code> and a <code>Select</code> projection can get you related data — what's the actual trade-off?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-2">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📦 Include</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>You need to actually change the related entity and save it back — a read-only shaped DTO has nothing a <code>SaveChanges()</code> call could update.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Include</code> loads the entire related entity, tracked by default, so it's ready to be modified and saved exactly like any other tracked entity.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Include = the whole graph, tracked, ready to edit.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🎯 Select projection</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A read-only page that only shows a book's title and author name still pays for every column on both entities, plus change-tracking overhead, if it loads the full graph through <code>Include</code>.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A <code>Select</code> projection names only the fields actually used, fetches nothing else, and is untracked by construction — no wasted columns, no tracking cost.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Select projection = only the shape you asked for, untracked.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Include</code> <span class="rarrow">→</span> <b>whole</b> entity graph, tracked</p>
+      <p class="rrow"><code>Select</code> projection <span class="rarrow">→</span> <b>named fields</b> only, untracked</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Include</code></b> hands you the real, editable object. <b><code>Select</code></b> hands you just the shape you asked for.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA10" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA10Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arA10Teal" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#0f766e"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shA10)"><rect x="190" y="14" width="260" height="46" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="34" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">📚 context.Books</text>
+      <text x="320" y="49" text-anchor="middle" font-size="10.5" fill="#5b6472">needs each book's Author too</text>
+
+      <path d="M320,60 V76" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M320,76 H160 V96" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arA10Blue)"/>
+      <path d="M320,76 H480 V96" fill="none" stroke="#0f766e" stroke-width="1.8" marker-end="url(#arA10Teal)"/>
+
+      <g filter="url(#shA10)"><rect x="50" y="96" width="220" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="116" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">.Include(b =&gt; b.Author)</text>
+      <text x="160" y="131" text-anchor="middle" font-size="10.5" fill="#5b6472">loads the full Author entity</text>
+
+      <g filter="url(#shA10)"><rect x="370" y="96" width="220" height="46" rx="12" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.8"/></g>
+      <text x="480" y="116" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f766e">.Select(b =&gt; new BookDto)</text>
+      <text x="480" y="131" text-anchor="middle" font-size="10.5" fill="#5b6472">names only Title + AuthorName</text>
+
+      <path d="M160,142 V164" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arA10Blue)"/>
+      <path d="M480,142 V164" fill="none" stroke="#0f766e" stroke-width="1.8" marker-end="url(#arA10Teal)"/>
+
+      <g filter="url(#shA10)"><rect x="50" y="164" width="220" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="184" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">📦 Whole entity graph</text>
+      <text x="160" y="199" text-anchor="middle" font-size="10.5" fill="#5b6472">every Author column, tracked</text>
+
+      <g filter="url(#shA10)"><rect x="370" y="164" width="220" height="46" rx="12" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.8"/></g>
+      <text x="480" y="184" text-anchor="middle" font-size="13" font-weight="700" fill="#0f766e">🎯 Shaped DTO</text>
+      <text x="480" y="199" text-anchor="middle" font-size="10.5" fill="#5b6472">only the 2 fields you asked for</text>
+
+      <path d="M160,210 V232" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arA10Blue)"/>
+      <path d="M480,210 V232" fill="none" stroke="#0f766e" stroke-width="1.8" marker-end="url(#arA10Teal)"/>
+
+      <g filter="url(#shA10)"><rect x="50" y="232" width="220" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="252" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Heavier payload</text>
+      <text x="160" y="267" text-anchor="middle" font-size="10.5" fill="#5b6472">more data, more tracking overhead</text>
+
+      <g filter="url(#shA10)"><rect x="370" y="232" width="220" height="46" rx="12" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.8"/></g>
+      <text x="480" y="252" text-anchor="middle" font-size="13" font-weight="700" fill="#0f766e">Lighter payload</text>
+      <text x="480" y="267" text-anchor="middle" font-size="10.5" fill="#5b6472">usually faster, untracked</text>
+    </svg>
+    <figcaption>Same starting query, two different jobs — one loads an editable object, the other loads a display shape.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>Include</code> doesn't always produce exactly one SQL query.</b> Split-query configuration and multiple collection <code>Include</code>s on the same root entity can each add their own separate query — one query is the common case, not a guarantee.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Is the related entity tracked by default when you use <code>Include</code>?"</b> Yes — it comes through the same tracked <code>DbContext</code> unless you've called <code>AsNoTracking()</code>. A <code>Select</code> projection is untracked regardless, because it's never mapped back to a real entity type.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>Include</code> loads the entire related entity graph — every column, tracked by default. A <code>Select</code> projection fetches only the fields I name into a shaped DTO — narrower, usually faster, and untracked by construction. I reach for <code>Include</code> when I need to edit and save the related entity, and for <code>Select</code> when I only need a shape to display."</p>
+    <ul>
+      <li><code>Include</code> → <span class="hl hl-blue">whole graph, every column, tracked</span>.</li>
+      <li><code>Select</code> projection → <span class="hl hl-teal">only the named fields, untracked DTO</span>.</li>
+      <li><code>Include</code> isn't guaranteed one query → <span class="hl hl-inter">split-query config or multiple collection Includes can add more</span>.</li>
+      <li>Editing the related entity afterward → <span class="hl hl-adv">needs Include's tracked entity, not a projection</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Include</span> tells EF Core to eagerly load a navigation property as a <b>real, tracked entity</b> of its actual type — every column comes along, whether the code uses it or not, because the result still has to be a complete, update-ready <code>Author</code> (or whatever the navigation points to). The LINQ-shape mechanics of <code>Include</code>/<code>ThenInclude</code> themselves, and how they compare to explicit and lazy loading, already have their own page — see "Eager vs. Explicit vs. Lazy Loading" in the EF Core track.</p>
+
+      <p><span class="hl hl-teal">A <code>Select</code> projection</span> never materializes a real <code>Author</code> at all — it builds a brand-new shape (an anonymous type or a named DTO) containing only the properties named inside the lambda. Because that shape isn't an entity EF Core's change tracker recognizes, it's untracked automatically — there's no tracked object to accidentally edit and no tracking overhead to pay for.</p>
+
+      <p>Neither option is the "correct" default — the decision is what happens to the result afterward. A page that will call <code>SaveChanges()</code> on the related data needs the real tracked entity <code>Include</code> provides. A page that only displays a few fields is better served by a projection sized exactly to what it uses.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>Include</code></th><th><code>Select</code> projection</th></tr></thead>
+        <tbody>
+          <tr><th>Returns</th><td>the real related entity</td><td>a shaped DTO/anonymous type</td></tr>
+          <tr><th>Columns loaded</th><td>every column on the graph</td><td>only the fields you name</td></tr>
+          <tr><th>Tracked?</th><td>yes, by default</td><td>no — untracked by construction</td></tr>
+          <tr><th>SQL queries</th><td>usually one — split-query config or multiple collection Includes can add more</td><td>one, shaped for exactly this result</td></tr>
+          <tr><th>Best for</th><td>editing/updating the loaded entity</td><td>read-only display data</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Book</span> book = context.Books
+    .Include(b =&gt; b.Author)        <span class="cx-ok">// ✅ real, tracked Author entity</span>
+    .First(b =&gt; b.Id == id);
+
+book.Author.Name = <span class="str">"Updated Name"</span>;  <span class="cx-cmt">// editing a tracked entity</span>
+context.SaveChanges();                  <span class="cx-cmt">// works — it's tracked</span></code></pre>
+      </div>
+      <p class="cx-note"><code>book.Author</code> is a real, tracked <code>Author</code> — every column loaded, ready to be modified and saved.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">BookDto</span> dto = context.Books
+    .Select(b =&gt; <span class="kw">new</span> <span class="ty">BookDto</span>
+    {
+        Title = b.Title,               <span class="cx-ok">// ✅ only these two fields</span>
+        AuthorName = b.Author.Name      <span class="cx-ok">// ✅ ever leave the database</span>
+    })
+    .First(b =&gt; b.Id == id);</code></pre>
+      </div>
+      <p class="cx-note"><code>dto</code> is a plain shape with no tracked entity behind it — nothing about it can be saved back, and nothing extra was ever fetched.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You need to edit the related entity and save the change</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA10-1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">EDIT &amp; SAVE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📦 .Include(Author)</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">tracked entity</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcA10-1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">✏️ SaveChanges()</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">works — it's tracked</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>Include</code> is the right call here — a <code>Select</code> projection would hand back a shape with nothing for <code>SaveChanges()</code> to recognize and persist.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need to save the related data → Include, not a projection.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A read-only page only shows two or three related fields</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA10-2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">DISPLAY ONLY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🎯 .Select(Dto)</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#0f766e">2 named fields</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUcA10-2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">📄 Rendered page</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#0f766e">nothing extra fetched</text>
+            </svg>
+          </div>
+          <p class="uc-what">Loading the full <code>Author</code> entity through <code>Include</code> here would fetch and track columns the page never reads — a projection sized to exactly what's displayed avoids that cost entirely.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Only displaying a few fields → Select, not Include.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> One query has multiple collection <code>Include</code>s on the same root entity</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA10-3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">NOT ALWAYS ONE QUERY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">📦 2 collection Includes</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">one root query</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcA10-3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🗄️ 2+ SQL queries</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">depends on configuration</text>
+            </svg>
+          </div>
+          <p class="uc-what">Assuming "one <code>Include</code>, one query" still holds once a second collection <code>Include</code> joins the chain is the exact trap above — the real query count depends on EF Core's split-query behavior, not a fixed rule.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Multiple collection Includes → check the actual query count, don't assume one.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A book details page only needs to show the title and the author's name.</b> Loading it through <code>Include(b => b.Author)</code> pulls and tracks every column on the full <code>Author</code> row for a page that will never call <code>SaveChanges()</code>. A <code>Select</code> projection naming just <code>Title</code> and <code>Author.Name</code> fetches exactly what the page renders — nothing tracked, nothing extra.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="9.html">← Query Execution and Database Round Trips</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="11.html">N+1 Queries and Navigation Properties →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

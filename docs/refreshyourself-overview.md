@@ -15,14 +15,13 @@ junior/mid-level interview. Two groups of tracks:
 
 - **Core backend interview path**, in this order: C# → LINQ → OOP → .NET/ASP.NET Core (MVC lives
   inside this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure →
-  AWS. **LINQ — Phases 1–6 complete, roadmap-only, 0/59 pages written** (added 2026-10-10): a
+  AWS. **LINQ — all 7 phases complete, 59/59 pages written** (added 2026-10-10): a
   separate top-level category per the user's own explicit request, scoped to LINQ-the-language-
   feature (operators, execution model, providers, SQL translation mechanics) rather than EF
   Core's own machinery or raw SQL internals, which stay in their existing tracks and get
   cross-linked instead of duplicated. Sourced from the user's own detailed proposed roadmap (54
-  topics + a 10-item "LINQ Scenarios" sub-block). See
-  [`specs/linq/overview.md`](superpowers/specs/linq/overview.md) — awaiting the user's review of
-  the roadmap before Phase 7 (page writing) starts.
+  topics + a 10-item "LINQ Scenarios" sub-block, plus one later addendum). See
+  [`specs/linq/overview.md`](superpowers/specs/linq/overview.md).
 - **Frontend group** (homepage section added 2026-09-18, per the user's own restructuring
   request): HTML & CSS → JavaScript → React → Angular. Kept as separate tracks rather than one
   "Frontend" track or folded into React, per the user's own rule: *"Keep a technology as a
@@ -77,8 +76,8 @@ Phase 7. *(Update 2026-10-07: C# Basic 1–14 were migrated to the new template 
 
 ## Current build status (one line each — see the track's own spec for detail)
 
-**Core backend path — C#, OOP, .NET/ASP.NET Core, Web API, EF Core, SQL, Azure, and AWS are all
-through all 7 phases:**
+**Core backend path — C#, LINQ, OOP, .NET/ASP.NET Core, Web API, EF Core, SQL, Azure, and AWS are
+all through all 7 phases:**
 
 - **C#** — **all 7 phases complete, 60/60 pages written** (2026-09-16):
   [`question-taxonomy.md`](superpowers/specs/csharp/question-taxonomy.md) →
@@ -90,6 +89,19 @@ through all 7 phases:**
   review the original 14 had. This track is the reference example for how every other track
   goes through the pipeline. See
   [`specs/csharp/overview.md`](superpowers/specs/csharp/overview.md).
+- **LINQ** — **all 7 phases complete, 59/59 pages written** (added 2026-10-10):
+  [`question-taxonomy.md`](superpowers/specs/linq/question-taxonomy.md) (8 concept groups,
+  sourced from the user's own detailed proposed roadmap, plus this track's own light Phase-2
+  gap-hunt: 3 small additions folded into existing pages) →
+  [`roadmap.md`](superpowers/specs/linq/roadmap.md) → 59 tiered/prioritized pages (Basic 14 /
+  Intermediate 17 / Advanced 28, the last 11 of which are a labeled "LINQ Scenarios" sub-block),
+  live on the site and on [`linq/roadmap.html`](../linq/roadmap.html). A separate top-level
+  category per the user's own explicit request, scoped to LINQ-the-language-feature (operators,
+  execution model, providers, SQL translation mechanics) rather than EF Core's own machinery or
+  raw SQL internals, which stay in their existing tracks and get cross-linked instead of
+  duplicated. Every diagram passed the mandatory automated verification script, run
+  independently against every single page. See
+  [`specs/linq/overview.md`](superpowers/specs/linq/overview.md).
 - **OOP** — **all 7 phases complete, 26/26 pages written** (2026-09-16):
   [`question-taxonomy.md`](superpowers/specs/oops/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/oops/roadmap.md) → 15 tiered/prioritized pages, live on the

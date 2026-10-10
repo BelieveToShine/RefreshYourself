@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What does IAsyncEnumerable<T> actually add over IEnumerable<T>?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="IAsyncEnumerable&lt;T&gt; vs. IEnumerable&lt;T&gt; — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="What does IAsyncEnumerable<T> actually add over IEnumerable<T>?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>IAsyncEnumerable&lt;T&gt; vs. IEnumerable&lt;T&gt; — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">IAsyncEnumerable&lt;T&gt; vs. IEnumerable&lt;T&gt;</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 LINQ · Advanced · Deep Dive</div>
+    <h1><code>IAsyncEnumerable&lt;T&gt;</code> vs. <code>IEnumerable&lt;T&gt;</code> — <span class="hl hl-teal">awaiting between elements</span> as they stream in</h1>
+    <p class="interview-q">"What does <code>IAsyncEnumerable&lt;T&gt;</code> actually add over <code>IEnumerable&lt;T&gt;</code>?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-2">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📦 IEnumerable&lt;T&gt;</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A <code>foreach</code> over a huge result set that's already been pulled into a <code>List&lt;T&gt;</code> has to wait for literally every row to arrive before processing even the first one.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>That's completely fine, and simpler, when the result set is small enough that fully materializing it is cheap — true for most everyday queries.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">IEnumerable&lt;T&gt; = wait for everything, then iterate.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🌊 IAsyncEnumerable&lt;T&gt;</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A large or slow-arriving result set means the caller sits idle until the very last row shows up, even though the first row might have been ready to process long before.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>await foreach</code> over an <code>IAsyncEnumerable&lt;T&gt;</code> — exactly what EF Core's <code>AsAsyncEnumerable()</code> returns — awaits <b>between</b> elements as they stream in, so processing can start on row 1 without waiting for row 100,000.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">IAsyncEnumerable&lt;T&gt; = await between each row, as it streams in.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>IEnumerable&lt;T&gt;</code> <span class="rarrow">→</span> <b>wait for everything</b>, then iterate</p>
+      <p class="rrow"><code>IAsyncEnumerable&lt;T&gt;</code> <span class="rarrow">→</span> <b>await between</b> each element</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>IEnumerable</code></b> is a finished box handed to you all at once. <b><code>IAsyncEnumerable</code></b> is a conveyor belt you can start working from immediately.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 215" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA14" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA14Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arA14Teal" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#0f766e"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8" letter-spacing="0.3">IEnumerable&lt;T&gt; — WAITS FOR EVERYTHING FIRST</text>
+
+      <g filter="url(#shA14)"><rect x="15" y="30" width="150" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="90" y="47" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🗄️ Query executes</text>
+      <text x="90" y="62" text-anchor="middle" font-size="10" fill="#5b6472">ToListAsync() starts it</text>
+
+      <path d="M165,50 H190" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arA14Blue)"/>
+
+      <g filter="url(#shA14)"><rect x="190" y="30" width="260" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="47" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">⏳ Waits for ALL rows</text>
+      <text x="320" y="62" text-anchor="middle" font-size="10" fill="#5b6472">nothing processed yet</text>
+
+      <path d="M450,50 H475" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arA14Blue)"/>
+
+      <g filter="url(#shA14)"><rect x="475" y="30" width="150" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="550" y="47" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🔁 foreach runs</text>
+      <text x="550" y="62" text-anchor="middle" font-size="10" fill="#5b6472">only after it's all in memory</text>
+
+      <text x="320" y="112" text-anchor="middle" font-size="12" font-weight="700" fill="#0f766e" letter-spacing="0.3">IAsyncEnumerable&lt;T&gt; — AWAITS BETWEEN ROWS</text>
+
+      <g filter="url(#shA14)"><rect x="15" y="126" width="150" height="40" rx="12" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.8"/></g>
+      <text x="90" y="143" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f766e">🗄️ Query executes</text>
+      <text x="90" y="158" text-anchor="middle" font-size="10" fill="#5b6472">AsAsyncEnumerable() starts it</text>
+
+      <path d="M165,146 H190" fill="none" stroke="#0f766e" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA14Teal)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shA14)"><rect x="190" y="126" width="260" height="40" rx="12" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.8"/></g>
+      <text x="320" y="143" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f766e">📦 Row arrives, processed</text>
+      <text x="320" y="158" text-anchor="middle" font-size="10" fill="#5b6472">await between each one</text>
+
+      <path d="M450,146 H475" fill="none" stroke="#0f766e" stroke-width="1.8" marker-end="url(#arA14Teal)"/>
+
+      <g filter="url(#shA14)"><rect x="475" y="126" width="150" height="40" rx="12" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.8"/></g>
+      <text x="550" y="143" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f766e">🔁 Stream continues</text>
+      <text x="550" y="158" text-anchor="middle" font-size="10" fill="#5b6472">one row at a time</text>
+
+      <text x="320" y="196" text-anchor="middle" font-size="10" fill="#5b6472">Still one query, one stream — only when the caller gets to start working with each row differs.</text>
+    </svg>
+    <figcaption><code>AsAsyncEnumerable()</code> is EF Core's own gateway into this — the same query, consumed one row at a time.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>await foreach</code> over an <code>IAsyncEnumerable&lt;T&gt;</code> is not one database round trip per element.</b> It's still a single query and a single open stream — <code>await</code> just lets the consumer wait for the next row the stream hasn't delivered yet, instead of blocking until the whole result set has arrived.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Is <code>IAsyncEnumerable&lt;T&gt;</code> just <code>IEnumerable&lt;T&gt;</code> with <code>async</code> sprinkled on?"</b> No — <code>MoveNext()</code> on <code>IEnumerable&lt;T&gt;</code> is synchronous, so it assumes the next element is already available. <code>MoveNextAsync()</code> on <code>IAsyncEnumerable&lt;T&gt;</code> returns a <code>Task</code>, because producing the next element might itself take time worth awaiting — a genuinely different contract, not the same one with a keyword added.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>IAsyncEnumerable&lt;T&gt;</code> lets <code>await foreach</code> await <b>between</b> elements as they stream in, instead of blocking until the entire sequence has materialized first — this is exactly what EF Core's <code>AsAsyncEnumerable()</code> returns."</p>
+    <ul>
+      <li><code>IEnumerable&lt;T&gt;</code> → <span class="hl hl-blue">wait for the whole sequence, then iterate</span>.</li>
+      <li><code>IAsyncEnumerable&lt;T&gt;</code> → <span class="hl hl-teal">await between each element, as it arrives</span>.</li>
+      <li>Still one query, one stream → <span class="hl hl-inter">not one round trip per element</span>.</li>
+      <li>Reach for it when → <span class="hl hl-adv">the result set is large enough that starting early actually matters</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue"><code>IEnumerable&lt;T&gt;</code></span>'s iteration contract — <code>MoveNext()</code>, <code>Current</code> — is entirely synchronous. By the time a typical EF Core query reaches a <code>foreach</code> (usually after a <code>ToList()</code> or <code>ToListAsync()</code>), every row has already arrived; the interface itself has no way to say "the next element isn't ready yet, come back to me."</p>
+
+      <p><span class="hl hl-teal"><code>IAsyncEnumerable&lt;T&gt;</code></span> replaces that with <code>MoveNextAsync()</code>, which returns a <code>Task&lt;bool&gt;</code> — a real place for the runtime to say "not yet" and let the caller await. <code>await foreach</code> is the matching syntax: it awaits each <code>MoveNextAsync()</code> call, so a row that hasn't streamed in yet just means an awaited pause right there, not a blocked thread and not a wait for the rest of the result set.</p>
+
+      <p>EF Core's <code>AsAsyncEnumerable()</code> is the bridge between the two worlds — it turns a normal <code>IQueryable&lt;T&gt;</code> query into an <code>IAsyncEnumerable&lt;T&gt;</code> that streams rows as the database delivers them, instead of requiring a terminal operator that waits for all of them.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>IEnumerable&lt;T&gt;</code></th><th><code>IAsyncEnumerable&lt;T&gt;</code></th></tr></thead>
+        <tbody>
+          <tr><th>Iteration keyword</th><td><code>foreach</code></td><td><code>await foreach</code></td></tr>
+          <tr><th><code>MoveNext</code></th><td>synchronous</td><td><code>MoveNextAsync()</code>, returns a <code>Task</code></td></tr>
+          <tr><th>Starts producing results</th><td>after full materialization (typical <code>ToList()</code> usage)</td><td>as soon as the first row streams in</td></tr>
+          <tr><th>EF Core entry point</th><td><code>ToList()</code> / <code>ToListAsync()</code></td><td><code>AsAsyncEnumerable()</code></td></tr>
+          <tr><th>Round trips</th><td>one</td><td>one — same stream, not one per element</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">Order</span>&gt; orders = <span class="kw">await</span> context.Orders.ToListAsync(); <span class="cx-cmt">// waits for ALL rows</span>
+
+<span class="kw">foreach</span> (<span class="kw">var</span> order <span class="kw">in</span> orders)        <span class="cx-cmt">// starts only now</span>
+    Process(order);</code></pre>
+      </div>
+      <p class="cx-note">Nothing in the loop runs until every single row has already arrived and been placed in <code>orders</code>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">IAsyncEnumerable</span>&lt;<span class="ty">Order</span>&gt; stream = context.Orders.AsAsyncEnumerable();
+
+<span class="kw">await</span> <span class="kw">foreach</span> (<span class="kw">var</span> order <span class="kw">in</span> stream) <span class="cx-ok">// ✅ processes each row as it streams in</span>
+    Process(order);</code></pre>
+      </div>
+      <p class="cx-note"><code>Process(order)</code> runs on row 1 as soon as it arrives — it never waits for the rows behind it.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A normal, modestly sized result set</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA14-1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">EVERYDAY QUERY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📦 ToListAsync()</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">a few hundred rows</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcA14-1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">✅ Simple, fast enough</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">materializing is cheap</text>
+            </svg>
+          </div>
+          <p class="uc-what">Most queries return small enough result sets that materializing everything first costs nothing meaningful — the simpler <code>IEnumerable&lt;T&gt;</code>/<code>ToListAsync()</code> path is the right default here.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Small result set → ToListAsync() is simpler, and that's fine.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A large export or report where starting work early actually matters</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA14-2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">LARGE STREAMING EXPORT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🌊 AsAsyncEnumerable()</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#0f766e">millions of rows</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUcA14-2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">⚡ Starts writing row 1</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#0f766e">without waiting for the rest</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is exactly the case <code>IAsyncEnumerable&lt;T&gt;</code> was built for — a result set large enough that waiting for all of it before doing anything would be a real, visible delay (and a real memory cost).</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Large result set, early processing matters → IAsyncEnumerable.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Assuming <code>await foreach</code> means one query per row</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA14-3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">MISREADING THE AWAIT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">await foreach</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">one query is already open</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcA14-3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🗄️ Still 1 query</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">not N</text>
+            </svg>
+          </div>
+          <p class="uc-what">The <code>await</code> inside <code>await foreach</code> is waiting on the already-open stream's next delivery, not opening a new database call per row — the query count doesn't change from using it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">await foreach → still one query, awaited one row at a time.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A nightly export job streams a million rows out to a CSV file.</b> Materializing all million rows first with <code>ToListAsync()</code> before writing anything means a large memory spike and no output at all until the entire query finishes. Switching to <code>await foreach</code> over <code>context.Rows.AsAsyncEnumerable()</code> lets it write each row to the file as it arrives, holding roughly constant memory for the whole job instead of one huge spike at the start.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="13.html">← Async LINQ: ToListAsync, AnyAsync, CountAsync</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="15.html">Streaming vs. Buffering Large Results →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Skip(n).Take(pageSize) vs. keyset (seek) pagination — what's the actual difference, expressed in LINQ?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Offset Pagination vs. Keyset Pagination — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="Skip(n).Take(pageSize) vs. keyset (seek) pagination — what's the actual difference, expressed in LINQ?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Offset Pagination vs. Keyset Pagination — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Offset Pagination vs. Keyset Pagination</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ LINQ · Advanced · Should Know</div>
+    <h1>Offset Pagination vs. Keyset Pagination — <code>Skip</code>/<code>Take</code> vs. <span class="hl hl-basic">seeking by the last key</span></h1>
+    <p class="interview-q">"<code>Skip(n).Take(pageSize)</code> vs. keyset ("seek") pagination — what's the actual difference, expressed in LINQ?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-2">
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">📄 Offset pagination</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span><code>Skip(n).Take(m)</code> re-scans and discards the first <code>n</code> rows on every single page request — page 50 of a long list does nearly as much work as scanning the whole table, over and over.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>It's the simplest to write, and fine for small tables or shallow pages — the trade-off only really bites on deep pagination over a large, growing table.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Offset = re-scan from the start, every page.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🔑 Keyset pagination</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A user paging deep into a long list with <code>Skip</code>/<code>Take</code> notices each page getting slower, and rows inserted or deleted mid-scroll can shift the page boundaries entirely.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Where(x =&gt; x.Id &gt; lastSeenId).OrderBy(x =&gt; x.Id).Take(m)</code> seeks straight to the right spot using an indexed column — roughly constant cost, no matter how deep the page is.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Keyset = seek directly to the last key you saw.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Skip</code>/<code>Take</code> <span class="rarrow">→</span> <b>re-scans</b> from the start, every page</p>
+      <p class="rrow"><code>Where(Id &gt; last)</code> <span class="rarrow">→</span> <b>seeks</b> straight to the last key</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Skip</code></b> counts rows to throw away. <b><code>Where</code></b> jumps straight there.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 316" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA12" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA12Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arA12Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="160" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b" letter-spacing="0.3">❌ OFFSET — Skip(n).Take(m)</text>
+      <text x="480" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#166534" letter-spacing="0.3">✅ KEYSET — Where(Id &gt; last)</text>
+
+      <path d="M320,6 V306" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <g filter="url(#shA12)"><rect x="35" y="34" width="250" height="46" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="54" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">Skip(0).Take(10)</text>
+      <text x="160" y="69" text-anchor="middle" font-size="10.5" fill="#5b6472">page 1 — scans 10 rows</text>
+
+      <g filter="url(#shA12)"><rect x="355" y="34" width="250" height="46" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="54" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">Where(Id &gt; 0).Take(10)</text>
+      <text x="480" y="69" text-anchor="middle" font-size="10.5" fill="#5b6472">page 1 — seeks to the start</text>
+
+      <path d="M160,80 V104" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA12Red)"/>
+      <path d="M480,80 V104" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA12Green)"/>
+
+      <g filter="url(#shA12)"><rect x="35" y="104" width="250" height="46" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="124" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">Skip(10).Take(10)</text>
+      <text x="160" y="139" text-anchor="middle" font-size="10.5" fill="#5b6472">page 2 — scans 20, keeps 10</text>
+
+      <g filter="url(#shA12)"><rect x="355" y="104" width="250" height="46" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="124" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">Where(Id &gt; last1).Take(10)</text>
+      <text x="480" y="139" text-anchor="middle" font-size="10.5" fill="#5b6472">page 2 — same seek cost</text>
+
+      <path d="M160,150 V174" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA12Red)"/>
+      <path d="M480,150 V174" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA12Green)"/>
+
+      <g filter="url(#shA12)"><rect x="35" y="174" width="250" height="46" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="194" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">Skip(20).Take(10)</text>
+      <text x="160" y="209" text-anchor="middle" font-size="10.5" fill="#5b6472">page 3 — scans 30, keeps 10</text>
+
+      <g filter="url(#shA12)"><rect x="355" y="174" width="250" height="46" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="194" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">Where(Id &gt; last2).Take(10)</text>
+      <text x="480" y="209" text-anchor="middle" font-size="10.5" fill="#5b6472">page 3 — same seek cost</text>
+
+      <path d="M160,220 V244" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA12Red)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+      <path d="M480,220 V244" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA12Green)"/>
+
+      <g filter="url(#shA12)"><rect x="35" y="244" width="250" height="46" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="264" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">📈 Wasted work grows</text>
+      <text x="160" y="279" text-anchor="middle" font-size="10.5" fill="#5b6472">every later page re-scans more</text>
+
+      <g filter="url(#shA12)"><rect x="355" y="244" width="250" height="46" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="264" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">⚡ Constant cost</text>
+      <text x="480" y="279" text-anchor="middle" font-size="10.5" fill="#5b6472">same work, no matter the page</text>
+    </svg>
+    <figcaption>Offset re-does work it already did on every earlier page — keyset never looks at a row it's already shown.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Offset pagination's page contents can shift between requests.</b> Insert or delete a row while a user is paging and they can see a row twice or miss one entirely — keyset pagination, anchored to a real column value instead of a row count, doesn't have this problem.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Can keyset pagination jump straight to an arbitrary page, like 'go to page 50'?"</b> Not directly — it only knows how to seek forward from the last key it saw. Arbitrary random-access page numbers are offset pagination's real strength, and keyset's real limitation.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>Skip(n).Take(m)</code> re-scans and discards the first <code>n</code> rows on every page request — cheap for shallow pages, expensive for deep ones. <code>Where(x => x.Id > lastSeenId).OrderBy(x => x.Id).Take(m)</code> seeks straight to the right spot instead, at roughly constant cost no matter how deep the page is."</p>
+    <ul>
+      <li><code>Skip</code>/<code>Take</code> → <span class="hl hl-hot">re-scans from row zero</span>, every single page.</li>
+      <li><code>Where(Id &gt; last)</code> → <span class="hl hl-basic">seeks directly</span>, using an indexed column.</li>
+      <li>Rows inserted/deleted mid-paging → <span class="hl hl-inter">offset can skip or duplicate a row</span>; keyset can't.</li>
+      <li>Jumping to an arbitrary page number → <span class="hl hl-adv">offset's real strength, keyset's real limitation</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-hot">Offset pagination</span> is expressed as <code>OrderBy(...).Skip(n).Take(m)</code> — straightforward, and the database still has to walk past (or otherwise account for) the first <code>n</code> rows before it can hand back the page, every single time that page is requested. The cost grows with <code>n</code>, so the deeper a user pages, the more work each request does, even though the page size never changed.</p>
+
+      <p><span class="hl hl-basic">Keyset pagination</span> replaces "skip this many rows" with "start after this specific value": <code>Where(x => x.Id > lastSeenId).OrderBy(x => x.Id).Take(m)</code>. Given an index on the ordering column, the database can seek directly to that value instead of counting rows to get there — the cost per page stays roughly flat regardless of how many pages came before.</p>
+
+      <p>The trade-off is real, not one-sided: keyset needs the client to carry the last key forward between requests, and it can't answer "show me page 50" out of context the way offset can — it only knows how to continue from where it left off.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Offset (Skip/Take)</th><th>Keyset (seek)</th></tr></thead>
+        <tbody>
+          <tr><th>Expressed as</th><td><code>OrderBy(...).Skip(n).Take(m)</code></td><td><code>Where(x =&gt; x.Id &gt; last).OrderBy(x =&gt; x.Id).Take(m)</code></td></tr>
+          <tr><th>Cost per page</th><td>grows with <code>n</code></td><td>roughly constant</td></tr>
+          <tr><th>Jump to page 50 directly?</th><td>yes</td><td>no — only "next from here"</td></tr>
+          <tr><th>Stable under inserts/deletes?</th><td>no — pages can shift</td><td>yes — anchored to a real value</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">Post</span>&gt; page = context.Posts
+    .OrderBy(p =&gt; p.Id)
+    .Skip(pageNumber * pageSize)   <span class="cx-err">// ❌ re-scans every earlier page</span>
+    .Take(pageSize)
+    .ToList();</code></pre>
+      </div>
+      <p class="cx-note">Page 50 re-scans (or accounts for) the first 49 pages' worth of rows before it can return anything.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">Post</span>&gt; page = context.Posts
+    .Where(p =&gt; p.Id &gt; lastSeenId)  <span class="cx-ok">// ✅ seeks straight past what we've shown</span>
+    .OrderBy(p =&gt; p.Id)
+    .Take(pageSize)
+    .ToList();</code></pre>
+      </div>
+      <p class="cx-note">Same cost on page 2 and page 500 — the database seeks to <code>lastSeenId</code> using the index, nothing earlier gets touched.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A small admin table that only ever has a handful of pages</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA12-1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">SMALL TABLE, FEW PAGES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">📄 Skip/Take</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">simple, cheap enough</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcA12-1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ Good enough</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#166534">no deep paging ever happens</text>
+            </svg>
+          </div>
+          <p class="uc-what">With only a few pages, the "re-scan from the start" cost never gets large enough to matter — offset's simplicity wins here, and keyset would be solving a problem that doesn't exist yet.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Shallow pages, small table → Skip/Take is fine.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> An infinite-scroll feed over a large, constantly growing table</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA12-2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">DEEP, GROWING FEED</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🔑 Where(Id &gt; last)</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">seeks, doesn't scan</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcA12-2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">⚡ Constant cost</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">at any scroll depth</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is exactly the case keyset pagination was built for — a feed users scroll through indefinitely, where offset's cost would keep climbing the deeper they go.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Deep, growing feed → keyset, not Skip/Take.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">3</span> A UI with numbered page links, like "jump to page 50"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA12-3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">NUMBERED PAGE LINKS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔢 "Go to page 50"</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#92400e">needs random access</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUcA12-3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">📄 Skip/Take required</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#92400e">keyset can't do this</text>
+            </svg>
+          </div>
+          <p class="uc-what">Keyset pagination only knows how to continue from the last key it saw — it has no concept of "page 50" in isolation, so a UI that needs arbitrary jump-to-page links has to use offset, cost trade-off accepted.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need arbitrary page jumps → offset is the only option.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A public API returns an activity feed, paged with <code>Skip</code>/<code>Take</code>.</b> Each page gets noticeably slower the further back a client scrolls, and clients occasionally see a duplicate or missing item when new activity gets inserted mid-scroll. Switching to <code>Where(x => x.Id < lastSeenId).OrderByDescending(x => x.Id).Take(m)</code> fixes both problems at once — constant per-page cost, and no shifting between requests because it's anchored to a real <code>Id</code> value instead of a row count.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="11.html">← N+1 Queries and Navigation Properties</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="13.html">Async LINQ: ToListAsync, AnyAsync, CountAsync →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

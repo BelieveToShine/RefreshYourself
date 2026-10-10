@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Four different ways to combine two sequences — which ones dedupe, and which ones keep duplicates?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Concat vs. Union vs. Intersect vs. Except — LINQ Intermediate — RefreshYourself">
+<meta property="og:description" content="Four different ways to combine two sequences — which ones dedupe, and which ones keep duplicates?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Concat vs. Union vs. Intersect vs. Except — LINQ Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Concat vs. Union vs. Intersect vs. Except</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ LINQ · Intermediate · Should Know</div>
+    <h1><code>Concat</code> vs. <code>Union</code> vs. <code>Intersect</code> vs. <code>Except</code> — <span class="hl hl-inter">four ways to combine two sequences</span></h1>
+    <p class="interview-q">"Four different ways to combine two sequences — which ones dedupe, and which ones keep duplicates?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">➕ Concat</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Merging two logs or batches for processing needs every record from both, including ones that happen to repeat — losing a legitimate duplicate record would be a real data-loss bug here.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Concat</code> lays sequence A then sequence B end-to-end and keeps absolutely everything, duplicates included — the simplest, no-dedupe combine.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Concat = everything, duplicates stay.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🔀 Union</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Merging two tag lists into one display set shouldn't show the same tag twice just because it existed in both source lists.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Union</code> is <code>Concat</code> plus a dedupe pass afterward — every distinct value appears exactly once in the combined result.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Union = Concat, then dedupe.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">∩ Intersect</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Finding which products appear in both this month's and last month's bestseller lists needs only the overlap, not either full list.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Intersect</code> returns only the elements present in <i>both</i> sequences — exactly the overlap, nothing from either side alone.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Intersect = only what's in both.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+          <div class="wc-head">➖ Except</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Finding which customers from last year never ordered again this year needs last year's list minus this year's, not an overlap and not everything combined.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Except</code> returns elements in the first sequence that are <i>not</i> in the second — a one-directional subtraction.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Except = first sequence, minus whatever's also in the second.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Concat</code> <span class="rarrow">→</span> <b>everything</b>, duplicates stay</p>
+      <p class="rrow"><code>Union</code> <span class="rarrow">→</span> Concat + <b>dedupe</b></p>
+      <p class="rrow"><code>Intersect</code> <span class="rarrow">→</span> only in <b>both</b></p>
+      <p class="rrow"><code>Except</code> <span class="rarrow">→</span> in A, <b>not</b> in B</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Concat</code></b> and <b><code>Union</code></b> are the same operation, one step apart — <b><code>Union</code></b> just adds the dedupe.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 400" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shLi12" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arLi12" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#475569"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">A = {1, 2, 3}     B = {2, 3, 4}</text>
+
+      <!-- UNION -->
+      <text x="130" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="#b45309">Union</text>
+      <circle cx="110" cy="95" r="32" fill="#fde68a" fill-opacity="0.75" stroke="#b45309" stroke-width="1.6"/>
+      <circle cx="150" cy="95" r="32" fill="#fde68a" fill-opacity="0.75" stroke="#b45309" stroke-width="1.6"/>
+      <text x="96" y="99" text-anchor="middle" font-size="10" font-weight="700" fill="#78350f">A</text>
+      <text x="164" y="99" text-anchor="middle" font-size="10" font-weight="700" fill="#78350f">B</text>
+      <text x="130" y="140" text-anchor="middle" font-size="9.5" fill="#5b6472">both circles shaded</text>
+      <text x="130" y="152" text-anchor="middle" font-size="9.5" fill="#5b6472">{1, 2, 3, 4} — no repeats</text>
+
+      <!-- INTERSECT -->
+      <text x="320" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="#0f766e">Intersect</text>
+      <circle cx="300" cy="95" r="32" fill="#ffffff" stroke="#0f766e" stroke-width="1.6"/>
+      <circle cx="340" cy="95" r="32" fill="#ffffff" stroke="#0f766e" stroke-width="1.6"/>
+      <path d="M320,70 A32,32 0 0,0 320,120 A32,32 0 0,0 320,70 Z" fill="#99f6e4" stroke="none"/>
+      <text x="286" y="99" text-anchor="middle" font-size="10" font-weight="700" fill="#134e4a">A</text>
+      <text x="354" y="99" text-anchor="middle" font-size="10" font-weight="700" fill="#134e4a">B</text>
+      <text x="320" y="140" text-anchor="middle" font-size="9.5" fill="#5b6472">only the overlap shaded</text>
+      <text x="320" y="152" text-anchor="middle" font-size="9.5" fill="#5b6472">{2, 3} — in both only</text>
+
+      <!-- EXCEPT -->
+      <text x="510" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">Except (A − B)</text>
+      <circle cx="490" cy="95" r="32" fill="#ddd6fe" fill-opacity="0.85" stroke="#6d28d9" stroke-width="1.6"/>
+      <circle cx="530" cy="95" r="32" fill="#ffffff" stroke="#6d28d9" stroke-width="1.6"/>
+      <path d="M510,70 A32,32 0 0,0 510,120 A32,32 0 0,0 510,70 Z" fill="#ffffff" stroke="none"/>
+      <text x="468" y="99" text-anchor="middle" font-size="10" font-weight="700" fill="#4c1d95">A</text>
+      <text x="544" y="99" text-anchor="middle" font-size="10" font-weight="700" fill="#4c1d95">B</text>
+      <text x="510" y="140" text-anchor="middle" font-size="9.5" fill="#5b6472">only A's own part shaded</text>
+      <text x="510" y="152" text-anchor="middle" font-size="9.5" fill="#5b6472">{1} — in A, not in B</text>
+
+      <path d="M20,175 H620" fill="none" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="4 4"/>
+
+      <text x="320" y="200" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">Concat(A, B) — lays both sequences end-to-end, keeps every element</text>
+
+      <g filter="url(#shLi12)"><rect x="150" y="214" width="164" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="225" y="237" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">A → 1, 2, 3</text>
+
+      <text x="320" y="229" text-anchor="middle" font-size="15" font-weight="700" fill="#475569">+</text>
+
+      <g filter="url(#shLi12)"><rect x="326" y="214" width="164" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/></g>
+      <text x="415" y="237" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">B → 2, 3, 4</text>
+
+      <path d="M320,252 V272" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#arLi12)"/>
+
+      <g filter="url(#shLi12)"><rect x="135" y="280" width="60" height="38" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="165" y="304" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">1</text>
+      <g filter="url(#shLi12)"><rect x="195" y="280" width="60" height="38" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="225" y="304" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">2</text>
+      <g filter="url(#shLi12)"><rect x="255" y="280" width="60" height="38" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="285" y="304" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">3</text>
+      <g filter="url(#shLi12)"><rect x="315" y="280" width="60" height="38" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/></g>
+      <text x="345" y="304" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">2</text>
+      <g filter="url(#shLi12)"><rect x="375" y="280" width="60" height="38" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/></g>
+      <text x="405" y="304" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">3</text>
+      <g filter="url(#shLi12)"><rect x="435" y="280" width="60" height="38" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/></g>
+      <text x="465" y="304" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">4</text>
+
+      <text x="345" y="333" text-anchor="middle" font-size="9.5" font-weight="700" fill="#dc2626">↑ dup</text>
+      <text x="405" y="333" text-anchor="middle" font-size="9.5" font-weight="700" fill="#dc2626">↑ dup</text>
+
+      <text x="320" y="360" text-anchor="middle" font-size="11" fill="#5b6472">Result: 1, 2, 3, 2, 3, 4 — six elements, "2" and "3" each kept twice</text>
+      <text x="320" y="378" text-anchor="middle" font-size="11" fill="#5b6472">Union of the same A and B would instead return exactly {1, 2, 3, 4}</text>
+    </svg>
+    <figcaption>Union/Intersect/Except shade a different region of the same two sets; <code>Concat</code> just lays both sequences end-to-end, duplicates and all.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>Concat</code> is not <code>Union</code>.</b> <code>Concat</code> keeps every duplicate from both sequences; <code>Union</code> runs the exact same combine and then removes duplicates — mixing the two up is the single most commonly confused pair among all four operators.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How do these four decide two elements are 'equal' for deduping or matching?"</b> All four default to <code>EqualityComparer&lt;T&gt;.Default</code> (effectively <code>Equals</code>/<code>GetHashCode</code>) unless you pass an explicit <code>IEqualityComparer&lt;T&gt;</code> overload — for a reference type with no overridden <code>Equals</code>, that means reference equality, not "same data."</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>Concat</code> keeps everything from both sequences, including duplicates. <code>Union</code> is <code>Concat</code> plus a dedupe pass. <code>Intersect</code> returns only elements present in both. <code>Except</code> returns elements in the first sequence that aren't in the second."</p>
+    <ul>
+      <li><code>Concat</code> <span class="hl hl-blue">→ no dedupe, order preserved</span>, every element from both.</li>
+      <li><code>Union</code> <span class="hl hl-inter">→ Concat, then distinct</span>, one copy of each value.</li>
+      <li><code>Intersect</code> <span class="hl hl-teal">→ overlap only</span>, in A and in B.</li>
+      <li><code>Except</code> <span class="hl hl-adv">→ one-directional subtraction</span>, in A but not in B.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Concat</span> is the simplest of the four: it streams every
+      element of the first sequence, then every element of the second, with no comparison between
+      them at all — if a value exists in both, it shows up twice in the result.
+      <span class="hl hl-inter">Union</span> runs that exact same combine and then removes
+      duplicate values from the combined result, so each distinct value appears exactly once.</p>
+
+      <p><span class="hl hl-teal">Intersect</span> and <span class="hl hl-adv">Except</span> both
+      compare the two sequences against each other rather than just combining them.
+      <code>Intersect</code> keeps only values that exist in both sequences — the overlap.
+      <code>Except</code> keeps only values from the first sequence that do <i>not</i> appear in
+      the second — a one-directional subtraction, so <code>a.Except(b)</code> and
+      <code>b.Except(a)</code> are generally different results.</p>
+
+      <p>All four of these are set operators in the sense that their output never contains
+      duplicates of the same value — except <code>Concat</code>, which isn't really a set
+      operation at all, it's a plain sequence-level append. That's the real reason it's grouped
+      with the other three here: not because it behaves like them, but because it's the operator
+      people reach for by mistake when they actually wanted <code>Union</code>.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>Concat</code></th><th><code>Union</code></th><th><code>Intersect</code></th><th><code>Except</code></th></tr></thead>
+        <tbody>
+          <tr><th>Keeps duplicates?</th><td class="no">✅ yes</td><td class="no">❌ no</td><td class="no">❌ no</td><td class="no">❌ no</td></tr>
+          <tr><th>Result contains</th><td>everything from both</td><td>every distinct value from either</td><td>only values in both</td><td>A's values, minus B's</td></tr>
+          <tr><th>Order-sensitive to A/B?</th><td>yes (A's elements first)</td><td>no — same distinct set either way</td><td>no — same overlap either way</td><td>yes — A.Except(B) ≠ B.Except(A)</td></tr>
+          <tr><th>SQL-ish analog</th><td><code>UNION ALL</code></td><td><code>UNION</code></td><td><code>INTERSECT</code></td><td><code>EXCEPT</code>/<code>MINUS</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">int</span>[] a = { <span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span> };
+<span class="kw">int</span>[] b = { <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span> };
+
+a.Concat(b);      <span class="cx-ok">// ✅ 1, 2, 3, 2, 3, 4 — six items, duplicates kept</span>
+a.Union(b);       <span class="cx-ok">// ✅ 1, 2, 3, 4 — four items, deduped</span></code></pre>
+      </div>
+      <p class="cx-note"><code>Union</code> is literally <code>Concat</code> <b>plus</b> a dedupe pass.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>a.Intersect(b);   <span class="cx-ok">// ✅ 2, 3 — present in both a and b</span>
+a.Except(b);      <span class="cx-ok">// ✅ 1 — in a, not in b</span>
+b.Except(a);      <span class="cx-ok">// ✅ 4 — in b, not in a (direction matters!)</span></code></pre>
+      </div>
+      <p class="cx-note"><code>Except</code> is <b>one-directional</b> — swapping the sequences changes the answer.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're merging two batches of raw log entries for processing</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc12a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">RAW LOG BATCHES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📄 batch 1 + batch 2</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc12a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📄 every entry kept</text>
+            </svg>
+          </div>
+          <p class="uc-what">A legitimately repeated log entry (the same error fired twice) is
+          real information, not noise — <code>Concat</code> is correct here precisely because it
+          never removes anything.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Duplicates are meaningful data → <code>Concat</code>, never <code>Union</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're building one combined tag list to display from two source lists</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc12b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">TAGS FROM TWO LISTS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🏷️ article + category tags</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc12b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🏷️ each tag shown once</text>
+            </svg>
+          </div>
+          <p class="uc-what">Showing the same tag twice in a UI chip list looks like a bug to the
+          end user even if it's technically "correct data" — <code>Union</code> is what a display
+          list actually needs.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">User-facing display list → <code>Union</code>, not <code>Concat</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You need customers that appear on both this quarter's and last quarter's top-spender list</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc12c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">TOP SPENDERS, BOTH QUARTERS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">📅 Q1 list ∩ Q2 list</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc12c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e">🏆 loyal customers only</text>
+            </svg>
+          </div>
+          <p class="uc-what">"Consistently high-value" is exactly the overlap between two
+          periods, not either period alone and not a combined list —
+          <code>Intersect</code> is the direct match for this question.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">"In both" questions → <code>Intersect</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">4</span> You reach for <code>Concat</code> when the requirement was really "no duplicates"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc12d" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">Concat USED, DUPES LEAK THROUGH</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">.Concat(b) used</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc12d)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">⚠️ duplicate rows shown</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the Common Trap surfacing as a real bug: a dropdown or report
+          shows the same item twice because <code>Concat</code> was used where <code>Union</code>
+          was actually needed — swapping the one method name fixes it completely.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Unexpected duplicate rows → check for a <code>Concat</code> that should be a <code>Union</code>.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A permissions check needs "roles granted directly, plus roles inherited from group
+      membership," with no role listed twice even if it came from both places.</b>
+      <code>directRoles.Union(groupRoles)</code> is the entire implementation — reaching for
+      <code>Concat</code> here would leave a user with the same role listed twice in the UI, a
+      cosmetic but very visible bug.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="11.html">← Append/Prepend vs. Collection Modification</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="13.html">SequenceEqual vs. Set Equality →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="All three force immediate execution — what's the actual difference between ToList, ToArray, and ToDictionary, and when does ToDictionary throw that the other two don't?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="ToList vs. ToArray vs. ToDictionary — LINQ Basic — RefreshYourself">
+<meta property="og:description" content="All three force immediate execution — what's the actual difference between ToList, ToArray, and ToDictionary, and when does ToDictionary throw that the other two don't?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>ToList vs. ToArray vs. ToDictionary — LINQ Basic — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/basic">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">ToList vs. ToArray vs. ToDictionary</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ LINQ · Basic · Should Know</div>
+    <h1><code>ToList</code> vs. <code>ToArray</code> vs. <code>ToDictionary</code> — <span class="hl hl-blue">same immediate execution,</span> <span class="hl hl-hot">not the same safety</span></h1>
+    <p class="interview-q">"All three force immediate execution — what's the actual difference between them, and when does <code>ToDictionary</code> throw at materialization time that the other two don't?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📋 ToList</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A deferred query isn't something you can <code>Add</code> to or <code>Remove</code> from — you need a real, editable collection to keep working with after the query runs.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>ToList()</code> runs the query right now and copies the results into a resizable <code>List&lt;T&gt;</code> you can freely edit afterward.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">ToList = immediate run into a resizable list.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">📦 ToArray</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Some APIs expect a plain <code>T[]</code>, and you already know the item count is fixed once the query finishes — a resizable list is more than you need.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>ToArray()</code> runs the query right now and copies the results into a fixed-size, compact <code>T[]</code>.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">ToArray = immediate run into a fixed-size array.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+          <div class="wc-head">🗄️ ToDictionary</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Scanning a list every time you need one item by its key is slow — you want direct, O(1)-style lookup instead.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>ToDictionary(keySelector)</code> runs the query right now and builds a <code>Dictionary&lt;TKey,TValue&gt;</code> — but it demands every key be unique, and throws immediately if two elements produce the same one.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">ToDictionary = immediate run into a keyed lookup — unique keys only.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>ToList()</code> <span class="rarrow">→</span> <b>List&lt;T&gt;</b>, resizable</p>
+      <p class="rrow"><code>ToArray()</code> <span class="rarrow">→</span> <b>T[]</b>, fixed-size</p>
+      <p class="rrow"><code>ToDictionary()</code> <span class="rarrow">→</span> <b>Dictionary&lt;K,V&gt;</b>, keyed</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>ToList</code></b>/<b><code>ToArray</code></b> never care whether the data is unique. <b><code>ToDictionary</code></b> does — a duplicate key crashes it the instant the query runs.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh11" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar11" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="ar11Red" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">SAME DEFERRED QUERY → THREE DIFFERENT MATERIALIZATIONS</text>
+
+      <path d="M110,34 H530" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M110,34 V78" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar11)"/>
+      <path d="M320,34 V78" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar11)"/>
+      <path d="M530,34 V78" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar11)"/>
+
+      <g filter="url(#sh11)"><rect x="25" y="78" width="170" height="42" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="110" y="104" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">ToList()</text>
+      <g filter="url(#sh11)"><rect x="235" y="78" width="170" height="42" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="104" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">ToArray()</text>
+      <g filter="url(#sh11)"><rect x="445" y="78" width="170" height="42" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="530" y="104" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">ToDictionary(sel)</text>
+
+      <path d="M110,120 V164" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar11)"/>
+      <path d="M320,120 V164" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar11)"/>
+      <path d="M530,120 V164" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar11)"/>
+
+      <g filter="url(#sh11)"><rect x="25" y="164" width="170" height="46" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="110" y="184" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">📋 List&lt;T&gt;</text>
+      <text x="110" y="200" text-anchor="middle" font-size="10" fill="#5b6472">resizable, editable</text>
+
+      <g filter="url(#sh11)"><rect x="235" y="164" width="170" height="46" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="184" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">📦 T[]</text>
+      <text x="320" y="200" text-anchor="middle" font-size="10" fill="#5b6472">fixed size, compact</text>
+
+      <g filter="url(#sh11)"><rect x="445" y="164" width="170" height="46" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="530" y="182" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🗄️ Dictionary&lt;K,V&gt;</text>
+      <text x="530" y="199" text-anchor="middle" font-size="9.5" fill="#5b6472">keyed by key selector</text>
+
+      <text x="110" y="234" text-anchor="middle" font-size="10.5" font-weight="700" fill="#16a34a">✅ always succeeds</text>
+      <text x="320" y="234" text-anchor="middle" font-size="10.5" font-weight="700" fill="#16a34a">✅ always succeeds</text>
+
+      <path d="M530,210 V238" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#ar11Red)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.7s" repeatCount="indefinite"/></path>
+      <text x="530" y="254" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">❌ duplicate key →</text>
+      <text x="530" y="270" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">ArgumentException 🐛</text>
+    </svg>
+    <figcaption>All three run the query immediately — only <code>ToDictionary</code>'s outcome depends on what's actually in the data.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>ToDictionary</code> fails the same way <code>ToList</code> or <code>ToArray</code> would.</b> It doesn't — <code>ToDictionary</code> throws <code>ArgumentException</code> the instant it finds a duplicate key, a failure mode the other two can never hit because neither one cares about uniqueness at all.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What if two elements genuinely need to share that key?"</b> Then <code>ToDictionary</code> is the wrong tool entirely — reach for <code>ToLookup</code> instead, which is built from the start for a many-values-per-key relationship and never throws on a repeated key.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"All three force immediate execution, but into different shapes — <code>ToList</code> gives a resizable <code>List&lt;T&gt;</code>, <code>ToArray</code> gives a fixed-size <code>T[]</code>, and <code>ToDictionary</code> gives a keyed lookup that throws <code>ArgumentException</code> right away if the key selector produces a duplicate."</p>
+    <ul>
+      <li><code>ToList</code> → <span class="hl hl-basic">use when you'll keep editing</span> the results afterward.</li>
+      <li><code>ToArray</code> → <span class="hl hl-blue">use for a fixed-size result</span>, or when an API specifically expects <code>T[]</code>.</li>
+      <li><code>ToDictionary</code> → <span class="hl hl-hot">only safe when the key is genuinely unique</span> per element — otherwise it crashes on materialization, not later.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>All three methods share one job: they stop the query from being a lazy, re-runnable
+      plan and force it to run <b>right now</b>, copying every result into a real in-memory
+      collection. Where they differ is only the shape of that collection — and, for
+      <code>ToDictionary</code>, a correctness requirement the other two never carry.</p>
+
+      <p><span class="hl hl-blue">ToList</span> and <span class="hl hl-blue">ToArray</span> never
+      look at the values themselves to decide whether materialization can succeed — every
+      element just gets copied in, one after another, position by position. <span class="hl
+      hl-hot">ToDictionary</span> is different: it has to run the key selector on every element
+      and check the result is unique along the way, because a dictionary simply can't have two
+      entries with the same key. The moment it finds a second element producing a key it's
+      already seen, it throws — during the <code>ToDictionary()</code> call itself, not on some
+      later lookup.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>ToList()</code></th><th><code>ToArray()</code></th><th><code>ToDictionary(sel)</code></th></tr></thead>
+        <tbody>
+          <tr><th>Produces</th><td><code>List&lt;T&gt;</code></td><td><code>T[]</code></td><td><code>Dictionary&lt;TKey,TValue&gt;</code></td></tr>
+          <tr><th>Resizable after?</th><td class="yes">✅ yes</td><td class="no">❌ fixed size</td><td>n/a — keyed, not positional</td></tr>
+          <tr><th>Needs unique keys?</th><td>no</td><td>no</td><td class="no">✅ yes — or it throws</td></tr>
+          <tr><th>Throws on duplicate key?</th><td class="no">never — not a concept it has</td><td class="no">never — not a concept it has</td><td class="yes">✅ <code>ArgumentException</code>, immediately</td></tr>
+          <tr><th>Best used for</th><td>you'll keep editing the result</td><td>a fixed-size result, or an API that expects <code>T[]</code></td><td>fast lookup by a genuinely unique key</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">string</span>&gt; names = people.Select(p =&gt; p.Name).ToList();
+names.Add(<span class="str">"Extra Person"</span>);   <span class="cx-ok">// ✅ works — List&lt;T&gt; is resizable</span></code></pre>
+      </div>
+      <p class="cx-note"><code>ToList</code> hands you something you can keep <b>editing</b> after the query runs.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">int</span>[] ids = people.Select(p =&gt; p.Id).ToArray();
+<span class="cx-cmt">// ids.Length is fixed the instant this line finishes</span></code></pre>
+      </div>
+      <p class="cx-note"><code>ToArray</code> gives a <b>fixed-size</b> array — no <code>Add</code>/<code>Remove</code> afterward.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Dictionary</span>&lt;<span class="ty">string</span>, <span class="ty">Person</span>&gt; byEmail =
+    people.ToDictionary(p =&gt; p.Email);
+<span class="cx-err">// ❌ throws ArgumentException the moment two people share an email</span></code></pre>
+      </div>
+      <p class="cx-note">The crash happens <b>right here</b>, on this line — not later, when someone reads <code>byEmail</code>.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You'll keep adding or removing items after the query runs</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc11a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">QUERY RESULT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">📋 ToList()</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc11a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✏️ Add / Remove freely</text>
+            </svg>
+          </div>
+          <p class="uc-what">Building up a results list that a user will keep filtering,
+          sorting, or editing in memory afterward? <code>ToList()</code> is the right shape — a
+          plain <code>List&lt;T&gt;</code> you can mutate freely once it's built.
+          <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need to keep editing it → <code>ToList</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> You're handing the result to an API that expects <code>T[]</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc11b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">QUERY RESULT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">📦 ToArray()</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc11b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">📨 SomeApi(int[] ids)</text>
+            </svg>
+          </div>
+          <p class="uc-what">Some method signatures are written to take <code>T[]</code>
+          specifically, and you already know the count won't change once the query is done.
+          <code>ToArray()</code> gives exactly that shape, with no resizing overhead you don't
+          need.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Fixed-size result, API wants <code>T[]</code> → <code>ToArray</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Your key selector isn't actually unique across the sequence</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc11c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing=".03em">THROWS IMMEDIATELY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b91c1c">🗄️ key = p.Dept</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc11c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12.5" font-weight="700" fill="#b91c1c">🐛 ArgumentException</text>
+            </svg>
+          </div>
+          <p class="uc-what">Keying by something that genuinely repeats — two employees in the
+          same department, two orders for the same customer — crashes <code>ToDictionary</code>
+          the instant it hits the second one. There's no silent "last one wins" fallback;
+          reach for <code>ToLookup</code> or <code>GroupBy</code> instead when the key can repeat.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Key can repeat → <code>ToDictionary</code> is the wrong tool entirely.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Think of a filing cabinet drawer labelled by name.</b> <code>ToList</code> is a
+      shopping list you can keep adding items to after you leave the store. <code>ToArray</code>
+      is a sealed, pre-counted box sized for exactly the shelf it's going on. <code>ToDictionary</code>
+      is that labelled drawer — but the cabinet refuses the second file the instant two files try
+      to use the same label.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="index.html" style="color:var(--ink-soft); font-weight:600;">← Distinct vs. DistinctBy <span style="font-weight:400;">(coming soon)</span></a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="12.html">Cast vs. OfType →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

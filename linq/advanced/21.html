@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="The exact same LINQ query is fast against an in-memory List<T> but noticeably slow against the real database — why, and how would you diagnose it?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: Fast In-Memory, Slow Against the Database — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="The exact same LINQ query is fast against an in-memory List<T> but noticeably slow against the real database — why, and how would you diagnose it?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: Fast In-Memory, Slow Against the Database — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: Fast In-Memory, Slow Against the Database</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 LINQ · Advanced · Must Know</div>
+    <h1>Scenario: fast in memory, <span class="hl hl-hot">slow against the database</span> — same <span class="hl hl-blue">LINQ</span>, different cost</h1>
+    <p class="interview-q">"The exact same LINQ query is fast against an in-memory <code>List&lt;T&gt;</code> but noticeably slow against the real database — why, and how would you diagnose it?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+        <div class="wc-head">🐌 Same syntax, different engine</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Over a <code>List&lt;T&gt;</code>, <code>Where(...)</code> is already-compiled C# running instantly in memory. Over an <code>IQueryable</code>, that same-looking <code>Where(...)</code> has to translate into SQL first — and if anything inside it can't translate, or a <code>.ToList()</code> sits too early in the chain, the "same" query silently pulls the entire table before filtering anything.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Inspect the actual generated SQL (EF Core's <code>ToQueryString()</code> or query logging — see <code>efcore/intermediate/1.html</code> for the how-to) to see whether the filter genuinely reached the <code>WHERE</code> clause, or whether it's running client-side over everything that was pulled back.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Same Where() syntax, completely different cost — depending on what's actually inside it.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Fast path <span class="rarrow">→</span> filter <b>stays in SQL</b>, database does the work</p>
+      <p class="rrow">Slow path <span class="rarrow">→</span> filter runs <b>client-side</b>, over the whole table</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> an untranslatable call inside
+    <b><code>Where()</code></b>, or a <b><code>.ToList()</code></b> placed too early, both end the
+    same way — the whole table, in memory, before anything is filtered.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shL21" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arL21Green" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arL21Red" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="24" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ FAST — the filter stays inside the SQL WHERE clause</text>
+
+      <g filter="url(#shL21)"><rect x="20" y="42" width="170" height="64" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="105" y="66" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">Where(u=&gt;u.Age&gt;30)</text>
+      <text x="105" y="82" text-anchor="middle" font-size="9.5" fill="#5b6472">translatable expression</text>
+
+      <path d="M190,74 H230" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arL21Green)"/>
+
+      <g filter="url(#shL21)"><rect x="230" y="42" width="170" height="64" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="315" y="66" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">🗄 SELECT…WHERE Age&gt;30</text>
+      <text x="315" y="82" text-anchor="middle" font-size="9.5" fill="#5b6472">database does the filtering</text>
+
+      <path d="M400,74 H440" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arL21Green)"/>
+
+      <g filter="url(#shL21)"><rect x="440" y="42" width="170" height="64" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="525" y="66" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">✅ small result set</text>
+      <text x="525" y="82" text-anchor="middle" font-size="9.5" fill="#5b6472">only matches cross the wire</text>
+
+      <text x="320" y="124" text-anchor="middle" font-size="10.5" fill="#5b6472">the predicate becomes part of the SQL itself</text>
+
+      <line x1="40" y1="140" x2="600" y2="140" stroke="#e2e8f0" stroke-width="1"/>
+
+      <text x="320" y="164" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐌 SLOW — the filter can't translate, so it runs after everything loads</text>
+
+      <g filter="url(#shL21)"><rect x="20" y="182" width="170" height="64" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="105" y="206" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">Where(u=&gt;IsVip(u))</text>
+      <text x="105" y="222" text-anchor="middle" font-size="9.5" fill="#5b6472">custom method, no SQL</text>
+
+      <path d="M190,214 H230" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arL21Red)"/>
+
+      <g filter="url(#shL21)"><rect x="230" y="182" width="170" height="64" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="315" y="206" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">🗄 SELECT * FROM Users</text>
+      <text x="315" y="222" text-anchor="middle" font-size="9.5" fill="#991b1b">⚠ entire table pulled first</text>
+
+      <path d="M400,214 H440" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arL21Red)"/>
+
+      <g filter="url(#shL21)"><rect x="440" y="182" width="170" height="64" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="525" y="206" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🐛 filtered in C#, after</text>
+      <text x="525" y="222" text-anchor="middle" font-size="9.5" fill="#5b6472">all rows already in memory</text>
+
+      <text x="320" y="272" text-anchor="middle" font-size="10.5" fill="#5b6472">same Where() syntax — completely different cost, depending on what's inside it</text>
+    </svg>
+    <figcaption>Same shape, same operator names — the only thing that changes is whether the predicate can actually become SQL.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Just add <code>.ToList()</code> so it compiles" is not a fix.</b> It forces the
+    entire, unfiltered table into memory before the untranslatable logic runs client-side — the query
+    stops throwing, but it's now doing dramatically more work, not less.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How would you actually confirm which one is happening?"</b> Look at the
+    generated SQL, not the C# — EF Core's <code>ToQueryString()</code> or its own query logging shows
+    whether the <code>WHERE</code> clause made it into the SQL text at all, or whether the SQL is an
+    unfiltered <code>SELECT *</code> with the real filtering happening somewhere else, in memory.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"The same LINQ syntax means something completely different depending on the
+    source — over a list it's compiled C# running instantly; over an <code>IQueryable</code> it has to
+    translate to SQL first. I'd check the actual generated SQL to see whether the filter reached the
+    <code>WHERE</code> clause, or whether an untranslatable call or an early <code>.ToList()</code> is
+    silently pulling the whole table before filtering it in memory."</p>
+    <ul>
+      <li>Fast path <span class="hl hl-basic">→ the predicate becomes part of the generated SQL</span>.</li>
+      <li>Slow path <span class="hl hl-hot">→ an untranslatable call, or too-early .ToList(), loads everything first</span>.</li>
+      <li>Diagnosis <span class="hl hl-blue">→ inspect the generated SQL, don't guess from the C#</span>.</li>
+      <li>"Add .ToList() to make it compile" <span class="hl hl-inter">→ fixes the error, not the performance</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Over a <code>List&lt;T&gt;</code>, every LINQ operator is <span class="hl hl-blue">LINQ-to-Objects</span>
+      — real, already-compiled C# delegates running directly against whatever's already in memory, so
+      a <code>Where</code> clause with arbitrary C# logic inside it is always just as fast as the logic
+      itself. Over an <code>IQueryable</code>, the exact same-looking <code>Where</code> call instead
+      builds an <b>expression tree</b> that a provider has to walk and translate into SQL before
+      anything runs — and the provider can only translate the specific, documented set of .NET
+      APIs/patterns it recognizes.</p>
+
+      <p>Two unrelated-looking causes produce the identical symptom. A call the provider can't
+      translate — a custom instance method, certain string/date logic on older EF Core versions —
+      either throws at translation time, or, more dangerously, silently falls back to pulling
+      everything back and finishing the filter client-side. Separately, a <code>.ToList()</code> placed
+      too early in the chain — before a <code>Where</code>/<code>OrderBy</code>/<code>Take</code> that
+      could have stayed server-side — forces the same full-table load, purely from where the
+      developer's own code chose to materialize.</p>
+
+      <p>Both produce the same observable symptom: correct results, dramatically more data pulled over
+      the wire than the filtered result needed, and real latency that only shows up once the table is
+      large enough to notice. The fix is never "add <code>.ToList()</code> wherever the compiler
+      complains" — it's looking at the actual generated SQL to see which half of the pipeline the
+      filter is really running in.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Fast — translates cleanly, the database does the filtering</span>
+<span class="kw">var</span> adults = db.Users.Where(u => u.Age > <span class="num">30</span>); <span class="cx-ok">// ✅ becomes WHERE Age &gt; 30</span></code></pre>
+      </div>
+      <p class="cx-note">Check with <code>adults.ToQueryString()</code> — the <code>WHERE</code> clause
+      shows up <b>in the SQL text itself</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Slow — IsVip() has no SQL equivalent the provider knows</span>
+<span class="kw">var</span> vips = db.Users.Where(u => IsVip(u)); <span class="cx-err">// ❌ the whole table loads before IsVip runs in C#</span></code></pre>
+      </div>
+      <p class="cx-note"><code>vips.ToQueryString()</code> here shows an <b>unfiltered</b>
+      <code>SELECT * FROM Users</code> — <code>IsVip</code> never made it into the SQL at all.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Self-inflicted version — same symptom, no untranslatable call at all</span>
+<span class="kw">var</span> rows = <span class="kw">await</span> db.Users.ToListAsync(); <span class="cx-err">// ❌ loads everything, before any filtering</span>
+<span class="kw">var</span> adults = rows.Where(u => u.Age > <span class="num">30</span>); <span class="cx-cmt">// now just LINQ-to-Objects, too late</span></code></pre>
+      </div>
+      <p class="cx-note">Nothing here is untranslatable — the <code>.ToList()</code> is simply placed
+      <b>too early</b>, before the filter that could have stayed server-side.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> A custom C# helper or regex check sits directly inside <code>Where()</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcL21a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">UNTRANSLATABLE CALL</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">Where(u=&gt;IsVip(u))</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcL21a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">whole table, then filter</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually hit — a method call the provider
+          has never heard of, sitting inside an otherwise-translatable chain, silently forcing the whole
+          table back before filtering client-side.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">An untranslatable call inside Where() forces a full table load.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> <code>.ToList()</code> sits before a <code>Where</code>/<code>OrderBy</code>/<code>Take</code> that could've stayed server-side</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcL21b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">ToList() TOO EARLY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">ToList() then Where()</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcL21b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">same symptom, no error</text>
+            </svg>
+          </div>
+          <p class="uc-what">Nothing here is untranslatable — the developer's own code chose to
+          materialize before filtering. Same slow, full-table symptom, with no translation error to
+          point at.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">An early ToList() causes the same symptom with no untranslatable call at all.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> The contrasting, genuinely fast case — for when it's NOT a problem</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcL21c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">PLAIN, TRANSLATABLE Where()</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Where(u=&gt;u.Age&gt;30)</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcL21c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ real WHERE clause</text>
+            </svg>
+          </div>
+          <p class="uc-what">Worth having in mind as the contrast: an ordinary, translatable predicate
+          over simple properties becomes a real <code>WHERE</code> clause every time — the "same LINQ
+          syntax" isn't inherently slow, it's specifically what's written inside it that decides.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A plain, translatable predicate is never the problem — check what's actually inside it.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A search endpoint is instant in unit tests against an in-memory fake, but takes seconds
+      against the real database in production.</b> Checking <code>ToQueryString()</code> on the real
+      query shows an unfiltered <code>SELECT *</code> — a custom string-matching helper inside
+      <code>Where()</code> has no SQL translation, so EF Core is pulling the entire table and filtering
+      it in memory. The unit tests never caught it because the in-memory fake runs that same helper as
+      plain, fast C#.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="20.html">← Scenario: Diagnosing Repeated Queries</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="22.html">Scenario: Diagnosing an N+1 Query Problem →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

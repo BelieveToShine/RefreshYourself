@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Why does where you call ToList() in a LINQ chain change what actually runs in the database?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Premature Materialization and ToList() Placement — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="Why does where you call ToList() in a LINQ chain change what actually runs in the database?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Premature Materialization and ToList() Placement — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Premature Materialization and ToList() Placement</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 LINQ · Advanced · Must Know</div>
+    <h1>Premature Materialization and <code>ToList()</code> Placement — <span class="hl hl-hot">where in the chain</span> it goes matters</h1>
+    <p class="interview-q">"Why does where you call <code>ToList()</code> in a LINQ chain change what actually runs in the database?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">📥 ToList() placement</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Calling <code>ToList()</code> before <code>Where</code>/<code>OrderBy</code>/<code>Take</code> ends the chain's SQL translation right there — everything written after it now runs as plain C# over whatever just got pulled, which on a real table means the entire unfiltered contents.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Keep every translatable operator — <code>Where</code>, <code>OrderBy</code>, <code>Take</code> — <b>before</b> <code>ToList()</code>, so the database does the filtering and only the rows actually needed ever leave it.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">ToList() ends the SQL — put it last, not first.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>ToList()</code> <b>early</b> <span class="rarrow">→</span> whole table in memory first</p>
+      <p class="rrow"><code>ToList()</code> <b>last</b> <span class="rarrow">→</span> only the filtered rows arrive</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>ToList()</code></b> is the "stop translating to SQL" switch — flip it too early and every later <code>Where</code>/<code>OrderBy</code>/<code>Take</code> runs in C#, not the database.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 316" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA8" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA8Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arA8Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="160" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b" letter-spacing="0.3">❌ ToList() CALLED FIRST</text>
+      <text x="480" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#166534" letter-spacing="0.3">✅ ToList() CALLED LAST</text>
+
+      <path d="M320,6 V306" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <g filter="url(#shA8)"><rect x="35" y="34" width="250" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="54" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">context.Orders</text>
+      <text x="160" y="69" text-anchor="middle" font-size="10.5" fill="#5b6472">DbSet&lt;Order&gt; — still IQueryable</text>
+
+      <g filter="url(#shA8)"><rect x="355" y="34" width="250" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="54" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">context.Orders</text>
+      <text x="480" y="69" text-anchor="middle" font-size="10.5" fill="#5b6472">DbSet&lt;Order&gt; — still IQueryable</text>
+
+      <path d="M160,80 V104" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA8Red)"/>
+      <path d="M480,80 V104" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA8Green)"/>
+
+      <g filter="url(#shA8)"><rect x="35" y="104" width="250" height="46" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="124" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐛 ToList() here</text>
+      <text x="160" y="139" text-anchor="middle" font-size="10.5" fill="#5b6472">executes immediately, too early</text>
+
+      <g filter="url(#shA8)"><rect x="355" y="104" width="250" height="46" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="124" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">Where / OrderBy / Take</text>
+      <text x="480" y="139" text-anchor="middle" font-size="10.5" fill="#5b6472">becomes part of the SQL query</text>
+
+      <path d="M160,150 V174" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA8Red)"/>
+      <path d="M480,150 V174" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA8Green)"/>
+
+      <g filter="url(#shA8)"><rect x="35" y="174" width="250" height="46" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="194" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">Where / OrderBy / Take</text>
+      <text x="160" y="209" text-anchor="middle" font-size="10.5" fill="#5b6472">plain C# over an in-memory list</text>
+
+      <g filter="url(#shA8)"><rect x="355" y="174" width="250" height="46" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="194" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">ToList() here</text>
+      <text x="480" y="209" text-anchor="middle" font-size="10.5" fill="#5b6472">executes now, after filtering</text>
+
+      <path d="M160,220 V244" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA8Red)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+      <path d="M480,220 V244" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA8Green)"/>
+
+      <g filter="url(#shA8)"><rect x="35" y="244" width="250" height="46" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="264" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐌 Slow</text>
+      <text x="160" y="279" text-anchor="middle" font-size="10.5" fill="#5b6472">whole table pulled, then filtered</text>
+
+      <g filter="url(#shA8)"><rect x="355" y="244" width="250" height="46" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="264" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">⚡ Fast</text>
+      <text x="480" y="279" text-anchor="middle" font-size="10.5" fill="#5b6472">only matching rows leave the DB</text>
+    </svg>
+    <figcaption>Same chain, same methods — only the position of <code>ToList()</code> changed which side of the line each step runs on.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Calling <code>ToList()</code> early "to be safe" is not a defensive habit.</b> It silently turns every <code>Where</code>/<code>OrderBy</code>/<code>Take</code> written after it into an in-memory operation over the entire table.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Is it ever correct to call <code>ToList()</code> partway through a chain?"</b> Yes — when a later step genuinely can't be translated to SQL (see "Why EF Core Cannot Translate Certain C# Methods"). The trap is calling it reflexively before filtering that could have stayed in SQL, not using it at all.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>ToList()</code> should be the last thing in the chain — every <code>Where</code>, <code>OrderBy</code>, and <code>Take</code> that the provider can translate belongs before it, so the database does the filtering and only the needed rows cross the wire."</p>
+    <ul>
+      <li><code>ToList()</code> called early → <span class="hl hl-hot">pulls the whole table</span>, then filters in C#.</li>
+      <li><code>ToList()</code> called last → <span class="hl hl-basic">Where/OrderBy/Take run as SQL</span> first.</li>
+      <li>Everything after <code>ToList()</code> → <span class="hl hl-inter">runs over an in-memory List&lt;T&gt;</span>, not the database.</li>
+      <li>Early <code>ToList()</code> is only correct → <span class="hl hl-blue">when a later step is genuinely untranslatable</span>, not out of habit.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>An <code>IQueryable&lt;T&gt;</code> chain is an expression tree being built up, not code running yet. <code>ToList()</code> is a <b>terminal operator</b> — the moment it's called, the provider translates everything accumulated <i>so far</i> into SQL and executes it. Anything written on the chain after that point is no longer part of that translation; it's ordinary LINQ-to-Objects running over whatever <code>List&lt;T&gt;</code> just came back.</p>
+
+      <p>This isn't about <code>ToList()</code> being slow by itself — it's about which half of the chain ends up <span class="hl hl-hot">server-side</span> versus <span class="hl hl-basic">client-side</span>. Put it after the translatable filtering and the database does the narrowing. Put it before, and the database has no filter to apply at all — it hands back every row, and the filtering happens afterward, in memory, over data that's already fully loaded.</p>
+
+      <p>The fix is a placement habit, not a different method: keep scanning the chain for any <code>Where</code>/<code>OrderBy</code>/<code>Take</code> that the provider can translate, and make sure <code>ToList()</code> comes after all of them.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>ToList() called first</th><th>ToList() called last</th></tr></thead>
+        <tbody>
+          <tr><th>Where/OrderBy/Take run</th><td>in C#, over everything pulled</td><td>as SQL, inside the database</td></tr>
+          <tr><th>Rows transferred</th><td>the entire table</td><td>only the rows that matched</td></tr>
+          <tr><th>Memory used</th><td>the whole table, materialized</td><td>just the final result</td></tr>
+          <tr><th>Risk</th><td>grows with table size</td><td>nothing introduced by placement</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">Order</span>&gt; orders = context.Orders.ToList(); <span class="cx-err">// ❌ whole table pulled now</span>
+
+<span class="kw">var</span> recent = orders
+    .Where(o =&gt; o.CreatedAt &gt; cutoff)         <span class="cx-cmt">// now plain C#, over every row</span>
+    .OrderByDescending(o =&gt; o.CreatedAt)
+    .Take(<span class="num">10</span>);</code></pre>
+      </div>
+      <p class="cx-note"><code>Where</code>, <code>OrderByDescending</code>, and <code>Take</code> now run in C#, after the entire <code>Orders</code> table already left the database.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">Order</span>&gt; recent = context.Orders
+    .Where(o =&gt; o.CreatedAt &gt; cutoff)         <span class="cx-cmt">// translates to SQL</span>
+    .OrderByDescending(o =&gt; o.CreatedAt)       <span class="cx-cmt">// translates to SQL</span>
+    .Take(<span class="num">10</span>)                                 <span class="cx-cmt">// translates to SQL</span>
+    .ToList();                                 <span class="cx-ok">// ✅ ToList() last</span></code></pre>
+      </div>
+      <p class="cx-note">All three translatable steps run as SQL — only the 10 matching rows are ever sent back.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> You call <code>ToList()</code> right after the <code>DbSet</code>, then filter/sort/page afterward</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA8-1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">TOLIST() TOO EARLY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">📥 ToList() now</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">whole table pulled</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcA8-1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐌 Filter in C#</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">over every row</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the <b>most common way this bug ships</b> — it looks harmless with a 200-row test table and gets dramatically slower the moment the real table grows, because the "filter" step never actually reaches the database.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">ToList() right after the DbSet → nothing left to translate.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> You chain every <code>Where</code>/<code>OrderBy</code>/<code>Take</code> first, and call <code>ToList()</code> only at the very end</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA8-2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">TOLIST() LAST</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🗄️ Filter in SQL</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">Where/OrderBy/Take</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcA8-2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">⚡ ToList() now</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#166534">only matches arrive</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the <b>default you should reach for</b> — every operator the provider can translate stays on the <code>IQueryable</code> chain, and <code>ToList()</code> is the last call, closing the chain only once there's nothing left to push down.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Filter, sort, page — then ToList(), not before.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> A later step genuinely can't be translated to SQL</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA8-3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">DELIBERATE EARLY STOP</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🗄️ Filter in SQL</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">everything translatable</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcA8-3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📥 ToList() here</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">then the custom method</text>
+            </svg>
+          </div>
+          <p class="uc-what">A narrow, already-filtered result materialized on purpose, right before the one method the provider can't translate, is a correct and deliberate use of early materialization — not the same mistake as reflexively calling <code>ToList()</code> before filtering.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Filter in SQL first, then materialize only for the untranslatable part.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A reporting endpoint calls <code>context.Orders.ToList()</code>, then applies <code>Where</code>/<code>OrderByDescending</code>/<code>Take</code> in C#.</b> It feels fine against a 200-row test database and gets steadily slower as the real table grows, because the "filtering" step never reaches SQL at all — it's scanning an ever-larger in-memory list every single call. Moving <code>ToList()</code> to the end of the chain lets the same three operators run as SQL, so only the requested page of rows ever leaves the database.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="7.html">← Why EF Core Cannot Translate Certain C# Methods</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="9.html">Query Execution and Database Round Trips →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

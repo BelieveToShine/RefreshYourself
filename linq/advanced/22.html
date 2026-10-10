@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Your API endpoint is making 1 + N database calls instead of 1 — walk through diagnosing and fixing it.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: Diagnosing an N+1 Query Problem — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="Your API endpoint is making 1 + N database calls instead of 1 — walk through diagnosing and fixing it.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: Diagnosing an N+1 Query Problem — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe; color:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: Diagnosing an N+1 Query Problem in an EF Core API</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 LINQ · Advanced · Must Know</div>
+    <h1>An endpoint that should run <span class="hl hl-basic">one query</span> is quietly running <span class="hl hl-hot">N+1</span></h1>
+    <p class="interview-q">"Your API endpoint is making 1 + N database calls instead of 1 — walk through diagnosing and fixing it."</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">🐛 N+1 Inside a Real Endpoint</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>An orders-listing endpoint fetches N orders in one query, then touches <code>order.Customer.Name</code> inside the loop building the response — each access lazily triggers its own round trip, so the endpoint silently makes 1 + N calls instead of 1. It's invisible with a handful of test orders and devastating with a real production dataset.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Fetch the related data in the same query the data actually needs it: either <code>.Include(o =&gt; o.Customer)</code> so the whole related object comes back eagerly, or a <code>Select</code> projection that asks for exactly the shape the endpoint returns — both turn N+1 round trips back into 1.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">A navigation property touched inside a loop over its parents is the N+1 tell.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">N+1 = <b>"1 query for the list, N more for what the loop touches."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <code>order.Customer.Name</code> inside a <code>foreach</code> over orders is the classic trigger — fix it with <b><code>Include()</code></b> or a <b><code>Select()</code></b> projection, before the loop ever runs.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh22" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar22Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="ar22Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="ar22Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">SAME /orders REQUEST — ONE QUERY, OR ONE PLUS N?</text>
+
+      <g filter="url(#sh22)"><rect x="190" y="34" width="260" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">1 query &#8594; N orders returned</text>
+
+      <path d="M320,74 V88" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,88 H480" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,88 V108" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar22Gray)"/>
+      <path d="M480,88 V108" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar22Gray)"/>
+
+      <g filter="url(#sh22)"><rect x="40" y="108" width="240" height="56" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="160" y="130" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">&#128257; loop touches .Customer</text>
+      <text x="160" y="148" text-anchor="middle" font-size="10.5" fill="#5b6472">once per order &#8594; N extra queries</text>
+
+      <g filter="url(#sh22)"><rect x="360" y="108" width="240" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="130" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">Include(o =&gt; o.Customer)</text>
+      <text x="480" y="148" text-anchor="middle" font-size="10.5" fill="#5b6472">or a Select() projection</text>
+
+      <path d="M160,164 V192" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#ar22Red)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+      <path d="M480,164 V192" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ar22Green)"/>
+
+      <g filter="url(#sh22)"><rect x="35" y="192" width="250" height="48" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="215" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">&#10060; 1 + N round trips</text>
+      <text x="160" y="231" text-anchor="middle" font-size="10.5" fill="#5b6472">fine with 5 rows, breaks at scale</text>
+
+      <g filter="url(#sh22)"><rect x="355" y="192" width="250" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="215" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">&#9989; 1 round trip total</text>
+      <text x="480" y="231" text-anchor="middle" font-size="10.5" fill="#5b6472">same data, no extra queries</text>
+
+      <text x="320" y="268" text-anchor="middle" font-size="11" fill="#5b6472">Same list query either way — what the loop does with .Customer decides 1 vs. 1+N.</text>
+    </svg>
+    <figcaption>Before: a navigation property touched inside the loop. After: fetched up front, in the same query.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"My integration test only showed 3 extra queries, so it's not really an N+1 problem."</b> N doesn't grow because the bug got worse — it was already 1-query-per-row from the start; a handful of test rows just makes it look small enough to ignore.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Does <code>Include()</code> always collapse this back to one query?"</b> Not always — multiple collection <code>Include()</code>s or certain query shapes can make EF Core split the work into several queries (query splitting) instead of one. It's still a world away from N+1 — a fixed, small number of queries instead of one per row — but "Include → always exactly 1 query" isn't a safe claim.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd look for a navigation property accessed inside a loop over the parent results — that's the N+1 signature. The fix is to fetch that related data in the same query it's needed, either with <code>.Include()</code> for the full related entity or a <code>Select</code> projection for just the shape the endpoint actually returns."</p>
+    <ul>
+      <li>N+1 signature <span class="hl hl-hot">→ a navigation property touched inside a loop</span> over its parent rows.</li>
+      <li><code>Include()</code> <span class="hl hl-basic">→ fetch the whole related entity eagerly</span>, in the same query, before the loop runs.</li>
+      <li><code>Select</code> projection <span class="hl hl-blue">→ fetch only the exact shape needed</span>, often lighter than the full graph.</li>
+      <li>Catch it early <span class="hl hl-teal">→ log or count queries in integration tests</span>, since small test data hides the bug completely.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>The request itself starts innocently: one query returns a list of <b>N</b> orders. The
+      bug lives in what happens next — building the response touches
+      <span class="hl hl-hot"><code>order.Customer.Name</code></span> for each order in the loop,
+      and because <code>Customer</code> was never loaded with the original query, EF Core's
+      change tracker lazily fires a brand-new query to fetch it, one order at a time. The endpoint
+      ends up making <b>1 + N</b> round trips to answer a request that only needed 1.</p>
+
+      <p>Both real fixes work by moving the related data into the <i>same</i> query as the list
+      itself. <code>.Include(o =&gt; o.Customer)</code> tells EF Core to bring the whole
+      <code>Customer</code> entity back alongside each order, eagerly, before the loop ever runs.
+      A <code>Select</code> projection does the same job more narrowly — it asks the database for
+      exactly the fields the endpoint needs (just <code>CustomerName</code>, say), which is often
+      the lighter option when the endpoint doesn't need the full related entity at all.</p>
+
+      <p>This is the same mechanism as <a href="../intermediate/17.html">Multiple Enumeration and
+      Side Effects</a> re-running a query unexpectedly — both are deferred-execution surprises
+      that only show up once something actually enumerates the source again. N+1 is that surprise
+      happening <i>N</i> times in a row, once per parent row.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> orders = <span class="kw">await</span> db.Orders.ToListAsync(); <span class="cx-cmt">// 1 query</span>
+
+<span class="kw">var</span> result = orders.Select(o =&gt; <span class="kw">new</span>
+{
+    o.Id,
+    CustomerName = o.Customer.Name <span class="cx-err">// ❌ lazy-loads Customer, once per order</span>
+}).ToList();</code></pre>
+      </div>
+      <p class="cx-note">The orders list is <b>one query</b> — the N+1 happens the moment
+      <code>o.Customer</code> is touched, <b>N</b> times over.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> orders = <span class="kw">await</span> db.Orders
+    .Include(o =&gt; o.Customer) <span class="cx-ok">// ✅ Customer fetched in the same query</span>
+    .ToListAsync();</code></pre>
+      </div>
+      <p class="cx-note"><code>Include()</code> is right when the endpoint genuinely needs the
+      <b>full</b> <code>Customer</code> entity, not just a field or two.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> result = <span class="kw">await</span> db.Orders
+    .Select(o =&gt; <span class="kw">new</span> { o.Id, CustomerName = o.Customer.Name }) <span class="cx-ok">// ✅ one SQL query, exact shape</span>
+    .ToListAsync();</code></pre>
+      </div>
+      <p class="cx-note">A projection is often <b>lighter</b> than <code>Include()</code> — it asks
+      the database for only the fields the response actually uses.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A list endpoint gets noticeably slower as the row count grows, with no error anywhere</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc22a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📈 rows up, latency up</text>
+              <text x="285" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">query count scales with N →</text>
+              <path d="M210,33 H330" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc22a)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">check the logs</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 way N+1 actually gets noticed — not a crash, just a response that gets proportionally slower as the table grows. Turning on query logging for one request is usually enough to see the same SQL statement repeated once per row.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Latency scaling with row count, no errors → suspect N+1 first.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> A code review spots a navigation property accessed inside a foreach, before it ships</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc22b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">👀 foreach + .Customer</text>
+              <text x="285" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">flag before merge →</text>
+              <path d="M210,33 H330" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc22b)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">add Include()</text>
+            </svg>
+          </div>
+          <p class="uc-what">Catching this before it reaches production is cheaper than catching it after — a navigation property dereferenced inside a loop over its parents is worth flagging in review every time, even when the current test data makes it look harmless.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A navigation property inside a loop is a review flag, not just a runtime symptom.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Adding <code>Include()</code> for every related entity, "just in case," on every query</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc22c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">📦 Include() everything</text>
+              <text x="285" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">over-fetches unused data →</text>
+              <path d="M210,33 H330" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc22c)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">bigger payload</text>
+            </svg>
+          </div>
+          <p class="uc-what">Over-correcting for N+1 by eagerly including every related entity on every query trades one performance problem for another — a heavier result set and more data transferred than the endpoint actually uses. A projection that returns only the fields the response needs is usually the better fix than a blanket <code>Include()</code>.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Fixing N+1 isn't "Include() everything" — match the fetch to what the endpoint actually returns.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>An "all orders" endpoint takes 40ms in staging with 10 rows, then times out against
+      production's 50,000 rows.</b> Enabling EF Core's query logging for a single request shows
+      one query for the order list, followed by one near-identical query per order fetching its
+      customer — the textbook N+1 signature. Adding <code>.Include(o =&gt; o.Customer)</code> (or
+      switching to a <code>Select</code> projection, if the endpoint only needs the customer's
+      name) collapses it back to a single round trip, independent of row count.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="21.html">← Scenario: Fast In-Memory, Slow Against the Database</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="23.html">Scenario: Predicting Output When Operator Order Changes →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

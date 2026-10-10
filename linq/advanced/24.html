@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Given a list of orders that needs deduplicating by a business rule — one order per (CustomerId, OrderDate) — which of these four approaches would you reach for?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: Distinct vs. DistinctBy vs. GroupBy vs. Comparer — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="Given a list of orders that needs deduplicating by a business rule — one order per (CustomerId, OrderDate) — which of these four approaches would you reach for?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: Distinct vs. DistinctBy vs. GroupBy vs. Comparer — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe; color:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: Distinct vs. DistinctBy vs. GroupBy vs. a Custom Equality Comparer</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ LINQ · Advanced · Should Know</div>
+    <h1>Deduping by <span class="hl hl-blue">two fields</span> — which of these four actually fits?</h1>
+    <p class="interview-q">"Given a list of orders that needs deduplicating by a business rule — say, one order per (CustomerId, OrderDate) combination — which of these four approaches would you reach for?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🧹 Four Ways to De-dup, One Right Fit</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>All four options can deduplicate the same list of orders by <code>(CustomerId, OrderDate)</code> — reaching for whichever one you remember first can mean writing a whole comparer class for a one-off rule, or losing information (like duplicate counts) you'll need two lines later.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Match the tool to what else the task needs: <code>DistinctBy</code> for a clean single derived key, <code>GroupBy</code> when you also need to know how many duplicates existed, a named comparer class when the same rule gets reused across several operators, and plain <code>Distinct</code> with an inline comparer only for a true one-off.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Pick by what you need besides the dedup — a count, reuse, or just a one-off key.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>DistinctBy(key)</code> <span class="rarrow">→</span> <b>cleanest</b> for one derived key</p>
+      <p class="rrow"><code>GroupBy().Select(First)</code> <span class="rarrow">→</span> <b>keeps the count</b> per group</p>
+      <p class="rrow">Named comparer class <span class="rarrow">→</span> <b>reused</b> across several operators</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>DistinctBy</code></b> is the one-liner. <b><code>GroupBy</code></b> is the one that remembers how many. A <b>named comparer</b> is the one worth writing once and reusing.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh24" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar24" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="14" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">4 WAYS TO DE-DUP ORDERS BY (CustomerId, OrderDate)</text>
+
+      <g filter="url(#sh24)"><rect x="150" y="24" width="340" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="48" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">One order per (CustomerId, OrderDate)</text>
+
+      <path d="M320,64 V80" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M90,80 H552" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M90,80 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar24)"/>
+      <path d="M244,80 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar24)"/>
+      <path d="M398,80 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar24)"/>
+      <path d="M552,80 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar24)"/>
+
+      <g filter="url(#sh24)"><rect x="20" y="100" width="140" height="70" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="90" y="122" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">Distinct()</text>
+      <text x="90" y="138" text-anchor="middle" font-size="9.5" fill="#5b6472">+ custom comparer</text>
+      <text x="90" y="152" text-anchor="middle" font-size="9.5" fill="#5b6472">class required</text>
+
+      <g filter="url(#sh24)"><rect x="174" y="100" width="140" height="70" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="244" y="122" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">DistinctBy(key)</text>
+      <text x="244" y="138" text-anchor="middle" font-size="9.5" fill="#5b6472">.NET 6+, tuple key</text>
+      <text x="244" y="152" text-anchor="middle" font-size="9.5" fill="#5b6472">no comparer class</text>
+
+      <g filter="url(#sh24)"><rect x="328" y="100" width="140" height="70" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="398" y="122" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">GroupBy + First()</text>
+      <text x="398" y="138" text-anchor="middle" font-size="9.5" fill="#5b6472">groups, not just</text>
+      <text x="398" y="152" text-anchor="middle" font-size="9.5" fill="#5b6472">a filter</text>
+
+      <g filter="url(#sh24)"><rect x="482" y="100" width="140" height="70" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8"/></g>
+      <text x="552" y="122" text-anchor="middle" font-size="11" font-weight="700" fill="#5b21b6">Named comparer</text>
+      <text x="552" y="138" text-anchor="middle" font-size="9.5" fill="#5b6472">reusable across</text>
+      <text x="552" y="152" text-anchor="middle" font-size="9.5" fill="#5b6472">several operators</text>
+
+      <text x="90" y="190" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">best: a true one-off rule</text>
+      <text x="244" y="190" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">best: single derived key</text>
+      <text x="398" y="190" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">best: need the count too</text>
+      <text x="552" y="190" text-anchor="middle" font-size="9.5" font-weight="700" fill="#5b21b6">best: rule reused elsewhere</text>
+
+      <text x="320" y="224" text-anchor="middle" font-size="11" fill="#5b6472">All four dedup the same list — pick by what you need besides the dedup itself.</text>
+    </svg>
+    <figcaption>Same dedup, four tools — the right one depends on whether you need a count, reuse, or just a quick key.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Distinct() can take a key selector like DistinctBy."</b> Plain
+    <code>Distinct()</code> only compares whole elements (or a full custom
+    <code>IEqualityComparer&lt;T&gt;</code>) — it has no key-selector overload; that convenience
+    belongs to <code>DistinctBy</code> specifically.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Which of these runs fastest?"</b> All four are roughly the same
+    O(n) hashing-based approach under the hood — the real difference isn't speed, it's what
+    information survives the dedup (a count, in <code>GroupBy</code>'s case) and how much
+    boilerplate it costs to express a multi-field rule.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"For a one-off multi-field key I'd reach for <code>DistinctBy</code> —
+    it's the cleanest one-liner since .NET 6. I'd only drop to <code>GroupBy</code> if I also
+    needed the duplicate count per group, and only write a named
+    <code>IEqualityComparer&lt;T&gt;</code> class if that same equality rule needs to be reused
+    across more than one LINQ operator in the codebase."</p>
+    <ul>
+      <li><code>DistinctBy(key)</code> <span class="hl hl-basic">→ the cleanest one-liner</span> for a single derived key, no class needed.</li>
+      <li><code>GroupBy().Select(g =&gt; g.First())</code> <span class="hl hl-inter">→ use when you also need the per-group count</span>, not just the first item.</li>
+      <li>Named comparer class <span class="hl hl-teal">→ worth it when reused</span> across <code>Distinct</code>/<code>GroupBy</code>/<code>Join</code>/set operators.</li>
+      <li>Plain <code>Distinct()</code> <span class="hl hl-blue">→ needs a comparer class</span> for anything beyond whole-element equality.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Distinct()</span> only ever compares whole elements using
+      <code>Equals</code>/<code>GetHashCode</code>, or a custom
+      <code>IEqualityComparer&lt;T&gt;</code> passed in — it has no built-in way to say "equal by
+      just these two fields." Expressing the <code>(CustomerId, OrderDate)</code> rule through
+      <code>Distinct()</code> means writing a small class whose whole job is that one comparison.</p>
+
+      <p><span class="hl hl-basic">DistinctBy</span> (.NET 6+) removes that ceremony entirely — a
+      key selector like <code>o =&gt; (o.CustomerId, o.OrderDate)</code> says the same rule in one
+      line, using a tuple as the key, with no comparer class in sight. It's the right default for
+      a single derived key with no other requirements.</p>
+
+      <p><span class="hl hl-inter">GroupBy</span> earns its place specifically when the dedup
+      needs to know <i>how many</i> duplicates existed — grouping keeps the full group around, so
+      <code>g.Count()</code> is available alongside <code>g.First()</code>, something neither
+      <code>Distinct()</code> nor <code>DistinctBy</code> can answer after the fact, since both
+      have already thrown the extra rows away by the time they return. A
+      <span class="hl hl-teal">named comparer class</span> is worth the extra file specifically
+      when that same equality rule needs to be reused across <code>Distinct</code>,
+      <code>GroupBy</code>, <code>Join</code>, or a set operator elsewhere in the codebase — one
+      definition instead of restating the rule as an inline lambda every time.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> deduped = orders.DistinctBy(o =&gt; (o.CustomerId, o.OrderDate));
+<span class="cx-ok">// ✅ one line, tuple key, no comparer class</span></code></pre>
+      </div>
+      <p class="cx-note">The <b>cleanest</b> option for a single derived key — this is the first
+      thing to reach for.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> grouped = orders
+    .GroupBy(o =&gt; (o.CustomerId, o.OrderDate))
+    .Select(g =&gt; <span class="kw">new</span> { First = g.First(), DuplicateCount = g.Count() });
+<span class="cx-ok">// ✅ keeps the duplicate count — Distinct/DistinctBy can't answer this</span></code></pre>
+      </div>
+      <p class="cx-note">Reach for <code>GroupBy</code> only when the <b>count</b> itself matters,
+      not just the first match.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">class</span> OrderKeyComparer : IEqualityComparer&lt;Order&gt;
+{
+    <span class="kw">public bool</span> Equals(Order a, Order b) =&gt;
+        a.CustomerId == b.CustomerId &amp;&amp; a.OrderDate == b.OrderDate;
+    <span class="kw">public int</span> GetHashCode(Order o) =&gt; HashCode.Combine(o.CustomerId, o.OrderDate);
+}
+<span class="cx-ok">// ✅ reusable across Distinct(), GroupBy(), Join(), and the set operators</span></code></pre>
+      </div>
+      <p class="cx-note">Worth writing once this rule is needed by <b>more than one</b> operator
+      in the codebase.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A one-off report just needs one order per customer/date combination, nothing else</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc24a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">DistinctBy(tuple key)</text>
+              <text x="285" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">one line, no class →</text>
+              <path d="M210,33 H330" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc24a)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">done</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario in practice: a single derived key, used once. <code>DistinctBy</code> says exactly that in one line, with no comparer class to maintain for a rule that's only used here.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Single key, used once → DistinctBy, no class needed.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> The business also wants to flag customers who placed more than one order on the same date</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc24b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">GroupBy keeps the group</text>
+              <text x="285" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">g.Count() available →</text>
+              <path d="M210,33 H330" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc24b)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">flag duplicates</text>
+            </svg>
+          </div>
+          <p class="uc-what">The moment "how many duplicates" becomes part of the requirement, <code>Distinct</code>/<code>DistinctBy</code> can't answer it — they've already discarded the extra rows. <code>GroupBy</code> keeps the whole group around specifically so <code>g.Count()</code> is still there to check.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need the duplicate count → GroupBy, not Distinct/DistinctBy.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#7c3aed">
+          <div class="uc-sit"><span class="uc-flag">3</span> The same (CustomerId, OrderDate) equality rule is needed for Distinct, a Join, and a set-difference check elsewhere in the same service</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc24c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#7c3aed"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#5b21b6">rule used in 3+ places</text>
+              <text x="285" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#5b21b6">write it once →</text>
+              <path d="M210,33 H330" stroke="#7c3aed" stroke-width="1.6" fill="none" marker-end="url(#arUc24c)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#5b21b6">named comparer</text>
+            </svg>
+          </div>
+          <p class="uc-what">Restating the same inline lambda key in three different places is a maintenance risk — if the business rule changes, all three call sites have to be found and updated together. A single named <code>IEqualityComparer&lt;T&gt;</code> class fixes that: one definition, reused everywhere the rule applies.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same rule, multiple operators → a named comparer class pays for itself.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A nightly reconciliation job needs to collapse duplicate order rows down to one per
+      customer/date, and separately report how many duplicates it found for an audit log.</b>
+      <code>DistinctBy</code> alone can't answer "how many" — it's already discarded the extras by
+      the time it returns. <code>GroupBy(o =&gt; (o.CustomerId, o.OrderDate))</code> followed by
+      <code>Select(g =&gt; new { First = g.First(), Count = g.Count() })</code> keeps both answers
+      in one pass.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="23.html">← Scenario: Predicting Output When Operator Order Changes</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="25.html">Scenario: Finding the Highest-Paid Employee in Each Department →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -1452,4 +1452,119 @@ window.NAV_INDEX = {
       }
     ]
   },
+  "linq/basic": {
+    track: "LINQ",
+    trackIcon: "🔗",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1–10",
+        items: [
+          { n: 1, file: "1.html", short: "What Is LINQ?", title: "What Is LINQ?", tail: "query syntax vs. method syntax", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Select vs SelectMany", title: "Select vs. SelectMany", tail: "one result per item, or flattened?", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Where vs First(pred)", title: "Where vs. First(predicate)", tail: "same result, so why pick one?", priority: "⭐" },
+          { n: 4, file: "4.html", short: "First/Single family", title: "First vs. FirstOrDefault vs. Single vs. SingleOrDefault", tail: "zero, one, or many matches", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Any vs Count() > 0", title: "Any vs. Count() > 0", tail: "the classic existence-check pitfall", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Any vs All vs Contains", title: "Any vs. All vs. Contains", tail: "three different existence checks", priority: "⭐" },
+          { n: 7, file: "7.html", short: "Where vs OfType", title: "Where vs. OfType", tail: "filter, or filter-and-cast?", priority: "⭐" },
+          { n: 8, file: "8.html", short: "OrderBy/ThenBy", title: "OrderBy vs. OrderByDescending vs. ThenBy", tail: "sorting with a tiebreaker", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Skip vs Take", title: "Skip vs. Take", tail: "the building blocks of paging", priority: "⭐" },
+          { n: 10, file: "10.html", short: "Distinct vs DistinctBy", title: "Distinct vs. DistinctBy", tail: "dedupe the whole item, or just a key", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11–14",
+        items: [
+          { n: 11, file: "11.html", short: "ToList/ToArray/ToDict", title: "ToList vs. ToArray vs. ToDictionary", tail: "materializing a sequence", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Cast vs OfType", title: "Cast vs. OfType", tail: "throw on a mismatch, or skip it?", priority: "🧠" },
+          { n: 13, file: "13.html", short: "Min/Max/Sum/Avg/Count", title: "Min vs. Max vs. Sum vs. Average vs. Count", tail: "five aggregates, three different empty-sequence behaviors", priority: "🔥" },
+          { n: 14, file: "14.html", short: "Anonymous Types", title: "Anonymous Types and Projection", tail: "shaping a query's result on the fly", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "linq/intermediate": {
+    track: "LINQ",
+    trackIcon: "🔗",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1–10",
+        items: [
+          { n: 1, file: "1.html", short: "Query vs Method Syntax", title: "Query Syntax vs. Method Syntax", tail: "when to use each", priority: "⭐" },
+          { n: 2, file: "2.html", short: "Deferred vs Immediate", title: "Deferred vs. Immediate Execution", tail: "when does a query actually run?", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Lazy Eval vs Materialize", title: "Lazy Evaluation vs. Materialization", tail: "a plan, or a result?", priority: "🔥" },
+          { n: 4, file: "4.html", short: "IEnumerable vs IQueryable", title: "IEnumerable<T> vs. IQueryable<T>", tail: "running code, or building an expression tree?", priority: "🔥" },
+          { n: 5, file: "5.html", short: "GroupBy vs ToLookup", title: "GroupBy vs. ToLookup", tail: "deferred regrouping, or a built structure?", priority: "⭐" },
+          { n: 6, file: "6.html", short: "Join vs GroupJoin", title: "Join vs. GroupJoin", tail: "a flat row per match, or nested groups?", priority: "⭐" },
+          { n: 7, file: "7.html", short: "Inner vs Left Outer Join", title: "Inner Join vs. Left Outer Join", tail: "faking LEFT JOIN with DefaultIfEmpty()", priority: "🔥" },
+          { n: 8, file: "8.html", short: "SelectMany vs Join", title: "SelectMany vs. Join", tail: "a navigation, or a correlated key?", priority: "⭐" },
+          { n: 9, file: "9.html", short: "Zip vs Join", title: "Zip vs. Join", tail: "paired by position, not by key", priority: "🧠" },
+          { n: 10, file: "10.html", short: "Aggregate vs Sum/Count", title: "Aggregate vs. Sum/Count", tail: "when the named aggregates aren't enough", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11–17",
+        items: [
+          { n: 11, file: "11.html", short: "Append/Prepend", title: "Append/Prepend vs. Collection Modification", tail: "a new sequence, never a mutation", priority: "🧠" },
+          { n: 12, file: "12.html", short: "Concat/Union/Intersect", title: "Concat vs. Union vs. Intersect vs. Except", tail: "four ways to combine two sequences", priority: "⭐" },
+          { n: 13, file: "13.html", short: "SequenceEqual", title: "SequenceEqual vs. Set Equality", tail: "order-sensitive, on purpose", priority: "🧠" },
+          { n: 14, file: "14.html", short: "ToDictionary vs ToLookup", title: "ToDictionary vs. ToLookup", tail: "one key, one value or many?", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Equality Comparers", title: "Equality Comparers and Custom Equality", tail: "how GroupBy/Distinct/Join decide \"equal\"", priority: "⭐" },
+          { n: 16, file: "16.html", short: "let/into Query Syntax", title: "let, into and Grouping in Query Syntax", tail: "the query-syntax-only keywords", priority: "🧠" },
+          { n: 17, file: "17.html", short: "Multiple Enumeration", title: "Multiple Enumeration and Side Effects", tail: "why a query that looks like it ran once, ran twice", priority: "🔥" }
+        ]
+      }
+    ]
+  },
+  "linq/advanced": {
+    track: "LINQ",
+    trackIcon: "🔗",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1–10",
+        items: [
+          { n: 1, file: "1.html", short: "Func<T> vs Expression", title: "Func<T> vs. Expression<Func<T>>", tail: "compiled code, or data describing code?", priority: "🔥" },
+          { n: 2, file: "2.html", short: "How Providers Work", title: "How LINQ Providers Work", tail: "from expression tree to IQueryProvider", priority: "⭐" },
+          { n: 3, file: "3.html", short: "LINQ-to-Objects/Entities", title: "LINQ-to-Objects vs. LINQ-to-Entities", tail: "same syntax, completely different execution", priority: "🔥" },
+          { n: 4, file: "4.html", short: "LINQ Expressions → SQL", title: "How LINQ Expressions Become SQL", tail: "providers, generated SQL, and the query plan", priority: "⭐" },
+          { n: 5, file: "5.html", short: "Client vs Server-Side", title: "Client-Side vs. Server-Side Evaluation", tail: "what actually runs where", priority: "🔥" },
+          { n: 6, file: "6.html", short: "AsEnumerable/AsQueryable", title: "AsEnumerable vs. AsQueryable", tail: "freezing the SQL, or faking a provider", priority: "⭐" },
+          { n: 7, file: "7.html", short: "Untranslatable Methods", title: "Why EF Core Cannot Translate Certain C# Methods", tail: "and why .ToList() isn't the fix", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Premature ToList()", title: "Premature Materialization and ToList() Placement", tail: "where in the chain it goes matters", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Query Round Trips", title: "Query Execution and Database Round Trips", tail: "one terminal call, one trip — usually", priority: "⭐" },
+          { n: 10, file: "10.html", short: "Include vs Select", title: "Include vs. Projection Using Select", tail: "the whole graph, or just the shape you need", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11–20",
+        items: [
+          { n: 11, file: "11.html", short: "N+1 Queries", title: "N+1 Queries and Navigation Properties", tail: "an innocent foreach, hundreds of queries", priority: "🔥" },
+          { n: 12, file: "12.html", short: "Offset vs Keyset Paging", title: "Offset Pagination vs. Keyset Pagination", tail: "Skip/Take vs. seeking by the last key", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Async LINQ Operators", title: "Async LINQ: ToListAsync, AnyAsync, CountAsync", tail: "EF Core's own async terminal operators", priority: "🔥" },
+          { n: 14, file: "14.html", short: "IAsyncEnumerable<T>", title: "IAsyncEnumerable<T> vs. IEnumerable<T>", tail: "awaiting between elements as they stream in", priority: "🧠" },
+          { n: 15, file: "15.html", short: "Streaming vs Buffering", title: "Streaming vs. Buffering Large Results", tail: "constant memory, or the whole result set at once", priority: "⭐" },
+          { n: 16, file: "16.html", short: "PLINQ / AsParallel", title: "PLINQ: AsParallel, Ordering, and Trade-offs", tail: "in-memory parallelism, not database parallelism", priority: "🧠" },
+          { n: 17, file: "17.html", short: "Modern LINQ Operators", title: "Modern LINQ Operators", tail: "Chunk, MaxBy, MinBy, CountBy, AggregateBy, and the new join operators", priority: "⭐" },
+          { n: 18, file: "18.html", short: "Scenario: SelectMany", title: "Scenario: Flattening Customers and Orders with SelectMany", tail: "", priority: "⭐" },
+          { n: 19, file: "19.html", short: "Scenario: First/Single", title: "Scenario: Choosing First/FirstOrDefault/Single/SingleOrDefault", tail: "", priority: "🔥" },
+          { n: 20, file: "20.html", short: "Scenario: Repeated Query", title: "Scenario: Diagnosing Repeated Queries from Deferred Execution", tail: "", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 21–28",
+        items: [
+          { n: 21, file: "21.html", short: "Scenario: Fast/Slow DB", title: "Scenario: Fast In-Memory, Slow Against the Database", tail: "", priority: "🔥" },
+          { n: 22, file: "22.html", short: "Scenario: N+1 Bug", title: "Scenario: Diagnosing an N+1 Query Problem", tail: "", priority: "🔥" },
+          { n: 23, file: "23.html", short: "Scenario: Operator Order", title: "Scenario: Predicting Output When Operator Order Changes", tail: "", priority: "⭐" },
+          { n: 24, file: "24.html", short: "Scenario: Distinct Choice", title: "Scenario: Distinct vs. DistinctBy vs. GroupBy vs. Comparer", tail: "", priority: "⭐" },
+          { n: 25, file: "25.html", short: "Scenario: Highest-Paid", title: "Scenario: Highest-Paid Employee Per Department", tail: "", priority: "⭐" },
+          { n: 26, file: "26.html", short: "Scenario: Untranslatable", title: "Scenario: Fixing an Untranslatable EF Core Query", tail: "", priority: "🔥" },
+          { n: 27, file: "27.html", short: "Scenario: Millions of Rows", title: "Scenario: Processing Millions of Records", tail: "", priority: "⭐" },
+          { n: 28, file: "28.html", short: "Scenario: Custom Where", title: "Scenario: Writing Your Own Custom LINQ Extension Method", tail: "", priority: "⭐" }
+        ]
+      }
+    ]
+  },
 };

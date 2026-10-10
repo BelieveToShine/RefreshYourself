@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="You need to process millions of rows from a database table — what are your real options, and what are the trade-offs?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: Processing Millions of Records — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="You need to process millions of rows from a database table — what are your real options, and what are the trade-offs?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: Processing Millions of Records — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe; color:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: Processing Millions of Records — Buffering, Streaming, Batching, and Database-Side Aggregation</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ LINQ · Advanced · Should Know</div>
+    <h1>Millions of rows — <span class="hl hl-hot">buffer them all</span>, or let the database do the work?</h1>
+    <p class="interview-q">"You need to process millions of rows from a database table — what are your real options, and what are the trade-offs?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🚚 Millions of Rows, Four Real Options</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>The obvious approach — <code>.ToList()</code> the whole table, then process it in memory — either crashes with an out-of-memory exception or hammers the server with a single enormous allocation, and it gets strictly worse as the table grows, not better.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Stream instead of buffering for constant memory use, batch into bounded chunks (keyset-paginated, not offset, at this scale) when the work has to happen row by row, and push the computation itself into the database with <code>Sum</code>/<code>Count</code>/<code>GroupBy</code>-style aggregation whenever the end goal is a number, not the raw rows.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Only pull across the wire what you actually need — rows, a batch, or just the answer.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Buffer everything <span class="rarrow">→</span> <b>one huge spike</b>, worst</p>
+      <p class="rrow">Stream / batch <span class="rarrow">→</span> <b>bounded memory</b>, scales</p>
+      <p class="rrow">Aggregate in the database <span class="rarrow">→</span> <b>least data moved</b>, best for a number</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> if the goal is <b>a sum or a count</b>, never pull the rows at all — let the database compute it and send back one number.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh27" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <text x="320" y="10" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">MILLIONS OF ROWS — FOUR WAYS TO PROCESS THEM</text>
+
+      <g filter="url(#sh27)"><rect x="25" y="22" width="130" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="90" y="46" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">&#129532; Buffer everything</text>
+
+      <g filter="url(#sh27)"><rect x="179" y="22" width="130" height="40" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="244" y="46" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">&#128260; Stream</text>
+
+      <g filter="url(#sh27)"><rect x="333" y="22" width="130" height="40" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="398" y="46" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">&#128230; Batch in chunks</text>
+
+      <g filter="url(#sh27)"><rect x="487" y="22" width="130" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="552" y="46" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">&#128202; Aggregate in DB</text>
+
+      <path d="M25,200 H617" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+
+      <g filter="url(#sh27)"><rect x="60" y="80" width="60" height="120" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <g filter="url(#sh27)"><rect x="214" y="120" width="60" height="80" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <g filter="url(#sh27)"><rect x="368" y="155" width="60" height="45" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <g filter="url(#sh27)"><rect x="522" y="182" width="60" height="18" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+
+      <text x="90" y="216" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">huge memory spike</text>
+      <text x="90" y="230" text-anchor="middle" font-size="9.5" fill="#991b1b">(worst, can crash)</text>
+
+      <text x="244" y="216" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">constant low memory</text>
+      <text x="244" y="230" text-anchor="middle" font-size="9.5" fill="#92400e">(better)</text>
+
+      <text x="398" y="216" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">bounded memory,</text>
+      <text x="398" y="230" text-anchor="middle" font-size="9.5" fill="#1d4ed8">scales safely</text>
+
+      <text x="552" y="216" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">least data moved</text>
+      <text x="552" y="230" text-anchor="middle" font-size="9.5" fill="#166534">(best for a number)</text>
+    </svg>
+    <figcaption>Same millions of rows, four ways to handle them — the bars are relative memory/data moved, shortest wins.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Streaming and batching are basically the same thing."</b> Streaming
+    processes one row at a time with no chunk boundary at all; batching deliberately groups rows
+    into fixed-size chunks, which matters when the processing itself needs to happen in bounded
+    units (a bulk update per batch, a transaction per chunk), not row by row.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why keyset pagination instead of Skip/Take for batching at this
+    scale?"</b> <code>Skip(n)</code> still has to scan and discard the first <code>n</code> rows
+    every single call, so it gets slower as the offset grows. Keyset pagination seeks directly
+    from the last key seen in the previous batch — the Offset Pagination vs. Keyset Pagination
+    page covers this trade-off in full.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I wouldn't buffer the whole table into memory — I'd stream it for
+    constant memory use, or batch it into bounded, keyset-paginated chunks if the work needs to
+    happen in units. And if the actual goal is a sum or a count, I'd push that computation into
+    the database itself instead of pulling millions of rows across the wire just to aggregate
+    them client-side."</p>
+    <ul>
+      <li>Buffering everything <span class="hl hl-hot">→ one huge memory spike</span>, the worst option at this scale.</li>
+      <li>Streaming <span class="hl hl-basic">→ constant, low memory</span>, one row at a time, no chunk boundary.</li>
+      <li>Batching <span class="hl hl-blue">→ bounded chunks</span>, keyset-paginated to avoid offset's re-scan cost.</li>
+      <li>Database-side aggregation <span class="hl hl-teal">→ least data transferred of all</span>, when the goal is a number, not the rows.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-hot">Buffering</span> — a plain <code>.ToList()</code> over millions
+      of rows — allocates space for the entire result set at once, which is exactly why it's the
+      option most likely to run out of memory or blow past a reasonable timeout. <span
+      class="hl hl-basic">Streaming</span> fixes the memory side of that by never materializing
+      more than one row (or a small internal buffer) at a time — see
+      <a href="15.html">Streaming vs. Buffering Large Results</a> for the full mechanics of why an
+      <code>IEnumerable&lt;T&gt;</code> source can do this and a materialized list can't.</p>
+
+      <p><span class="hl hl-blue">Batching</span> is a different axis from streaming, not a
+      stronger version of it — it deliberately groups rows into fixed-size chunks because the
+      processing itself needs a unit boundary, like a bulk update per batch or a transaction per
+      chunk, not because streaming alone isn't fast enough. At millions of rows, the batching
+      technique matters too: a <code>Skip(n).Take(pageSize)</code> loop re-scans and discards the
+      first <code>n</code> rows on every call, getting slower as <code>n</code> grows — keyset
+      pagination (seeking from the last key seen) avoids that entirely, see
+      <a href="12.html">Offset Pagination vs. Keyset Pagination</a>.</p>
+
+      <p><span class="hl hl-teal">Database-side aggregation</span> is the option that doesn't
+      transfer the rows at all — a <code>Sum</code>, <code>Count</code>, or
+      <code>GroupBy</code>-with-aggregate query translates into SQL that computes the answer on
+      the server and sends back one number (or one row per group), instead of millions of rows
+      crossing the network just to be summed client-side. Whenever the actual end goal is a
+      computed value rather than the raw rows themselves, this is strictly less work than any of
+      the other three options.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">await foreach</span> (<span class="kw">var</span> order <span class="kw">in</span> db.Orders.AsAsyncEnumerable())
+{
+    Process(order); <span class="cx-ok">// ✅ one row in memory at a time</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Streaming keeps memory <b>constant</b>, independent of table size.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">int</span> lastId = <span class="num">0</span>;
+<span class="kw">while</span> (<span class="kw">true</span>)
+{
+    <span class="kw">var</span> batch = <span class="kw">await</span> db.Orders
+        .Where(o =&gt; o.Id &gt; lastId) <span class="cx-ok">// ✅ keyset — no offset re-scan</span>
+        .OrderBy(o =&gt; o.Id).Take(<span class="num">1000</span>).ToListAsync();
+    <span class="kw">if</span> (batch.Count == <span class="num">0</span>) <span class="kw">break</span>;
+    ProcessBatch(batch);
+    lastId = batch[^<span class="num">1</span>].Id;
+}</code></pre>
+      </div>
+      <p class="cx-note">Bounded chunks, seeking from the <b>last key</b> instead of an offset
+      that keeps growing.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> totalsByRegion = <span class="kw">await</span> db.Orders
+    .GroupBy(o =&gt; o.Region)
+    .Select(g =&gt; <span class="kw">new</span> { g.Key, Total = g.Sum(o =&gt; o.Amount) })
+    .ToListAsync(); <span class="cx-ok">// ✅ the database sums — one row per region comes back</span></code></pre>
+      </div>
+      <p class="cx-note">Millions of rows never leave the database — only the <b>computed
+      totals</b> do.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> The end goal is a dashboard number — a total, a count, an average — not the individual rows</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc27a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">GroupBy().Sum() in SQL</text>
+              <text x="285" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">rows never leave DB →</text>
+              <path d="M210,33 H330" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc27a)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">one number back</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the option that beats the other three outright, not just a trade-off among equals: if the answer is a computed value, let the database compute it. There's no reason for millions of rows to cross the network at all.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need a number, not the rows → aggregate in the database, every time.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> Every row genuinely needs individual processing — sent to an external API, written to a file, transformed and re-saved</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc27b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">per-row work needed</text>
+              <text x="285" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">stream or batch →</text>
+              <path d="M210,33 H330" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc27b)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">bounded memory</text>
+            </svg>
+          </div>
+          <p class="uc-what">When the rows themselves have to be touched, pick streaming for simple one-row-at-a-time work, or keyset-paginated batching when the work needs a chunk boundary (a transaction per batch, a bulk call per chunk) — either way, memory stays bounded as the table grows.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Real per-row work → stream or batch, never buffer the whole table.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A nightly job that worked fine for months suddenly throws an out-of-memory exception</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc27c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">table grew past memory</text>
+              <text x="285" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">.ToList() finally breaks →</text>
+              <path d="M210,33 H330" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc27c)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">OutOfMemoryException</text>
+            </svg>
+          </div>
+          <p class="uc-what">Buffering "worked" for a long time simply because the table was small enough — it was never actually safe, just not yet tested against real scale. The fix is switching to streaming or batching, not raising the memory limit and hoping the table stops growing.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A job that "always worked" until now is a sign buffering was never the right choice, just untested at scale.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A nightly job recalculates total revenue per region across tens of millions of order
+      rows, and a separate job re-exports every individual order to a partner system.</b> The
+      revenue job should never pull a single order row — <code>GroupBy(o =&gt;
+      o.Region).Select(g =&gt; g.Sum(o =&gt; o.Amount))</code> gets the database to compute it
+      directly. The export job genuinely needs every row, so it streams or keyset-batches through
+      the table instead of loading it all into memory at once.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="26.html">← Scenario: Fixing an Untranslatable EF Core Query</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="28.html">Scenario: Writing Your Own Custom LINQ Extension Method →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

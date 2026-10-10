@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Why is a Select with a side effect dangerous inside a deferred query?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Multiple Enumeration and Side Effects — LINQ Intermediate — RefreshYourself">
+<meta property="og:description" content="Why is a Select with a side effect dangerous inside a deferred query?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Multiple Enumeration and Side Effects — LINQ Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Multiple Enumeration and Side Effects</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 LINQ · Intermediate · Must Know</div>
+    <h1>Multiple Enumeration and Side Effects — <span class="hl hl-hot">why a query that looks like it ran once, ran twice</span></h1>
+    <p class="interview-q">"Why is a <code>Select</code> with a side effect — a counter, logging, an API call — dangerous inside a deferred query?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">🔁 Multiple Enumeration</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Checking <code>query.Any()</code> to validate results, then enumerating the same query again in a <code>foreach</code>, looks like it ran once — but a deferred LINQ query re-executes its entire pipeline on every single enumeration, so any side effect inside it fires once per enumeration, not once per item overall.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Materialize the query once with <code>ToList()</code>/<code>ToArray()</code> before anything with a side effect runs more than once, so the pipeline — and whatever it does — runs exactly one time.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Enumerated twice → side effect runs twice.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Multiple enumeration = <b>"the same query re-runs its whole pipeline every time something enumerates it."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <code>Any()</code> then <code>foreach</code> on the same un-materialized query → <b>two</b> full runs, not one.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shL17" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arL17" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arL17Rose" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.3">⏱ TIME — SAME QUERY, TWO ENUMERATIONS</text>
+
+      <path d="M40,40 H600" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+      <path d="M592,34 L600,40 L592,46" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+
+      <g filter="url(#shL17)"><rect x="40" y="56" width="220" height="40" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="150" y="73" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">var q = items.Select(x =&gt;</text>
+      <text x="150" y="87" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">{ counter++; return x; })</text>
+
+      <text x="150" y="112" text-anchor="middle" font-size="10" fill="#5b6472">defined, not enumerated yet — counter = 0</text>
+
+      <path d="M160,44 V56" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+
+      <path d="M300,40 V56" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arL17Rose)"/>
+      <g filter="url(#shL17)"><rect x="300" y="56" width="140" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="370" y="73" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">q.Any()</text>
+      <text x="370" y="87" text-anchor="middle" font-size="9.5" fill="#991b1b">1st enumeration</text>
+
+      <path d="M370,96 V112" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arL17Rose)"/>
+      <g filter="url(#shL17)"><rect x="300" y="112" width="140" height="36" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="370" y="135" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">counter = 3</text>
+
+      <path d="M500,40 V56" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arL17Rose)"/>
+      <g filter="url(#shL17)"><rect x="500" y="56" width="120" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="560" y="73" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">foreach(q)</text>
+      <text x="560" y="87" text-anchor="middle" font-size="9.5" fill="#991b1b">2nd enumeration</text>
+
+      <path d="M560,96 V112" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arL17Rose)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+      <g filter="url(#shL17)"><rect x="490" y="112" width="140" height="44" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="560" y="134" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">😮 counter = 6</text>
+      <text x="560" y="148" text-anchor="middle" font-size="9.5" fill="#5b6472">doubled, not 3 items</text>
+
+      <text x="320" y="190" text-anchor="middle" font-size="11.5" fill="#5b6472">Each enumeration re-runs the whole Select — the counter++ side effect fires every single time</text>
+      <text x="320" y="210" text-anchor="middle" font-size="10.5" fill="#94a3b8">Fix: materialize once with ToList() before Any()/foreach — then counter ends at 3, correctly</text>
+    </svg>
+    <figcaption>3 items, enumerated twice — the side effect inside <code>Select</code> runs 6 times, not 3.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Looks like it ran once" is not the same as "it ran once."</b> Calling <code>query.Any()</code> to check for results, then enumerating the same un-materialized query again in a <code>foreach</code>, independently re-runs the whole pipeline both times — a side effect inside <code>Select</code> fires on both passes, not just the second one.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Does <code>ToList()</code> always fix this?"</b> Yes for this specific problem — materializing once with <code>ToList()</code>/<code>ToArray()</code> runs the pipeline exactly once, so the side effect fires exactly once per item. It's a separate decision from performance, though: materializing early against an <code>IQueryable</code> can mean losing provider-side translation, which is its own, different pitfall.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A deferred LINQ query re-runs its whole pipeline every time it's enumerated — so a <code>Select</code> with a side effect like <code>counter++</code> fires once per enumeration, not once overall. Checking <code>Any()</code> and then looping over the same un-materialized query counts as two enumerations, and the side effect runs twice."</p>
+    <ul>
+      <li>Deferred query <span class="hl hl-hot">→ re-executes the pipeline on every enumeration</span>, nothing is cached.</li>
+      <li>Side effect inside <code>Select</code>/<code>Where</code> <span class="hl hl-inter">→ runs once per enumeration</span>, not once per item overall.</li>
+      <li>Fix <span class="hl hl-basic">→ materialize once with <code>ToList()</code>/<code>ToArray()</code></span> before enumerating more than once.</li>
+      <li>Common trigger <span class="hl hl-blue">→ checking <code>Any()</code>/<code>Count()</code> then looping the same query again</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <span class="hl hl-blue">deferred</span> LINQ query is a plan, not a stored result — every
+      time something enumerates it (<code>foreach</code>, <code>Any()</code>, <code>Count()</code>,
+      <code>ToList()</code>, another <code>foreach</code>...), the whole chain of
+      <code>Where</code>/<code>Select</code>/etc. runs again from the source, from scratch. That's
+      fine when every step is a pure calculation — running it twice gives the same answer twice. It
+      stops being fine the moment a step has a <span class="hl hl-hot">side effect</span>: a counter
+      increment, a log line, an API call, a database write.</p>
+
+      <p>The classic trigger is validating before using: calling <code>query.Any()</code> to check
+      "is there anything to process," then running a separate <code>foreach</code> over the exact
+      same query variable to actually process it. Both calls look like they're working with "the
+      query's result," but each one is an independent enumeration that reruns every
+      <code>Select</code>/<code>Where</code> in the chain — including whatever side effect lives
+      inside them.</p>
+
+      <p>The fix is to decide, once, when the pipeline should actually run: call
+      <code>ToList()</code> or <code>ToArray()</code> right after building the query, then do every
+      check and every loop against that materialized list instead of the original query variable.
+      The side effect then runs exactly once per item, because the pipeline itself only ran once.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">int</span> counter = <span class="num">0</span>;
+<span class="kw">var</span> query = items.Select(x =&gt; { counter++; <span class="kw">return</span> x; });   <span class="cx-cmt">// not run yet</span>
+
+<span class="kw">if</span> (query.Any())        <span class="cx-err">// 1st enumeration — counter now 3</span>
+{
+    <span class="kw">foreach</span> (<span class="kw">var</span> x <span class="kw">in</span> query)   <span class="cx-err">// 2nd enumeration — counter now 6, not 3</span>
+        Process(x);
+}</code></pre>
+      </div>
+      <p class="cx-note">Same query variable, <b>two full enumerations</b> — the side effect doubles.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">int</span> counter = <span class="num">0</span>;
+<span class="kw">var</span> results = items.Select(x =&gt; { counter++; <span class="kw">return</span> x; }).ToList();   <span class="cx-ok">// runs once here</span>
+
+<span class="kw">if</span> (results.Any())       <span class="cx-ok">// checking a List&lt;T&gt;, no re-run</span>
+{
+    <span class="kw">foreach</span> (<span class="kw">var</span> x <span class="kw">in</span> results)   <span class="cx-ok">// looping a List&lt;T&gt;, no re-run</span>
+        Process(x);
+}
+Console.WriteLine(counter);   <span class="cx-ok">// ✅ 3 — exactly once per item</span></code></pre>
+      </div>
+      <p class="cx-note"><code>ToList()</code> <b>fixes the count</b> by running the pipeline exactly once, up front.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> Validate with <code>Any()</code>, then process the same query in a <code>foreach</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">Any() THEN foreach — SAME QUERY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">query.Any()</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc17a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">foreach(query) 😮</text>
+            </svg>
+          </div>
+          <p class="uc-what">The single most common way this bug ships: a null/empty guard that
+          calls <code>Any()</code>, then a <code>foreach</code> right after it over the same
+          un-materialized query — doubling any API call, log line, or counter inside the pipeline.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Any() + foreach on the same query → materialize first, or it runs twice.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Debug logging inside a Select bound to something that re-reads it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">BOUND TO A VIEW THAT RE-READS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">📝 log in Select</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc17b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">logged 2-3x 😮</text>
+            </svg>
+          </div>
+          <p class="uc-what">A deferred query bound to a grid or view that reads it more than once
+          (e.g. once to measure a count, once to render rows) logs every line 2-3 times — not
+          because the logging code is wrong, but because the query it's attached to was never
+          materialized.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Duplicate log lines from one request → suspect multiple enumeration first.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> Counting processed items with a counter inside the Select itself</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">Count() AND ToList() ON SAME QUERY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">counter++ in Select</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc17c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">double-counted</text>
+            </svg>
+          </div>
+          <p class="uc-what">Calling both <code>query.Count()</code> and <code>query.ToList()</code>
+          separately on the same deferred query — instead of calling one and deriving the other from
+          its result — is another common double-enumeration source, and the counter ends up twice
+          the real item count.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need both a count and the items? Materialize once, then use .Count on the list.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A batch job builds a deferred query whose <code>Select</code> calls an external API per
+      item for enrichment, checks <code>query.Any()</code> to decide whether to proceed, then runs
+      a <code>foreach</code> over that same query to process it.</b> Every item's enrichment API
+      call fires twice, doubling API cost and risking rate limits — purely because the same
+      un-materialized query was enumerated twice, not because of anything wrong with the enrichment
+      logic itself.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="16.html">← let, into and Grouping in Query Syntax</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Intermediate</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -40,7 +40,7 @@ not a per-page feature — read this before touching `assets/site.js` or adding 
   literal `<`/`&` (e.g. `List<T>`). Never insert index text unescaped.
 - **Icons:** `iconFor()` maps `item.track` to an emoji; every track string in `search-index.js`
   needs an entry (C#, OOP, .NET, Web API, EF Core, SQL, Azure, AWS, AI, React, Angular, DSA,
-  Python, JavaScript, HTML & CSS). A new track must be added there or its results show a generic 📄.
+  Python, JavaScript, HTML & CSS, LINQ 🔗). A new track must be added there or its results show a generic 📄.
 
 ## The one rule that keeps this working
 

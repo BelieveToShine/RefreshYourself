@@ -3,31 +3,38 @@
 **Start here for anything LINQ-related.** See [`docs/superpowers/specs/README.md`](../README.md)
 for what this file is and the process for keeping it in sync with the live pages.
 
-## Status — Phases 1–6 complete, roadmap-only, 0/59 pages written
+## Status — Phases 1–7 complete, all 59 pages written
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): 8 concept groups, sourced from
   the user's own detailed proposed roadmap (already organized into 3 tiers + a scenario section),
   plus this track's own light Phase-2 gap-hunt (3 small additions, each folded into an existing
   page rather than added as a new one).
 - **Phases 2–6** — [`roadmap.md`](roadmap.md): reviewed (4 merges, 1 exclusion — see its own
-  Phase 2 section for the reasoning on each), grouped into 58 final pages, tiered by **interview
-  depth** (not difficulty), and given an interview-priority tag.
-- **Phase 6 wiring done at Phase 1**, per [specs/README.md](../README.md)'s mandate —
-  `linq/roadmap.html` and the root `index.html` tile's `roadmap-badge` exist and resolve, plus a
-  minimal `linq/index.html` and the three tier `index.html` pages (all rows `planned`, none
-  written) so every link from the homepage tile actually resolves rather than 404ing. The root
-  tile itself stays `tile soon`/"Coming soon" until Phase 7 actually finishes — only the badge and
-  the tier-stub pages exist so far.
-- **Phase 7 — not started.** Awaiting the user's review of `roadmap.md` before any topic page
-  gets written.
+  Phase 2 section for the reasoning on each), grouped into 59 final pages (including one later
+  addendum — a custom-LINQ-extension-method scenario), tiered by **interview depth** (not
+  difficulty), and given an interview-priority tag.
+- **Phase 7 — all 59 pages written** (Basic 14 / Intermediate 17 / Advanced 28, the last 11 of
+  which are the labeled "LINQ Scenarios" sub-block), using the same template as every other
+  completed track's Phase 7 (❓ Interview Question line → 🔥 Recall → 🧠 Visual → ⚠️ Trap → 🔄
+  Follow-up → 🎯 Say-this → 📖 Explanation → 💻 Code → optional 🧭 Use Cases — see
+  [content-writing.md](../../rules/content-writing.md)). Every page's diagram was run through the
+  mandatory automated verification script (see
+  [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
+  and independently re-verified — all 59 confirmed `issueCount: 0`, zero genuine defects. Fully
+  wired into the shared site files: `assets/nav-index.js`, `assets/search-index.js`, the three
+  tier index pages, [`linq/roadmap.html`](../../../linq/roadmap.html), `linq/index.html`'s tier
+  cards, and the root `index.html` tile (no longer "Coming soon").
 
 ## The full roadmap, tier by tier
 
-See [`roadmap.md`](roadmap.md)'s Phase 6 tables for the complete, numbered list (59 rows: Basic
-14 / Intermediate 17 / Advanced 28, the last 11 of which are the "LINQ Scenarios" sub-block) — not
-re-duplicated here to avoid the two documents drifting out of sync while the roadmap is still
-under review. Once Phase 7 starts, this section will carry the same tier-by-tier table every
-other track's `overview.md` carries, mirrored from the live tier `index.html` pages.
+Live on each tier's own index page:
+[`linq/basic/index.html`](../../../linq/basic/index.html) (14, all written),
+[`linq/intermediate/index.html`](../../../linq/intermediate/index.html) (17, all written),
+[`linq/advanced/index.html`](../../../linq/advanced/index.html) (28, all written — the last 11
+are the "LINQ Scenarios" sub-block). See [`roadmap.md`](roadmap.md)'s Phase 6 tables for the
+full numbered list with the Phase 2 merge/exclusion reasoning behind each page's scope, and
+[`linq/roadmap.html`](../../../linq/roadmap.html) for the same 59 pages grouped by concept
+cluster instead of by tier.
 
 ## Where the roadmap came from
 
@@ -48,7 +55,7 @@ into pages, tier, prioritize, and produce the final numbered roadmap — see
   SQL/database-engine internals (index design, reading a query plan, isolation levels —
   `sql/`'s job). Every page that brushes against either boundary cross-links the existing page
   instead of re-teaching it.
-- **Scenario questions are a distinct, labeled sub-block inside Advanced** (pages 18–27, each
+- **Scenario questions are a distinct, labeled sub-block inside Advanced** (pages 18–28, each
   titled `Scenario: ...`), matching the exact convention already used on
   `react/advanced/14–18.html` and `angular/advanced/11–16.html` — not a fourth tier, not a
   separate top-level site section.
@@ -62,6 +69,19 @@ into pages, tier, prioritize, and produce the final numbered roadmap — see
 
 ## Known gaps
 
-- **All 59 pages** — Phase 7 hasn't started. Pending the user's review of `roadmap.md`'s merge/
-  exclusion/tier/priority decisions before any page gets written.
-- No independent diagram-verification sweep has run yet (nothing to verify — no pages written).
+None — all 59 pages are written and independently diagram-verified (all confirmed
+`issueCount: 0`, zero genuine defects). Expect a review/feedback pass once the user goes through
+it, same as every other track's first full pass.
+
+## Addendum 2026-10-10 — all 59 pages written and wired
+
+All 59 pages (Basic 14, Intermediate 17, Advanced 28) were written and independently verified,
+then wired into `assets/nav-index.js`, `assets/search-index.js`, the three tier index pages,
+`linq/roadmap.html`, `linq/index.html`'s tier-bulletin counts, and the root `index.html` tile
+(dropped `tile soon`/the "Coming soon" ribbon, tier pills are now real links). Two small drifts
+between the original planned-roadmap stub pages and the pages actually written were corrected
+during wiring, using the live page as ground truth: `advanced/11–20.html`'s 🔥 Must Know count is
+4 (not the stub's 3) and `advanced/21–28.html`'s is 3 (not the stub's 4); and several Advanced
+Scenario pages (19, 20, 22–27) were written with shorter, tightened titles than the originally
+planned long-form wording — the tier index, roadmap, search-index, and nav-index entries all use
+the real, as-written titles.

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What does switching between these two actually change about where the rest of the query runs?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="AsEnumerable vs. AsQueryable — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="What does switching between these two actually change about where the rest of the query runs?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>AsEnumerable vs. AsQueryable — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">AsEnumerable vs. AsQueryable</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ LINQ · Advanced · Should Know</div>
+    <h1><code>AsEnumerable</code> vs. <code>AsQueryable</code> — <span class="hl hl-blue">freezing the SQL</span>, or <span class="hl hl-inter">faking a provider</span></h1>
+    <p class="interview-q">"What does switching between these two actually change about where the rest of the query runs?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">❄️ AsEnumerable()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Sometimes you genuinely need to finish a query with a method the provider can't translate (Advanced #7) — but you still want everything before that point to run as efficient SQL.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>AsEnumerable()</code> called on an <code>IQueryable&lt;T&gt;</code> "freezes" everything written before it into one piece of server-side SQL, then switches the rest of the chain to run as ordinary LINQ-to-Objects in memory.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">AsEnumerable() = freeze the SQL so far, run everything after it in memory.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🎭 AsQueryable()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A method signature or a piece of test code expects an <code>IQueryable&lt;T&gt;</code>, but all you actually have is an in-memory <code>IEnumerable&lt;T&gt;</code> with no real database provider behind it.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>AsQueryable()</code> just wraps the in-memory sequence so it LOOKS queryable — there's no real provider underneath, so nothing it builds ever gets translated into SQL; it still runs as LINQ-to-Objects when enumerated.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">AsQueryable() = looks queryable, but there's no real provider underneath to translate anything.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>AsEnumerable()</code> <span class="rarrow">→</span> <b>freezes</b> the SQL built so far, rest runs in memory</p>
+      <p class="rrow"><code>AsQueryable()</code> <span class="rarrow">→</span> <b>wraps</b> in-memory data to look queryable, nothing translates</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>AsEnumerable()</code></b> is a real exit from the database. <b><code>AsQueryable()</code></b> never had a database to exit from.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shLa6" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arLa6" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+
+      <rect x="16" y="30" width="300" height="88" rx="14" fill="#dbeafe" opacity="0.35"/>
+      <rect x="320" y="30" width="344" height="88" rx="14" fill="#dcfce7" opacity="0.35"/>
+      <text x="166" y="20" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.3">SERVER-SIDE (SQL)</text>
+      <text x="492" y="20" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534" letter-spacing="0.3">CLIENT-SIDE (IN-MEMORY)</text>
+
+      <g filter="url(#shLa6)"><rect x="32" y="48" width="130" height="50" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="97" y="68" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">.Where(...)</text>
+      <text x="97" y="82" text-anchor="middle" font-size="9" fill="#5b6472">still IQueryable</text>
+
+      <path d="M162,73 H182" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arLa6)"/>
+
+      <g filter="url(#shLa6)"><rect x="182" y="48" width="130" height="50" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="247" y="68" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">.OrderBy(...)</text>
+      <text x="247" y="82" text-anchor="middle" font-size="9" fill="#5b6472">still building SQL</text>
+
+      <path d="M312,73 H332" fill="none" stroke="#d97706" stroke-width="2.2" marker-end="url(#arLa6)"/>
+
+      <g filter="url(#shLa6)"><rect x="332" y="38" width="160" height="70" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="2.2"/></g>
+      <text x="412" y="60" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">❄️ .AsEnumerable()</text>
+      <text x="412" y="75" text-anchor="middle" font-size="9.5" fill="#92400e">FREEZE POINT</text>
+      <text x="412" y="89" text-anchor="middle" font-size="9" fill="#5b6472">SQL sent &amp; run NOW</text>
+
+      <path d="M492,73 H512" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arLa6)"/>
+
+      <g filter="url(#shLa6)"><rect x="512" y="48" width="140" height="50" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="582" y="66" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">.Select(custom)</text>
+      <text x="582" y="80" text-anchor="middle" font-size="9" fill="#5b6472">LINQ-to-Objects</text>
+
+      <path d="M97,98 V122" fill="none" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="3 3"/>
+      <path d="M582,98 V122" fill="none" stroke="#16a34a" stroke-width="1.6" stroke-dasharray="3 3"/>
+      <path d="M97,122 H582" fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="3 3"/>
+
+      <g filter="url(#shLa6)"><rect x="252" y="134" width="180" height="44" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="342" y="153" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ .ToList()</text>
+      <text x="342" y="167" text-anchor="middle" font-size="9" fill="#5b6472">final in-memory result</text>
+    </svg>
+    <figcaption>Everything left of the freeze point becomes SQL; everything right of it runs as plain LINQ-to-Objects.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>AsEnumerable()</code> does not materialize a <code>List&lt;T&gt;</code>.</b> It's still deferred — it only changes which LINQ implementation runs for everything chained after it; nothing forces the whole sequence into memory as one block the way <code>ToList()</code> does.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Does <code>AsQueryable()</code> let an in-memory list suddenly get translated to SQL later?"</b> No — <code>AsQueryable()</code> on its own in-memory sequence has no real provider behind it; it doesn't retroactively gain database translation just by looking like an <code>IQueryable&lt;T&gt;</code>.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"AsEnumerable() called on an IQueryable&lt;T&gt; freezes everything written before it into server-side SQL, then switches everything after it to run as ordinary LINQ-to-Objects in memory. AsQueryable() called on an in-memory IEnumerable&lt;T&gt; just wraps it so it looks queryable — there's no real database provider underneath, so nothing about it ever gets translated to SQL."</p>
+    <ul>
+      <li><code>AsEnumerable()</code> <span class="hl hl-blue">→ real freeze point — SQL before it, memory after it</span>.</li>
+      <li><code>AsQueryable()</code> <span class="hl hl-inter">→ cosmetic wrap — no provider, no translation, ever</span>.</li>
+      <li><code>AsEnumerable()</code> doesn't materialize <span class="hl hl-hot">→ it's still deferred, just running a different LINQ implementation now</span>.</li>
+      <li>Reach for <code>AsEnumerable()</code> <span class="hl hl-basic">→ when you deliberately need to finish with an untranslatable method</span>.</li>
+      <li>Reach for <code>AsQueryable()</code> <span class="hl hl-adv">→ mainly to satisfy a method signature expecting IQueryable&lt;T&gt;, not for performance</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><code>AsEnumerable()</code> is a type-only operation at the C# level — it changes the
+      static type from <code>IQueryable&lt;T&gt;</code> to <code>IEnumerable&lt;T&gt;</code>, so
+      everything chained after it resolves against the <code>IEnumerable&lt;T&gt;</code>
+      extension methods (<code>Func&lt;T&gt;</code>, LINQ-to-Objects) instead of the
+      <code>IQueryable&lt;T&gt;</code> ones. Whatever was already built up as an expression tree
+      before that call still gets handed to the provider and translated/executed as SQL the
+      moment something actually enumerates it — it's the switch-over point, not an extra round
+      trip of its own.</p>
+
+      <p><code>AsQueryable()</code> goes the other direction, on data that was never backed by a
+      real provider: calling it on an <code>IEnumerable&lt;T&gt;</code> wraps it in an
+      <code>IQueryable&lt;T&gt;</code> implementation (<code>EnumerableQuery&lt;T&gt;</code>)
+      that technically builds expression trees too, but its own provider just compiles and runs
+      them as ordinary LINQ-to-Objects — there's no SQL, no external system, nothing to
+      translate to.</p>
+
+      <p>The two exist for different reasons: <code>AsEnumerable()</code> is a deliberate
+      performance/capability trade-off — finish on the database as far as possible, then drop to
+      memory for the one thing the provider can't do. <code>AsQueryable()</code> is mostly a
+      type-compatibility tool — satisfying a method or interface that insists on
+      <code>IQueryable&lt;T&gt;</code> even though the real data behind it was already in
+      memory.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>AsEnumerable()</code></th><th><code>AsQueryable()</code></th></tr></thead>
+        <tbody>
+          <tr><th>Starting type</th><td><code>IQueryable&lt;T&gt;</code></td><td><code>IEnumerable&lt;T&gt;</code></td></tr>
+          <tr><th>What it changes</th><td>switches rest of chain to LINQ-to-Objects</td><td>wraps it so it <i>looks</i> queryable</td></tr>
+          <tr><th>Forces execution?</th><td class="no">❌ no — still deferred</td><td class="no">❌ no — still deferred</td></tr>
+          <tr><th>Real provider underneath?</th><td>n/a — nothing after it is sent anywhere</td><td class="no">❌ no — <code>EnumerableQuery&lt;T&gt;</code>, just LINQ-to-Objects</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> result = context.Orders
+    .Where(o =&gt; o.Total &gt; 100)   <span class="cx-cmt">// still IQueryable — becomes part of the SQL</span>
+    .AsEnumerable()                <span class="cx-ok">// ⚡ freeze point — SQL for everything above runs now</span>
+    .Select(o =&gt; CustomFormat(o)) <span class="cx-cmt">// runs as LINQ-to-Objects, in memory</span>
+    .ToList();</code></pre>
+      </div>
+      <p class="cx-note">Everything above <code>AsEnumerable()</code> becomes SQL; everything below it is plain C#.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">Order</span>&gt; orders = GetOrdersFromCache();      <span class="cx-cmt">// already in memory</span>
+<span class="ty">IQueryable</span>&lt;<span class="ty">Order</span>&gt; q = orders.AsQueryable();   <span class="cx-cmt">// ❓ looks queryable...</span>
+<span class="kw">var</span> filtered = q.Where(o =&gt; o.Total &gt; 100);     <span class="cx-err">// ...but still just LINQ-to-Objects — no SQL anywhere</span></code></pre>
+      </div>
+      <p class="cx-note">Wrapping an in-memory list doesn't grant it a database provider.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A query needs one final step the provider can't translate</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcAe6a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">CUSTOM FORMATTING STEP</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">.AsEnumerable()</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcAe6a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">✅ clean handoff</text>
+            </svg>
+          </div>
+          <p class="uc-what">Placing <code>AsEnumerable()</code> right before the untranslatable
+          step keeps everything earlier as real SQL, and makes the switch-over deliberate and
+          visible.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need an untranslatable final step → AsEnumerable() right before it.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> A shared method signature expects <code>IQueryable&lt;T&gt;</code>, but you have a plain list</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcAe6b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">TYPE COMPATIBILITY ONLY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">in-memory list</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcAe6b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">.AsQueryable()</text>
+            </svg>
+          </div>
+          <p class="uc-what">A common case in unit tests — <code>AsQueryable()</code> satisfies
+          the type the signature demands without changing any actual behavior.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need the type, not the translation → AsQueryable() is for compatibility only.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Expecting <code>AsEnumerable()</code> to "materialize" the data like <code>ToList()</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcAe6c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">STILL DEFERRED</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">.AsEnumerable()</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcAe6c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 not a List&lt;T&gt;</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">still deferred</text>
+            </svg>
+          </div>
+          <p class="uc-what">Enumerating the result twice still re-runs the whole pipeline
+          twice — <code>AsEnumerable()</code> only changed which LINQ implementation runs, it
+          didn't force anything into memory as one block.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">AsEnumerable() switches implementations — it doesn't materialize anything.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A report needs a custom in-memory formatting function applied to a filtered,
+      sorted set of database rows.</b> The clean pattern: filter and sort against the
+      <code>DbSet&lt;T&gt;</code> first, call <code>AsEnumerable()</code> right before the
+      formatting step, then apply the formatter — the database does the heavy filtering, and
+      only the already-narrowed result set gets formatted in memory.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="5.html">← Client-Side vs. Server-Side Evaluation</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="7.html">Why EF Core Cannot Translate Certain C# Methods →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

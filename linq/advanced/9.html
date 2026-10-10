@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="For a single LINQ query against IQueryable, how many times does the database actually get hit?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Query Execution and Database Round Trips — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="For a single LINQ query against IQueryable, how many times does the database actually get hit?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Query Execution and Database Round Trips — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Query Execution and Database Round Trips</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ LINQ · Advanced · Should Know</div>
+    <h1>Query Execution and Database Round Trips — <span class="hl hl-basic">one terminal call</span>, <span class="hl hl-hot">one trip</span> — usually</h1>
+    <p class="interview-q">"For a single LINQ query against <code>IQueryable</code>, how many times does the database actually get hit?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🗄️ Round trips</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Each database round trip costs real network latency — code that quietly turns "one query" into dozens doesn't look wrong on screen, it just gets slower in a way that's easy to miss until load testing.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A terminal operator call hits the database exactly once, by default — once that's confirmed, any extra round trips trace back to a specific authoring pattern (a loop, a repeated enumeration), not to the terminal operator doing something hidden.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">One terminal call = one round trip — extra trips are a pattern, not a surprise.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">One terminal call = <b>"one round trip, by default."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>ToList()</code></b> hits the database once. A <b>loop</b> that re-enumerates the same query hits it <b>once per iteration</b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 235" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA9" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA9Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arA9Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#166534" letter-spacing="0.3">✅ ONE TERMINAL CALL = ONE ROUND TRIP</text>
+
+      <g filter="url(#shA9)"><rect x="20" y="38" width="190" height="50" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="115" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">✅ Terminal call</text>
+      <text x="115" y="73" text-anchor="middle" font-size="10.5" fill="#5b6472">ToList() fires here</text>
+
+      <path d="M210,63 H258" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA9Green)"/>
+
+      <g filter="url(#shA9)"><rect x="258" y="38" width="148" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="332" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🗄️ Database hit</text>
+      <text x="332" y="73" text-anchor="middle" font-size="10.5" fill="#5b6472">exactly once</text>
+
+      <path d="M406,63 H454" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA9Green)"/>
+
+      <g filter="url(#shA9)"><rect x="454" y="38" width="166" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="537" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">📦 Result ready</text>
+      <text x="537" y="73" text-anchor="middle" font-size="10.5" fill="#5b6472">no more DB calls needed</text>
+
+      <text x="320" y="112" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b" letter-spacing="0.3">❌ A LOOP RE-ENUMERATING THE QUERY</text>
+
+      <g filter="url(#shA9)"><rect x="20" y="132" width="190" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="115" y="152" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🔁 foreach(query)</text>
+      <text x="115" y="167" text-anchor="middle" font-size="10.5" fill="#5b6472">never materialized first</text>
+
+      <path d="M210,157 H258" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA9Red)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shA9)"><rect x="258" y="132" width="148" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="332" y="152" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🗄️ Database hit</text>
+      <text x="332" y="167" text-anchor="middle" font-size="10.5" fill="#5b6472">again, every iteration</text>
+
+      <path d="M406,157 H454" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA9Red)"/>
+
+      <g filter="url(#shA9)"><rect x="454" y="132" width="166" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="537" y="152" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">📈 N round trips</text>
+      <text x="537" y="167" text-anchor="middle" font-size="10.5" fill="#5b6472">scales with result size</text>
+
+      <text x="320" y="206" text-anchor="middle" font-size="10" fill="#5b6472">N = however many times the query gets re-enumerated — not a property of the terminal operator itself.</text>
+    </svg>
+    <figcaption>The terminal operator never changed — only how many times the query got enumerated did.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A LINQ statement isn't automatically "one query, forever."</b> It's one round trip only while it's enumerated exactly once — enumerate the same un-materialized query again, in a loop or a second pass, and the whole pipeline runs again too.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"I call <code>query.Any()</code> to check for results, then <code>foreach</code> over the same <code>query</code> variable right after — how many round trips is that?"</b> Two — each is a separate enumeration of an un-materialized query. Call <code>ToList()</code> once and reuse the resulting list instead.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A terminal operator call — <code>ToList()</code>, <code>First()</code>, <code>Count()</code> — hits the database exactly once by default. Extra round trips always trace back to how the query was written: a loop that re-triggers a lazy load per iteration, or enumerating the same un-materialized query more than once."</p>
+    <ul>
+      <li>One terminal call → <span class="hl hl-basic">one round trip</span>, by default.</li>
+      <li>A loop touching a navigation property → <span class="hl hl-hot">fires once per iteration</span>, not once total.</li>
+      <li>Enumerating the same query twice → <span class="hl hl-inter">re-runs the entire pipeline twice</span>.</li>
+      <li>Materialize once, reuse the list → <span class="hl hl-blue">the fix for both patterns</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A terminal operator call triggers the provider to translate the whole expression tree built up to that point and send it to the database <b>once</b>. That's the entire contract — nothing about <code>ToList()</code>, <code>First()</code>, or <code>Count()</code> implies a loop, a retry, or a second trip on its own.</p>
+
+      <p>Every extra round trip someone blames on "LINQ" actually comes from the code written <i>around</i> the query, not the terminal call itself: a <code>foreach</code> that reads a lazy-loaded navigation property once per outer row (see "N+1 Queries and Navigation Properties"), or the same un-materialized <code>IQueryable</code> enumerated more than once — once for a check, again in a loop (see "Lazy Evaluation vs. Materialization").</p>
+
+      <p>The fix is the same in both cases: decide where the query gets materialized, call a terminal operator <b>there</b>, and reuse the resulting in-memory collection for anything that follows — not the query variable itself.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>One terminal call</th><th>Re-enumerated query</th></tr></thead>
+        <tbody>
+          <tr><th>Round trips</th><td>exactly one</td><td>one per enumeration</td></tr>
+          <tr><th>Caused by</th><td>normal terminal-operator use</td><td>a loop or a second pass over the same query</td></tr>
+          <tr><th>Fix</th><td>n/a — already correct</td><td>materialize once, reuse the list</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">IQueryable</span>&lt;<span class="ty">Order</span>&gt; query = context.Orders.Where(o =&gt; o.CreatedAt &gt; cutoff);
+
+<span class="kw">if</span> (query.Any())            <span class="cx-err">// ❌ round trip #1</span>
+{
+    <span class="kw">foreach</span> (<span class="kw">var</span> o <span class="kw">in</span> query)  <span class="cx-err">// ❌ round trip #2 — same query, enumerated again</span>
+        Process(o);
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>query</code> was never materialized, so <code>Any()</code> and the <code>foreach</code> each re-run the pipeline — two round trips for what should be one.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">Order</span>&gt; orders = context.Orders
+    .Where(o =&gt; o.CreatedAt &gt; cutoff)
+    .ToList();                 <span class="cx-ok">// ✅ one round trip, right here</span>
+
+<span class="kw">if</span> (orders.Count &gt; <span class="num">0</span>)      <span class="cx-cmt">// in-memory check, no DB call</span>
+{
+    <span class="kw">foreach</span> (<span class="kw">var</span> o <span class="kw">in</span> orders)  <span class="cx-cmt">// in-memory loop, no DB call</span>
+        Process(o);
+}</code></pre>
+      </div>
+      <p class="cx-note">Materializing once with <code>ToList()</code> means every later check or loop reads the same in-memory list — zero additional round trips.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A single terminal operator call, used once</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA9-1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">NORMAL CASE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ ToList()</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">called once</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcA9-1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🗄️ 1 round trip</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#166534">exactly as expected</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the <b>default, and the expected case</b> — a terminal operator called once against a query built up from <code>Where</code>/<code>OrderBy</code>/etc. costs exactly one round trip, no matter how many LINQ operators came before it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One call, one trip — this is the baseline, not the exception.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> A loop reads a lazy-loaded navigation property on every iteration</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA9-2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">LOOP TRIGGERS LAZY LOADS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🔁 foreach row</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">reads .Orders each time</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcA9-2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🗄️ N round trips</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">one per row</text>
+            </svg>
+          </div>
+          <p class="uc-what">The query count scales with the <b>outer result set's size</b>, not with any loop count the developer actually wrote — this is the N+1 pattern (see "N+1 Queries and Navigation Properties" for the dedicated page).</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Navigation access inside a loop → one round trip per row.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">3</span> The same un-materialized query gets enumerated more than once</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA9-3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">MULTIPLE ENUMERATION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">Any() then foreach</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#92400e">same query variable</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUcA9-3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🗄️ 2 round trips</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#92400e">not 1</text>
+            </svg>
+          </div>
+          <p class="uc-what">Checking <code>Any()</code> and then looping over the same <code>IQueryable</code> variable each re-run the pipeline, because neither one materialized it — the fix is calling <code>ToList()</code> once and reusing the list for both checks.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Reusing an un-materialized query variable → one trip per use.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>An API endpoint calls <code>query.Any()</code> to decide whether to return "no results," then <code>foreach</code>'s over the same <code>query</code> variable to build the response.</b> That's two full round trips for a single logical request. Materializing once — <code>var list = query.ToList();</code> — right after building the query, then checking <code>list.Count</code> and looping over <code>list</code>, collapses it back down to one.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="8.html">← Premature Materialization and ToList() Placement</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="10.html">Include vs. Projection Using Select →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

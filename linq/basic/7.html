@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="list.Where(x => x is Cat).Cast<Cat>() vs. list.OfType<Cat>() — same filter, so why does OfType exist?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Where vs. OfType — LINQ Basic — RefreshYourself">
+<meta property="og:description" content="list.Where(x => x is Cat).Cast<Cat>() vs. list.OfType<Cat>() — same filter, so why does OfType exist?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Where vs. OfType — LINQ Basic — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/basic">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Where vs. OfType</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ LINQ · Basic · Should Know</div>
+    <h1><code>Where</code> vs. <code>OfType</code> — <span class="hl hl-blue">filter, or filter-and-cast?</span></h1>
+    <p class="interview-q">"<code>list.Where(x =&gt; x is Cat).Cast&lt;Cat&gt;()</code> vs. <code>list.OfType&lt;Cat&gt;()</code> — same filter, so why does <code>OfType</code> exist?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔍 Where + Cast</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>You only want the Cats out of a mixed list, but <code>Where(x =&gt; x is Cat)</code> still hands you a sequence typed as the original base type — you can't call Cat-only members on it yet.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Chaining <code>.Cast&lt;Cat&gt;()</code> afterward turns that filtered sequence into a real <code>IEnumerable&lt;Cat&gt;</code> — a second, explicit step.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Where + Cast = filter, then cast — two calls.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🎯 OfType</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Writing the filter-then-cast pattern correctly, every single time, is two method calls to remember and keep in the right order.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>OfType&lt;Cat&gt;()</code> fuses the type-check and the cast into one call, and skips <code>null</code> and mismatched elements automatically along the way.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">OfType = filter + cast, fused into one call.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Where(x =&gt; x is Cat).Cast&lt;Cat&gt;()</code> <span class="rarrow">→</span> <b>two</b> calls</p>
+      <p class="rrow"><code>OfType&lt;Cat&gt;()</code> <span class="rarrow">→</span> <b>one</b> call, already typed as Cat</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Where</code></b> filters but leaves you typed as the base type. <b><code>OfType</code></b> filters <b>and</b> casts, for free.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 310" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh7" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar7" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#sh7)"><rect x="170" y="16" width="300" height="40" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="320" y="41" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">📦 Cat, Dog, null, Cat</text>
+
+      <path d="M320,56 V70" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M160,70 H480" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M160,70 V90" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar7)"/>
+      <path d="M480,70 V90" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar7)"/>
+
+      <g filter="url(#sh7)"><rect x="50" y="90" width="220" height="48" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="110" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Where(x =&gt; x is Cat)</text>
+      <text x="160" y="127" text-anchor="middle" font-size="10.2" fill="#5b6472">→ still IEnumerable&lt;Animal&gt;</text>
+
+      <path d="M160,138 V160" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar7)"/>
+
+      <g filter="url(#sh7)"><rect x="50" y="160" width="220" height="48" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="180" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">.Cast&lt;Cat&gt;()</text>
+      <text x="160" y="197" text-anchor="middle" font-size="10.2" fill="#5b6472">→ now IEnumerable&lt;Cat&gt;</text>
+
+      <path d="M160,208 V236" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar7)"/>
+
+      <g filter="url(#sh7)"><rect x="370" y="90" width="220" height="48" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="110" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">OfType&lt;Cat&gt;()</text>
+      <text x="480" y="127" text-anchor="middle" font-size="10.2" fill="#5b6472">→ auto-skips null &amp; Dog</text>
+
+      <path d="M480,138 V236" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar7)"/>
+
+      <g filter="url(#sh7)"><rect x="130" y="236" width="380" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="258" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ Same result: [Cat, Cat]</text>
+      <text x="320" y="275" text-anchor="middle" font-size="10.2" fill="#5b6472">both exclude null &amp; Dog — just a different number of steps</text>
+    </svg>
+    <figcaption>Two routes to the same Cats — <code>Where</code>+<code>Cast</code> takes two explicit steps, <code>OfType</code> does the filter and the cast in one.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>Where(x =&gt; x is Cat)</code> does not give you Cat-typed items.</b> The filtered sequence is still declared as the original base type — you still need <code>.Cast&lt;Cat&gt;()</code> (or a <code>Select</code>) before calling anything Cat-only, where <code>OfType&lt;Cat&gt;()</code> hands you an <code>IEnumerable&lt;Cat&gt;</code> directly.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Does <code>OfType&lt;T&gt;()</code> use something special under the hood, or is it just <code>is</code> again?"</b> It's the same <code>is</code> type-check per element, just fused with the cast — <code>OfType</code> doesn't need a new mechanism, it just saves you from writing the check and the cast as two separate calls.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>list.Where(x =&gt; x is Cat).Cast&lt;Cat&gt;()</code> and <code>list.OfType&lt;Cat&gt;()</code> end up with the same Cats, but <code>OfType</code> does the filtering and casting in one call, where <code>Where</code> alone leaves the sequence typed as the original base type until you cast it yourself."</p>
+    <ul>
+      <li><code>OfType&lt;T&gt;()</code> → <span class="hl hl-basic">filter + cast, fused into one call</span>.</li>
+      <li><code>Where(x =&gt; x is Cat)</code> → <span class="hl hl-inter">result is still typed as the base type</span> until you cast it.</li>
+      <li>Same final answer either way — <span class="hl hl-teal">OfType just needs no is-check written by hand</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Where(x => x is Cat)</span> filters down to the actual
+      <code>Cat</code> instances, but the sequence it hands back is still declared as the original
+      element type — you need a second call, <code>.Cast&lt;Cat&gt;()</code>, before you can touch
+      anything Cat-specific.</p>
+
+      <p><span class="hl hl-basic">OfType&lt;Cat&gt;()</span> does both jobs in a single call: it
+      checks each element's type and casts the ones that match, in one pass, giving you an
+      <code>IEnumerable&lt;Cat&gt;</code> directly. Along the way it quietly skips <code>null</code>
+      and anything that isn't a <code>Cat</code> — the same outcome <code>Where</code>'s
+      <code>is</code> check already produced, just without writing that check by hand.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>Where</code> + <code>Cast</code></th><th><code>OfType&lt;T&gt;</code></th></tr></thead>
+        <tbody>
+          <tr><th>Steps needed</th><td>2 — filter, then cast</td><td>1</td></tr>
+          <tr><th>Result already typed as T?</th><td class="no">❌ not until the cast</td><td class="yes">✅ immediately</td></tr>
+          <tr><th>Skips null?</th><td class="yes">✅ yes, via the <code>is</code> check</td><td class="yes">✅ yes, built in</td></tr>
+          <tr><th>Skips a mismatched type?</th><td class="yes">✅ yes, via the <code>is</code> check</td><td class="yes">✅ yes, built in</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>List&lt;Animal&gt; animals = <span class="kw">new</span>() { <span class="kw">new</span> <span class="ty">Cat</span>(), <span class="kw">new</span> <span class="ty">Dog</span>(), <span class="kw">null</span>, <span class="kw">new</span> <span class="ty">Cat</span>() };
+<span class="kw">var</span> catsA = animals.Where(x => x <span class="kw">is</span> <span class="ty">Cat</span>).Cast&lt;<span class="ty">Cat</span>&gt;();  <span class="cx-ok">// ✅ still 2 steps</span></code></pre>
+      </div>
+      <p class="cx-note"><code>Where</code> alone leaves you with <b>Animal</b>, not <code>Cat</code> — the <code>Cast</code> is what fixes the type.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> catsB = animals.OfType&lt;<span class="ty">Cat</span>&gt;();  <span class="cx-ok">// ✅ same Cats, 1 step — null &amp; Dog skipped</span></code></pre>
+      </div>
+      <p class="cx-note">One call, <b>already typed</b> as <code>Cat</code> — no separate cast anywhere.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're pulling one type out of a mixed collection and need its members right away</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">MIXED COLLECTION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">📦 shapes list</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc7a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">OfType&lt;Circle&gt;()</text>
+            </svg>
+          </div>
+          <p class="uc-what">You need just the circles, already typed as <code>Circle</code>, to read
+          <code>.Radius</code> right away. <code>OfType&lt;Circle&gt;()</code> gets you there in one
+          call. <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need the typed members immediately → <code>OfType&lt;T&gt;()</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> You need the filtered-but-not-yet-cast sequence for something else first</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">COUNT FIRST, CAST LATER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">Where(is Cat).Count()</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc7b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">.Cast&lt;Cat&gt;() later</text>
+            </svg>
+          </div>
+          <p class="uc-what">Sometimes you want the filtered sequence on its own terms first —
+          e.g. logging how many matched — before deciding whether to cast it at all. <code>Where</code>
+          as its own step still earns its place here.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need the filter step on its own → plain <code>Where</code> first.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You call a Cat-only member right after <code>Where</code>, with no cast</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc7c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing=".03em">DOESN'T COMPILE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b91c1c">Where(is Cat)</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc7c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b91c1c">.Meow() 🚫</text>
+            </svg>
+          </div>
+          <p class="uc-what">The sequence from <code>Where</code> is still <code>IEnumerable&lt;Animal&gt;</code>
+          — calling a Cat-only method on its elements without a cast in between simply won't
+          compile, even though every element really is a Cat at runtime.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext"><code>Where</code> alone never changes the declared type.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A box of mixed shapes.</b> Pulling out just the circles and immediately measuring each
+      one's radius is one motion with <code>OfType&lt;Circle&gt;()</code>. Checking "is this a
+      circle?" and then casting it afterward is the same job, just split into two separate
+      motions.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="6.html">← Any vs. All vs. Contains</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="8.html">OrderBy vs. OrderByDescending vs. ThenBy →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

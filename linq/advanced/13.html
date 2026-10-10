@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Why do these async terminal operators exist instead of just awaiting a Task-wrapped ToList()?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Async LINQ: ToListAsync, AnyAsync, CountAsync — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="Why do these async terminal operators exist instead of just awaiting a Task-wrapped ToList()?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Async LINQ: ToListAsync, AnyAsync, CountAsync — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Async LINQ: ToListAsync, AnyAsync, CountAsync</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 LINQ · Advanced · Must Know</div>
+    <h1>Async LINQ: <code>ToListAsync</code>, <code>AnyAsync</code>, <code>CountAsync</code> — <span class="hl hl-basic">EF Core's own</span> async terminal operators</h1>
+    <p class="interview-q">"Why do these async terminal operators exist instead of just awaiting a <code>Task</code>-wrapped <code>ToList()</code>?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-2">
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">🔒 Synchronous terminal operators</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span><code>ToList()</code>, <code>First()</code>, <code>Count()</code> on <code>IQueryable</code> are synchronous by design — calling them against a database blocks the calling thread for the entire network round trip, even though the thread has nothing to do but wait.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>They're the right call in genuinely synchronous code — the cost only bites in a server handling many requests, where a blocked thread can't serve anyone else meanwhile.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Sync terminal op = thread sits and waits for the whole trip.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">⚡ Async terminal operators</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A busy ASP.NET Core server needs its request-handling threads free to serve other requests while any one request is just waiting on the database.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>ToListAsync()</code>, <code>AnyAsync()</code>, <code>CountAsync()</code> — EF Core's own async terminal operators — await the round trip instead of blocking it, freeing the thread until the database responds.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Async terminal op = thread goes free while the database works.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>ToList()</code> <span class="rarrow">→</span> <b>blocks</b> the thread for the whole round trip</p>
+      <p class="rrow"><code>ToListAsync()</code> <span class="rarrow">→</span> <b>frees</b> the thread while awaiting</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b>sync</b> terminal ops make the thread wait. <b>Async</b> ones let it go do something else.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 215" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shA13" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arA13Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arA13Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b" letter-spacing="0.3">❌ ToList() — BLOCKS THE THREAD</text>
+
+      <g filter="url(#shA13)"><rect x="15" y="30" width="150" height="40" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="90" y="47" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">📞 ToList()</text>
+      <text x="90" y="62" text-anchor="middle" font-size="10" fill="#5b6472">synchronous call</text>
+
+      <path d="M165,50 H190" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arA13Red)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shA13)"><rect x="190" y="30" width="260" height="40" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="47" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">🔒 Thread blocked</text>
+      <text x="320" y="62" text-anchor="middle" font-size="10" fill="#5b6472">for the entire round trip</text>
+
+      <path d="M450,50 H475" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arA13Red)"/>
+
+      <g filter="url(#shA13)"><rect x="475" y="30" width="150" height="40" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="550" y="47" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">📦 Result returns</text>
+      <text x="550" y="62" text-anchor="middle" font-size="10" fill="#5b6472">thread resumes here</text>
+
+      <text x="320" y="112" text-anchor="middle" font-size="12" font-weight="700" fill="#166534" letter-spacing="0.3">✅ ToListAsync() — FREES THE THREAD</text>
+
+      <g filter="url(#shA13)"><rect x="15" y="126" width="150" height="40" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="90" y="143" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">⏳ ToListAsync()</text>
+      <text x="90" y="158" text-anchor="middle" font-size="10" fill="#5b6472">asynchronous call</text>
+
+      <path d="M165,146 H190" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA13Green)"/>
+
+      <g filter="url(#shA13)"><rect x="190" y="126" width="260" height="40" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="143" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">🧵 Thread freed</text>
+      <text x="320" y="158" text-anchor="middle" font-size="10" fill="#5b6472">handles other work meanwhile</text>
+
+      <path d="M450,146 H475" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arA13Green)"/>
+
+      <g filter="url(#shA13)"><rect x="475" y="126" width="150" height="40" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="550" y="143" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">📦 Result returns</text>
+      <text x="550" y="158" text-anchor="middle" font-size="10" fill="#5b6472">await resumes here</text>
+
+      <text x="320" y="196" text-anchor="middle" font-size="10" fill="#5b6472">Both reach the database the same way — only what the calling thread does while waiting differs.</text>
+    </svg>
+    <figcaption>Same round trip, same database — only the calling thread's fate while it waits is different.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Calling <code>.ToList()</code> and awaiting something else nearby doesn't make it async.</b> The blocking already happened before anything got a chance to await — mixing a sync terminal operator into an otherwise-async pipeline defeats the purpose, and can even deadlock under classic ASP.NET's synchronization context (not ASP.NET Core, which has none by default).</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why doesn't that deadlock risk apply to ASP.NET Core the same way?"</b> ASP.NET Core installs no synchronization context by default — the classic ASP.NET deadlock pattern needs a captured context whose single thread is also the one needed to resume the blocked call, and ASP.NET Core simply doesn't have that context to capture.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>ToListAsync()</code>, <code>AnyAsync()</code>, and <code>CountAsync()</code> are EF Core's own async terminal operators — they exist because <code>IQueryable&lt;T&gt;</code>'s standard LINQ terminal operators are synchronous by design. Awaiting them frees the calling thread for the whole round trip instead of blocking it."</p>
+    <ul>
+      <li>Sync terminal op (<code>ToList()</code>) → <span class="hl hl-hot">blocks the thread for the entire round trip</span>.</li>
+      <li>Async terminal op (<code>ToListAsync()</code>) → <span class="hl hl-basic">frees the thread while awaiting</span>.</li>
+      <li>These live in → <span class="hl hl-blue"><code>Microsoft.EntityFrameworkCore</code></span>, not standard LINQ-to-Objects.</li>
+      <li>Mixing sync into an async pipeline → <span class="hl hl-inter">defeats the purpose, risks a deadlock under classic ASP.NET</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Standard LINQ's terminal operators — <code>ToList()</code>, <code>First()</code>, <code>Count()</code>, and the rest — are defined once, synchronously, for both <code>IEnumerable&lt;T&gt;</code> and <code>IQueryable&lt;T&gt;</code>. That works fine for LINQ-to-Objects, where "execute the query" means running in-process C# with nothing to wait on. Against a database, the exact same call still has to block until the network round trip finishes — there's no async version in standard LINQ to reach for instead.</p>
+
+      <p><code>ToListAsync()</code>, <code>AnyAsync()</code>, <code>CountAsync()</code>, and their siblings fill that gap — but they're defined by <b>EF Core itself</b>, in the <code>Microsoft.EntityFrameworkCore</code> namespace, as extension methods on <code>IQueryable&lt;T&gt;</code>. They only make sense where there's an actual async provider underneath to await; LINQ-to-Objects has no equivalent because there's nothing to wait on there in the first place.</p>
+
+      <p>Awaiting the async version suspends the calling method and returns its thread to the pool until the database responds — no thread sits idle for the round trip. That's the entire value: same query, same network cost, a very different story for everything else that thread could have been doing.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Sync (<code>ToList</code>/<code>First</code>/<code>Count</code>)</th><th>Async (<code>ToListAsync</code>/<code>FirstAsync</code>/<code>CountAsync</code>)</th></tr></thead>
+        <tbody>
+          <tr><th>Defined by</th><td>standard LINQ (<code>IEnumerable</code>/<code>IQueryable</code>)</td><td>EF Core — <code>Microsoft.EntityFrameworkCore</code></td></tr>
+          <tr><th>Thread during the round trip</th><td>blocked</td><td>free</td></tr>
+          <tr><th>Correct in</th><td>genuinely synchronous code</td><td>an <code>async</code> method, awaited</td></tr>
+          <tr><th>Risk if misused</th><td>wastes threads under load</td><td>can deadlock under classic ASP.NET's sync context</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="ty">IActionResult</span>&gt; GetOrders()
+{
+    <span class="kw">var</span> orders = context.Orders.ToList(); <span class="cx-err">// ❌ blocks this thread the whole trip</span>
+    <span class="kw">return</span> Ok(orders);
+}</code></pre>
+      </div>
+      <p class="cx-note">The method is <code>async</code>, but <code>ToList()</code> still blocks — marking the method async didn't make this call non-blocking.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="ty">IActionResult</span>&gt; GetOrders()
+{
+    <span class="kw">var</span> orders = <span class="kw">await</span> context.Orders.ToListAsync(); <span class="cx-ok">// ✅ thread freed while awaiting</span>
+    <span class="kw">return</span> Ok(orders);
+}</code></pre>
+      </div>
+      <p class="cx-note">The thread returns to the pool the moment the await suspends — it's free to serve another request until the database responds.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A busy web API endpoint, handling many concurrent requests</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA13-1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">BUSY SERVER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">⚡ await ToListAsync()</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">frees the thread</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcA13-1)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🧵 Serves others</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#166534">while waiting</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the case async terminal operators exist for — under real concurrent load, every freed thread is one more request the server can serve in the meantime.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Concurrent server load → always await the async terminal operator.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> A one-off console tool or build-time script</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA13-2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">NOTHING ELSE TO SERVE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📞 ToList()</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">blocks this one thread</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcA13-2)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">✅ Acceptable here</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">no one else waiting on it</text>
+            </svg>
+          </div>
+          <p class="uc-what">A single-threaded console script with nothing else competing for that thread has no real downside to blocking — the sync version is simpler and there's no concurrency cost to pay.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Genuinely synchronous, single-purpose code → sync is fine.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> An <code>async</code> method that still calls the sync terminal operator</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcA13-3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">ASYNC IN NAME ONLY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">async method</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">calls .ToList() inside</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcA13-3)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🔒 Still blocks</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">async keyword didn't help</text>
+            </svg>
+          </div>
+          <p class="uc-what">Marking a method <code>async</code> doesn't make the calls inside it non-blocking — the sync terminal operator still blocks exactly as it would in a non-async method, and the method gains none of async's benefit.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">async on the method ≠ async on every call inside it.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A web API controller action calls <code>context.Orders.ToList()</code> instead of awaiting <code>ToListAsync()</code>.</b> Under light load nothing looks wrong. Under real traffic, every one of those calls ties up a thread-pool thread for the full database round trip, and the pool runs dry faster than the request volume alone would explain. Switching to <code>await context.Orders.ToListAsync()</code> frees each thread the moment the call starts waiting, instead of holding it for the duration.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="12.html">← Offset Pagination vs. Keyset Pagination</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="14.html">IAsyncEnumerable&lt;T&gt; vs. IEnumerable&lt;T&gt; →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

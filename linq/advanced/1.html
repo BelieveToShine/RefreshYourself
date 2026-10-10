@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Both Func<T,bool> and Expression<Func<T,bool>> can represent x => x.Age > 30 — what's the real difference?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Func&lt;T&gt; vs. Expression&lt;Func&lt;T&gt;&gt; — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="Both Func<T,bool> and Expression<Func<T,bool>> can represent x => x.Age > 30 — what's the real difference?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Func&lt;T&gt; vs. Expression&lt;Func&lt;T&gt;&gt; — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Func&lt;T&gt; vs. Expression&lt;Func&lt;T&gt;&gt;</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 LINQ · Advanced · Must Know</div>
+    <h1><code>Func&lt;T&gt;</code> vs. <code>Expression&lt;Func&lt;T&gt;&gt;</code> — <span class="hl hl-blue">compiled code</span>, or <span class="hl hl-inter">data describing code</span>?</h1>
+    <p class="interview-q">"Both <code>Func&lt;T,bool&gt;</code> and <code>Expression&lt;Func&lt;T,bool&gt;&gt;</code> can represent <code>x =&gt; x.Age &gt; 30</code> — what's the real difference?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🧩 Func&lt;T&gt;</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>You need to run a predicate as code, right now, against data already sitting in memory — nothing else is ever going to read or rewrite that logic first.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Func&lt;T,bool&gt;</code> compiles to a regular delegate — an in-memory pointer to already-generated IL — so calling it just runs the code immediately, with no way for anything else to inspect its structure first.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Func&lt;T&gt; = compiled code, already runnable.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🌳 Expression&lt;Func&lt;T&gt;&gt;</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A provider like EF Core needs to turn <code>x =&gt; x.Age &gt; 30</code> into something else entirely — a SQL <code>WHERE</code> clause — before anything runs, but a compiled delegate is a black box it can't look inside.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Expression&lt;Func&lt;T,bool&gt;&gt;</code> compiles the same lambda into a data structure instead — a tree the provider can walk, read, and rewrite into SQL (or anything else) before ever executing it as C#.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Expression&lt;Func&lt;T&gt;&gt; = data describing the code, not the code itself.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Func&lt;T&gt;</code> <span class="rarrow">→</span> <b>compiled</b>, callable right now</p>
+      <p class="rrow"><code>Expression&lt;Func&lt;T&gt;&gt;</code> <span class="rarrow">→</span> <b>data tree</b>, inspected first</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Func&lt;T&gt;</code></b> runs. <b><code>Expression&lt;Func&lt;T&gt;&gt;</code></b> describes what to run.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shLa1" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arLa1" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arLa1Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arLa1Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shLa1)"><rect x="240" y="18" width="200" height="40" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="340" y="42" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">x =&gt; x.Age &gt; 30</text>
+
+      <path d="M340,58 V74" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M170,74 H510" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M170,74 V96" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arLa1)"/>
+      <path d="M510,74 V96" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arLa1)"/>
+
+      <text x="170" y="90" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">Func&lt;T,bool&gt;</text>
+      <text x="510" y="90" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">Expression&lt;Func&lt;T,bool&gt;&gt;</text>
+
+      <g filter="url(#shLa1)"><rect x="60" y="100" width="220" height="42" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="170" y="120" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Compiled by the compiler</text>
+      <text x="170" y="135" text-anchor="middle" font-size="10" fill="#5b6472">emits IL for a delegate</text>
+
+      <g filter="url(#shLa1)"><rect x="400" y="100" width="220" height="42" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="510" y="120" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">Built as a data tree</text>
+      <text x="510" y="135" text-anchor="middle" font-size="10" fill="#5b6472">nodes describing the code</text>
+
+      <path d="M170,142 V164" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arLa1Blue)"/>
+      <path d="M510,142 V164" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arLa1Amber)"/>
+
+      <g filter="url(#shLa1)"><rect x="60" y="164" width="220" height="42" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="170" y="184" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">IEnumerable&lt;T&gt; calls it</text>
+      <text x="170" y="199" text-anchor="middle" font-size="10" fill="#5b6472">directly, no inspection</text>
+
+      <g filter="url(#shLa1)"><rect x="400" y="164" width="220" height="42" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="510" y="184" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">A provider reads it</text>
+      <text x="510" y="199" text-anchor="middle" font-size="10" fill="#5b6472">EF Core, etc. — before running anything</text>
+
+      <path d="M170,206 V228" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arLa1Blue)"/>
+      <path d="M510,206 V228" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arLa1Amber)"/>
+
+      <g filter="url(#shLa1)"><rect x="60" y="228" width="220" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="170" y="248" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ Runs now, in memory</text>
+      <text x="170" y="263" text-anchor="middle" font-size="10" fill="#5b6472">LINQ-to-Objects</text>
+
+      <g filter="url(#shLa1)"><rect x="400" y="228" width="220" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="510" y="248" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">🗄️ Rewritten &amp; translated</text>
+      <text x="510" y="263" text-anchor="middle" font-size="10" fill="#5b6472">e.g. to SQL — LINQ-to-Entities</text>
+    </svg>
+    <figcaption>The identical lambda, compiled two different ways — the target type decides which one you get.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>An <code>Expression&lt;Func&lt;T&gt;&gt;</code> isn't directly callable.</b> It has no <code>Invoke</code> — you can only run it as code after calling <code>.Compile()</code>, which turns the tree back into a delegate at a real runtime cost.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"So can I just call <code>.Compile()</code> on every <code>Expression&lt;Func&lt;T&gt;&gt;</code> and get a working <code>Func&lt;T&gt;</code> back?"</b> Yes, technically — but doing that against an <code>IQueryable</code> means you've opted out of translation entirely: the compiled delegate can only run in-memory, so nothing in it reaches the database as SQL anymore.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>Func&lt;T,bool&gt;</code> is already-compiled, callable code — calling it just runs the lambda. <code>Expression&lt;Func&lt;T,bool&gt;&gt;</code> is a data structure describing that same lambda's logic, which a provider like EF Core walks and translates into something else, like SQL, instead of ever running it as C#."</p>
+    <ul>
+      <li><code>Func&lt;T&gt;</code> <span class="hl hl-blue">→ compiled delegate, runs now</span>.</li>
+      <li><code>Expression&lt;Func&lt;T&gt;&gt;</code> <span class="hl hl-inter">→ expression tree, inspected and translated first</span>.</li>
+      <li><code>IQueryable&lt;T&gt;</code>'s operators take <code>Expression&lt;Func&lt;T&gt;&gt;</code> <span class="hl hl-hot">→ so a provider can see the logic before anything runs</span>.</li>
+      <li><code>.Compile()</code> <span class="hl hl-basic">→ turns a tree back into a delegate, but only for in-memory use</span>.</li>
+      <li>Same lambda syntax <span class="hl hl-adv">→ the compiler picks which one to build from the target type it's assigned to</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>The compiler decides which of these it builds based on the <b>target type</b>, not the
+      lambda's own syntax. Assign <code>x =&gt; x.Age &gt; 30</code> to a
+      <code>Func&lt;Person,bool&gt;</code> and the compiler emits ordinary IL for a delegate —
+      exactly like compiling any other method body. Assign the identical lambda to an
+      <code>Expression&lt;Func&lt;Person,bool&gt;&gt;</code> and the compiler instead emits code
+      that <i>builds an object graph</i> — a tree of <code>BinaryExpression</code>,
+      <code>MemberExpression</code>, and similar nodes describing "compare this property with
+      this constant," rather than compiling the comparison itself.</p>
+
+      <p>This is the actual mechanism behind <code>IQueryable&lt;T&gt;</code>. Its standard query
+      operators (<code>Where</code>, <code>Select</code>, <code>OrderBy</code>...) are defined to
+      accept <code>Expression&lt;Func&lt;T,...&gt;&gt;</code> parameters specifically —
+      <code>IEnumerable&lt;T&gt;</code>'s versions of the same-named methods take plain
+      <code>Func&lt;T,...&gt;</code> instead. That signature difference is what forces the
+      compiler to hand a provider like EF Core a tree it can read, rather than a delegate it
+      can't look inside.</p>
+
+      <p><code>.Compile()</code> exists to cross back over: it walks the tree and emits a real
+      delegate at runtime, which does real work and isn't free. Calling it on a tree that was
+      about to be translated to SQL throws away that translation path entirely — everything
+      after it just runs as LINQ-to-Objects, in memory.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>Func&lt;T,bool&gt;</code></th><th><code>Expression&lt;Func&lt;T,bool&gt;&gt;</code></th></tr></thead>
+        <tbody>
+          <tr><th>Compiles to</th><td>a delegate (IL)</td><td>an expression tree (data)</td></tr>
+          <tr><th>Can inspect the logic?</th><td class="no">❌ no — already opaque, compiled code</td><td class="yes">✅ yes — walk nodes like <code>BinaryExpression</code></td></tr>
+          <tr><th>Can call it directly?</th><td class="yes">✅ yes — <code>predicate(person)</code></td><td class="no">❌ no — must <code>.Compile()</code> first</td></tr>
+          <tr><th>Used by</th><td><code>IEnumerable&lt;T&gt;</code> (LINQ-to-Objects)</td><td><code>IQueryable&lt;T&gt;</code> (LINQ-to-Entities / providers)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Func</span>&lt;<span class="ty">Person</span>, <span class="kw">bool</span>&gt; predicate = p =&gt; p.Age &gt; 30;
+<span class="kw">bool</span> isAdult = predicate(person);   <span class="cx-ok">// ✅ runs immediately — real compiled code</span></code></pre>
+      </div>
+      <p class="cx-note">A <code>Func&lt;T&gt;</code> is just a method reference — calling it runs it.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Expression</span>&lt;<span class="ty">Func</span>&lt;<span class="ty">Person</span>, <span class="kw">bool</span>&gt;&gt; predicateExpr = p =&gt; p.Age &gt; 30;
+<span class="cx-err">// predicateExpr(person);     ❌ won't compile — it's data, not a callable method</span>
+<span class="kw">var</span> compiled = predicateExpr.Compile();   <span class="cx-cmt">// turns the tree back into a delegate</span>
+<span class="kw">bool</span> isAdult = compiled(person);           <span class="cx-ok">// ✅ now callable — but only in memory</span></code></pre>
+      </div>
+      <p class="cx-note">The tree itself can't be invoked — only a delegate produced by <code>.Compile()</code> can.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// IEnumerable&lt;T&gt;'s Where — takes a Func, runs it directly</span>
+<span class="kw">public</span> <span class="kw">static</span> <span class="ty">IEnumerable</span>&lt;T&gt; Where&lt;T&gt;(<span class="kw">this</span> <span class="ty">IEnumerable</span>&lt;T&gt; src, <span class="ty">Func</span>&lt;T, <span class="kw">bool</span>&gt; predicate);
+
+<span class="cx-cmt">// IQueryable&lt;T&gt;'s Where — takes an Expression, hands it to the provider</span>
+<span class="kw">public</span> <span class="kw">static</span> <span class="ty">IQueryable</span>&lt;T&gt; Where&lt;T&gt;(<span class="kw">this</span> <span class="ty">IQueryable</span>&lt;T&gt; src, <span class="ty">Expression</span>&lt;<span class="ty">Func</span>&lt;T, <span class="kw">bool</span>&gt;&gt; predicate);</code></pre>
+      </div>
+      <p class="cx-note">Same method name, different parameter type — that signature difference <b>is</b> the mechanism.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Writing a reusable filter for an in-memory <code>List&lt;T&gt;</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcF1a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">LIST&lt;T&gt; FILTER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Func&lt;T,bool&gt;</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">never inspected</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcF1a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ just called</text>
+            </svg>
+          </div>
+          <p class="uc-what">Nothing is ever going to read or rewrite this lambda, so a plain
+          <code>Func&lt;T,bool&gt;</code> is exactly right — it compiles once and is called
+          directly, every time.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">In-memory, never inspected → Func&lt;T&gt; is the right tool.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Writing a filter for a <code>DbSet&lt;T&gt;</code> that must become SQL</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcF1b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">DBSET&lt;T&gt; FILTER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">Expression&lt;Func&lt;T&gt;&gt;</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#92400e">readable tree</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcF1b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🗄️ becomes SQL</text>
+            </svg>
+          </div>
+          <p class="uc-what">EF Core must be able to see the logic's structure before it runs
+          anything — which is exactly why <code>IQueryable&lt;T&gt;</code>'s <code>Where</code>
+          demands an <code>Expression&lt;Func&lt;T,bool&gt;&gt;</code>, not a <code>Func</code>.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Needs translation → must stay an Expression, not a Func.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Calling <code>.Compile()</code> on a query you meant to run on the database</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcF1c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">.COMPILE() TOO EARLY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">Tree → delegate</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">translation opted out</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcF1c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 runs in memory</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">no longer SQL</text>
+            </svg>
+          </div>
+          <p class="uc-what">Calling <code>.Compile()</code> turns the tree into a delegate that
+          can only run against data already in memory — any part of the query that was still
+          meant to reach the database loses its path there the moment this happens.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">.Compile() too early → opts out of SQL translation entirely.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Think of <code>Func&lt;T&gt;</code> as a sealed envelope you can only open by running
+      it</b> — you hand it an input and get an output, with no way to see what's inside first.
+      <code>Expression&lt;Func&lt;T&gt;&gt;</code> is the same instructions written on a piece of
+      paper instead — someone else (the provider) can read those instructions, cross things out,
+      and rewrite them into a completely different language before anyone actually follows them.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev"></div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="2.html">How LINQ Providers Work →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Your query throws a translation exception because it calls a custom C# method inside the Where clause — how do you fix it, without loading the entire table into memory?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: Fixing an Untranslatable EF Core Query — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="Your query throws a translation exception because it calls a custom C# method inside the Where clause — how do you fix it, without loading the entire table into memory?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: Fixing an Untranslatable EF Core Query — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe; color:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: Fixing an EF Core Query That Can't Translate a Custom C# Method</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 LINQ · Advanced · Must Know</div>
+    <h1>A custom method breaks translation — <span class="hl hl-hot">don't reach for .ToList()</span></h1>
+    <p class="interview-q">"Your query throws a translation exception because it calls a custom C# method inside the <code>Where</code> clause — how do you fix it, without loading the entire table into memory?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">🧯 Untranslatable Method, Without the Full-Table Fix</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A custom C# method inside <code>Where</code> throws because EF Core's provider has no SQL equivalent for it — and the instinctive fix, slapping <code>.ToList()</code> in front of the whole query, "fixes" the exception by pulling the entire unfiltered table into memory first, which is correct but can be catastrophically slow on a real table.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Rewrite the custom logic using operators the provider can translate, so the whole thing stays server-side. When that's genuinely not possible, push every translatable filter into SQL first to narrow the result set, <i>then</i> materialize only that already-narrowed set and apply the untranslatable logic in memory.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Narrow in SQL first, go to memory last — never the whole table.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">The fix = <b>"narrow in SQL first, switch to memory last — never the whole table."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>.ToList()</code></b> the whole unfiltered table is the wrong fix every time — push every translatable filter to SQL first, <b>then</b> drop to memory only for the small untranslatable part.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 330" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh26" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar26Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="ar26Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="ar26Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">WHERE(x =&gt; CUSTOMMETHOD(x)) — TWO VERY DIFFERENT FIXES</text>
+
+      <g filter="url(#sh26)"><rect x="190" y="20" width="260" height="44" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">Where(x =&gt; CustomMethod(x))</text>
+      <text x="320" y="54" text-anchor="middle" font-size="10" fill="#5b6472">&#10071; provider can't translate this</text>
+
+      <path d="M320,64 V80" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,80 H480" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,80 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar26Gray)"/>
+      <path d="M480,80 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar26Gray)"/>
+
+      <g filter="url(#sh26)"><rect x="50" y="100" width="220" height="56" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="122" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">&#10060; .ToList() the whole table</text>
+      <text x="160" y="138" text-anchor="middle" font-size="10" fill="#5b6472">then filters the rest in memory</text>
+
+      <g filter="url(#sh26)"><rect x="370" y="100" width="220" height="56" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="122" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">push translatable filters</text>
+      <text x="480" y="138" text-anchor="middle" font-size="10" fill="#5b6472">to SQL first — narrow the set</text>
+
+      <path d="M160,156 V186" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#ar26Red)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+      <path d="M480,156 V176" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ar26Green)"/>
+
+      <g filter="url(#sh26)"><rect x="45" y="186" width="230" height="48" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="208" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">&#128062; loads everything first</text>
+      <text x="160" y="224" text-anchor="middle" font-size="10" fill="#5b6472">wasteful, slow at scale</text>
+
+      <g filter="url(#sh26)"><rect x="370" y="176" width="220" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="198" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">AsEnumerable()</text>
+      <text x="480" y="214" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">+ CustomMethod() on the rest</text>
+
+      <path d="M480,232 V252" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ar26Green)"/>
+
+      <g filter="url(#sh26)"><rect x="365" y="252" width="230" height="40" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="276" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">&#9989; small in-memory filter only</text>
+
+      <text x="320" y="314" text-anchor="middle" font-size="11" fill="#5b6472">Same "can't translate" error, two very different outcomes.</text>
+    </svg>
+    <figcaption>Wrong: .ToList() the whole table first. Right: narrow in SQL, then go to memory only for the small remaining part.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Just add .ToList() before the custom method and the error goes
+    away."</b> It does make the exception disappear, but it does so by pulling the <i>entire
+    unfiltered table</i> into memory first — correctness-preserving, performance-destroying,
+    never the recommended fix.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's the difference between AsEnumerable() and ToList() here?"</b>
+    <code>AsEnumerable()</code> just changes the static type to <code>IEnumerable&lt;T&gt;</code>
+    so later operators run client-side — it doesn't force execution on its own. Placed after the
+    translatable filters, it hands off only the already-narrowed query to memory, instead of
+    eagerly materializing the whole thing the way <code>ToList()</code> would.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I wouldn't reach for .ToList() on the whole query — that pulls the
+    entire unfiltered table into memory. I'd rewrite the custom logic using translatable
+    operators if possible, and if it genuinely can't translate, push every other filter into SQL
+    first to narrow the result set, then switch to in-memory evaluation only for that small
+    remaining part."</p>
+    <ul>
+      <li><code>.ToList()</code> the whole query <span class="hl hl-hot">→ never the fix</span>, even though it removes the exception.</li>
+      <li>Rewrite inline with translatable operators <span class="hl hl-basic">→ the best fix</span> when it's possible at all.</li>
+      <li>Push filters to SQL, narrow, <b>then</b> go client-side <span class="hl hl-blue">→ the real fallback</span> when a rewrite isn't possible.</li>
+      <li><code>AsEnumerable()</code> mid-chain <span class="hl hl-teal">→ the tool for that handoff</span>, placed after the translatable filters, not before them.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>The exception happens because EF Core's provider walks the expression tree looking for
+      SQL equivalents of every call in the chain, and a custom C# method has no such mapping —
+      see <a href="7.html">Why EF Core Cannot Translate Certain C# Methods</a> for the mechanism
+      in full. The fastest-looking fix, <span class="hl hl-hot">.ToList()</span> placed right
+      before the custom method, does make the exception disappear — but only because it forces
+      the <i>entire</i> query to materialize first, including every row the database hasn't even
+      filtered yet. See <a href="8.html">Premature Materialization and ToList() Placement</a> for
+      why this is never the recommended move.</p>
+
+      <p>The better path, in order of preference: first try to express the custom logic using
+      operators and string/date methods the provider already knows how to translate — if that's
+      possible, the whole query stays server-side and nothing changes about its shape. When the
+      logic genuinely can't be expressed that way (a call into a complex business rule, say),
+      push every <i>other</i> filter into the query first, so the database does as much narrowing
+      as it possibly can. Only then switch to <span class="hl hl-basic">AsEnumerable()</span> —
+      which just changes the static type to <code>IEnumerable&lt;T&gt;</code> without itself
+      forcing execution — so the custom method runs in memory against a result set that's already
+      small, not the full table.</p>
+
+      <p>The difference between the two fixes isn't correctness — both eventually produce the
+      right rows. It's <i>when</i> the database stops helping: the wrong fix throws away every bit
+      of server-side filtering before the custom logic even runs; the right fix keeps as much of
+      it as possible and only drops to memory for the part that has no other choice.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> result = db.Orders
+    .Where(o =&gt; o.Status == OrderStatus.Active) <span class="cx-cmt">// translatable</span>
+    .Where(o =&gt; PricingRules.IsDiscountEligible(o)) <span class="cx-err">// ❌ throws: can't translate</span>
+    .ToList();</code></pre>
+      </div>
+      <p class="cx-note">The custom method is what fails — nothing here fixes it yet.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> result = db.Orders
+    .Where(o =&gt; o.Status == OrderStatus.Active)
+    .ToList() <span class="cx-err">// ❌ WRONG — pulls every active order into memory first</span>
+    .Where(o =&gt; PricingRules.IsDiscountEligible(o))
+    .ToList();</code></pre>
+      </div>
+      <p class="cx-note">Fixes the exception, but by loading <b>every</b> active order before the
+      untranslatable filter even runs.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> result = db.Orders
+    .Where(o =&gt; o.Status == OrderStatus.Active)
+    .Where(o =&gt; o.CreatedAt &gt;= cutoff) <span class="cx-ok">// ✅ every translatable filter stays in SQL</span>
+    .AsEnumerable() <span class="cx-ok">// hands off only the already-narrowed rows</span>
+    .Where(o =&gt; PricingRules.IsDiscountEligible(o)) <span class="cx-ok">// runs in memory, on a small set</span>
+    .ToList();</code></pre>
+      </div>
+      <p class="cx-note">The database does <b>everything it can</b> first — memory only handles
+      the small, already-narrowed remainder.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> The custom method is actually simple enough to rewrite as translatable operators</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc26a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">rewrite inline</text>
+              <text x="285" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">stays server-side →</text>
+              <path d="M210,33 H330" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc26a)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">whole query in SQL</text>
+            </svg>
+          </div>
+          <p class="uc-what">A method like a one-line date comparison or string check often has a direct translatable equivalent — rewriting it inline keeps the entire query server-side and avoids the whole client-side conversation.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Try a translatable rewrite first — it's the best outcome, when it's possible.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> The custom method is a genuinely complex business rule with no SQL equivalent</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc26b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">narrow in SQL first</text>
+              <text x="285" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">then AsEnumerable() →</text>
+              <path d="M210,33 H330" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc26b)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">small set, in memory</text>
+            </svg>
+          </div>
+          <p class="uc-what">When a rewrite genuinely isn't possible, pushing every other filter into SQL first and switching to in-memory evaluation only for the small remaining set is the real, recommended fallback — not a compromise to feel bad about.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Can't rewrite it → narrow in SQL first, then go client-side for the rest.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A "quick fix" .ToList() added to silence the exception ships to production</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc26c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">.ToList() "fixes" it</text>
+              <text x="285" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">whole table every call →</text>
+              <path d="M210,33 H330" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc26c)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">endpoint times out</text>
+            </svg>
+          </div>
+          <p class="uc-what">No exception in the logs, just a quietly expensive endpoint — the exact trap from the Common Trap box, caught in production instead of code review. Every request now loads the entire table, every single time.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A ".ToList() fixed the error" commit is worth a second look during review.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A pricing filter calling a legacy business-rules method starts throwing a translation
+      exception after an EF Core upgrade.</b> Pushing the status and date filters into SQL first,
+      then calling <code>.AsEnumerable()</code> before the legacy method, keeps the query fast —
+      the database does the heavy narrowing, and the legacy rule only ever runs against the
+      handful of rows left over.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="25.html">← Scenario: Finding the Highest-Paid Employee in Each Department</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="27.html">Scenario: Processing Millions of Records →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

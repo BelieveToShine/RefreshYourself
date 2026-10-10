@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What does 'this can't run on the server' actually mean for an IQueryable query?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Client-Side vs. Server-Side Evaluation — LINQ Advanced — RefreshYourself">
+<meta property="og:description" content="What does 'this can't run on the server' actually mean for an IQueryable query?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Client-Side vs. Server-Side Evaluation — LINQ Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="linq/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0e7ff;--crumb-ink:#4f46e5;">🔗 LINQ</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Client-Side vs. Server-Side Evaluation</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 LINQ · Advanced · Must Know</div>
+    <h1><span class="hl hl-blue">Client-Side</span> vs. <span class="hl hl-hot">Server-Side</span> Evaluation — what actually runs where</h1>
+    <p class="interview-q">"What does 'this can't run on the server' actually mean for an <code>IQueryable</code> query?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">⚡ Client-Side Evaluation</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A plain C# method or property the provider can't translate — a custom instance method, an unsupported string/date API, a computed property with real logic — sitting inside an otherwise-<code>IQueryable</code> expression has no SQL equivalent, so the provider has to do <i>something</i> with it.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Modern EF Core (3.0+) throws at translation time for most such cases; an older or more permissive setup instead silently falls back to pulling far more rows than intended to the client and finishing the filter in memory — same root cause, two very different-looking symptoms.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Client-side evaluation = the part that couldn't become SQL runs in memory instead — or doesn't run at all.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Translatable part <span class="rarrow">→</span> stays server-side, becomes SQL</p>
+      <p class="rrow">Untranslatable, modern EF Core <span class="rarrow">→</span> <b>throws</b> at translation time</p>
+      <p class="rrow">Untranslatable, older/permissive setup <span class="rarrow">→</span> <b>silently pulls</b> rows, filters in memory</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b>Throws</b> is loud and safe. <b>Silent pull</b> is quiet and dangerous.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 680 350" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shLa5" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arLa5" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arLa5Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arLa5Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arLa5Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="340" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">context.Orders.Where(o =&gt; o.Total &gt; 100 &amp;&amp; IsPriority(o))</text>
+
+      <g filter="url(#shLa5)"><rect x="220" y="26" width="240" height="38" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="340" y="50" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">still building, IQueryable</text>
+
+      <path d="M340,64 V80" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,80 H520" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,80 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arLa5)"/>
+      <path d="M520,80 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arLa5)"/>
+
+      <g filter="url(#shLa5)"><rect x="40" y="104" width="240" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="124" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ Total &gt; 100</text>
+      <text x="160" y="140" text-anchor="middle" font-size="10" fill="#5b6472">translatable — stays in SQL</text>
+
+      <g filter="url(#shLa5)"><rect x="400" y="104" width="240" height="48" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="520" y="124" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">❓ IsPriority(o)</text>
+      <text x="520" y="140" text-anchor="middle" font-size="10" fill="#5b6472">custom method — not recognized</text>
+
+      <path d="M440,152 V176" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arLa5)"/>
+      <path d="M600,152 V176" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arLa5Red)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shLa5)"><rect x="310" y="176" width="260" height="52" rx="12" fill="#f1f5f9" stroke="#64748b" stroke-width="1.8"/></g>
+      <text x="440" y="197" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">🛑 Throws now</text>
+      <text x="440" y="212" text-anchor="middle" font-size="9.5" fill="#5b6472">modern EF Core (3.0+), typical</text>
+
+      <g filter="url(#shLa5)"><rect x="500" y="176" width="170" height="52" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="585" y="195" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">⚠️ Silent pull</text>
+      <text x="585" y="209" text-anchor="middle" font-size="9" fill="#991b1b">older / permissive</text>
+      <text x="585" y="221" text-anchor="middle" font-size="9" fill="#991b1b">setups only</text>
+
+      <path d="M440,228 V252" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arLa5)"/>
+      <path d="M585,228 V252" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arLa5Red)"/>
+
+      <g filter="url(#shLa5)"><rect x="310" y="252" width="150" height="46" rx="12" fill="#f1f5f9" stroke="#64748b" stroke-width="1.8"/></g>
+      <text x="385" y="272" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">Fails loud</text>
+      <text x="385" y="286" text-anchor="middle" font-size="9" fill="#5b6472">query never ran</text>
+
+      <g filter="url(#shLa5)"><rect x="480" y="252" width="190" height="46" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="575" y="272" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 ALL rows pulled</text>
+      <text x="575" y="286" text-anchor="middle" font-size="9" fill="#991b1b">filtered client-side, no error</text>
+    </svg>
+    <figcaption>Same untranslatable method, two very different outcomes — one fails loudly, one fails silently.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Compiling clean isn't the same as running clean.</b> A method the provider can't translate compiles fine inside a <code>Where()</code> — the failure (or worse, the silent client pull) only shows up at runtime, never at build time.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If it throws, what's the fix?"</b> Rewrite the untranslatable piece in terms the provider CAN translate, or deliberately move it after <code>AsEnumerable()</code>/<code>ToList()</code> so it runs in memory on purpose — never just slap <code>.ToList()</code> in front of the whole query as a blanket fix (see Advanced #7 and #8 for why that's a different, often worse, bug).</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Client-side evaluation means the part of your query the provider can't translate has to run somewhere else. Modern EF Core (3.0+) throws a translation exception for most such cases up front; an older or more permissive setup can instead silently pull far more rows to the client than you intended and finish the filter in memory — same root cause, very different blast radius."</p>
+    <ul>
+      <li>Translatable part <span class="hl hl-blue">→ stays server-side, becomes real SQL</span>.</li>
+      <li>Untranslatable part, modern EF Core <span class="hl hl-hot">→ throws at translation time — loud and safe</span>.</li>
+      <li>Untranslatable part, older/permissive setup <span class="hl hl-hot">→ silently pulls extra rows, filters client-side — quiet and dangerous</span>.</li>
+      <li>A query that compiles <span class="hl hl-inter">→ says nothing about whether every piece of it can translate</span>.</li>
+      <li>The real fix <span class="hl hl-basic">→ rewrite in translatable terms, or move the untranslatable piece after materializing on purpose</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Translation happens at the provider's visitor level (see <a href="4.html">Advanced
+      #4</a>); when the visitor hits a node it doesn't recognize — a custom instance method, a
+      computed property backed by real logic, an unsupported string/date API — it has nothing
+      to map that node to.</p>
+
+      <p>EF Core 3.0 onward changed the default here deliberately: client evaluation is now
+      restricted to the final top-level projection; anything untranslatable inside a filter,
+      order, or group clause throws a translation exception instead of silently running
+      client-side. Earlier EF Core versions — and some other, more permissive
+      <code>IQueryable</code> providers — were more permissive: they'd quietly materialize more
+      of the underlying data than the developer expected and finish the untranslatable part in
+      memory, which can turn a selective filter into something that scans the whole table, with
+      no error raised at all.</p>
+
+      <p>Either failure mode traces back to the exact same cause — the provider's translator
+      didn't recognize a pattern — so the fix is the same either way: express the logic in a
+      way the provider's translator does understand, or move it to run after the query is
+      deliberately materialized, not as an accidental side effect of throwing
+      <code>.ToList()</code> in front of it.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Throws (modern EF Core, 3.0+)</th><th>Silent client pull (older/permissive)</th></tr></thead>
+        <tbody>
+          <tr><th>When it happens</th><td>translation time, before any SQL runs</td><td>query execution time</td></tr>
+          <tr><th>What the developer sees</th><td>an exception naming the untranslatable method/property</td><td>no error at all, just a slow query</td></tr>
+          <tr><th>Risk</th><td>low — fails loud, fails fast</td><td>high — looks fine until the table is large</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> priority = context.Orders
+    .Where(o =&gt; o.Total &gt; 100 &amp;&amp; IsPriorityCustomer(o))   <span class="cx-cmt">// a plain C# method</span>
+    .ToList();
+<span class="cx-err">// 🛑 throws: "could not be translated" (EF Core 3.0+)</span></code></pre>
+      </div>
+      <p class="cx-note">The exception names the exact piece the translator couldn't map.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> rewritten = context.Orders
+    .Where(o =&gt; o.Total &gt; 100 &amp;&amp; o.PriorityScore &gt;= 5)    <span class="cx-ok">// ✅ translatable properties only</span>
+    .ToList();</code></pre>
+      </div>
+      <p class="cx-note">The real fix: express the same decision using properties the provider already understands.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A <code>Where()</code> using only properties and operators EF Core recognizes</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcCs5a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">ONLY RECOGNIZED PIECES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">o.Total &gt; 100</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcCs5a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ stays server-side</text>
+            </svg>
+          </div>
+          <p class="uc-what">The whole expression translates — it stays entirely server-side,
+          no client evaluation of any kind involved.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">All recognized → no client evaluation needed at all.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#475569">
+          <div class="uc-sit"><span class="uc-flag">2</span> A <code>Where()</code> calling a custom instance method</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcCs5b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#475569"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155" letter-spacing=".03em">CUSTOM METHOD CALL</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">IsPriority(o)</text>
+              <path d="M190,43 H290" stroke="#475569" stroke-width="1.6" fill="none" marker-end="url(#arUcCs5b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">🛑 throws now</text>
+            </svg>
+          </div>
+          <p class="uc-what">EF Core 3.0+ throws a clear translation exception right away —
+          the safest possible outcome for an untranslatable call.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Modern EF Core → fails loud, before any SQL runs.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A more permissive provider silently pulling the whole table to evaluate a filter</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcCs5c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">OLDER / PERMISSIVE SETUP</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">untranslatable filter</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcCs5c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 no error</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">just gets slower</text>
+            </svg>
+          </div>
+          <p class="uc-what">No exception at all — just a query that quietly gets slower as the
+          table grows, because every row is being pulled to filter in memory.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No error, just slow → check for a silent client-side pull.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A report endpoint gets noticeably slower every month, with no code changes and no
+      errors in the logs.</b> The actual cause: a filter calling a small computed property
+      that the provider can't translate, silently pulling the entire growing table into memory
+      every time the report runs — the fix is rewriting that one condition in translatable
+      terms, not adding more server capacity.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="4.html">← How LINQ Expressions Become SQL</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to LINQ Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="6.html">AsEnumerable vs. AsQueryable →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · LINQ · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
