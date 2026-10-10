@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What can CompletableFuture do that a plain Future can't? Future vs. CompletableFuture — blocking get(), or a non-blocking chain.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Future vs. CompletableFuture — Java Advanced — RefreshYourself">
+<meta property="og:description" content="What can CompletableFuture do that a plain Future can't? Future vs. CompletableFuture — blocking get(), or a non-blocking chain.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Future vs. CompletableFuture — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Future vs. CompletableFuture</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Java · Advanced · Must Know</div>
+    <h1>Future vs. CompletableFuture — <span class="hl hl-hot">blocking get()</span>, or a <span class="hl hl-basic">non-blocking chain</span></h1>
+    <p class="interview-q">"What can CompletableFuture do that a plain Future can't?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-2">
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🎫 Future</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>You submit an async task and need its eventual result — but <code>Future</code>'s only way to retrieve it is <code>get()</code>, which blocks the calling thread, with no way to attach a callback or chain more work.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Future&lt;V&gt;</code> represents a result that will exist eventually — fine for a simple fire-and-wait, but nothing more without blocking.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Future = a result ticket you can only redeem by blocking.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">⚡ CompletableFuture</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Real async workflows need to chain steps, combine results from several independent calls, and recover from failure — none of that is possible without blocking on a plain <code>Future</code>.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>CompletableFuture</code> (Java 8+) adds a full composable, non-blocking async API — <code>thenApply</code>, <code>thenCompose</code>, <code>thenCombine</code>, exception handling, manual completion, and <code>allOf</code>/<code>anyOf</code>.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">CompletableFuture = a Future plus a non-blocking chain of callbacks.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Future</code> <span class="rarrow">→</span> <b>blocking</b> get() only</p>
+      <p class="rrow"><code>CompletableFuture</code> <span class="rarrow">→</span> <b>non-blocking</b> chain of callbacks</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <code>Future</code> is a claim ticket.
+    <code>CompletableFuture</code> is a pipeline already wired to that ticket.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 336" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shP15" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arP15" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arP15Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <line x1="320" y1="26" x2="320" y2="296" stroke="#e2e8f0" stroke-width="2"/>
+
+      <text x="160" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e" letter-spacing="0.3">FUTURE — ONE WAY OUT</text>
+      <text x="480" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#166534" letter-spacing="0.3">COMPLETABLEFUTURE — NON-BLOCKING</text>
+
+      <g filter="url(#shP15)"><rect x="50" y="28" width="220" height="34" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="49" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">⚡ Async task submitted</text>
+
+      <path d="M160,62 V82" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP15)"/>
+
+      <g filter="url(#shP15)"><rect x="50" y="82" width="220" height="40" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="160" y="102" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🎫 Future&lt;V&gt;</text>
+      <text x="160" y="116" text-anchor="middle" font-size="9.5" fill="#5b6472">result will exist eventually</text>
+
+      <path d="M160,122 V142" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP15)"/>
+
+      <g filter="url(#shP15)"><rect x="50" y="142" width="220" height="46" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="163" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🔒 get() — BLOCKS caller</text>
+      <text x="160" y="177" text-anchor="middle" font-size="9.5" fill="#5b6472">optional timeout, still blocks</text>
+
+      <path d="M160,188 V208" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP15)"/>
+
+      <g filter="url(#shP15)"><rect x="90" y="208" width="140" height="40" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="232" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ Result</text>
+
+      <text x="160" y="270" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">ONLY EXIT: blocking get()</text>
+
+      <g filter="url(#shP15)"><rect x="370" y="28" width="220" height="34" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="49" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">⚡ Async task submitted</text>
+
+      <path d="M480,62 V82" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP15)"/>
+
+      <g filter="url(#shP15)"><rect x="370" y="82" width="220" height="40" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="102" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">⚡ CompletableFuture&lt;V&gt;</text>
+      <text x="480" y="116" text-anchor="middle" font-size="9.5" fill="#5b6472">same idea, composable API</text>
+
+      <path d="M480,122 V142" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arP15Green)"/>
+
+      <rect x="370" y="142" width="220" height="32" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+      <text x="480" y="162" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">thenApply(fn) — transform</text>
+
+      <path d="M480,174 V194" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arP15Green)"/>
+
+      <rect x="370" y="194" width="220" height="32" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+      <text x="480" y="214" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">thenAccept(fn) — consume</text>
+
+      <path d="M480,226 V246" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arP15Green)"/>
+
+      <g filter="url(#shP15)"><rect x="370" y="246" width="220" height="40" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="270" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ handled, no block anywhere</text>
+
+      <rect x="20" y="304" width="600" height="22" rx="11" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="320" y="319" text-anchor="middle" font-size="10" fill="#475569">Future's only way out is blocking. CompletableFuture never has to block.</text>
+    </svg>
+    <figcaption>Same async task, two very different ways to reach the result.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Calling <code>.get()</code> on a <code>CompletableFuture</code> is still
+    blocking.</b> <code>CompletableFuture</code> gives you the <i>option</i> not to block — via
+    <code>thenApply</code>/<code>thenAccept</code>/<code>thenCompose</code> — but its own
+    <code>get()</code> blocks exactly like a plain <code>Future</code>'s does.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Can you manually complete a CompletableFuture without running any
+    task?"</b> Yes — <code>complete(value)</code> (or <code>completeExceptionally(ex)</code>) sets
+    the result directly, which is exactly how you bridge a callback-based API into the
+    <code>CompletableFuture</code> world.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>Future&lt;V&gt;</code> only lets you retrieve a result through a
+    blocking <code>get()</code> call. <code>CompletableFuture</code> (Java 8+) is a
+    <code>Future</code> that's also composable and non-blocking — you can chain callbacks,
+    combine multiple futures, and handle failure without ever calling a blocking
+    <code>get()</code>."</p>
+    <ul>
+      <li><code>Future.get()</code> → <span class="hl hl-hot">always blocks</span> the calling thread (optional timeout).</li>
+      <li><code>CompletableFuture</code> → implements <code>Future</code>, adds <span class="hl hl-basic">thenApply/thenCompose/thenCombine</span> chaining.</li>
+      <li><code>allOf()</code> / <code>anyOf()</code> → combinators across <span class="hl hl-teal">multiple independent futures</span>.</li>
+      <li>Manual completion → <code>complete()</code>/<code>completeExceptionally()</code> <span class="hl hl-adv">bridges a callback API</span> into this model.</li>
+      <li>Still need the raw value right now? → <span class="hl hl-inter">get() still blocks</span>, even on a CompletableFuture.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><code>Future</code> is deliberately minimal — it was designed around
+      <code>ExecutorService.submit()</code> as a handle for "ask for the result later," and
+      "later" originally meant "block until it's ready." <span class="hl hl-basic">CompletableFuture</span>
+      extends the same interface but adds the entire pipeline on top: every <code>thenX</code>
+      method returns a new <code>CompletableFuture</code>, so a chain of transformations reads
+      like a sequence of steps while none of them actually block the thread that built the
+      chain.</p>
+
+      <p>This matters most once a system has more than one async call in flight at once. A plain
+      <code>Future</code> gives no clean way to say "run this after that one finishes" or "wait
+      for both of these, then combine" without manually blocking on each — exactly the combinator
+      methods (<code>thenCompose</code>, <code>thenCombine</code>, <code>allOf</code>) that only
+      <code>CompletableFuture</code> provides.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Future</th><th>CompletableFuture</th></tr></thead>
+        <tbody>
+          <tr><th>Retrieve result</th><td>get() — always blocks</td><td>get() blocks too, but you rarely need it</td></tr>
+          <tr><th>Chaining</th><td>not possible</td><td>thenApply / thenCompose / thenCombine</td></tr>
+          <tr><th>Combine multiple</th><td>manual blocking on each</td><td>allOf() / anyOf()</td></tr>
+          <tr><th>Exception handling</th><td>get() throws, that's it</td><td>exceptionally() / handle() / whenComplete()</td></tr>
+          <tr><th>Manual completion</th><td>not supported</td><td>complete() / completeExceptionally()</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Future</span>&lt;<span class="ty">Integer</span>&gt; future = pool.submit(() -> computeTotal());
+<span class="cx-cmt">// ... no way to attach a callback here ...</span>
+<span class="kw">int</span> total = future.get(); <span class="cx-err">// ❌ blocks this thread until done</span></code></pre>
+      </div>
+      <p class="cx-note">The calling thread has nothing to do but wait — there's no hook to run
+      code automatically once <code>computeTotal()</code> finishes.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">CompletableFuture</span>&lt;<span class="ty">Integer</span>&gt; cf = CompletableFuture.supplyAsync(() -> computeTotal());
+cf.thenApply(total -> total * <span class="num">1.1</span>)       <span class="cx-cmt">// add tax, non-blocking</span>
+  .thenAccept(withTax -> log(withTax)); <span class="cx-ok">// ✅ no get() call anywhere</span></code></pre>
+      </div>
+      <p class="cx-note">The calling thread moves on immediately — <code>thenApply</code>/
+      <code>thenAccept</code> run automatically once the result is ready.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">CompletableFuture</span>&lt;<span class="ty">String</span>&gt; cf = <span class="kw">new</span> <span class="ty">CompletableFuture</span>&lt;&gt;();
+legacyCallbackApi.onResult(value -> cf.complete(value));    <span class="cx-cmt">// bridge in</span>
+legacyCallbackApi.onError(err -> cf.completeExceptionally(err));</code></pre>
+      </div>
+      <p class="cx-note">Manual completion is how a callback-based library gets wrapped into the
+      <code>CompletableFuture</code> model it was never written for.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#92400e">
+          <div class="uc-sit"><span class="uc-flag">1</span> One async call, and the caller genuinely has nothing else to do but wait</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc15a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#92400e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">SIMPLE FIRE-AND-WAIT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#92400e" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">⚡ submit(task)</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#92400e">one call, nothing else to do</text>
+              <path d="M190,43 H290" stroke="#92400e" stroke-width="1.6" fill="none" marker-end="url(#arUc15a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#92400e" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🎫 future.get()</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#92400e">plain Future is enough</text>
+            </svg>
+          </div>
+          <p class="uc-what">If there's genuinely no further work to chain and the caller is fine
+          waiting, a plain <code>Future</code> with a blocking <code>get()</code> is simple and
+          perfectly correct — reaching for <code>CompletableFuture</code> here adds no real
+          value.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Nothing to chain → plain Future is fine.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> Fetching a user, then their profile, then rendering — each step depends on the last</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc15b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">CHAINED ASYNC STEPS</text>
+              <rect x="20" y="24" width="140" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="90" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">fetchUser()</text>
+              <path d="M160,43 H230" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc15b)"/>
+              <rect x="230" y="24" width="140" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="300" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">thenCompose</text>
+              <path d="M370,43 H440" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc15b)"/>
+              <rect x="400" y="24" width="60" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="430" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">render</text>
+            </svg>
+          </div>
+          <p class="uc-what">Each async step depends on the previous one's result —
+          <code>CompletableFuture.thenCompose</code> chains them without blocking a thread at
+          every hop.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Dependent async steps → CompletableFuture chaining.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Code calls <code>.get()</code> immediately after building a CompletableFuture chain</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc15c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">DEFEATS THE POINT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">⚡ thenApply chain</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">built non-blocking</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUc15c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🔒 .get() right after</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">blocks anyway</text>
+            </svg>
+          </div>
+          <p class="uc-what">Building a careful non-blocking chain and then immediately calling
+          <code>.get()</code> on the end of it throws away the whole benefit. <b>A common
+          interview trap:</b> assuming <code>CompletableFuture</code> is non-blocking by itself —
+          it's non-blocking only if you never call its blocking methods.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">.get() after a chain → still blocks, no matter how it was built.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A reporting service calls three independent downstream APIs and needs to combine
+      their results into one response.</b> Blocking on three separate <code>Future.get()</code>
+      calls in sequence wastes time waiting on each one in turn; <code>CompletableFuture</code>'s
+      <code>thenCombine</code>/<code>allOf</code> let all three run concurrently and compose the
+      final result the moment the slowest one finishes — no manual thread bookkeeping required.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="14.html">← ExecutorService and Thread Pools</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="16.html">thenApply() vs. thenCompose() vs. thenCombine() →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

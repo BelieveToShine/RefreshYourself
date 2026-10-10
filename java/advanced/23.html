@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Lock contention — why adding more threads can make throughput drop instead of rise.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Synchronization, Lock Contention and Throughput — Java Advanced — RefreshYourself">
+<meta property="og:description" content="Lock contention — why adding more threads can make throughput drop instead of rise.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Synchronization, Lock Contention and Throughput — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Synchronization, Lock Contention and Throughput</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Java · Advanced · Should Know</div>
+    <h1>More threads, <span class="hl hl-hot">less throughput</span> — know what <span class="hl hl-blue">contention</span> actually costs</h1>
+    <p class="interview-q">"Your app adds more threads but throughput actually drops — what's going on?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">🔒 Lock contention</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>When many threads frequently compete for the same lock, each extra thread adds more waiting and context-switching rather than more real work — so throughput can go <i>down</i> as thread count goes up, the opposite of the usual "add threads to scale" instinct.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Shrink what the lock actually protects, split one lock into several independent locks for independent data, or move to a lock-free/concurrent-collection design — "add more threads" is never the fix for a contention-bound system.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Contention = threads paying more for the lock than they get from the work.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Contention = <b>"past a point, threads spend more time waiting than working."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> one checkout counter and a growing line —
+    adding more customers doesn't check anyone out faster, it just makes the line longer.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shJ23a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arJ23Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">THROUGHPUT vs. THREAD COUNT</text>
+
+      <path d="M70,210 V36" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ23Gray)"/>
+      <path d="M70,210 H580" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ23Gray)"/>
+      <text x="40" y="30" font-size="10" fill="#5b6472">throughput</text>
+      <text x="560" y="228" font-size="10" fill="#5b6472">threads</text>
+
+      <path d="M70,190 C140,110 200,70 270,66 C340,62 420,120 500,185" fill="none" stroke="#1d4ed8" stroke-width="2.4"/>
+
+      <circle cx="270" cy="66" r="4.5" fill="#1d4ed8"/>
+      <rect x="208" y="34" width="124" height="20" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.3"/>
+      <text x="270" y="48" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">contention point</text>
+
+      <rect x="80" y="140" width="150" height="20" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.3"/>
+      <text x="155" y="154" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">more work getting done</text>
+
+      <rect x="345" y="150" width="190" height="20" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.3"/>
+      <text x="440" y="164" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">more waiting than working</text>
+
+      <text x="20" y="214" font-size="9.5" fill="#94a3b8">0</text>
+
+      <line x1="70" y1="225" x2="635" y2="225" stroke="#e2e8f0" stroke-width="1.5"/>
+
+      <g filter="url(#shJ23a)"><rect x="80" y="236" width="230" height="18" rx="9" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.3"/></g>
+      <text x="195" y="249" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">1 coarse lock — whole method</text>
+
+      <path d="M312,245 H370" stroke="#94a3b8" stroke-width="1.6" fill="none" marker-end="url(#arJ23Gray)"/>
+
+      <g filter="url(#shJ23a)"><rect x="375" y="236" width="80" height="18" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.3"/></g>
+      <text x="415" y="249" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">lock A</text>
+      <g filter="url(#shJ23a)"><rect x="463" y="236" width="80" height="18" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.3"/></g>
+      <text x="503" y="249" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">lock B</text>
+    </svg>
+    <figcaption>Throughput rises, peaks at the contention point, then falls — splitting one lock into independent ones is the standard fix.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Adding more threads is not a universal fix for low throughput.</b> Past
+    the contention point, every additional thread adds more waiting and context-switching on the
+    same lock instead of more completed work — the system can get slower, not faster.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How would you actually confirm the bottleneck is lock contention,
+    not something else?"</b> Lock/contention profiling (e.g. thread dumps showing many threads
+    `BLOCKED` on the same monitor, or a profiler's lock-contention view) — see this track's
+    JVM-profiling page for the full "profile first" approach.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Contention is multiple threads frequently competing for the same lock —
+    past a certain point, adding threads reduces throughput instead of increasing it, because
+    threads spend more time waiting and context-switching than doing work. The fix is shrinking
+    the lock's scope, splitting one lock into several independent locks, or moving to a
+    lock-free/concurrent-collection design — never just adding more threads."</p>
+    <ul>
+      <li>Contention → <span class="hl hl-hot">more waiting than working</span>, past a certain thread count.</li>
+      <li>Reduce lock scope → <span class="hl hl-basic">protect only what truly needs it</span>, not a whole method.</li>
+      <li>Split one lock into several → <span class="hl hl-blue">independent data gets independent locks</span>.</li>
+      <li>Lock-free / concurrent collections → <span class="hl hl-adv">avoid the lock entirely for hot paths</span>.</li>
+      <li>"Just add more threads" → <span class="hl hl-inter">never the fix for a contention-bound system</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A lock (<code>synchronized</code>, a <code>ReentrantLock</code>) exists to protect
+      shared mutable state, but it also serializes access to whatever it protects — only one
+      thread can hold it at a time. With few threads, that serialization barely matters; as
+      thread count grows, more threads arrive wanting the same lock at the same moment, and each
+      one past the first has to wait. Waiting threads aren't idle for free either — they're
+      often parked and later rescheduled, and that context-switching itself costs CPU time that
+      produces no useful work.</p>
+
+      <p><span class="hl hl-blue">Reducing the lock's scope</span> is usually the cheapest fix:
+      lock only the few statements that actually touch shared state instead of an entire method,
+      so threads spend less time holding the lock and more time doing independent work outside
+      it. <span class="hl hl-basic">Splitting one lock into several</span> helps when the
+      protected data is actually independent — two unrelated fields guarded by the same lock
+      create contention between operations that never needed to block each other at all; giving
+      each its own lock lets them run concurrently for real.</p>
+
+      <p>When contention is still too high after that, a <span class="hl hl-adv">lock-free or
+      concurrent-collection design</span> (CAS-based structures, <code>ConcurrentHashMap</code>'s
+      per-bin locking) removes the single shared lock as the bottleneck entirely — at the cost of
+      real implementation complexity, which is why it's a step up from "just split the lock,"
+      not the first thing to reach for.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">synchronized</span> <span class="kw">void</span> handleRequest(<span class="ty">Request</span> r) {
+    validate(r);              <span class="cx-cmt">// doesn't touch shared state</span>
+    <span class="kw">this</span>.counter++;        <span class="cx-cmt">// the only line that actually needs the lock</span>
+    writeAuditLog(r);         <span class="cx-cmt">// slow I/O — held the lock the whole time</span>
+}
+<span class="cx-err">// ❌ the lock is held for validate() + writeAuditLog() too — pure contention under load</span></code></pre>
+      </div>
+      <p class="cx-note">Locking the entire method serializes work that never needed to be
+      serialized — every thread queues behind the slow I/O call too.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">void</span> handleRequest(<span class="ty">Request</span> r) {
+    validate(r);                 <span class="cx-cmt">// now runs lock-free, in parallel</span>
+    <span class="kw">synchronized</span> (<span class="kw">this</span>) { <span class="kw">this</span>.counter++; } <span class="cx-ok">// ✅ lock held for one line only</span>
+    writeAuditLog(r);            <span class="cx-cmt">// slow I/O, also outside the lock now</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Shrinking the lock to the single statement that needs it cuts how long
+      every thread spends waiting, without changing what's actually protected.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">private</span> <span class="kw">final</span> <span class="ty">Object</span> ordersLock = <span class="kw">new</span> <span class="ty">Object</span>();
+<span class="kw">private</span> <span class="kw">final</span> <span class="ty">Object</span> metricsLock = <span class="kw">new</span> <span class="ty">Object</span>();
+<span class="cx-cmt">// two independent fields, two independent locks — no false contention between them</span>
+
+<span class="kw">void</span> recordOrder() { <span class="kw">synchronized</span> (ordersLock) { orders.add(newOrder); } }
+<span class="kw">void</span> recordMetric() { <span class="kw">synchronized</span> (metricsLock) { metrics.increment(); } }
+<span class="cx-ok">// ✅ a thread calling recordOrder() never blocks a thread calling recordMetric()</span></code></pre>
+      </div>
+      <p class="cx-note">One shared lock for both fields would make unrelated operations block
+      each other for no real reason — splitting the lock removes that false contention.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> Throughput drops after the team doubles the thread pool size</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ23a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">MORE THREADS ADDED</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🧵🧵🧵🧵 threads</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">same single lock</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcJ23a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 Throughput falls</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">past contention point</text>
+            </svg>
+          </div>
+          <p class="uc-what">Past the contention point, more threads just means more threads
+          queued on the same lock. <b>A common interview trap:</b> assuming "throughput problem"
+          always means "not enough threads."</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">More threads on a saturated lock → lower throughput, not higher.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> One method synchronizes on <code>this</code> for its entire body</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ23b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">SHRINK LOCK SCOPE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🔓 whole method locked</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">I/O held inside the lock</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcJ23b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ one line locked</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#166534">I/O moved outside</text>
+            </svg>
+          </div>
+          <p class="uc-what">Locking only the statement that touches shared state — moving slow
+          I/O or validation outside the <code>synchronized</code> block — is usually the cheapest
+          way to cut contention, with no design change needed.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Shrink the lock to what actually needs protecting.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> Two unrelated fields share one lock</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ23c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">SPLIT THE LOCK</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🔒 1 lock, 2 fields</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">false contention</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcJ23c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🔒🔒 2 locks</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">run concurrently</text>
+            </svg>
+          </div>
+          <p class="uc-what">An orders list and a metrics counter guarded by the same lock block
+          each other for no real reason — they're independent data. Giving each its own lock
+          lets operations on one run concurrently with operations on the other.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Independent data → independent locks.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A service's response times get worse after the on-call engineer bumps the thread
+      pool from 50 to 200 "to handle more load."</b> A thread dump shows most of those 200
+      threads sitting `BLOCKED` on the same monitor. The real fix isn't more threads — it's
+      finding what that lock protects, shrinking its scope, or splitting it so independent work
+      stops queuing behind unrelated work.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="22.html">← Parallel Streams — When They Help and Hurt</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="24.html">JVM Profiling and Java Performance Tuning →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

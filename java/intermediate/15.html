@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Why doesn't anything happen when you write .filter().map() on a stream, until you add .collect()?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Stream API — Intermediate vs. Terminal Operations — Java Intermediate — RefreshYourself">
+<meta property="og:description" content="Why doesn't anything happen when you write .filter().map() on a stream, until you add .collect()?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Stream API — Intermediate vs. Terminal Operations — Java Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Stream API — Intermediate vs. Terminal Operations</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Java · Intermediate · Must Know</div>
+    <h1>Stream pipelines — <span class="hl hl-hot">a plan, until something finally triggers it</span></h1>
+    <p class="interview-q">"Why doesn't anything happen when you write <code>.filter().map()</code> on a stream, until you add <code>.collect()</code>?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">⏳ Lazy Pipelines</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Chaining <code>.filter().map().sorted()</code> on a huge list looks like it should already be scanning and transforming data — but nothing has been touched yet, which is confusing the first time a breakpoint inside the lambda never fires.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Intermediate operations only build up a description of the work; a terminal operation is what actually pulls every element through the whole chain, one pass, in one go.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">A stream pipeline is a recipe — nothing cooks until a terminal op turns the stove on.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>filter() / map() / sorted()</code> <span class="rarrow">→</span> <b>describes</b> the plan, lazy</p>
+      <p class="rrow"><code>collect() / forEach() / reduce()</code> <span class="rarrow">→</span> <b>runs</b> it, once</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> Nothing happens <b>until</b> a terminal operation is called — then the whole chain runs in one pass, element by element.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shJ15" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arJ15Gray" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arJ15Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">LAZY UNTIL A TERMINAL OP TRIGGERS IT</text>
+
+      <g filter="url(#shJ15)"><rect x="20" y="44" width="126" height="74" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="83" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">💤 filter()</text>
+      <text x="83" y="90" text-anchor="middle" font-size="10.5" fill="#5b6472">just a plan</text>
+
+      <g filter="url(#shJ15)"><rect x="178" y="44" width="126" height="74" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="241" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">💤 map()</text>
+      <text x="241" y="90" text-anchor="middle" font-size="10.5" fill="#5b6472">just a plan</text>
+
+      <g filter="url(#shJ15)"><rect x="336" y="44" width="126" height="74" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="399" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">💤 sorted()</text>
+      <text x="399" y="90" text-anchor="middle" font-size="10.5" fill="#5b6472">just a plan</text>
+
+      <g filter="url(#shJ15)"><rect x="494" y="44" width="126" height="74" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="557" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">⚡ collect()</text>
+      <text x="557" y="90" text-anchor="middle" font-size="10.5" fill="#5b6472">TERMINAL — triggers it</text>
+
+      <path d="M146,81 H178" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="4 4" marker-end="url(#arJ15Gray)"/>
+      <path d="M304,81 H336" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="4 4" marker-end="url(#arJ15Gray)"/>
+      <path d="M462,81 H494" fill="none" stroke="#16a34a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arJ15Green)"><animate attributeName="stroke-dashoffset" values="9;0" dur="0.8s" repeatCount="indefinite"/></path>
+
+      <path d="M557,118 V150 H320 V175" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arJ15Green)"/>
+
+      <g filter="url(#shJ15)"><rect x="190" y="175" width="260" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="199" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ runs now — one pass</text>
+      <text x="320" y="217" text-anchor="middle" font-size="10" fill="#5b6472">all four steps run together, once</text>
+
+      <text x="320" y="250" text-anchor="middle" font-size="11" fill="#5b6472">Nothing runs until a terminal operation is called</text>
+    </svg>
+    <figcaption>Intermediate operations stay dormant, just describing a plan — the terminal operation is what pulls every element through the whole chain, one pass.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A stream can be reused like a list.</b> It can't — a stream is consumed
+    exactly once; calling a second terminal operation on the same stream instance throws
+    <code>IllegalStateException</code> ("stream has already been operated upon or closed").</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"So if I need both a count and the actual list, do I just call two
+    terminal ops on the same stream?"</b> No — each terminal operation needs its own freshly
+    built stream (call <code>.stream()</code> on the source again), or collect once and derive
+    the rest from that result (e.g. <code>list.size()</code> after <code>collect()</code>)
+    instead of touching the original stream twice.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A stream pipeline is lazy — <code>filter()</code>, <code>map()</code>,
+    and <code>sorted()</code> just build up a plan and return a new stream. Nothing actually runs
+    until a terminal operation like <code>collect()</code>, <code>forEach()</code>, or
+    <code>reduce()</code> pulls every element through the whole chain in one pass."</p>
+    <ul>
+      <li>Intermediate ops <span class="hl hl-blue">→ lazy, only describe the plan</span>, return a new stream.</li>
+      <li>Terminal ops <span class="hl hl-hot">→ trigger the actual run, exactly once</span>.</li>
+      <li>A stream <span class="hl hl-inter">→ consumed once</span>; a 2nd terminal op throws <code>IllegalStateException</code>.</li>
+      <li>Need two results <span class="hl hl-basic">→ build a fresh stream</span>, don't reuse the old one.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Calling <code>.filter(...)</code> on a stream doesn't scan anything — it just wraps the
+      source in a description that says "when someone eventually asks for elements, apply this
+      test first." <code>.map(...)</code> and <code>.sorted()</code> stack more of the same kind of
+      description on top. Every <span class="hl hl-blue">intermediate operation</span> returns a
+      brand-new <code>Stream</code> object that still hasn't touched a single real element.</p>
+
+      <p>A <span class="hl hl-hot">terminal operation</span> is the only thing that actually asks
+      for elements. When <code>collect()</code> or <code>forEach()</code> runs, the whole pipeline
+      pulls one source element at a time, pushes it through every intermediate step in order, and
+      only then moves to the next element — a single pass, not one pass per operation. That's also
+      why a stream can't be reused: once the terminal operation has pulled every element through,
+      the pipeline considers itself finished and any later terminal call on that same instance is
+      rejected.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Intermediate operation</th><th>Terminal operation</th></tr></thead>
+        <tbody>
+          <tr><th>Returns</th><td>a new <code>Stream</code></td><td>a result (or nothing, <code>void</code>)</td></tr>
+          <tr><th>Runs immediately?</th><td class="no">❌ no — lazy</td><td>✅ yes — triggers the whole pipeline</td></tr>
+          <tr><th>Examples</th><td><code>filter</code>, <code>map</code>, <code>sorted</code>, <code>distinct</code></td><td><code>collect</code>, <code>forEach</code>, <code>reduce</code>, <code>count</code>, <code>findFirst</code></td></tr>
+          <tr><th>Can chain more after it?</th><td>✅ yes</td><td class="no">❌ no — the stream is already consumed</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Stream</span>&lt;<span class="ty">String</span>&gt; pipeline = names.stream()
+    .filter(n -&gt; n.length() &gt; <span class="num">3</span>)   <span class="cx-cmt">// not run yet</span>
+    .map(<span class="ty">String</span>::toUpperCase);     <span class="cx-err">// ❌ still zero elements touched</span></code></pre>
+      </div>
+      <p class="cx-note">Building the pipeline <b>does no work at all</b> — it just records the plan.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; result = pipeline.collect(<span class="ty">Collectors</span>.toList());
+                                          <span class="cx-ok">// ✅ NOW it runs — one pass, element by element</span></code></pre>
+      </div>
+      <p class="cx-note"><code>collect()</code> is the terminal operation — it's what actually
+      <b>pulls</b> the elements through.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>pipeline.collect(<span class="ty">Collectors</span>.toList());   <span class="cx-cmt">// already ran once</span>
+pipeline.count();                     <span class="cx-err">// ❌ IllegalStateException</span></code></pre>
+      </div>
+      <p class="cx-note">The <b>same stream instance</b> can't be asked to run a second time — build
+      a fresh one instead.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A breakpoint inside <code>filter()</code> never fires</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ15a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">pipeline built, no terminal</text>
+              <path d="M210,33 H330" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcJ15a)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">nothing ran</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: the whole pipeline
+          was built, but the line that actually calls <code>collect()</code>/<code>forEach()</code>
+          was never reached (an early return, a missing statement). No terminal op means no
+          elements were ever touched — the breakpoint was never going to fire.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No breakpoint hit → check whether a terminal operation actually ran.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> You need both a count and the full list from the same data</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ15b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">collect() once</text>
+              <path d="M210,33 H330" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcJ15b)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">list.size()</text>
+            </svg>
+          </div>
+          <p class="uc-what">Collect the stream into a <code>List</code> once, then call
+          <code>.size()</code> on that list for the count — the list already holds everything, so
+          there's no need (and no way) to run the original stream a second time.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need two answers from one stream → collect once, derive the rest from the result.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A stream reference gets stored and reused later</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ15c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">2nd .collect() call</text>
+              <path d="M210,33 H330" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcJ15c)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 exception</text>
+            </svg>
+          </div>
+          <p class="uc-what">A <code>Stream</code> field or local variable that gets a terminal
+          operation called on it twice — once now, once later in a different code path — throws
+          <code>IllegalStateException</code> the second time, even though the variable itself still
+          holds a perfectly normal-looking reference.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A stream variable isn't reusable data — treat it as single-use, like an envelope you can only open once.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A teammate builds a 6-step stream pipeline, logs "processing started," then nothing
+      shows up in the output.</b> The log line ran, but the pipeline itself never had a terminal
+      operation called on it — swapping the final line for <code>.collect(Collectors.toList())</code>
+      (or any other terminal op) is what actually makes the whole chain run.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="14.html">← Functional Interfaces, Lambdas and Method References</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="16.html">map() vs. flatMap() →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

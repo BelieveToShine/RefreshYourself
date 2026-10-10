@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="You suspect a memory leak vs. a stuck thread — which diagnostic tool do you reach for, and why?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Heap Dumps, Thread Dumps and Out-of-Memory Errors — Java Advanced — RefreshYourself">
+<meta property="og:description" content="You suspect a memory leak vs. a stuck thread — which diagnostic tool do you reach for, and why?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Heap Dumps, Thread Dumps and Out-of-Memory Errors — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Heap Dumps, Thread Dumps and Out-of-Memory Errors</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Java · Advanced · Must Know</div>
+    <h1><span class="hl hl-blue">What's retained</span> vs. <span class="hl hl-hot">what's stuck</span> — two different snapshots</h1>
+    <p class="interview-q">"You suspect a memory leak vs. a stuck thread — which diagnostic tool do you reach for, and why?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📸 Heap Dump</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>"Memory keeps growing" alone doesn't say which object, or which reference chain, is actually responsible — guessing from code review alone is slow and often wrong.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A heap dump is a snapshot of every live object and their reference graph — load it in a profiler and sort by retained size to see exactly <b>what's</b> holding memory, and through what chain.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Heap dump = what's retaining memory, and why it's still reachable.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🧵 Thread Dump</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>"Requests are timing out" doesn't say whether threads are deadlocked, blocked on a lock, or the pool simply ran out of workers — and the heap tells you nothing about any of that.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A thread dump is a snapshot of every thread's stack trace and state at one instant — it shows exactly where each thread is stuck, and (for a deadlock) the circular lock wait itself.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Thread dump = who's stuck, and exactly where in the code.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Memory growing <span class="rarrow">→</span> <b>heap dump</b></p>
+      <p class="rrow">App stuck / unresponsive <span class="rarrow">→</span> <b>thread dump</b></p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> heap dump = a photo of <b>what's being
+    held</b>. Thread dump = a photo of <b>who's holding things up</b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shJ6" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arJ6Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arJ6Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shJ6)"><rect x="235" y="20" width="170" height="54" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="42" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">🤔 What are you</text>
+      <text x="320" y="58" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">diagnosing?</text>
+
+      <path d="M280,74 V95 H110 V117" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arJ6Blue)"/>
+      <path d="M360,74 V95 H530 V117" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arJ6Amber)"/>
+
+      <g filter="url(#shJ6)"><rect x="20" y="117" width="180" height="56" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="110" y="139" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📈 Memory growing</text>
+      <text x="110" y="155" text-anchor="middle" font-size="9.5" fill="#5b6472">over time, no drops</text>
+      <text x="110" y="167" text-anchor="middle" font-size="9.5" fill="#5b6472">suspected leak</text>
+
+      <g filter="url(#shJ6)"><rect x="440" y="117" width="180" height="56" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="530" y="139" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🧊 App stuck</text>
+      <text x="530" y="155" text-anchor="middle" font-size="9.5" fill="#5b6472">unresponsive, timing out</text>
+      <text x="530" y="167" text-anchor="middle" font-size="9.5" fill="#5b6472">suspected deadlock</text>
+
+      <path d="M110,173 V195" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arJ6Blue)"/>
+      <path d="M530,173 V195" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arJ6Amber)"/>
+
+      <g filter="url(#shJ6)"><rect x="20" y="195" width="180" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="110" y="217" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">📸 Heap Dump</text>
+      <text x="110" y="233" text-anchor="middle" font-size="9.5" fill="#5b6472">live objects +</text>
+      <text x="110" y="245" text-anchor="middle" font-size="9.5" fill="#5b6472">reference graph</text>
+
+      <g filter="url(#shJ6)"><rect x="440" y="195" width="180" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="530" y="217" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🧵 Thread Dump</text>
+      <text x="530" y="233" text-anchor="middle" font-size="9.5" fill="#5b6472">every stack trace +</text>
+      <text x="530" y="245" text-anchor="middle" font-size="9.5" fill="#5b6472">thread state</text>
+    </svg>
+    <figcaption>Different symptom, different snapshot — a heap dump can't show a stuck thread, and a thread dump can't show what's retaining memory.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Out of memory" is not one error.</b> <code>java.lang.OutOfMemoryError:
+    Java heap space</code>, <code>GC overhead limit exceeded</code>, <code>Metaspace</code>, and
+    <code>unable to create native thread</code> each point at a different root cause — treating
+    them all as "just increase the heap" misses the ones that aren't actually a heap problem.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's actually different about the Metaspace flavor?"</b> It means
+    class metadata itself ran out of room — usually from loading far more classes than expected
+    (dynamic class generation, a classloader leak from repeatedly reloading the same classes),
+    not from too many regular objects on the heap.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A heap dump is a snapshot of every live object and their reference
+    graph — the tool for finding what's retaining memory in a leak. A thread dump is a snapshot
+    of every thread's stack trace and state — the tool for a deadlock, a stuck thread, or
+    thread-pool exhaustion. And OutOfMemoryError has distinct flavors — heap space, GC overhead
+    limit, Metaspace, unable to create native thread — that each point at a different cause."</p>
+    <ul>
+      <li>Memory growing over time → <span class="hl hl-blue">take a heap dump</span>, sort by retained size.</li>
+      <li>App unresponsive / timing out → <span class="hl hl-inter">take a thread dump</span>, look for circular waits.</li>
+      <li><code>Metaspace</code> OOM → <span class="hl hl-hot">too many loaded classes</span>, not too many objects.</li>
+      <li><code>GC overhead limit exceeded</code> → <span class="hl hl-adv">the GC is running constantly</span> but barely reclaiming anything.</li>
+      <li><code>unable to create native thread</code> → <span class="hl hl-basic">the OS is out of threads/memory</span> for the process, not the Java heap itself.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <span class="hl hl-blue">heap dump</span> (triggered manually with
+      <code>jmap</code>/<code>jcmd</code>, or automatically on OOM with
+      <code>-XX:+HeapDumpOnOutOfMemoryError</code>) captures every live object at that instant,
+      plus the references between them. Loaded into a profiler, you can sort by <b>retained
+      size</b> (how much memory would be freed if this object were collected) and walk the
+      reference chain back to a GC root — exactly how you'd actually find the leak described on
+      the previous page, rather than guessing from the source.</p>
+
+      <p>A <span class="hl hl-inter">thread dump</span> (<code>jstack</code>, or
+      <code>kill -3</code> / <code>jcmd Thread.print</code> on the running process) captures
+      every thread's current stack trace and state (<code>RUNNABLE</code>, <code>BLOCKED</code>,
+      <code>WAITING</code>, …) at that instant. For a deadlock specifically, the JVM's own
+      deadlock detector often reports the circular "waiting to lock … which is held by …" chain
+      directly in the dump — no manual tracing needed.</p>
+
+      <p><code>OutOfMemoryError</code> isn't one failure mode. <b>Java heap space</b> means
+      object allocation genuinely has nowhere to go. <b>GC overhead limit exceeded</b> means the
+      collector is running almost continuously while reclaiming almost nothing — a symptom of a
+      heap that's nearly full of live (not garbage) data. <b>Metaspace</b> means class metadata
+      itself — not regular objects — ran out of room, often from a classloader leak that keeps
+      reloading classes no one properly discards. <b>Unable to create native thread</b> means the
+      operating system refused a new OS thread for the process — an OS-level resource limit, not
+      the Java heap at all.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Shell</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt"># Take a heap dump from a running JVM (find PID with jps)</span>
+jmap -dump:live,format=b,file=heap.hprof &lt;pid&gt;
+
+<span class="cx-cmt"># Auto-dump on the actual OOM, no guessing about timing</span>
+java -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./heap.hprof -jar app.jar
+
+<span class="cx-cmt"># Take a thread dump from a running JVM</span>
+jstack &lt;pid&gt; &gt; threads.txt</code></pre>
+      </div>
+      <p class="cx-note">Prefer <code>-XX:+HeapDumpOnOutOfMemoryError</code> in production — a
+      manual <code>jmap</code> taken minutes after the fact may already have missed the state
+      that actually caused the failure.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Text</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">Found one Java-level deadlock:</span>
+<span class="cx-cmt">=============================</span>
+<span class="cx-err">"Thread-1":</span>
+  waiting to lock monitor 0x00..., which is held by "Thread-2"
+<span class="cx-err">"Thread-2":</span>
+  waiting to lock monitor 0x00..., which is held by "Thread-1"</code></pre>
+      </div>
+      <p class="cx-note">A thread dump's deadlock detector names the exact circular wait — this
+      is the kind of finding a heap dump simply cannot show.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Heap usage trends upward over days, then the app crashes with <code>OutOfMemoryError</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ16" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">SLOW MEMORY GROWTH</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📈 Days-long climb</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">never drops back down</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcJ16)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📸 Heap dump</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">find the retained chain</text>
+            </svg>
+          </div>
+          <p class="uc-what">A slow, steady climb with full-GC collections not bringing it back
+          down is the classic leak signature — a heap dump, sorted by retained size, is the
+          fastest way to name exactly which object and chain is responsible.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Days-long memory growth → heap dump, not thread dump.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> All requests suddenly stall at once, CPU usage drops to near zero</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ17" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">SUDDEN FULL STALL</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🧊 Everything frozen</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#92400e">CPU idle, not busy</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUcJ17)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🧵 Thread dump</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#92400e">deadlock detector flags it</text>
+            </svg>
+          </div>
+          <p class="uc-what">Low CPU plus total unresponsiveness points at threads waiting on
+          each other, not threads doing expensive work — a thread dump's built-in deadlock
+          detector will usually name the exact circular lock wait directly.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Frozen + idle CPU → thread dump, look for a deadlock.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You see "OutOfMemoryError" in the log and assume the heap is simply too small</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ18" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">READ THE FLAVOR FIRST</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">⚠️ "OutOfMemoryError"</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">one label, several causes</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcJ18)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🔍 Check the exact flavor</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">heap? Metaspace? threads?</text>
+            </svg>
+          </div>
+          <p class="uc-what">A candidate often treats every <code>OutOfMemoryError</code> as "the
+          heap is too small, just increase <code>-Xmx</code>." <b>That's not always true</b> —
+          <code>Metaspace</code> and <code>unable to create native thread</code> flavors point at
+          completely different fixes (classloader leak, OS thread limits), and bumping heap size
+          won't touch either one.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Read the exact OOM flavor before assuming "just raise the heap."</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A service's response times degrade over several hours, then it stops accepting new
+      connections entirely.</b> Pulling a thread dump first shows whether every request-handling
+      thread is blocked waiting on the same lock (a contention issue, not a leak) — if threads
+      look healthy and busy instead, a heap dump is the next step, since the real bottleneck is
+      more likely memory pressure triggering constant GC.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="5.html">← Strong, Soft, Weak and Phantom References</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="7.html">JIT Compilation and JVM Optimization →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

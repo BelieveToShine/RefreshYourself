@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What's the difference between instanceof and a cast, and what's new about instanceof pattern matching?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="instanceof, Casting and Type Checking — Java Basic — RefreshYourself">
+<meta property="og:description" content="What's the difference between instanceof and a cast, and what's new about instanceof pattern matching?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>instanceof, Casting and Type Checking — Java Basic — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/basic">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">instanceof, Casting and Type Checking</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Java · Basic · Should Know</div>
+    <h1><code>instanceof</code> vs. a cast — <span class="hl hl-hot">a safe test, or an unchecked bet?</span></h1>
+    <p class="interview-q">"What's the difference between <code>instanceof</code> and a cast, and what's new about <code>instanceof</code> pattern matching?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔍 instanceof</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>You need to know whether an object is really a <code>Cat</code> before touching it, but guessing wrong shouldn't be able to crash the program.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>instanceof</code> just answers <code>true</code>/<code>false</code> and never throws — it checks the object's actual runtime type.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">instanceof = test only, returns boolean, never throws.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+          <div class="wc-head">⚠️ Cast</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Sometimes you're already certain a conversion will succeed and don't want the ceremony of checking first.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>(Cat) o</code> skips the check entirely — and throws <code>ClassCastException</code> the instant that certainty turns out to be wrong.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Cast = assumes success, throws ClassCastException if wrong.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🧩 Pattern matching</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Testing with <code>instanceof</code> and then casting on the next line to actually use the object is two statements for one idea, every single time.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>instanceof</code> pattern matching (Java 16, JEP 394) tests <b>and</b> binds a typed variable in one line: <code>if (obj instanceof Cat c)</code>.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Pattern matching = test + cast, combined, Java 16+.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>instanceof</code> <span class="rarrow">→</span> <b>test</b> only, never throws</p>
+      <p class="rrow"><code>(Type)obj</code> <span class="rarrow">→</span> <b>throws</b> on mismatch</p>
+      <p class="rrow"><code>instanceof Cat c</code> <span class="rarrow">→</span> <b>test + bind</b>, Java 16+</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> pattern matching is just <b><code>instanceof</code></b> and the cast you'd write right after it, <b>fused into one line</b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh18a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar18a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto"><path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/></marker>
+        <marker id="ar18aRed" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto"><path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/></marker>
+      </defs>
+
+      <text x="320" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">object o — TESTING AGAINST Cat</text>
+
+      <path d="M160,34 H480" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M160,34 V82" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar18a)"/>
+      <path d="M480,34 V82" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar18a)"/>
+
+      <g filter="url(#sh18a)"><rect x="65" y="82" width="190" height="38" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="106" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1d4ed8">o instanceof Cat</text>
+      <g filter="url(#sh18a)"><rect x="385" y="82" width="190" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="480" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#b91c1c">(Cat) o</text>
+
+      <path d="M160,120 V144" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar18a)"/>
+      <path d="M480,120 V144" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar18a)"/>
+
+      <g filter="url(#sh18a)"><rect x="65" y="144" width="190" height="36" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="167" text-anchor="middle" font-size="11.5" fill="#1d4ed8">✅ true / false — never throws</text>
+      <g filter="url(#sh18a)"><rect x="385" y="144" width="190" height="36" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="480" y="167" text-anchor="middle" font-size="12" fill="#b91c1c">✅ Cat ref / ❌ throws</text>
+
+      <path d="M480,180 V202" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#ar18aRed)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.7s" repeatCount="indefinite"/></path>
+      <text x="480" y="220" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">ClassCastException</text>
+
+      <text x="320" y="240" text-anchor="middle" font-size="11" fill="#5b6472">Same mismatch, two different endings — only the cast can crash</text>
+    </svg>
+    <figcaption>Same type mismatch, tested two ways — only the unchecked cast can throw.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh18b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar18bGreen" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto"><path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/></marker>
+        <marker id="ar18bSlate" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto"><path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/></marker>
+      </defs>
+
+      <rect x="220" y="20" width="200" height="40" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/>
+      <text x="320" y="45" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">obj instanceof Cat c</text>
+      <rect x="440" y="14" width="150" height="20" rx="10" fill="#ffffff" stroke="#d97706" stroke-width="1.2"/>
+      <text x="515" y="28" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">Java 16+ (JEP 394)</text>
+
+      <path d="M320,60 V84" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M170,84 H470" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M170,84 V108" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ar18bGreen)"/>
+      <path d="M470,84 V108" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar18bSlate)"/>
+
+      <rect x="70" y="108" width="200" height="46" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+      <text x="170" y="128" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ c = Cat, bound</text>
+      <text x="170" y="143" text-anchor="middle" font-size="9.5" fill="#5b6472">scoped to this branch only</text>
+
+      <rect x="370" y="108" width="200" height="46" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+      <text x="470" y="128" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">❌ false</text>
+      <text x="470" y="143" text-anchor="middle" font-size="9.5" fill="#5b6472">c doesn't exist here</text>
+
+      <text x="320" y="178" text-anchor="middle" font-size="11" fill="#5b6472">c only exists where the check actually passed</text>
+    </svg>
+    <figcaption>Pattern matching fuses the test and the cast — <code>c</code> is typed, bound, and scoped to the branch where the check passed.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Reaching for a cast when <code>instanceof</code> (or its pattern-matching form) would avoid the exception entirely.</b> If you're not already certain the conversion will succeed, a bare cast is the risky choice, not the default one.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Can <code>c</code> from <code>obj instanceof Cat c</code> be used outside the <code>if</code> block?"</b> Only if the compiler can prove the check held there too (e.g. an early <code>return</code>/<code>throw</code> in the <code>false</code> branch) — otherwise <code>c</code> is simply not in scope outside the branch where the test passed.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>instanceof</code> only tests and returns a boolean. A cast throws <code>ClassCastException</code> if the object genuinely isn't that type — it's the only one of the two that can crash. Since Java 16, pattern matching (<code>obj instanceof Cat c</code>) combines the test and the cast in one line, binding <code>c</code> only inside the branch where the check passed."</p>
+    <ul>
+      <li><code>instanceof</code> pattern (<code>instanceof Cat c</code>) → <span class="hl hl-basic">test and bind in one line</span>, Java 16+.</li>
+      <li>Bare cast → <span class="hl hl-hot">use only when you're already certain</span> the conversion succeeds.</li>
+      <li><code>c</code> is scoped to <span class="hl hl-blue">the branch where the check passed</span>, nowhere else.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">instanceof</span> just answers a yes/no question — "is this
+      object actually a <code>Cat</code>, or some subtype of it?" — at runtime, using the
+      object's real type, not the variable's declared type. It never throws.</p>
+
+      <p><span class="hl hl-hot">A cast</span> — <code>(Cat) o</code> — is the one with no safety
+      net. It performs no check of its own at the source level; the JVM verifies the real object's
+      type at the cast and throws <code>ClassCastException</code> immediately if it doesn't
+      match. It's the right tool only when failure genuinely isn't expected.</p>
+
+      <p><span class="hl hl-teal">instanceof pattern matching</span>, finalized in <b>Java 16</b>
+      (JEP 394), fuses the two: <code>if (obj instanceof Cat c)</code> tests <i>and</i> declares
+      <code>c</code> as an already-cast <code>Cat</code> reference, but only inside the branch
+      where the test actually succeeded — try to read <code>c</code> outside that branch and the
+      compiler rejects it as out of scope, not merely unsafe.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>instanceof</code></th><th>Bare cast</th><th>Pattern matching</th></tr></thead>
+        <tbody>
+          <tr><th>Returns</th><td><code>boolean</code></td><td>The converted reference</td><td><code>boolean</code>, plus a bound variable</td></tr>
+          <tr><th>On a mismatch</th><td><code>false</code></td><td class="no">❌ throws</td><td><code>false</code>, no exception</td></tr>
+          <tr><th>Gives you a usable reference?</th><td class="no">❌ not by itself</td><td class="yes">✅ yes</td><td class="yes">✅ yes, scoped to the branch</td></tr>
+          <tr><th>Minimum Java version</th><td>Any</td><td>Any</td><td><b>16</b> (JEP 394)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang">☕ Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Object</span> o = <span class="kw">new</span> <span class="ty">Dog</span>();
+<span class="kw">if</span> (o <span class="kw">instanceof</span> <span class="ty">Cat</span>) {
+    <span class="ty">Cat</span> c = (<span class="ty">Cat</span>) o;   <span class="cx-cmt">// old style — test, then a separate cast</span>
+    c.meow();
+} <span class="kw">else</span> {
+    System.out.println(<span class="str">"not a cat"</span>);  <span class="cx-ok">// ✅ runs, no exception</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Pre-16 style: <code>instanceof</code> tests, then a <b>separate</b> cast statement makes <code>c</code> usable.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang">☕ Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">if</span> (o <span class="kw">instanceof</span> <span class="ty">Cat</span> c) {   <span class="cx-cmt">// Java 16+ — test AND bind in one line</span>
+    c.meow();                       <span class="cx-ok">// ✅ c is already a typed Cat here</span>
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>c</code> only exists <b>inside this block</b> — the compiler won't let you reference it outside where the check passed.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang">☕ Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Cat</span> c = (<span class="ty">Cat</span>) o;   <span class="cx-err">// ❌ throws ClassCastException — o is a Dog</span></code></pre>
+      </div>
+      <p class="cx-note">The bare cast <b>assumes success</b> — when that assumption is wrong, it's the only option here that crashes.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're looping through a mixed-type collection for one type</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="14" width="190" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">📦 Dog, Cat, Bird…</text>
+              <path d="M210,33 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc18a)"/>
+              <rect x="290" y="14" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">instanceof Cat c</text>
+            </svg>
+          </div>
+          <p class="uc-what">Looping through a bag of mixed types and want only the Cats?
+          <code>instanceof Cat c</code> tests each item safely and hands you a typed <code>c</code>
+          in one line. <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Mixed collection → instanceof pattern, never a raw cast.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> You already know for certain what the object is</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <rect x="20" y="14" width="190" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🏭 you made it a Cat</text>
+              <path d="M210,33 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc18b)"/>
+              <rect x="290" y="14" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🐱 (Cat) o — no risk</text>
+            </svg>
+          </div>
+          <p class="uc-what">If you created the object as that type yourself, or a method's
+          contract guarantees it, a bare cast is just recovering type information you already
+          have — the one case a cast is the deliberate, correct choice.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Certain of the type already → bare cast is the deliberate choice.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You assume a successful <code>instanceof</code> check guarantees a later cast can't fail</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="14" width="210" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="125" y="30" text-anchor="middle" font-size="10" font-weight="700" fill="#b91c1c">🐛 another thread</text>
+              <text x="125" y="43" text-anchor="middle" font-size="9.5" fill="#b91c1c">reassigns the field</text>
+              <path d="M230,33 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc18c)"/>
+              <rect x="290" y="14" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">stale check, risky cast</text>
+            </svg>
+          </div>
+          <p class="uc-what">If the same shared field is checked and then cast as two separate
+          statements, something else (another thread, a setter call in between) can change it in
+          the gap — the pattern-matching form closes that gap by binding <code>c</code> from the
+          exact value that was tested.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Separate check-then-cast on a shared field → a gap can open between them.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Checking ID at a door.</b> <code>instanceof</code> is glancing at someone's badge and
+      deciding yes or no — nobody gets hurt either way. A bare cast is letting someone in and
+      finding out they're an impostor only once they're already inside, causing a scene. Pattern
+      matching is checking the badge and handing them their matching keycard in the same motion.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="17.html">← this vs. super</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="19.html">Packages and Imports →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

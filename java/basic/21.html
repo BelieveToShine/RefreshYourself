@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What is autoboxing, and where does the Integer caching trap actually bite you?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Wrapper Classes, Autoboxing and Unboxing — Java Basic — RefreshYourself">
+<meta property="og:description" content="What is autoboxing, and where does the Integer caching trap actually bite you?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Wrapper Classes, Autoboxing and Unboxing — Java Basic — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/basic">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#dcfce7;--crumb-ink:#15803d;">Basic</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Wrapper Classes, Autoboxing and Unboxing</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Java · Basic · Must Know</div>
+    <h1>Autoboxing &amp; <code>Integer</code> caching — <span class="hl hl-hot">where <code>==</code> quietly stops working</span></h1>
+    <p class="interview-q">"What is autoboxing, and where does the <code>Integer</code> caching trap actually bite you?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔄 Autoboxing &amp; Unboxing</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Generics like <code>List&lt;T&gt;</code> can only hold objects, never a raw primitive — using <code>int</code> values with them would otherwise require manual wrapping everywhere.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The compiler automatically converts between a primitive and its wrapper — <code>Integer i = 5;</code> boxes, <code>int j = i;</code> unboxes — so primitives and generic collections work together with no extra code.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Autoboxing = the compiler wraps and unwraps for you, automatically.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+          <div class="wc-head">🎯 Integer Caching</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Comparing wrappers with <code>==</code> can look perfectly correct while testing with small numbers, then silently break in production the first time a larger value shows up.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Integer.valueOf</code> (used by autoboxing) only caches instances from <b>-128 to 127</b> — <code>==</code> happens to "work" by coincidence inside that range and compares different objects outside it.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text"><code>==</code> on wrappers is never safe — use <code>equals()</code>.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Autoboxing <span class="rarrow">→</span> <b>compiler</b> converts automatically</p>
+      <p class="rrow"><code>Integer</code> <code>==</code> <span class="rarrow">→</span> <b>never reliable</b>, cache is only -128 to 127</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>==</code></b> on wrappers compares identity, not value. <b><code>equals()</code></b> is the one that's always right.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh21" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+      <text x="320" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.4">Integer.valueOf(...) — WHICH VALUES ARE CACHED?</text>
+
+      <g filter="url(#sh21)"><rect x="20" y="40" width="150" height="56" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="95" y="63" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">&lt; -128</text>
+      <text x="95" y="81" text-anchor="middle" font-size="10" fill="#5b6472">not cached</text>
+
+      <g filter="url(#sh21)"><rect x="190" y="40" width="260" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="63" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">-128 … 127</text>
+      <text x="320" y="81" text-anchor="middle" font-size="10" fill="#5b6472">cached — shared objects</text>
+
+      <g filter="url(#sh21)"><rect x="470" y="40" width="150" height="56" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="545" y="63" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">&gt; 127</text>
+      <text x="545" y="81" text-anchor="middle" font-size="10" fill="#5b6472">not cached</text>
+    </svg>
+    <figcaption><code>==</code> only "works" inside this range by coincidence — those 256 cached objects get reused by every autoboxing conversion.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh21b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar21b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto">
+          <path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="ar21bRed" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto">
+          <path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <path d="M320,20 V180" stroke="#cbd5e1" stroke-width="1.6" stroke-dasharray="5 4"/>
+
+      <text x="160" y="35" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">Integer a = 100, b = 100</text>
+      <text x="130" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">a</text>
+      <text x="190" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">b</text>
+      <path d="M130,68 V95" fill="none" stroke="#16a34a" stroke-width="1.6" marker-end="url(#ar21b)"/>
+      <path d="M190,68 V95" fill="none" stroke="#16a34a" stroke-width="1.6" marker-end="url(#ar21b)"/>
+      <g filter="url(#sh21b)"><rect x="90" y="95" width="140" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="124" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🔗 Integer(100)</text>
+      <text x="160" y="167" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">a == b → true</text>
+
+      <text x="480" y="35" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">Integer a = 200, b = 200</text>
+      <text x="405" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">a</text>
+      <text x="545" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">b</text>
+      <path d="M405,68 V95" fill="none" stroke="#dc2626" stroke-width="1.6" marker-end="url(#ar21bRed)"/>
+      <path d="M545,68 V95" fill="none" stroke="#dc2626" stroke-width="1.6" marker-end="url(#ar21bRed)"/>
+      <g filter="url(#sh21b)"><rect x="350" y="95" width="110" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="405" y="124" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">Integer(200)</text>
+      <g filter="url(#sh21b)"><rect x="490" y="95" width="110" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="545" y="124" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">Integer(200)</text>
+      <text x="480" y="167" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">a == b → false</text>
+    </svg>
+    <figcaption>Inside the cache, <code>a</code> and <code>b</code> point at the exact same object. Outside it, autoboxing creates two separate <code>Integer</code> objects that just happen to hold equal values.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Integer caching is not a reason to ever use <code>==</code> for wrapper comparison.</b> It only happens to "work" for values -128 to 127 because those instances are cached and reused — outside that range, two equal-looking <code>Integer</code>s are different objects and <code>==</code> returns false.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What happens if you unbox a <code>null</code> <code>Integer</code>?"</b> It throws <code>NullPointerException</code> at the exact unboxing point — e.g. inside a ternary that mixes a wrapper and a primitive branch — which can look completely unrelated to <code>null</code> at a glance.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Autoboxing/unboxing is the compiler converting between a primitive and its wrapper automatically. <code>Integer</code> caches instances only from -128 to 127, so <code>==</code> happens to work there by coincidence and breaks outside it — always use <code>equals()</code> for wrapper comparison, and watch for <code>NullPointerException</code> when a wrapper gets unboxed while <code>null</code>."</p>
+    <ul>
+      <li>Autoboxing → <span class="hl hl-basic">compiler-inserted conversion</span>, never something you call yourself.</li>
+      <li><code>==</code> on wrappers → <span class="hl hl-hot">never reliable</span> — use <code>equals()</code> always.</li>
+      <li>Unboxing a <code>null</code> wrapper → <span class="hl hl-hot">throws NullPointerException</span> at that exact line.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Every primitive has a matching <span class="hl hl-blue">wrapper class</span> —
+      <code>int</code>→<code>Integer</code>, <code>boolean</code>→<code>Boolean</code>, and so on.
+      <b>Autoboxing</b> is the compiler calling <code>Integer.valueOf(...)</code> for you whenever a
+      primitive is used where an object is expected; <b>unboxing</b> is the reverse, calling
+      <code>.intValue()</code> for you.</p>
+
+      <p><span class="hl hl-hot">The cache</span> is what makes this risky: <code>Integer.valueOf</code>
+      keeps a pool of shared objects for -128 to 127 and hands one of those back instead of building
+      a new object every time. Two boxed <code>100</code>s inside that range are genuinely the same
+      object, so <code>==</code> returns <code>true</code> — not because <code>==</code> started
+      comparing values, but because both variables happen to point at the one cached object.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>int</code> (primitive)</th><th><code>Integer</code> (wrapper)</th></tr></thead>
+        <tbody>
+          <tr><th>Can be <code>null</code>?</th><td class="no">❌ no</td><td class="yes">✅ yes</td></tr>
+          <tr><th>Default value</th><td><code>0</code></td><td><code>null</code></td></tr>
+          <tr><th>Works in <code>List&lt;T&gt;</code>?</th><td class="no">❌ no — must be boxed first</td><td class="yes">✅ yes</td></tr>
+          <tr><th><code>==</code> compares</th><td>the actual value</td><td class="no">object identity — looks like value only in the cached range</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang">☕ Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>List&lt;Integer&gt; nums = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+nums.add(<span class="num">5</span>);              <span class="cx-cmt">// autobox: int → Integer</span>
+<span class="kw">int</span> first = nums.get(<span class="num">0</span>);  <span class="cx-cmt">// unbox: Integer → int</span></code></pre>
+      </div>
+      <p class="cx-note">The compiler inserts <code>Integer.valueOf(5)</code> and <code>.intValue()</code> for you — you never call either one yourself.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang">☕ Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Integer</span> a = <span class="num">100</span>, b = <span class="num">100</span>;
+System.out.println(a == b);   <span class="cx-ok">// true  — same cached object</span>
+
+<span class="ty">Integer</span> x = <span class="num">200</span>, y = <span class="num">200</span>;
+System.out.println(x == y);   <span class="cx-err">// false — two different objects</span></code></pre>
+      </div>
+      <p class="cx-note">Same code shape, different outcome, purely because of the value — exactly why <code>==</code> is unsafe for wrappers.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang">☕ Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Integer</span> bonus = <span class="kw">null</span>;
+<span class="kw">int</span> payout = hasBonus ? bonus : <span class="num">0</span>;  <span class="cx-err">// ❌ NullPointerException when hasBonus is true</span></code></pre>
+      </div>
+      <p class="cx-note">One branch is <code>int</code>, so the whole expression's type becomes <code>int</code> — picking the <code>bonus</code> branch unboxes it, and unboxing <code>null</code> throws right there.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> You store numbers in a <code>List&lt;Integer&gt;</code> or use one as a <code>Map</code> key</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc21a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">TRANSPARENT CONVERSION</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🔢 int score = 5</text>
+              <path d="M210,43 H270" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc21a)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">📦 List&lt;Integer&gt;</text>
+            </svg>
+          </div>
+          <p class="uc-what">Autoboxing is what makes this work at all — generics can only hold objects, so
+          every <code>int</code> added to the list is silently boxed on the way in. <b>This is the #1
+          scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Primitive into a generic collection → autoboxed automatically.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You compare two boxed <code>Integer</code>s above 127 with <code>==</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc21b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing=".03em">WORKED IN TESTING, NOT IN PROD</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">price1 == price2</text>
+              <path d="M210,43 H270" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc21b)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">🐛 false — different objects</text>
+            </svg>
+          </div>
+          <p class="uc-what">Small test values (under 128) stayed inside the cache and passed every time —
+          the bug only surfaces once a real value above 127 shows up in production.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Passed in testing with small numbers ≠ safe — always use <code>equals()</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A ternary mixes an <code>Integer</code> branch with a primitive <code>int</code> branch</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc21c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c" letter-spacing=".03em">NPE FROM AN UNEXPECTED LINE</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">cond ? bonus : 0</text>
+              <path d="M210,43 H270" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc21c)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">🐛 NPE unboxing bonus</text>
+            </svg>
+          </div>
+          <p class="uc-what">Because the other branch is a primitive <code>int</code>, the whole expression's
+          type becomes <code>int</code> — selecting the <code>bonus</code> branch unboxes it, and a
+          <code>null</code> there throws from a line that doesn't obviously mention <code>null</code>
+          anywhere.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Wrapper + primitive in one ternary → check for null before it unboxes.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A locker vs. the item inside it.</b> <code>int</code> is the raw item; <code>Integer</code>
+      is a labeled locker holding that item so it can go into a system (a generic collection) that
+      only accepts lockers, never loose items. Comparing two lockers with <code>==</code> asks
+      "is this the exact same locker?" — not "do they hold the same item?"</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="20.html">← Immutability and Designing Immutable Classes</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Basic</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="22.html">var and Local Variable Type Inference →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Basic
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

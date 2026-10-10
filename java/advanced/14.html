@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Why shouldn't you create a new Thread per incoming task in a production service? ExecutorService — reusable workers, not a Thread factory.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="ExecutorService and Thread Pools — Java Advanced — RefreshYourself">
+<meta property="og:description" content="Why shouldn't you create a new Thread per incoming task in a production service? ExecutorService — reusable workers, not a Thread factory.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>ExecutorService and Thread Pools — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">ExecutorService and Thread Pools</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Java · Advanced · Must Know</div>
+    <h1>ExecutorService — reusable workers, not a <span class="hl hl-hot">new Thread per task</span></h1>
+    <p class="interview-q">"Why shouldn't you create a new Thread per incoming task in a production service?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">⚙️ ExecutorService</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A <code>new Thread()</code> per incoming task is expensive to create, consumes real OS resources, and has no ceiling — a traffic spike can spawn thousands of threads and bring the whole JVM down.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An <code>ExecutorService</code> decouples <i>submitting</i> a task from <i>how/when</i> it runs — a bounded pool of reusable worker threads pulls tasks off an internal queue instead of a thread being created per task.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">ExecutorService = a managed pool of reusable workers, not a Thread factory.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">ExecutorService = <b>"a managed pool of reusable workers pulling tasks off a queue."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <code>submit()</code> hands off the task — the
+    pool decides <i>who</i> runs it and <i>when</i>, not the caller.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 352" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shP14" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arP14" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arP14Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arP14Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <line x1="320" y1="28" x2="320" y2="332" stroke="#e2e8f0" stroke-width="2"/>
+
+      <text x="160" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534" letter-spacing="0.3">EXECUTORSERVICE (FIXED POOL)</text>
+      <text x="480" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b" letter-spacing="0.3">NEW THREAD PER TASK ⚠️</text>
+
+      <g filter="url(#shP14)"><rect x="50" y="30" width="220" height="36" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="52" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">📥 Incoming tasks (many)</text>
+
+      <path d="M160,66 V86" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP14)"/>
+
+      <g filter="url(#shP14)"><rect x="50" y="86" width="220" height="42" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="160" y="107" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🗳️ Task queue</text>
+      <text x="160" y="121" text-anchor="middle" font-size="10" fill="#5b6472">⏳ 2 tasks waiting (pool full)</text>
+
+      <path d="M160,128 V150" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP14)"/>
+
+      <g filter="url(#shP14)"><rect x="30" y="150" width="260" height="162" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="160" y="170" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">👷 FIXED-SIZE POOL (3 WORKERS)</text>
+
+      <rect x="50" y="180" width="220" height="32" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+      <text x="160" y="200" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">Worker 1 — 🟢 busy</text>
+
+      <rect x="50" y="222" width="220" height="32" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+      <text x="160" y="242" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">Worker 2 — 🟢 busy</text>
+
+      <rect x="50" y="264" width="220" height="32" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+      <text x="160" y="284" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">Worker 3 — 🟢 busy</text>
+
+      <text x="160" y="304" text-anchor="middle" font-size="9.5" fill="#5b6472">bounded — count never grows past 3</text>
+
+      <g filter="url(#shP14)"><rect x="370" y="30" width="220" height="36" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="52" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">📥 Incoming tasks (many)</text>
+
+      <path d="M480,66 V86" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP14)"/>
+
+      <g filter="url(#shP14)"><rect x="370" y="86" width="220" height="42" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="107" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🧵 new Thread() created</text>
+      <text x="480" y="121" text-anchor="middle" font-size="10" fill="#5b6472">every single task, no reuse</text>
+
+      <path d="M480,128 V150" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arP14Red)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shP14)"><rect x="350" y="150" width="260" height="162" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="480" y="170" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🧵 THREAD COUNT, UNBOUNDED</text>
+
+      <rect x="372" y="180" width="200" height="26" rx="8" fill="#fecaca" stroke="#dc2626" stroke-width="1.4"/>
+      <text x="472" y="197" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">Thread #1,247 🧵</text>
+
+      <rect x="382" y="212" width="200" height="26" rx="8" fill="#fecaca" stroke="#dc2626" stroke-width="1.4"/>
+      <text x="482" y="229" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">Thread #1,248 🧵</text>
+
+      <rect x="392" y="244" width="200" height="26" rx="8" fill="#fecaca" stroke="#dc2626" stroke-width="1.4"/>
+      <text x="492" y="261" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">Thread #1,249 … 🧵</text>
+
+      <text x="480" y="300" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">💥 no limit — risks OutOfMemoryError</text>
+
+      <rect x="20" y="326" width="600" height="20" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="320" y="340" text-anchor="middle" font-size="10" fill="#475569">One path is bounded and reusable. The other has no ceiling at all.</text>
+    </svg>
+    <figcaption>Same incoming load, two very different resource shapes.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>Executors.newCachedThreadPool()</code> is not a safe default.</b>
+    It has no upper bound on threads, so under sustained load it can degrade into the exact
+    unbounded-thread-creation problem an <code>ExecutorService</code> was supposed to fix.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What happens if you submit more tasks than a fixed pool can run at
+    once?"</b> They sit in the pool's internal queue (unbounded by default for
+    <code>Executors.newFixedThreadPool()</code>, which is its own risk) until a worker frees up
+    — the submitting thread hands the task off and moves on, it doesn't block.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"An <code>ExecutorService</code> decouples submitting a task from
+    running it — a reusable pool of worker threads pulls tasks off an internal queue, instead of
+    a brand-new <code>Thread</code> being created and torn down for every single task."</p>
+    <ul>
+      <li><code>newFixedThreadPool(n)</code> → <span class="hl hl-blue">bounded concurrency</span>, predictable resource use.</li>
+      <li><code>newCachedThreadPool()</code> → grows/shrinks on demand, <span class="hl hl-hot">risky under sustained load</span>.</li>
+      <li><code>newScheduledThreadPool(n)</code> → <span class="hl hl-teal">delayed or periodic</span> work, cron-like tasks.</li>
+      <li>Java 21+ <code>newVirtualThreadPerTaskExecutor()</code> → <span class="hl hl-adv">one cheap virtual thread per task</span>, no pooling needed the same way.</li>
+      <li><code>new Thread()</code> per task → <span class="hl hl-inter">expensive, unbounded</span>, a real production risk under load.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Creating an OS thread isn't free — each one gets its own real stack memory and has to be
+      scheduled by the OS. A <span class="hl hl-blue">pool of workers</span> amortizes that cost:
+      threads are created once, up front, and reused for task after task, instead of paying the
+      creation (and teardown) cost on every single request.</p>
+
+      <p>The factory method you pick decides the pool's <i>growth policy</i>, not just its size. A
+      fixed pool caps concurrency outright. A cached pool starts at zero and grows as needed — fine
+      for short, bursty, low-volume work, but it has no built-in ceiling, so sustained heavy load
+      can grow it into the same unbounded-thread problem a pool exists to prevent. A scheduled pool
+      adds delayed/periodic execution on top of the same worker-pool idea.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Fixed pool</th><th>Cached pool</th><th>Scheduled pool</th></tr></thead>
+        <tbody>
+          <tr><th>Thread count</th><td>fixed at creation</td><td>grows/shrinks, no ceiling</td><td>fixed at creation</td></tr>
+          <tr><th>Best for</th><td>steady, bounded concurrent load</td><td>short, bursty, low-volume work</td><td>delayed/periodic jobs</td></tr>
+          <tr><th>Risk under load</th><td>tasks queue, don't crash the JVM</td><td>can spiral into unbounded threads</td><td>same as fixed — bounded</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err">// ❌ A new OS thread per incoming request — no ceiling at all</span>
+<span class="kw">for</span> (<span class="ty">Request</span> req : incomingRequests) {
+    <span class="kw">new</span> <span class="ty">Thread</span>(() -> handle(req)).start();
+}</code></pre>
+      </div>
+      <p class="cx-note">Under a traffic spike, this line alone can spawn thousands of real OS
+      threads — each with its own stack, each competing for CPU time.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">ExecutorService</span> pool = Executors.newFixedThreadPool(<span class="num">8</span>); <span class="cx-ok">// ✅ bounded</span>
+<span class="kw">for</span> (<span class="ty">Request</span> req : incomingRequests) {
+    pool.submit(() -> handle(req)); <span class="cx-cmt">// hands off, doesn't block</span>
+}
+pool.shutdown(); <span class="cx-cmt">// stop accepting new tasks, finish queued ones</span></code></pre>
+      </div>
+      <p class="cx-note">The same 8 workers keep getting reused — the thread count never grows
+      past 8, no matter how many requests arrive.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Java 21+ — one cheap virtual thread per task, no manual pool sizing</span>
+<span class="kw">try</span> (<span class="ty">ExecutorService</span> pool = Executors.newVirtualThreadPerTaskExecutor()) {
+    <span class="kw">for</span> (<span class="ty">Request</span> req : incomingRequests) {
+        pool.submit(() -> handle(req));
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">Still an <code>ExecutorService</code> — same submit-a-task API — but each
+      task gets its own virtual thread instead of sharing a fixed platform-thread pool.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A web service handles bursts of short, independent requests</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc14a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">BURSTY SHORT REQUESTS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📥 Request burst</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">many, short-lived</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc14a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">⚙️ Fixed pool</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">sized to capacity</text>
+            </svg>
+          </div>
+          <p class="uc-what">A fixed-size pool, sized to the available cores (CPU-bound) or higher
+          (I/O-bound work that spends time waiting), gives predictable resource use no matter how
+          bursty the incoming traffic gets.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Bursty short requests → a fixed pool sized to real capacity.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A nightly cleanup job needs to run on a fixed schedule</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc14b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">PERIODIC WORK</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">⏰ Midnight tick</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#0f766e">every 24 hours</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc14b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🧹 Cleanup runs</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#0f766e">scheduled pool</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>Executors.newScheduledThreadPool()</code> is the right shape
+          here — it's built specifically for delayed or recurring work, not one-off task
+          submission.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Delayed or recurring work → a scheduled pool, not a fixed one.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A cached thread pool under sustained, heavy load</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc14c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">SUSTAINED HEAVY LOAD</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">📈 Load never drops</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">cachedThreadPool()</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUc14c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🧵 Threads keep growing</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">no ceiling</text>
+            </svg>
+          </div>
+          <p class="uc-what">A cached pool creates a new thread whenever none is idle, with no
+          upper bound. <b>A common interview trap:</b> assuming "cached" means "safe" — under
+          sustained load it degrades into the exact unbounded-thread problem a pool exists to
+          avoid.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Cached pool + sustained load → unbounded growth, same risk as new Thread() per task.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your service starts timing out under load, and a thread dump shows thousands of
+      live threads, most of them idle or blocked.</b> The root cause is almost always a
+      <code>new Thread()</code> (or an unbounded cached pool) created per incoming request — the
+      fix is a bounded <code>ExecutorService</code> sized to what the service can actually handle
+      downstream, with monitoring on the queue depth so a backlog is visible before it becomes an
+      outage.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="13.html">← <code>wait()</code> vs. <code>sleep()</code> vs. <code>notify()</code></a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="15.html">Future vs. CompletableFuture →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

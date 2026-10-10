@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Why is implementing Runnable usually preferred over extending Thread directly? Thread, Runnable, and Callable — the execution unit vs. the task description.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Thread vs. Runnable vs. Callable — Java Advanced — RefreshYourself">
+<meta property="og:description" content="Why is implementing Runnable usually preferred over extending Thread directly? Thread, Runnable, and Callable — the execution unit vs. the task description.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Thread vs. Runnable vs. Callable — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Thread vs. Runnable vs. Callable</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Java · Advanced · Must Know</div>
+    <h1><code>Thread</code>, <code>Runnable</code>, <code>Callable</code> — which one is the <span class="hl hl-blue">task</span>, and which one actually <span class="hl hl-hot">runs</span> it?</h1>
+    <p class="interview-q">"Why is implementing Runnable usually preferred over extending Thread directly?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🧵 Thread</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Something has to actually be the real, OS-backed unit of execution a program can <code>start()</code> — without one, there's no thread for any task to run on.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Thread</code> is that execution unit itself. You can extend it directly, but doing so burns your only superclass slot and welds the task to the mechanism that runs it.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Thread = the actual thing that runs, not just a description of work.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🏃 Runnable</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Extending <code>Thread</code> for every task means that class can never extend anything else, and ties a reusable task to one specific way of running it.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Runnable</code> is a functional interface — just <code>run()</code>, no return value, can't throw a checked exception — describing the work, separate from how it executes. Implement it and hand it to a <code>Thread</code> or an <code>ExecutorService</code>.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Runnable = the task description, pluggable into any execution mechanism.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">📞 Callable&lt;V&gt;</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A background task that needs to hand back a result — or report failure via a checked exception — has no way to do either through <code>run()</code>, which returns nothing and can't throw checked exceptions.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>Callable&lt;V&gt;</code> is the same idea as <code>Runnable</code>, but <code>call()</code> returns a value and can throw a checked exception. Submit it to an <code>ExecutorService</code> to get back a <code>Future&lt;V&gt;</code>.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Callable = Runnable that can return a result and throw.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>Thread</code> <span class="rarrow">→</span> is the <b>execution unit</b></p>
+      <p class="rrow"><code>Runnable</code> <span class="rarrow">→</span> is the <b>task</b>, no return value</p>
+      <p class="rrow"><code>Callable</code> <span class="rarrow">→</span> is the <b>task</b>, returns a value</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>Thread</code></b> runs it.
+    <b><code>Runnable</code></b> describes it. <b><code>Callable</code></b> describes it and hands
+    back an answer.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 290" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shJ9" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arJ9Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arJ9Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">TASK DESCRIPTION, OR THE THING THAT RUNS IT?</text>
+
+      <g filter="url(#shJ9)"><rect x="40" y="36" width="170" height="58" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="125" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🏃 Runnable</text>
+      <text x="125" y="73" text-anchor="middle" font-size="9.5" fill="#5b6472">run() — no return value</text>
+      <text x="125" y="86" text-anchor="middle" font-size="9.5" fill="#5b6472">no checked throw</text>
+
+      <g filter="url(#shJ9)"><rect x="240" y="36" width="170" height="58" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="325" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">📞 Callable&lt;V&gt;</text>
+      <text x="325" y="73" text-anchor="middle" font-size="9.5" fill="#5b6472">call() — returns V</text>
+      <text x="325" y="86" text-anchor="middle" font-size="9.5" fill="#5b6472">can throw checked</text>
+
+      <path d="M125,94 V110 H325 V126" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arJ9Blue)"/>
+      <path d="M325,94 V126" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arJ9Amber)"/>
+
+      <text x="225" y="107" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">both plug into an</text>
+
+      <g filter="url(#shJ9)"><rect x="150" y="132" width="220" height="50" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="260" y="152" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🧵 Thread / ExecutorService</text>
+      <text x="260" y="167" text-anchor="middle" font-size="9.5" fill="#5b6472">the actual execution unit</text>
+
+      <path d="M260,182 V198" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M180,198 H340" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M180,198 V214" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arJ9Blue)"/>
+      <path d="M340,198 V214" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arJ9Amber)"/>
+
+      <g filter="url(#shJ9)"><rect x="80" y="214" width="200" height="46" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="180" y="234" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ started — code runs</text>
+      <text x="180" y="248" text-anchor="middle" font-size="9.5" fill="#5b6472">no result comes back</text>
+
+      <g filter="url(#shJ9)"><rect x="300" y="214" width="200" height="46" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="400" y="234" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">📬 Future&lt;V&gt; returned</text>
+      <text x="400" y="248" text-anchor="middle" font-size="9.5" fill="#5b6472">get() hands back the result</text>
+    </svg>
+    <figcaption>Runnable and Callable describe the task — Thread (or an executor) is what actually runs it.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Calling <code>.run()</code> directly does not start a new thread.</b> It
+    just runs that code synchronously on the calling thread — only <code>Thread.start()</code>
+    (or handing the task to an executor) actually begins concurrent execution.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If Runnable can't return a value, how do you get a result back from a
+    background task on an ExecutorService?"</b> Submit a <code>Callable&lt;V&gt;</code> instead
+    — <code>ExecutorService.submit(Callable&lt;V&gt;)</code> returns a <code>Future&lt;V&gt;</code>
+    you can call <code>get()</code> on, which blocks until the result (or thrown exception) is
+    available.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>Thread</code> is the actual unit of execution you
+    <code>start()</code>; <code>Runnable</code> and <code>Callable</code> are task descriptions
+    you hand to it. <code>Runnable</code> has no return value and can't throw a checked exception;
+    <code>Callable&lt;V&gt;</code> returns a value and can — which is why it's used with an
+    <code>ExecutorService</code> to get a <code>Future&lt;V&gt;</code> back."</p>
+    <ul>
+      <li><code>Thread</code> → <span class="hl hl-blue">the real execution unit</span>, started via <code>start()</code>.</li>
+      <li><code>Runnable</code> → <span class="hl hl-blue">a task description</span>, no return value, no checked exception.</li>
+      <li><code>Callable&lt;V&gt;</code> → <span class="hl hl-blue">a task that returns V</span> and can throw checked exceptions.</li>
+      <li>Prefer <code>Runnable</code> over extending <code>Thread</code> → <span class="hl hl-basic">keeps your one superclass slot free</span> and separates task from mechanism.</li>
+      <li>Calling <code>.run()</code> directly → <span class="hl hl-hot">does not start a new thread</span> — only <code>start()</code> (or an executor) does.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <span class="hl hl-blue">Thread</span> is a real, OS-backed unit of execution — the only
+      thing in this trio that <code>start()</code> can actually act on. Extending <code>Thread</code>
+      directly is legal, but it's a poor default: Java only allows one superclass, so a class that
+      extends <code>Thread</code> can never extend anything else, and the task is now permanently
+      welded to "runs on its own dedicated thread" — it can't be handed to a shared thread pool
+      instead.</p>
+
+      <p><code>Runnable</code> and <code>Callable&lt;V&gt;</code> both solve that by describing
+      <i>what</i> to run as a plain, pluggable object, leaving <i>how</i> it runs to whatever
+      mechanism receives it — a <code>Thread</code>, or (more commonly in real code) an
+      <code>ExecutorService</code>. The only real difference between the two is what happens when
+      the work finishes: <code>Runnable.run()</code> returns nothing and can only throw an
+      unchecked exception, while <code>Callable&lt;V&gt;.call()</code> returns a <code>V</code>
+      and is allowed to throw a checked one — which is exactly why <code>Callable</code> is the
+      one used when a caller needs the result, retrieved later through the
+      <code>Future&lt;V&gt;</code> an executor hands back.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>Thread</code></th><th><code>Runnable</code></th><th><code>Callable&lt;V&gt;</code></th></tr></thead>
+        <tbody>
+          <tr><th>Represents</th><td>the execution unit</td><td>a task, no result</td><td>a task, with a result</td></tr>
+          <tr><th>Return value</th><td>n/a</td><td>none — <code>void run()</code></td><td><code>V</code>, via <code>call()</code></td></tr>
+          <tr><th>Checked exceptions</th><td>n/a</td><td>❌ can't throw one</td><td>✅ can throw one</td></tr>
+          <tr><th>How it runs</th><td><code>.start()</code></td><td>passed to a <code>Thread</code> or executor</td><td>submitted to an executor → <code>Future&lt;V&gt;</code></td></tr>
+          <tr><th>Cost of choosing it</th><td>extends <code>Thread</code> — burns the one superclass slot</td><td>implements an interface — free</td><td>implements an interface — free</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Runnable</span> task = () -&gt; System.out.println(<span class="str">"running"</span>);
+
+<span class="cx-cmt">// Option A — hand it to a Thread</span>
+<span class="kw">new</span> <span class="ty">Thread</span>(task).start();
+
+<span class="cx-cmt">// Option B — hand it to a shared pool instead</span>
+ExecutorService pool = Executors.newFixedThreadPool(<span class="num">4</span>);
+pool.execute(task); <span class="cx-ok">// ✅ same task, no return value expected</span></code></pre>
+      </div>
+      <p class="cx-note">The exact same <code>Runnable</code> works with either execution
+      mechanism — the task never knew or cared how it would be run.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Callable</span>&lt;<span class="ty">Integer</span>&gt; task = () -&gt; {
+    <span class="kw">if</span> (dataIsMissing()) <span class="kw">throw</span> <span class="kw">new</span> <span class="ty">IOException</span>(<span class="str">"no data"</span>); <span class="cx-ok">// ✅ checked exception allowed</span>
+    <span class="kw">return</span> computeResult();            <span class="cx-ok">// ✅ returns a value</span>
+};
+
+<span class="ty">Future</span>&lt;<span class="ty">Integer</span>&gt; future = pool.submit(task);
+<span class="kw">int</span> result = future.get(); <span class="cx-cmt">// blocks until the result (or thrown exception) is ready</span></code></pre>
+      </div>
+      <p class="cx-note"><code>Callable</code> is the one to reach for the moment the caller
+      needs an answer back, not just confirmation the work ran.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Runnable</span> task = () -&gt; doWork();
+
+task.run();         <span class="cx-err">// ❌ runs on THIS thread — no concurrency at all</span>
+<span class="kw">new</span> <span class="ty">Thread</span>(task).start(); <span class="cx-ok">// ✅ this is what actually starts a new thread</span></code></pre>
+      </div>
+      <p class="cx-note"><code>run()</code> is just a normal method call — nothing about calling
+      it schedules anything on another thread.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A fire-and-forget background task that needs no result</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ9a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">NO RESULT NEEDED</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🏃 Runnable</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">log a line, send a ping</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcJ9a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">pool.execute()</text>
+            </svg>
+          </div>
+          <p class="uc-what">For work where nobody needs to wait on a result — a log line, a
+          cache warm-up — a plain <code>Runnable</code> handed to <code>Thread</code> or
+          <code>executor.execute()</code> is simplest and carries no unused machinery.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No result needed → Runnable is the right-sized tool.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">2</span> A background computation that must hand back a result, or might fail</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ9b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">RESULT OR FAILURE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">📞 Callable&lt;V&gt;</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#92400e">pool.submit()</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUcJ9b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">Future&lt;V&gt;.get()</text>
+            </svg>
+          </div>
+          <p class="uc-what">Fetching a value, parsing a file, calling another service — anything
+          where the caller eventually needs the answer (or the exception) uses
+          <code>Callable&lt;V&gt;</code> submitted via <code>executor.submit()</code>, read back
+          through <code>Future&lt;V&gt;.get()</code>.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need the answer back → Callable, not Runnable.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Someone calls <code>task.run()</code> directly, expecting concurrency</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ9c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">run() ≠ start()</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">task.run()</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">just a method call</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcJ9c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">same thread</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">no concurrency</text>
+            </svg>
+          </div>
+          <p class="uc-what">Calling <code>.run()</code> instead of <code>.start()</code> (or
+          submitting to an executor) runs the code synchronously, right there — nothing about it
+          is concurrent, and the calling thread blocks until it finishes.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">run() executes it. start() is what makes it concurrent.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><code>Runnable</code> is a recipe card — it just describes what to cook, with no return
+      value. <code>Thread</code> is the cook who can actually start cooking. <code>Callable</code>
+      is a recipe card that promises to hand you back a finished dish you can collect later,
+      instead of just confirming someone cooked something.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="8.html">← Java Memory Model and Happens-Before</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="10.html">synchronized vs. Lock →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

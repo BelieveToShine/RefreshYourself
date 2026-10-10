@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How does ConcurrentHashMap avoid locking the whole table on every write? Per-bin locking (Java 8+), not one lock for the table.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="ConcurrentHashMap Internals and Atomic Operations — Java Advanced — RefreshYourself">
+<meta property="og:description" content="How does ConcurrentHashMap avoid locking the whole table on every write? Per-bin locking (Java 8+), not one lock for the table.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>ConcurrentHashMap Internals and Atomic Operations — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">ConcurrentHashMap Internals and Atomic Operations</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Java · Advanced · Must Know</div>
+    <h1><code>ConcurrentHashMap</code> — <span class="hl hl-basic">per-bin locking</span>, not <span class="hl hl-hot">one lock for the table</span></h1>
+    <p class="interview-q">"How does ConcurrentHashMap avoid locking the whole table on every write?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-2">
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🔒 Per-bin locking</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A single lock around the whole map would force every thread to wait, even when two threads are touching completely different keys — terrible concurrent throughput.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Modern <code>ConcurrentHashMap</code> (Java 8+) synchronizes only the specific bin being modified on a collision, using CAS for simple operations — different bins proceed with zero contention.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">ConcurrentHashMap = lock the bin, not the table.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">⚛️ Atomic compound ops</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Checking whether a key is present and then writing to it as two separate calls is a race under concurrent access — another thread can sneak in between the check and the write.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>computeIfAbsent</code>, <code>compute</code>, and <code>merge</code> read-and-conditionally-write a single key atomically, with no external lock needed.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">compute()/merge() = check-and-write, in one atomic step.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">ConcurrentHashMap = <b>"lock the one bin that's colliding, never the whole table."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> different bins → <b>no lock at all</b>.
+    Same bin, a collision → <b>that one bin</b> gets synchronized, nothing else.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 344" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shP18" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arP18Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arP18Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534" letter-spacing="0.3">TWO THREADS, TWO DIFFERENT BINS</text>
+
+      <g filter="url(#shP18)"><rect x="140" y="30" width="90" height="34" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="185" y="51" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🧵 Thread A</text>
+
+      <g filter="url(#shP18)"><rect x="410" y="30" width="90" height="34" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="455" y="51" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">🧵 Thread B</text>
+
+      <path d="M185,64 V88" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arP18Green)"/>
+      <path d="M455,64 V88" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arP18Green)"/>
+
+      <rect x="55" y="88" width="80" height="40" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+      <text x="95" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Bin 0</text>
+
+      <rect x="145" y="88" width="80" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+      <text x="185" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Bin 1</text>
+
+      <rect x="235" y="88" width="80" height="40" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+      <text x="275" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Bin 2</text>
+
+      <rect x="325" y="88" width="80" height="40" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+      <text x="365" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Bin 3</text>
+
+      <rect x="415" y="88" width="80" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+      <text x="455" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Bin 4</text>
+
+      <rect x="505" y="88" width="80" height="40" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+      <text x="545" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Bin 5</text>
+
+      <text x="320" y="150" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">✅ different bins — zero contention, both proceed</text>
+
+      <text x="320" y="178" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b" letter-spacing="0.3">SAME BIN — ONE LOCK, NOT THE WHOLE TABLE</text>
+
+      <rect x="145" y="190" width="90" height="34" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="190" y="211" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🧵 Thread C</text>
+
+      <rect x="405" y="190" width="90" height="34" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="450" y="211" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🧵 Thread D</text>
+
+      <path d="M190,224 V240 H320 V262" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arP18Red)"/>
+      <path d="M450,224 V240 H320 V262" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arP18Red)"/>
+
+      <g filter="url(#shP18)"><rect x="275" y="262" width="90" height="40" rx="10" fill="#fecaca" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="284" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🔒 Bin 2</text>
+      <text x="320" y="296" text-anchor="middle" font-size="8.5" fill="#991b1b">locked</text>
+
+      <text x="320" y="322" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">only this one bin blocks — every other bin stays free</text>
+    </svg>
+    <figcaption>Different bins never wait on each other — only a real collision ever locks anything.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>ConcurrentHashMap</code> does not use segment locking anymore.</b>
+    That was the pre-Java-8 design; the modern (Java 8+) implementation locks only the specific
+    bin being modified, using CAS for most operations — never a fixed set of 16 segments.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why not just synchronize the whole map, like Hashtable does?"</b> You
+    could, but then every thread waits for every operation anywhere in the map, even on
+    completely unrelated keys — exactly the throughput problem per-bin locking exists to avoid.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Modern <code>ConcurrentHashMap</code> (Java 8+) locks at the bin level
+    — it synchronizes only the specific bucket being modified on a collision, using CAS for
+    simple operations, so threads touching different bins never contend at all. Compound
+    operations like <code>computeIfAbsent</code>, <code>compute</code>, and <code>merge</code>
+    do a read-and-write on one key atomically, without needing an external lock."</p>
+    <ul>
+      <li>Locking granularity → <span class="hl hl-basic">per-bin (bucket)</span>, not per-segment, not whole-table.</li>
+      <li>Simple ops (get/put) → <span class="hl hl-blue">CAS-based</span>, lock-free in the common case.</li>
+      <li>A real collision → <span class="hl hl-hot">only that one bin</span> gets synchronized.</li>
+      <li><code>computeIfAbsent</code>/<code>compute</code>/<code>merge</code> → <span class="hl hl-teal">atomic check-and-write</span> on a single key.</li>
+      <li>Pre-Java-8 segment locking → <span class="hl hl-inter">historical, not the current design</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><code>ConcurrentHashMap</code>, like <code>HashMap</code>, stores entries across an
+      array of bins (buckets), each picked by a key's hash. For a simple operation like
+      <code>get</code> or an uncontended <code>put</code>, the implementation uses
+      <span class="hl hl-basic">CAS (compare-and-swap)</span> instructions — no lock is taken at
+      all. Only when two threads genuinely collide on the <i>same</i> bin does that one bin get
+      <code>synchronized</code>, for just long enough to resolve the collision (the historical
+      segment-locking design, which split the table into a fixed set of segments each with their
+      own lock, was replaced entirely as of Java 8).</p>
+
+      <p>The atomic compound methods solve a different, equally real problem:
+      <span class="hl hl-teal">computeIfAbsent</span>/<span class="hl hl-teal">compute</span>/
+      <span class="hl hl-teal">merge</span> let you check a key's current value and write a new
+      one in a single atomic step, scoped to that one key — no separate
+      <code>containsKey</code>-then-<code>put</code> race window, and no need to hold an external
+      lock around the two calls yourself.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>HashMap</th><th>Hashtable</th><th>ConcurrentHashMap</th></tr></thead>
+        <tbody>
+          <tr><th>Thread-safe?</th><td>no</td><td>yes — whole table locked</td><td>yes — per-bin locking</td></tr>
+          <tr><th>Null keys/values</th><td>one null key, many null values</td><td>none allowed</td><td>none allowed</td></tr>
+          <tr><th>Concurrent throughput</th><td>n/a</td><td>poor — one lock for everything</td><td>high — unrelated bins never wait</td></tr>
+          <tr><th>Use today</th><td>single-threaded / externally synced</td><td>legacy, avoid in new code</td><td>genuine concurrent access</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err">// ❌ race: another thread can put() between containsKey() and put()</span>
+<span class="kw">if</span> (!map.containsKey(key)) {
+    map.put(key, computeExpensiveValue());
+}</code></pre>
+      </div>
+      <p class="cx-note">Two threads can both pass the <code>containsKey</code> check before
+      either calls <code>put</code> — the expensive computation can run twice, or overwrite a
+      newer value.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">ConcurrentHashMap</span>&lt;<span class="ty">String</span>, <span class="ty">Value</span>&gt; map = <span class="kw">new</span> <span class="ty">ConcurrentHashMap</span>&lt;&gt;();
+map.computeIfAbsent(key, k -> computeExpensiveValue()); <span class="cx-ok">// ✅ atomic, scoped to this key</span></code></pre>
+      </div>
+      <p class="cx-note">Only one thread's lambda ever actually runs for a given key — the check
+      and the write happen as one atomic step.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">ConcurrentHashMap</span>&lt;<span class="ty">String</span>, <span class="ty">Integer</span>&gt; counts = <span class="kw">new</span> <span class="ty">ConcurrentHashMap</span>&lt;&gt;();
+counts.merge(word, <span class="num">1</span>, Integer::sum); <span class="cx-ok">// ✅ atomic increment-or-insert</span></code></pre>
+      </div>
+      <p class="cx-note">A classic word-count update — no manual <code>synchronized</code> block,
+      no lost updates under concurrent calls.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A shared in-memory cache, read and written by many request threads</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">SHARED CACHE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🧵 many request threads</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">different keys, usually</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc18a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">⚙️ ConcurrentHashMap</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#166534">real concurrent throughput</text>
+            </svg>
+          </div>
+          <p class="uc-what">A cache most requests read, and only occasionally write to, is the
+          textbook case — per-bin locking means unrelated keys almost never contend with each
+          other.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Many threads, mostly different keys → ConcurrentHashMap.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> Counting occurrences of something across many concurrent events</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">CONCURRENT COUNTING</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📊 events arrive</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">many threads</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc18b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">merge(key, 1, +)</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">atomic increment</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>merge()</code> turns "increment this key, or insert 1 if it's
+          new" into one atomic call — no lost updates even with many threads hitting the same
+          key.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Concurrent counters → merge(), not read-then-write.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Describing ConcurrentHashMap's internals in an interview</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc18c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">OUTDATED MENTAL MODEL</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">"16 segments"</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">pre-Java-8 design</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUc18c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">❌ no longer accurate</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">modern = per-bin</text>
+            </svg>
+          </div>
+          <p class="uc-what">Describing the old segment-locking design as if it's still current is
+          a dated answer that signals stale knowledge. <b>A common interview trap:</b> many
+          engineers learned "16 segments" years ago and never updated the mental model to Java
+          8's per-bin design.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">"Segments" → outdated. Say "per-bin" instead.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A session-tracking map in a web server is read and written by hundreds of request
+      threads at once, keyed by session ID.</b> Because different sessions almost always land in
+      different bins, <code>ConcurrentHashMap</code> lets those requests proceed with
+      essentially no contention — the rare case where two sessions happen to hash into the same
+      bin only ever blocks those two threads against each other, never the whole table.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="17.html">← Exception Handling in CompletableFuture</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="19.html">Blocking vs. Non-Blocking Algorithms →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

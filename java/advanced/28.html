@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Heap usage grows continuously in production, eventually causing OutOfMemoryError. Walk through how you'd investigate it.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: Diagnosing a Production Memory Leak — Java Advanced — RefreshYourself">
+<meta property="og:description" content="Heap usage grows continuously in production, eventually causing OutOfMemoryError. Walk through how you'd investigate it.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: Diagnosing a Production Memory Leak — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: Diagnosing a Production Memory Leak</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Java · Advanced · Must Know</div>
+    <h1>Scenario: Diagnosing a Production <span class="hl hl-hot">Memory Leak</span></h1>
+    <p class="interview-q">"Heap usage grows continuously in production, eventually causing <code>OutOfMemoryError</code>. Walk through how you'd investigate it."</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">📈 Growing Heap</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>"The heap just grows until it crashes" is a symptom, not a diagnosis — restarting the service papers over the real bug, and the same growing object type will come back and bring the next instance down too.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Take heap dumps, compare them over time to see which object type's <b>retained size</b> keeps growing (not just what's large right now), then trace that type's retaining reference chain back to a GC root — usually a static collection, a registered listener, or an unbounded cache.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Compare dumps over time to find what's GROWING, then trace the retaining chain back to its root.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline"><b>A leak in Java isn't "unreferenced garbage" — it's an object that's still
+    reachable but no longer needed.</b> Find what's growing across snapshots, then trace it back
+    to its GC root.</p>
+    <p class="rthink"><b class="tc-label">Think:</b> a static collection, a listener that was
+    never unregistered, or a cache with no eviction policy.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh28" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar28Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="ar28Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.3">THREE HEAP DUMPS OVER TIME — ONE OBJECT TYPE KEEPS GROWING</text>
+
+      <g filter="url(#sh28)"><rect x="40" y="36" width="160" height="64" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="120" y="58" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Heap Dump #1</text>
+      <text x="120" y="76" text-anchor="middle" font-size="10.5" fill="#5b6472">CacheEntry: 50MB</text>
+
+      <path d="M200,68 H240" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar28Gray)"/>
+
+      <g filter="url(#sh28)"><rect x="240" y="36" width="160" height="64" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="58" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">Heap Dump #2</text>
+      <text x="320" y="76" text-anchor="middle" font-size="10.5" fill="#5b6472">CacheEntry: 180MB</text>
+
+      <path d="M400,68 H440" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar28Gray)"/>
+
+      <g filter="url(#sh28)"><rect x="440" y="36" width="160" height="64" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="520" y="58" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">Heap Dump #3</text>
+      <text x="520" y="76" text-anchor="middle" font-size="10.5" fill="#5b6472">CacheEntry: 420MB 🐛</text>
+
+      <rect x="360" y="108" width="120" height="20" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+      <text x="420" y="122" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">retaining chain</text>
+
+      <path d="M320,176 V140 H520 V100" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ar28Red)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#sh28)"><rect x="170" y="176" width="300" height="56" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="198" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">🔒 static Map cache field (GC Root)</text>
+      <text x="320" y="215" text-anchor="middle" font-size="10.5" fill="#5b6472">never removes old entries</text>
+    </svg>
+    <figcaption>Each snapshot shows the same object type retaining more memory — tracing the reference chain backward lands on a static field that's still holding every entry it ever cached.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A single heap dump is enough to find a leak.</b> One snapshot only shows
+    what's large right now — a legitimately big cache looks identical to a leaking one in a
+    single dump; only comparing retained size across multiple dumps over time reveals what's
+    actually still <i>growing</i>.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What are the classic causes you'd check first?"</b> A static collection
+    nothing ever removes from, listeners or callbacks registered but never unregistered, and an
+    unbounded in-memory cache with no eviction policy — all three keep an object reachable from a
+    GC root long after it's actually needed.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd take heap dumps over time and compare retained size per object
+    type to find what's actually growing, not just what's large — then trace that type's
+    retaining reference chain back to a GC root, which is usually a static collection, an
+    unregistered listener, or an unbounded cache."</p>
+    <ul>
+      <li>One dump → <span class="hl hl-inter">only shows size right now, not growth — compare several over time</span>.</li>
+      <li>Retained size growing → <span class="hl hl-hot">trace the reference chain back to its GC root</span>.</li>
+      <li>Classic suspects → <span class="hl hl-blue">static collections, un-unregistered listeners, unbounded caches</span>.</li>
+      <li>A histogram/dominator-tree view → <span class="hl hl-basic">the fastest way to see which type is dominating retained memory</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A memory leak in a garbage-collected language sounds like a contradiction, but it isn't
+      one: the garbage collector only reclaims objects that are <b>unreachable</b> from a GC root
+      (a thread's stack, a static field, a JNI reference, and a few other roots). An object a
+      program no longer logically needs, but still holds a reference to somewhere along that
+      chain, stays reachable forever — the GC is working correctly; the program is just still
+      holding the door open.</p>
+
+      <p>The practical investigation starts with a heap dump (triggerable via <code>jmap</code>,
+      a JFR recording, or an APM tool's built-in capture) and a tool that can browse it — a
+      histogram view ranks object types by instance count and retained size, and a dominator-tree
+      view shows exactly which object is keeping a whole subtree of memory alive. Taking this
+      snapshot once tells you what's big right now; taking it two or three times, spaced out
+      while the problem is actively happening, tells you what's actually <i>growing</i> — the
+      distinction that separates a real leak from an intentionally large cache.</p>
+
+      <p>Once a growing type is identified, the dump's retaining-reference view traces backward
+      from an instance to whatever root is keeping it alive. In practice this is almost always
+      one of three shapes: a <code>static</code> field holding a collection that only ever grows,
+      an observer/listener pattern where a subscriber registers itself but is never removed, or a
+      cache implemented as a plain map with no size limit or expiry.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">EntryCache</span> {
+    <span class="kw">private</span> <span class="kw">static</span> <span class="kw">final</span> <span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">CacheEntry</span>&gt; CACHE = <span class="kw">new</span> <span class="ty">HashMap</span>&lt;&gt;();
+
+    <span class="kw">public</span> <span class="kw">void</span> put(<span class="ty">String</span> key, <span class="ty">CacheEntry</span> entry) {
+        CACHE.put(key, entry); <span class="cx-err">// ❌ never evicted — this IS the GC root</span>
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">A <code>static</code> field lives for the whole life of the
+      classloader — every entry ever put in <code>CACHE</code> stays reachable forever.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">private</span> <span class="kw">static</span> <span class="kw">final</span> <span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">CacheEntry</span>&gt; CACHE =
+    <span class="ty">Caffeine</span>.newBuilder()
+        .maximumSize(10_000)              <span class="cx-ok">// ✅ bounded</span>
+        .expireAfterWrite(<span class="ty">Duration</span>.ofMinutes(30)) <span class="cx-ok">// ✅ evicted</span>
+        .build()
+        .asMap();</code></pre>
+      </div>
+      <p class="cx-note">A bounded, expiring cache (a proven library, not a hand-rolled map)
+      guarantees retained size has a ceiling.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Heap usage climbs steadily over days and only a restart brings it back down</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc28a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📈 heap climbs for days</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">compare 3 dumps →</text>
+              <path d="M170,33 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc28a)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">find the growing type</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: a slow, steady climb that a restart resets, pointing at a genuine leak rather than a one-off spike. Taking dumps a few hours apart and comparing retained size per type is the fastest way to confirm it and name the type that's actually growing.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A climb that only a restart fixes is the signature of a real leak, not a transient spike.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> The dominator-tree view shows a single static field retaining most of the heap</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc28b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔒 static field found</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">add eviction/bound →</text>
+              <path d="M170,33 H310" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc28b)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">heap stabilizes</text>
+            </svg>
+          </div>
+          <p class="uc-what">A dominator tree answers "if this one object were freed, what else would go with it" — when one static field dominates a huge share of retained heap, that field is almost certainly the leak's actual GC root, not just a large but legitimate structure.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A dominator tree names the one object actually responsible for a whole retained subtree.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A listener-based component is garbage collected, but memory still doesn't drop</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc28c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🎧 listener not removed</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">publisher still holds it →</text>
+              <path d="M170,33 H310" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc28c)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">component never freed</text>
+            </svg>
+          </div>
+          <p class="uc-what">Candidates often assume removing the last visible reference to a component is enough — but if that component registered itself with an event publisher or listener list and never unregistered, the publisher still holds a live reference, and the whole component (plus everything it references) stays reachable.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">An unregistered listener keeps its whole owning object reachable from the publisher.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A service's heap grows by roughly 2% an hour until it hits <code>OutOfMemoryError</code>
+      every few days.</b> Three heap dumps taken a day apart show the same
+      <code>CacheEntry</code> type's retained size tripling, and the retaining-reference view
+      traces every instance back to one <code>static Map</code> that was meant to be a
+      short-lived request cache but never had an eviction policy added.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="27.html">← Scenario: HashMap Behaves Unexpectedly with a Mutable Key</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="29.html">Scenario: Diagnosing a Race Condition on a Shared Balance →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

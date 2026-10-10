@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Why does modifying a list while iterating over it sometimes throw an exception and sometimes not?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Fail-Fast vs. Fail-Safe Iteration — Java Intermediate — RefreshYourself">
+<meta property="og:description" content="Why does modifying a list while iterating over it sometimes throw an exception and sometimes not?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Fail-Fast vs. Fail-Safe Iteration — Java Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Fail-Fast vs. Fail-Safe Iteration</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Java · Intermediate · Should Know</div>
+    <h1><code>Fail-Fast</code> vs. <code>Fail-Safe</code> Iteration — <span class="hl hl-inter">throws on a structural change, or tolerates it</span></h1>
+    <p class="interview-q">"Why does modifying a list while iterating over it sometimes throw an exception and sometimes not?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">⚡ Fail-Fast</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Iterating over an <code>ArrayList</code> or <code>HashMap</code> while another part of the code structurally changes it (adds/removes) could silently skip elements, revisit one twice, or throw an unrelated-looking exception deep inside the collection's internals.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A fail-fast iterator tracks a modification counter and throws <code>ConcurrentModificationException</code> the instant it detects the backing collection changed structurally by anything other than its own <code>remove()</code> — the bug surfaces loudly and immediately instead of corrupting data silently.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">fail-fast = detects the change → throws immediately.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🧵 Fail-Safe (Weakly Consistent)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>In a genuinely concurrent system — many threads reading a shared map while others add or remove entries — a fail-fast collection would throw constantly from completely normal, expected concurrent use, not from an actual bug.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>ConcurrentHashMap</code> and <code>CopyOnWriteArrayList</code> iterate over a stable snapshot or otherwise tolerate concurrent structural changes and never throw — the trade-off is the iteration may miss or include an update made during the pass.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">fail-safe = tolerates the change → keeps going, no throw.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Fail-Fast <span class="rarrow">→</span> <b>throws</b> immediately</p>
+      <p class="rrow">Fail-Safe <span class="rarrow">→</span> <b>never</b> throws</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <code>ArrayList</code>/<code>HashMap</code> are <b>fail-fast</b>. <code>ConcurrentHashMap</code>/<code>CopyOnWriteArrayList</code> are <b>fail-safe</b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shJ8" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arJ8" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arJ8Red" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">MODIFYING list WHILE ITERATING — WHO THROWS?</text>
+
+      <path d="M320,34 V228" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <g filter="url(#shJ8)"><rect x="40" y="38" width="240" height="36" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="61" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">for (String s : list)</text>
+      <g filter="url(#shJ8)"><rect x="360" y="38" width="240" height="36" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="61" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">it = list.iterator()</text>
+
+      <path d="M160,74 V98" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ8)"/>
+      <path d="M480,74 V98" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ8)"/>
+
+      <g filter="url(#shJ8)"><rect x="60" y="98" width="200" height="40" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="160" y="122" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">list.remove(s)</text>
+      <g filter="url(#shJ8)"><rect x="380" y="98" width="200" height="40" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="480" y="122" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">it.remove()</text>
+
+      <path d="M160,138 V164" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arJ8Red)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+      <path d="M480,138 V164" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ8)"/>
+
+      <g filter="url(#shJ8)"><rect x="45" y="164" width="230" height="52" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="186" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">❌ CME 🐛</text>
+      <text x="160" y="202" text-anchor="middle" font-size="10" fill="#5b6472">ConcurrentModificationException</text>
+
+      <g filter="url(#shJ8)"><rect x="365" y="164" width="230" height="52" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="186" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ removed safely</text>
+      <text x="480" y="202" text-anchor="middle" font-size="10" fill="#5b6472">loop continues cleanly</text>
+
+      <text x="320" y="252" text-anchor="middle" font-size="11" fill="#5b6472">Any structural change outside the iterator's own remove() ⇒ fail-fast throws instantly</text>
+    </svg>
+    <figcaption>Same intent, different code path — <code>list.remove()</code> inside the loop throws; <code>iterator.remove()</code> doesn't.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shJ8b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arJ8b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.5">CONCURRENT MODIFICATION — FAIL-SAFE, NO EXCEPTION</text>
+
+      <g filter="url(#shJ8b)"><rect x="15" y="40" width="175" height="54" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="102" y="60" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🧵 Thread A</text>
+      <text x="102" y="76" text-anchor="middle" font-size="10" fill="#5b6472">iterating a snapshot</text>
+
+      <path d="M190,67 H230" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ8b)"/>
+
+      <g filter="url(#shJ8b)"><rect x="230" y="40" width="175" height="54" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="317" y="60" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🧵 Thread B</text>
+      <text x="317" y="76" text-anchor="middle" font-size="10" fill="#5b6472">adds a new element</text>
+
+      <path d="M405,67 H445" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ8b)"/>
+
+      <g filter="url(#shJ8b)"><rect x="445" y="40" width="175" height="54" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="532" y="60" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ no exception</text>
+      <text x="532" y="76" text-anchor="middle" font-size="10" fill="#5b6472">Thread A unaffected</text>
+
+      <text x="320" y="128" text-anchor="middle" font-size="11" fill="#5b6472"><code>CopyOnWriteArrayList</code> iterates a stable snapshot — concurrent changes never throw</text>
+    </svg>
+    <figcaption>A <code>CopyOnWriteArrayList</code> tolerates the exact same kind of concurrent change that would crash an <code>ArrayList</code>.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>list.remove(x)</code> inside a <code>for-each</code> over that same list is not safe.</b> It's the single most common way to trigger <code>ConcurrentModificationException</code> — fix it with the iterator's own <code>remove()</code>, or Java 8's <code>Collection.removeIf()</code>.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What if you actually need to remove elements while iterating?"</b> Use the iterator's own <code>remove()</code>, call <code>Collection.removeIf()</code>, or iterate over a copy (<code>new ArrayList&lt;&gt;(list)</code>) if the original list still needs to be usable mid-loop.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Fail-fast iterators like <code>ArrayList</code> and <code>HashMap</code>'s default views track a modification count and throw <code>ConcurrentModificationException</code> the moment they detect a structural change made outside the iterator itself. Fail-safe, weakly-consistent iterators like <code>ConcurrentHashMap</code> and <code>CopyOnWriteArrayList</code> never throw — they iterate a stable snapshot or tolerate concurrent changes instead."</p>
+    <ul>
+      <li>Fail-fast <span class="hl hl-hot">→ throws ConcurrentModificationException</span> on any unexpected structural change.</li>
+      <li>Fail-safe <span class="hl hl-basic">→ never throws</span>, may miss or include a concurrent update.</li>
+      <li><code>list.remove(x)</code> in a <code>for-each</code> <span class="hl hl-inter">→ the classic trigger</span>; fix with <code>iterator.remove()</code> or <code>removeIf()</code>.</li>
+      <li>"Weakly consistent" <span class="hl hl-teal">→ a deliberate trade-off</span> for concurrency, not a bug.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <span class="hl hl-hot">fail-fast</span> iterator (the default on <code>ArrayList</code>,
+      <code>HashMap</code>, and most of the "classic" collections) keeps a private counter of how
+      many times the backing collection has been structurally changed. Every call to
+      <code>next()</code> checks that counter against the value it started with — if anything other
+      than the iterator's own <code>remove()</code>/<code>add()</code> touched the collection in
+      between, it throws <code>ConcurrentModificationException</code> right there, like a smoke
+      alarm going off the instant it detects smoke rather than waiting for the fire.</p>
+
+      <p>A <span class="hl hl-basic">fail-safe</span> (also called weakly consistent) iterator takes
+      a different approach entirely — <code>CopyOnWriteArrayList</code> iterates over a frozen copy
+      of the array taken when the iterator was created, and <code>ConcurrentHashMap</code>'s
+      iterators are built to tolerate concurrent bucket changes without ever needing to stop and
+      check a counter. Neither one throws, but neither one guarantees the iteration reflects every
+      single change made while it was running.</p>
+
+      <p>This isn't a quality difference — it's a deliberate design trade-off for each collection's
+      intended use. A single-threaded <code>ArrayList</code> has no reason to tolerate concurrent
+      changes, so failing loudly and immediately is the safer default; a genuinely concurrent
+      collection has every reason to avoid throwing from completely normal concurrent access.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Fail-Fast</th><th>Fail-Safe / Weakly Consistent</th></tr></thead>
+        <tbody>
+          <tr><th>Mechanism</th><td>modification-count check</td><td>stable snapshot or tolerant traversal</td></tr>
+          <tr><th>Throws on concurrent structural change?</th><td class="no">❌ yes, immediately</td><td class="yes">✅ never</td></tr>
+          <tr><th>Sees every update made mid-iteration?</th><td>not applicable — it stops</td><td class="no">❌ not guaranteed</td></tr>
+          <tr><th>Typical collections</th><td><code>ArrayList</code>, <code>HashMap</code></td><td><code>ConcurrentHashMap</code>, <code>CopyOnWriteArrayList</code></td></tr>
+          <tr><th>Best used for</th><td>single-threaded code — surface bugs loudly</td><td>genuine concurrent read/write access</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(<span class="ty">List</span>.of(<span class="str">"Sam"</span>, <span class="str">"Max"</span>, <span class="str">"Ann"</span>));
+<span class="kw">for</span> (<span class="ty">String</span> n : names) {
+    <span class="kw">if</span> (n.equals(<span class="str">"Max"</span>)) names.remove(n);  <span class="cx-err">// ❌ throws CME</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">A direct <code>remove()</code> on the collection mid-loop changes the modification count the iterator is still checking against.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Iterator</span>&lt;<span class="ty">String</span>&gt; it = names.iterator();
+<span class="kw">while</span> (it.hasNext()) {
+    <span class="kw">if</span> (it.next().equals(<span class="str">"Max"</span>)) it.remove();  <span class="cx-ok">// ✅ safe</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">The iterator's own <code>remove()</code> updates its tracked count too — <b>no mismatch, no exception</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>names.removeIf(n -&gt; n.equals(<span class="str">"Max"</span>));   <span class="cx-ok">// ✅ safe, Java 8+</span></code></pre>
+      </div>
+      <p class="cx-note"><code>removeIf()</code> is the modern one-liner — <b>no explicit iterator needed</b> at all.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're removing matching elements from a <code>List</code> in a loop</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">REMOVE WHILE LOOPING</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">for-each + list.remove()</text>
+              <path d="M210,43 H270" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc8a)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">❌ CME at runtime</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the <b>#1 scenario</b> you'll actually run into. The fix is
+          never "catch the exception" — switch to the iterator's own <code>remove()</code> or
+          <code>Collection.removeIf()</code>, both of which keep the modification count consistent.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Removing inside a <code>for-each</code> → reach for <code>removeIf()</code>, not <code>list.remove()</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> Multiple threads read a shared cache while others update it</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">SHARED, CONCURRENT CACHE</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">ConcurrentHashMap</text>
+              <path d="M210,43 H270" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc8b)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ no exception, ever</text>
+            </svg>
+          </div>
+          <p class="uc-what">A plain <code>HashMap</code> here would throw constantly under normal
+          concurrent traffic. A <code>ConcurrentHashMap</code> is built for exactly this access
+          pattern — readers never see an exception, only a possibly-slightly-stale view.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Real concurrent read/write → <code>ConcurrentHashMap</code>, not a plain <code>HashMap</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You assume "fail-safe" means the iteration sees every update live</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc8c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">"SAFE" ≠ "LIVE VIEW"</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">update mid-iteration</text>
+              <path d="M210,43 H270" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc8c)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">maybe missed, no error</text>
+            </svg>
+          </div>
+          <p class="uc-what">"Fail-safe" only promises no exception — it never promises the
+          iteration reflects every change made while it was running. Code that depends on seeing
+          every single concurrent update needs real synchronization, not just a tolerant iterator.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No exception ≠ fully up to date — weakly consistent means exactly that.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A background job intermittently crashes with <code>ConcurrentModificationException</code>
+      while reading a shared <code>List</code> that another thread occasionally trims.</b> The
+      fail-fast exception is working exactly as designed here — the real fix is switching the
+      shared list to a <code>CopyOnWriteArrayList</code> (reads stay lock-free and never throw) or
+      adding real synchronization, not catching and ignoring the exception.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="7.html">← Iterator vs. ListIterator</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="9.html">Generics, Type Erasure and Bounded Types →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

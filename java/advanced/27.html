@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A custom object is used as a HashMap key. After modifying one of its fields, the entry becomes difficult to retrieve. Why?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: HashMap Behaves Unexpectedly with a Mutable Key — Java Advanced — RefreshYourself">
+<meta property="og:description" content="A custom object is used as a HashMap key. After modifying one of its fields, the entry becomes difficult to retrieve. Why?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: HashMap Behaves Unexpectedly with a Mutable Key — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: HashMap Behaves Unexpectedly with a Mutable Key</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Java · Advanced · Must Know</div>
+    <h1>Scenario: HashMap Behaves Unexpectedly with a <span class="hl hl-hot">Mutable Key</span></h1>
+    <p class="interview-q">"A custom object is used as a <code>HashMap</code> key. After modifying one of its fields, the entry becomes difficult to retrieve. Why?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">🗝️ Mutable HashMap Key</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>An entry looks like it should be right there — the exact same object reference is used for the lookup — yet <code>map.get(key)</code> returns <code>null</code>, and the data is silently stuck, unreachable through the normal API.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A <code>HashMap</code> decides a key's bucket from its <code>hashCode()</code> at insertion time. Mutating a field the key's <code>hashCode()</code> depends on changes what that method now returns, so a later lookup computes a different bucket than where the entry actually lives.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">The bucket is fixed at insertion time — mutate a hash-affecting field afterward and the key points at the wrong bucket forever.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline"><b>HashMap bucket = hashCode() at insertion time.</b> Mutate a field used in
+    <code>hashCode()</code> after that, and the key now points at the <b>wrong</b> bucket.</p>
+    <p class="rthink"><b class="tc-label">Think:</b> the entry doesn't move when the key changes —
+    only the <i>key's own compass</i> starts pointing somewhere else.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh27" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar27Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="ar27Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#sh27)"><rect x="30" y="30" width="260" height="56" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="52" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">At insertion — hashCode() = 3</text>
+      <text x="160" y="69" text-anchor="middle" font-size="10.5" fill="#5b6472">object stored in bucket 3</text>
+
+      <g filter="url(#sh27)"><rect x="350" y="30" width="260" height="56" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="52" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">map.get(sameRef) after mutation</text>
+      <text x="480" y="69" text-anchor="middle" font-size="10.5" fill="#5b6472">hashCode() now = 7</text>
+
+      <path d="M160,86 V123 H268 V160" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#ar27Blue)"/>
+      <path d="M480,86 V123 H556 V160" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ar27Red)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#sh27)"><rect x="20" y="160" width="64" height="50" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="52" y="190" text-anchor="middle" font-size="15" font-weight="700" fill="#475569">0</text>
+      <g filter="url(#sh27)"><rect x="92" y="160" width="64" height="50" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="124" y="190" text-anchor="middle" font-size="15" font-weight="700" fill="#475569">1</text>
+      <g filter="url(#sh27)"><rect x="164" y="160" width="64" height="50" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="196" y="190" text-anchor="middle" font-size="15" font-weight="700" fill="#475569">2</text>
+      <g filter="url(#sh27)"><rect x="236" y="160" width="64" height="50" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2.2"/></g>
+      <text x="268" y="190" text-anchor="middle" font-size="16" font-weight="700" fill="#166534">3</text>
+      <g filter="url(#sh27)"><rect x="308" y="160" width="64" height="50" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="340" y="190" text-anchor="middle" font-size="15" font-weight="700" fill="#475569">4</text>
+      <g filter="url(#sh27)"><rect x="380" y="160" width="64" height="50" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="412" y="190" text-anchor="middle" font-size="15" font-weight="700" fill="#475569">5</text>
+      <g filter="url(#sh27)"><rect x="452" y="160" width="64" height="50" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="484" y="190" text-anchor="middle" font-size="15" font-weight="700" fill="#475569">6</text>
+      <g filter="url(#sh27)"><rect x="524" y="160" width="64" height="50" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2.2"/></g>
+      <text x="556" y="190" text-anchor="middle" font-size="16" font-weight="700" fill="#991b1b">7</text>
+
+      <rect x="203" y="208" width="130" height="22" rx="11" fill="#dcfce7" stroke="#16a34a" stroke-width="1"/>
+      <text x="268" y="223" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">✅ entry is actually here</text>
+      <rect x="494" y="208" width="125" height="22" rx="11" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+      <text x="556" y="223" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">❌ lookup finds nothing</text>
+    </svg>
+    <figcaption>Same object, same reference — but the hash it computes now points at bucket 7, while the entry it inserted is still sitting in bucket 3.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>The entry isn't "lost" or moved — it never leaves bucket 3.</b> What
+    breaks is the key's own <code>hashCode()</code>, which now resolves to bucket 7, so every
+    lookup searches the wrong place; the map itself didn't rehash or relocate anything.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Would iterating the whole map still find the entry?"</b> Yes —
+    <code>entrySet()</code>/<code>values()</code> walk every bucket directly and don't call
+    <code>hashCode()</code> at all, so the entry is still there and still visible; only
+    hash-based lookups (<code>get</code>, <code>containsKey</code>, <code>remove</code>) are
+    broken, because only those recompute the key's hash to pick a bucket.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A <code>HashMap</code> picks a key's bucket from <code>hashCode()</code>
+    at insertion time. If a field that <code>hashCode()</code> uses gets mutated afterward, the
+    key now computes a different hash, so <code>get()</code> looks in the wrong bucket and never
+    finds the entry — it's not lost, it's just unreachable through the hash path."</p>
+    <ul>
+      <li>Bucket choice → <span class="hl hl-hot">fixed once, at insertion, from that moment's hashCode()</span>.</li>
+      <li>Mutating a hash-affecting field → <span class="hl hl-inter">changes what hashCode() returns, not where the entry sits</span>.</li>
+      <li>Fix → <span class="hl hl-basic">never use a mutable object as a key; base equals()/hashCode() only on fields that never change after insertion</span>.</li>
+      <li>A safe alternative → <span class="hl hl-blue">an immutable key class, or a record, so hashCode() can never drift after insertion</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><code>HashMap</code> doesn't search its buckets by comparing every stored key with
+      <code>equals()</code> — that would be slow. Instead, it calls the key's
+      <code>hashCode()</code> once, turns that number into a bucket index, and only compares
+      <code>equals()</code> against the few keys already sitting in that one bucket. This is
+      exactly what makes <code>HashMap</code> fast, and exactly what breaks when a key mutates:
+      the bucket decision was made and is never revisited.</p>
+
+      <p>When a field feeding that key's <code>hashCode()</code> changes after insertion, nothing
+      about the stored entry moves — it is still physically sitting in its original bucket. What
+      changes is what <code>hashCode()</code> <i>now</i> returns when called again on a lookup.
+      <code>get(key)</code> computes a bucket from the current, mutated state, walks into that
+      (likely different, often empty) bucket, and reports no match — even when the exact same
+      object reference is passed in.</p>
+
+      <p>This is why the standard advice is so blunt: <b>don't use a mutable object as a
+      <code>HashMap</code> key</b> unless you're certain its <code>equals()</code>/
+      <code>hashCode()</code> fields never change for the lifetime of that entry. A key built
+      from fields that are set once in the constructor and never touched again — or a
+      <code>record</code>, which is immutable by construction — never has this failure mode.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">class</span> <span class="ty">Point</span> {
+    <span class="kw">int</span> x, y; <span class="cx-err">// ❌ mutable — part of equals()/hashCode()</span>
+
+    @Override
+    <span class="kw">public</span> <span class="kw">int</span> hashCode() { <span class="kw">return</span> <span class="ty">Objects</span>.hash(x, y); }
+}
+
+<span class="ty">Map</span>&lt;<span class="ty">Point</span>, <span class="ty">String</span>&gt; map = <span class="kw">new</span> <span class="ty">HashMap</span>&lt;&gt;();
+<span class="ty">Point</span> p = <span class="kw">new</span> <span class="ty">Point</span>(1, 1);
+map.put(p, <span class="str">"origin"</span>);   <span class="cx-err">// stored using hashCode() for (1,1)</span>
+p.x = 99;                   <span class="cx-err">// ❌ mutated — hashCode() now different</span>
+map.get(p);                  <span class="cx-err">// ❌ returns null — looks in the wrong bucket</span></code></pre>
+      </div>
+      <p class="cx-note">Same reference, same <code>equals()</code> logic — but
+      <code>hashCode()</code> now returns something else, so the lookup bucket is wrong.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">record</span> <span class="ty">Point</span>(<span class="kw">int</span> x, <span class="kw">int</span> y) {} <span class="cx-ok">// ✅ immutable — fields can never change</span>
+
+<span class="ty">Map</span>&lt;<span class="ty">Point</span>, <span class="ty">String</span>&gt; map = <span class="kw">new</span> <span class="ty">HashMap</span>&lt;&gt;();
+map.put(<span class="kw">new</span> <span class="ty">Point</span>(1, 1), <span class="str">"origin"</span>);
+map.get(<span class="kw">new</span> <span class="ty">Point</span>(1, 1)); <span class="cx-ok">// ✅ "origin" — hashCode() can never drift</span></code></pre>
+      </div>
+      <p class="cx-note">A <code>record</code> (or any key with fields set once and never
+      reassigned) can't drift — its <code>hashCode()</code> is identical for its whole life.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> A cache keyed by a mutable DTO stops returning hits after the DTO is updated in place</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc27a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">✏️ DTO field edited</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">cache.get() misses →</text>
+              <path d="M170,33 H310" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc27a)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">re-fetched needlessly</text>
+            </svg>
+          </div>
+          <p class="uc-what">An in-memory cache keyed by an entity object silently "forgets" entries whenever a cached field used in <code>equals()</code>/<code>hashCode()</code> is edited after the object was cached. The cache doesn't break loudly — it just looks like a lower hit rate, which is easy to misdiagnose as something else entirely.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A falling cache hit rate with no code change is a classic symptom of a mutable cache key.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> A key stored inside a Set appears to "duplicate" after being mutated and re-added</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc27b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔁 mutate, re-add</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">set.contains() → false →</text>
+              <path d="M170,33 H310" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc27b)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">looks like a duplicate</text>
+            </svg>
+          </div>
+          <p class="uc-what">A <code>HashSet</code> has exactly the same bucket mechanism as <code>HashMap</code>. Mutate an object already stored in the set, and <code>contains()</code> stops finding it — a careless re-add then creates what looks like a duplicate, even though it's the same underlying problem: the element's hash moved, the set's bucket for it didn't.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">HashSet uses the exact same bucket logic as HashMap — mutable elements have the identical failure mode.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> A code review correctly flags a mutable field inside an equals()/hashCode() pair before it ships</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc27c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">👀 reviewer spots setter</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">request: make immutable →</text>
+              <path d="M170,33 H310" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc27c)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">key class → record</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the scenario worth aiming for: a reviewer sees a class with a setter used as a key type, or fields feeding <code>hashCode()</code> that aren't <code>final</code>, and asks for it to be made immutable — a <code>record</code>, or a class with only a constructor and getters — before it ever ships as a map or set key.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">The real fix is caught in review, not in production — make key classes immutable by construction.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A session object is used as a <code>HashMap</code> key, and its <code>status</code>
+      field (included in <code>hashCode()</code>) is updated in place as the session moves
+      through its lifecycle.</b> After that update, <code>sessionMap.get(session)</code> starts
+      returning <code>null</code> for the exact same reference that was inserted — the entry is
+      still in the map, just in a bucket the key's new hash no longer points at.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="26.html">← Serialization, Deserialization and Compatibility</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="28.html">Scenario: Diagnosing a Production Memory Leak →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

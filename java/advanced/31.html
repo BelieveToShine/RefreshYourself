@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="An application stops responding because every request occupies a worker thread while waiting on a blocking operation. How do you explain and fix this?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: Thread Pool Exhaustion — Java Advanced — RefreshYourself">
+<meta property="og:description" content="An application stops responding because every request occupies a worker thread while waiting on a blocking operation. How do you explain and fix this?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: Thread Pool Exhaustion — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: Thread Pool Exhaustion</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Java · Advanced · Must Know</div>
+    <h1>Scenario: <span class="hl hl-hot">Thread Pool Exhaustion</span></h1>
+    <p class="interview-q">"An application stops responding because every request occupies a worker thread while waiting on a blocking operation. How do you explain and fix this?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">🧵 Pool Exhaustion</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Every worker thread in a fixed-size pool is blocked waiting on a slow downstream call (a database, a remote API), so new requests have nowhere to run — they queue indefinitely, or get rejected, while the application looks frozen even though no exception is thrown.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Size the pool deliberately against expected concurrency and the blocking call's latency, add explicit timeouts so a worker can't block forever, use a bounded queue with a sensible rejection policy, and — where the call is blocking I/O — consider virtual threads, which unmount from their carrier instead of tying up a scarce platform thread.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Every worker blocked on I/O means nobody's left to pick up new work — that's pool exhaustion.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline"><b>Pool exhaustion = every worker is blocked, none are free to pick up new
+    work.</b> The pool isn't broken — it's just full of threads waiting, not working.</p>
+    <p class="rthink"><b class="tc-label">Think:</b> timeouts stop a block from lasting forever;
+    sizing and virtual threads stop a block from costing a scarce thread in the first place.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh31" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar31Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="ar31Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">FIXED POOL vs. VIRTUAL THREADS UNDER THE SAME BLOCKING LOAD</text>
+
+      <g filter="url(#sh31)"><rect x="20" y="30" width="290" height="140" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="165" y="48" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">❌ fixed pool, 4 workers</text>
+
+      <rect x="35" y="58" width="60" height="30" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="1.4"/>
+      <text x="65" y="77" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">🔒 W1</text>
+      <rect x="105" y="58" width="60" height="30" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="1.4"/>
+      <text x="135" y="77" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">🔒 W2</text>
+      <rect x="175" y="58" width="60" height="30" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="1.4"/>
+      <text x="205" y="77" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">🔒 W3</text>
+      <rect x="245" y="58" width="60" height="30" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="1.4"/>
+      <text x="275" y="77" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">🔒 W4</text>
+      <text x="165" y="100" text-anchor="middle" font-size="9.5" fill="#5b6472">all 4 blocked on a slow DB call</text>
+
+      <rect x="35" y="112" width="270" height="22" rx="11" fill="#fff7ed" stroke="#d97706" stroke-width="1.2"/>
+      <text x="170" y="127" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">⏳ queue: req 5, 6, 7, 8…</text>
+
+      <text x="165" y="156" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">none are free to pick up new work</text>
+
+      <g filter="url(#sh31)"><rect x="330" y="30" width="290" height="140" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="475" y="48" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ virtual threads</text>
+
+      <rect x="345" y="58" width="120" height="34" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.4"/>
+      <text x="405" y="72" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">Carrier thread</text>
+      <text x="405" y="85" text-anchor="middle" font-size="8.5" fill="#5b6472">1 of a few, OS-level</text>
+
+      <path d="M465,75 H490" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#ar31Green)"><animate attributeName="stroke-dashoffset" values="7;0" dur="1s" repeatCount="indefinite"/></path>
+
+      <rect x="490" y="58" width="115" height="34" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.4"/>
+      <text x="547" y="72" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">VT blocked on I/O</text>
+      <text x="547" y="85" text-anchor="middle" font-size="8.5" fill="#5b6472">unmounts ⟲</text>
+
+      <text x="475" y="112" text-anchor="middle" font-size="9.5" fill="#5b6472">unmounted VT frees the carrier</text>
+      <rect x="345" y="122" width="260" height="22" rx="11" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.2"/>
+      <text x="475" y="137" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">carrier picks up the next VT</text>
+
+      <text x="475" y="156" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">thousands of blocked VTs, few carriers</text>
+
+      <g filter="url(#sh31)"><rect x="110" y="200" width="420" height="56" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="222" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">The exact bottleneck</text>
+      <text x="320" y="239" text-anchor="middle" font-size="10.5" fill="#5b6472">Every platform worker is blocked — none are free to pick up new work</text>
+    </svg>
+    <figcaption>Same blocking load, two outcomes: a fixed pool runs out of workers; a virtual thread unmounts from its carrier the moment it blocks, so the carrier stays free.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A bigger thread pool fixes this.</b> It raises the ceiling, but if every
+    request still blocks on the same slow downstream call, a bigger pool just delays the same
+    exhaustion and adds more idle-but-blocked threads consuming memory — it doesn't fix the
+    actual cause, which is a worker thread sitting idle while it waits.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's the actual difference a virtual thread makes here?"</b> When a
+    virtual thread blocks on supported I/O, the JVM unmounts it from its carrier (platform)
+    thread, freeing that carrier to run a different virtual thread — a platform thread blocked
+    the same way is simply stuck, unusable until that exact call returns.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Every worker in the pool is blocked waiting on the same slow
+    downstream call, so no thread is free to pick up new requests — they queue or get rejected
+    depending on the policy. I'd size the pool against real concurrency and latency, add
+    explicit timeouts so a call can't block forever, use a bounded queue with a sensible
+    rejection policy, and move the blocking work to virtual threads where that's an option, since
+    blocking there unmounts from the carrier instead of consuming a scarce platform thread."</p>
+    <ul>
+      <li>Root cause → <span class="hl hl-hot">every platform worker blocked on I/O, none free for new work</span>.</li>
+      <li>Timeouts → <span class="hl hl-blue">stop one slow call from blocking a worker forever</span>.</li>
+      <li>Bounded queue + rejection policy → <span class="hl hl-blue">fails fast instead of silently delaying the same failure</span>.</li>
+      <li>Virtual threads → <span class="hl hl-basic">blocking I/O unmounts from the carrier — no platform thread tied up</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A fixed-size <code>ExecutorService</code> hands each incoming task to one of a bounded
+      set of platform threads. If a task's work is mostly waiting — a database round trip, a
+      slow remote API call — that thread sits blocked for the whole wait, doing nothing, but
+      still counted as "busy" by the pool. Once every thread in the pool is in that state
+      simultaneously, there is nothing left to run the next request; depending on the executor's
+      queue, new work either backs up indefinitely or gets rejected once the queue itself is
+      full.</p>
+
+      <p>Three fixes attack this from different angles. Deliberate <b>sizing</b> — based on
+      expected concurrent load and the blocking call's typical latency, not a guessed round
+      number — raises the ceiling to where it's actually needed. Explicit <b>timeouts</b> on the
+      downstream call itself put a hard limit on how long any one worker can be stuck, so a
+      single unusually slow dependency can't quietly consume the whole pool. A <b>bounded
+      queue</b> with an explicit rejection policy (fail fast, or run on the caller) turns an
+      unbounded backlog — which just delays the same eventual failure while making it worse —
+      into a visible, immediate signal instead.</p>
+
+      <p><b>Virtual threads</b> (Java 21+) attack it structurally rather than by tuning numbers:
+      a virtual thread that blocks on supported I/O is <i>unmounted</i> from its underlying
+      carrier (platform) thread, freeing that carrier to run a different virtual thread while the
+      first one waits. A pool of millions of virtual threads can have most of them blocked at
+      once without starving anything, because the scarce resource — a handful of OS-level carrier
+      threads — is never tied up by the wait itself, only by the moments of actual CPU work.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">ExecutorService</span> pool = <span class="ty">Executors</span>.newFixedThreadPool(8);
+
+pool.submit(() -&gt; {
+    <span class="ty">String</span> result = slowDatabaseCall(); <span class="cx-err">// ❌ no timeout — can block this worker forever</span>
+    process(result);
+});</code></pre>
+      </div>
+      <p class="cx-note">One unusually slow call has no limit — it can hold its worker until the
+      pool has none left.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">ExecutorService</span> pool = <span class="ty">Executors</span>.newVirtualThreadPerTaskExecutor();
+
+pool.submit(() -&gt; {
+    <span class="ty">String</span> result = slowDatabaseCall(); <span class="cx-ok">// ✅ blocks a virtual thread — unmounts from its carrier</span>
+    process(result);
+});</code></pre>
+      </div>
+      <p class="cx-note">The carrier thread is freed the moment this virtual thread blocks — it
+      can run other work in the meantime instead of sitting idle.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> A web service stops accepting new requests whenever one downstream dependency slows down</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc31a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐢 one slow dependency</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">every worker blocks →</text>
+              <path d="M170,33 H310" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc31a)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">whole service hangs</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: one downstream dependency gets slow, and every request happens to call it, so the entire fixed pool fills with workers blocked on that one call — healthy, unrelated endpoints that happen to share the same pool stop responding too, even though they don't touch the slow dependency.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One slow dependency can exhaust a shared pool and take down unrelated endpoints with it.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Requests pile up in the queue for minutes with no errors, then suddenly start failing all at once</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc31b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">📥 queue fills up</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">bound it + reject early →</text>
+              <path d="M170,33 H310" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc31b)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">fast, visible failure</text>
+            </svg>
+          </div>
+          <p class="uc-what">An unbounded queue hides the exhaustion for a while — requests keep getting accepted, just never actually run — until memory pressure or client-side timeouts turn it into a sudden, confusing mass failure. A bounded queue with a clear rejection policy makes the same underlying problem visible immediately instead of quietly deferring it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">An unbounded queue doesn't prevent exhaustion — it just delays and disguises it.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> A service migrating to Java 21+ considers virtual threads specifically for blocking-I/O-heavy endpoints</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc31c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🧵 I/O-heavy endpoint</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">virtual-thread executor →</text>
+              <path d="M170,33 H310" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc31c)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">no pool to exhaust</text>
+            </svg>
+          </div>
+          <p class="uc-what">For endpoints whose work is dominated by waiting on I/O rather than CPU, switching their executor to <code>newVirtualThreadPerTaskExecutor()</code> removes the fixed-size bottleneck entirely — thousands of blocked virtual threads cost far less than thousands of blocked platform threads, because blocking unmounts them from their carrier instead of occupying it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Virtual threads are the right reach specifically for blocking-I/O-heavy work, not CPU-bound work.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A REST API backed by a fixed thread pool of 20 workers stops responding to all
+      traffic after a downstream payment provider starts taking 30+ seconds per call.</b> Within
+      a couple of minutes, every worker is blocked on that one call, the request queue grows
+      without bound, and even requests that don't touch payments can't get a thread — adding a
+      request timeout on the payment call and moving that endpoint to a virtual-thread executor
+      fixes both the immediate hang and the underlying fragility.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="30.html">← Scenario: A Slow or Side-Effecting Stream Pipeline</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="32.html">Scenario: A CompletableFuture in a Group of Calls Fails →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

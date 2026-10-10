@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="CPU usage is high but requests are still slow — how do you figure out whether it's allocation, GC, lock contention, an inefficient algorithm, or blocking I/O?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: High CPU, Slow Requests — Java Advanced — RefreshYourself">
+<meta property="og:description" content="CPU usage is high but requests are still slow — how do you figure out whether it's allocation, GC, lock contention, an inefficient algorithm, or blocking I/O?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: High CPU, Slow Requests — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: High CPU, Slow Requests</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Java · Advanced · Should Know</div>
+    <h1>High CPU rules out one usual suspect — let <span class="hl hl-blue">the profiler</span> find the other three</h1>
+    <p class="interview-q">"CPU usage is high but requests are still slow — how do you figure out whether it's allocation, GC, lock contention, an inefficient algorithm, or blocking I/O?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+        <div class="wc-head">🔥 High CPU, Still Slow</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>"High CPU" sounds like one problem, but it's actually a symptom shared by at least three very different root causes — excess allocation driving GC, lock contention, and a genuinely inefficient algorithm — and guessing which one wastes exactly the time an incident doesn't have.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Let a profiler point at the actual mechanism — GC logs for allocation pressure, a lock-contention profile for synchronization, CPU sampling for a hot method — and use the fact that high CPU itself already rules out pure blocking I/O, which would show as low CPU with parked threads instead.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">High CPU rules out blocking I/O — the profiler, not a guess, tells you which of the other three it is.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">GC logs spiking <span class="rarrow">→</span> <b>allocation</b> pressure</p>
+      <p class="rrow">lock-contention profile hot <span class="rarrow">→</span> <b>synchronization</b></p>
+      <p class="rrow">CPU-sampling hot method <span class="rarrow">→</span> <b>inefficient algorithm</b></p>
+      <p class="rrow">low CPU, threads parked <span class="rarrow">→</span> <b>blocking I/O</b> instead</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> a thread parked on I/O isn't burning CPU —
+    so high CPU already hands you a shortlist of three, not five.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh34" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar34" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#sh34)"><rect x="210" y="14" width="220" height="40" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="38" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">High CPU, slow requests</text>
+
+      <path d="M320,54 V70" fill="none" stroke="#64748b" stroke-width="1.6"/>
+      <path d="M320,70 H90 V92" fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#ar34)"/>
+      <path d="M320,70 H250 V92" fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#ar34)"/>
+      <path d="M320,70 H555 V92" fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#ar34)"/>
+
+      <text x="90" y="81" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">GC logs spike</text>
+      <text x="250" y="81" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">contention profile hot</text>
+      <text x="555" y="81" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">CPU sampling hot</text>
+
+      <g filter="url(#sh34)"><rect x="20" y="92" width="140" height="50" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="90" y="113" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">Allocation pressure</text>
+      <text x="90" y="128" text-anchor="middle" font-size="9.5" fill="#5b6472">constant GC activity</text>
+
+      <g filter="url(#sh34)"><rect x="180" y="92" width="140" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="250" y="113" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">Lock contention</text>
+      <text x="250" y="128" text-anchor="middle" font-size="9.5" fill="#5b6472">spin-wait, context switch</text>
+
+      <g filter="url(#sh34)"><rect x="485" y="92" width="140" height="50" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="555" y="113" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">Inefficient algorithm</text>
+      <text x="555" y="128" text-anchor="middle" font-size="9.5" fill="#5b6472">doing more work than needed</text>
+
+      <path d="M90,142 V215" fill="none" stroke="#3b82f6" stroke-width="1.6"/>
+      <path d="M250,142 V215" fill="none" stroke="#dc2626" stroke-width="1.6"/>
+      <path d="M555,142 V215" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+
+      <rect x="20" y="215" width="605" height="30" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+      <text x="322" y="233" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">all three share one trait: the CPU is genuinely busy doing real work</text>
+
+      <rect x="150" y="255" width="340" height="22" rx="11" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="320" y="270" text-anchor="middle" font-size="10" font-weight="700" fill="#64748b">⛔ blocking I/O would show LOW CPU instead — ruled out</text>
+    </svg>
+    <figcaption>High CPU already narrows it to three — the profiler, not a guess, says which one. Blocking I/O would look completely different: low CPU, parked threads.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>High CPU usually means a database or network call is the bottleneck.</b> A
+    thread genuinely blocked waiting on I/O isn't consuming CPU at all — that symptom shows up as
+    <i>low</i> CPU with threads parked, not high CPU; high CPU points to allocation/GC, lock
+    contention, or an inefficient algorithm instead.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"If it turns out to be GC, what would you actually change?"</b> Depends
+    on what the allocation profile shows — reducing avoidable object creation in the hot path
+    first, then, only if that's not enough, revisiting heap sizing or the collector itself (see
+    Advanced #3's generational trade-offs) — never jump straight to "just tune the GC" before
+    confirming the allocation source.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"High CPU with slow requests already rules out pure blocking I/O, since a
+    blocked thread doesn't burn CPU — I'd profile for the other three: GC logs for allocation
+    pressure, a lock-contention profile for synchronization overhead, and CPU sampling for a hot
+    method doing more work than it needs to."</p>
+    <ul>
+      <li>High CPU → <span class="hl hl-hot">rules out blocking I/O as the direct cause — that shows as low CPU with parked threads</span>.</li>
+      <li>GC logs/pause frequency → <span class="hl hl-blue">check for excessive allocation driving constant collection</span>.</li>
+      <li>Lock/thread-contention profile → <span class="hl hl-inter">check for threads burning CPU on spin-wait or context-switch overhead</span>.</li>
+      <li>CPU sampling, hot methods → <span class="hl hl-basic">check for a genuinely inefficient algorithm, not just "slow code"</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>The first useful move is what the symptom itself already rules out:
+      <b>blocking I/O</b> — a thread parked waiting on a socket read, a database round-trip, or a
+      disk operation — doesn't consume CPU while it waits; the OS simply isn't scheduling it. That
+      pattern shows up as <i>low</i> CPU alongside high latency and a pool full of waiting threads,
+      the opposite of what this scenario describes. Seeing genuinely high CPU is itself a
+      diagnostic fact: whatever's slow is actually doing CPU work, not waiting for something
+      external.</p>
+
+      <p>From there, a profiler — not a guess — separates the three real suspects. Allocation
+      pressure shows up in GC logs and pause-frequency metrics: a request path creating far more
+      short-lived objects than it needs to forces the collector to run constantly, and that
+      collection work itself consumes CPU cycles that never show up as "my code is slow" in a
+      naive read. Lock contention shows up in a thread/lock-contention profile: threads burning CPU
+      cycles spin-waiting for a lock, or paying repeated context-switch overhead fighting over a
+      shared resource, can look like "busy" CPU that's actually mostly wasted coordination rather
+      than useful work. An inefficient algorithm shows up directly in CPU sampling as one or a few
+      hot methods consuming a disproportionate share of samples — genuinely necessary work, just
+      more of it than the problem requires (an O(n²) scan where a map lookup would do).</p>
+
+      <p>These three aren't mutually exclusive in a real incident — allocation pressure can itself
+      cause lock contention inside the allocator/GC, for instance — but a profiler run first, before
+      any fix is attempted, is what tells you which one to actually chase instead of tuning the
+      wrong layer first.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">for</span> (<span class="ty">Order</span> o : orders) {
+    <span class="ty">String</span> summary = <span class="ty">String</span>.format(<span class="str">"%s: %d"</span>, o.id(), o.qty()); <span class="cx-err">// ❌ new String + format allocation per row</span>
+    log.add(summary);
+}</code></pre>
+      </div>
+      <p class="cx-note">Harmless-looking per-row formatting, multiplied over a large hot-path
+      loop, is exactly the kind of allocation pressure that GC logs would surface.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">synchronized</span> (sharedLock) { <span class="cx-err">// ❌ one lock guarding the whole hot path</span>
+    cache.put(key, computeExpensiveValue()); <span class="cx-err">// threads queue up, burning CPU on contention</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">A lock-contention profile — not CPU sampling alone — is what reveals
+      threads spending cycles waiting on <code>sharedLock</code> rather than doing useful work.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> GC pause frequency in the logs climbs right alongside the slowdown</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc34a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">GC pauses spike</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">points to →</text>
+              <path d="M170,33 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc34a)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">allocation pressure</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is a very common real pattern: a code path creates far more short-lived objects than it needs to, forcing the collector to run constantly. The fix starts with an allocation profile pointing at the actual source, not a heap-size or collector-tuning change made before confirming where the allocation is coming from.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">GC pause frequency rising with load → check allocation before touching GC settings.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> Many threads are runnable but a thread dump shows most of them stuck on the same lock</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc34b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">threads queue on 1 lock</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">points to →</text>
+              <path d="M170,33 H310" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc34b)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">lock contention</text>
+            </svg>
+          </div>
+          <p class="uc-what">High CPU with most threads piled up behind one shared lock, visible in a thread dump or contention profile, points straight at synchronization as the cause — widening the lock's scope, splitting it per-key, or moving to a concurrent collection are the real fixes, not adding more threads.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Threads piled on one lock in a dump → it's contention, not raw CPU work.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#334155">
+          <div class="uc-sit"><span class="uc-flag">3</span> CPU sampling shows almost all time inside one specific method</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc34c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#334155"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">one hot method</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">points to →</text>
+              <path d="M170,33 H310" stroke="#334155" stroke-width="1.6" fill="none" marker-end="url(#arUc34c)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">inefficient algorithm</text>
+            </svg>
+          </div>
+          <p class="uc-what">No GC spike, no lock contention — just one method dominating the CPU-sampling profile. This is the straightforward case: the code is doing real, necessary-looking work, just a lot more of it than the problem actually requires (a nested scan where an index or map lookup would do).</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A single dominant hot method in sampling → an algorithmic fix, not an infrastructure one.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A service's CPU climbs to 95% during peak traffic while response times triple.</b>
+      Pull a CPU-sampling profile first — it will point at one of allocation/GC, lock contention,
+      or a specific hot method, and that evidence decides the fix, rather than reaching straight
+      for "add more instances" or "tune the garbage collector."</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="33.html">← Scenario: Choosing a Collection for a High-Throughput Lookup Service</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="35.html">Scenario: Upgrading to a Newer Java Version →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

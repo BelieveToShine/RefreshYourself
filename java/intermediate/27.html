@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How do sealed classes and pattern matching for switch work together to let the compiler guarantee every case is handled?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Sealed Classes, Pattern Matching and Switch Expressions — Java Intermediate — RefreshYourself">
+<meta property="og:description" content="How do sealed classes and pattern matching for switch work together to let the compiler guarantee every case is handled?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Sealed Classes, Pattern Matching and Switch Expressions — Java Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Sealed Classes, Pattern Matching and Switch Expressions</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Java · Intermediate · Should Know</div>
+    <h1><code>sealed</code> + Pattern-Matching <code>switch</code> — <span class="hl hl-basic">a closed set the compiler can verify</span></h1>
+    <p class="interview-q">"How do sealed classes and pattern matching for <code>switch</code> work together to let the compiler guarantee every case is handled?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔒 sealed</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A <code>switch</code> over a class hierarchy (<code>Shape</code> → <code>Circle</code>, <code>Square</code>, <code>Triangle</code>) can't know if it has truly covered every possible subtype, because any code anywhere could add a new subclass — so the compiler forces a <code>default</code> branch "just in case," even when every known case is covered.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A <code>sealed</code> class/interface (finalized Java 17, JEP 409) lists every class permitted to extend/implement it — closing the hierarchy, so the compiler actually knows the full set of possible subtypes.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">sealed = the exact list of subtypes, decided once, checked forever.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🔀 pattern-matching switch</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Branching on a value's runtime type used to mean a long <code>instanceof</code>-<code>else if</code> chain with manual casts — nothing stopped a developer from simply forgetting a type.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Pattern matching for <code>switch</code> (finalized Java 21, JEP 441, with record patterns JEP 440) lets a <code>switch</code> branch directly on type and destructure a record's components — paired with a <code>sealed</code> hierarchy, the compiler can verify every case is handled with no <code>default</code> needed.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">pattern-matching switch + sealed = exhaustiveness the compiler actually checks.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>sealed</code> <span class="rarrow">→</span> <b>closed set</b> of allowed subtypes</p>
+      <p class="rrow"><code>switch</code> pattern matching <span class="rarrow">→</span> <b>branches on type</b>, destructures records</p>
+      <p class="rrow">together <span class="rarrow">→</span> <b>no default needed</b>, compiler-verified</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>sealed</code></b> (Java 17) tells the compiler the full list. <b><code>switch</code></b> pattern matching (Java 21) uses that list to prove nothing's missing.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 252" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh27" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar27" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#sh27)"><rect x="220" y="14" width="200" height="34" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="35" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">sealed interface Shape</text>
+
+      <path d="M320,48 V62" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M135,62 H505" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M135,62 V84" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar27)"/>
+      <path d="M320,62 V84" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar27)"/>
+      <path d="M505,62 V84" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar27)"/>
+
+      <g filter="url(#sh27)"><rect x="65" y="84" width="140" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="135" y="105" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">record Circle</text>
+      <g filter="url(#sh27)"><rect x="250" y="84" width="140" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="320" y="105" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">record Square</text>
+      <g filter="url(#sh27)"><rect x="435" y="84" width="140" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="505" y="105" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">record Triangle</text>
+
+      <path d="M135,118 V132" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M320,118 V132" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M505,118 V132" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M135,132 H505" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M320,132 V156" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar27)"/>
+
+      <g filter="url(#sh27)"><rect x="110" y="156" width="420" height="80" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="175" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">switch (shape) { ... }</text>
+      <text x="200" y="195" text-anchor="middle" font-size="10" fill="#92400e">case Circle c →</text>
+      <text x="320" y="195" text-anchor="middle" font-size="10" fill="#92400e">case Square s →</text>
+      <text x="445" y="195" text-anchor="middle" font-size="10" fill="#92400e">case Triangle t →</text>
+      <text x="320" y="216" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ no default needed — all 3 covered</text>
+    </svg>
+    <figcaption>Three permitted subtypes, three case arms — the compiler can prove the <code>switch</code> is exhaustive without a <code>default</code>.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Sealing a hierarchy doesn't make a <code>switch</code> exhaustive by itself.</b> If a sealed interface has 3 permitted subtypes but the <code>switch</code> only has cases for 2 of them, the compiler still requires a <code>default</code> (or reports an error) — exhaustiveness comes from the <code>switch</code> actually covering every permitted type, not from sealing alone.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What happens if someone adds a 4th permitted subtype later?"</b> Every exhaustive <code>switch</code> over that sealed type across the codebase fails to compile until a case is added for the new subtype — a missed case becomes a compile error, not a runtime surprise.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>sealed</code> restricts a class or interface to an explicitly listed set of permitted subtypes, finalized in Java 17, so the compiler has full closed-world knowledge of the hierarchy. Pattern matching for <code>switch</code>, finalized in Java 21 with record patterns, lets a <code>switch</code> branch on type and destructure records directly — combined with a sealed hierarchy, the compiler can verify every case is covered with no default needed."</p>
+    <ul>
+      <li><code>sealed</code> <span class="hl hl-blue">→ closed, explicit list</span> of permitted subtypes (Java 17, JEP 409).</li>
+      <li>pattern matching for <code>switch</code> <span class="hl hl-inter">→ branches on type</span>, destructures records (Java 21, JEP 441/440).</li>
+      <li><code>switch</code> expression <span class="hl hl-basic">→ returns a value</span> via <code>-&gt;</code> arrows, no break-per-case (Java 14+).</li>
+      <li><code>sealed</code> + exhaustive <code>switch</code> <span class="hl hl-hot">→ a missing case is a compile error</span>, not a runtime bug.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <code>sealed</code> type names every class allowed to extend or implement it via
+      <code>permits</code> (or lets the compiler infer the list from classes in the same file).
+      That's the piece that was missing before: without it, any hierarchy is open-ended, so the
+      compiler can never be sure it has seen every subtype, and a <code>switch</code> is forced to
+      carry a defensive <code>default</code> branch.</p>
+
+      <p>Pattern matching for <code>switch</code> lets a <code>case</code> test a value's actual
+      type (<code>case Circle c -&gt;</code>) and, for a record, pull its components straight out
+      (<code>case Circle(var r) -&gt;</code>) without a manual cast. A <code>switch</code>
+      expression (Java 14+) returns a value directly from each <code>-&gt;</code> arm instead of
+      requiring a <code>break</code> per case. Put a sealed hierarchy and an exhaustive
+      pattern-matching <code>switch</code> expression together, and the compiler can prove — not
+      just hope — that every possible shape of input is handled.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th>Feature</th><th>Finalized in</th><th>JEP</th></tr></thead>
+        <tbody>
+          <tr><th><code>switch</code> expressions</th><td>Java 14</td><td>JEP 361</td></tr>
+          <tr><th><code>sealed</code> classes/interfaces</th><td>Java 17</td><td>JEP 409</td></tr>
+          <tr><th>Pattern matching for <code>switch</code></th><td>Java 21</td><td>JEP 441</td></tr>
+          <tr><th>Record patterns</th><td>Java 21</td><td>JEP 440</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">sealed interface</span> <span class="ty">Shape</span>
+    <span class="kw">permits</span> <span class="ty">Circle</span>, <span class="ty">Square</span>, <span class="ty">Triangle</span> {}  <span class="cx-cmt">// ✅ Java 17 — the full list</span>
+
+<span class="kw">record</span> <span class="ty">Circle</span>(<span class="kw">double</span> radius) <span class="kw">implements</span> <span class="ty">Shape</span> {}
+<span class="kw">record</span> <span class="ty">Square</span>(<span class="kw">double</span> side) <span class="kw">implements</span> <span class="ty">Shape</span> {}
+<span class="kw">record</span> <span class="ty">Triangle</span>(<span class="kw">double</span> base, <span class="kw">double</span> height) <span class="kw">implements</span> <span class="ty">Shape</span> {}</code></pre>
+      </div>
+      <p class="cx-note">No 4th subtype can exist <b>anywhere</b> without being listed here.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">double</span> area = <span class="kw">switch</span> (shape) {               <span class="cx-cmt">// ✅ Java 21 — pattern matching</span>
+    <span class="kw">case</span> <span class="ty">Circle</span>(<span class="kw">double</span> r) -&gt; Math.PI * r * r;
+    <span class="kw">case</span> <span class="ty">Square</span>(<span class="kw">double</span> s) -&gt; s * s;
+    <span class="kw">case</span> <span class="ty">Triangle</span>(<span class="kw">double</span> b, <span class="kw">double</span> h) -&gt; 0.5 * b * h;
+    <span class="cx-ok">// no default — compiler already knows these 3 are ALL of Shape</span>
+};</code></pre>
+      </div>
+      <p class="cx-note">Record patterns <b>destructure directly</b> — no manual cast or getter calls.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Modeling a fixed result type instead of exceptions</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc27a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">FIXED RESULT SHAPE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">sealed PaymentResult</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc27a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#1e3a8a">Success/Failure/Pending</text>
+            </svg>
+          </div>
+          <p class="uc-what">A <code>sealed PaymentResult</code> with exactly three permitted
+          records — <code>Success</code>, <code>Failure</code>, <code>Pending</code> — lets calling
+          code <code>switch</code> over the outcome with the compiler guaranteeing every case is
+          handled, instead of relying on exceptions or null checks.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A fixed set of outcomes → model it as a sealed hierarchy.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> Parsing an expression tree with record patterns</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc27b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">DESTRUCTURE DIRECTLY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">case Add(l, r) →</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc27b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">eval(l)+eval(r)</text>
+            </svg>
+          </div>
+          <p class="uc-what">Evaluating an AST node (<code>Add</code>, <code>Mul</code>,
+          <code>Const</code>) with record patterns pulls each component straight into a local
+          variable in the <code>case</code> itself — no manual casting or getter calls needed to
+          get at the node's fields.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Record patterns destructure in the case line itself.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Assuming <code>sealed</code> means "can't be extended at all"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc27c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">sealed ≠ final</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">sealed Shape</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc27c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">still 3 subtypes extend it</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>sealed</code> restricts <b>who</b> may extend a type, not
+          <b>whether</b> anyone can — the listed permitted subtypes still genuinely extend it.
+          Only <code>final</code> blocks extension entirely; a <code>sealed</code> type's permitted
+          subtypes are real subclasses, not a contradiction.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">sealed restricts who extends it, not whether it can be extended.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>An API client's result type is modeled as <code>sealed interface ApiResult permits
+      Success, NotFound, ServerError</code>.</b> Every place in the codebase that handles an API
+      call <code>switch</code>es over the result — and the day someone adds a new
+      <code>RateLimited</code> case, every one of those switches fails to compile until it's
+      updated, instead of silently falling through a forgotten <code>default</code> in production.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="26.html">← Annotations and Reflection</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="28.html">Text Blocks and Modern Java Language Features →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Parallel streams split work across the common ForkJoinPool — why can turning a stream parallel sometimes make it slower?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Parallel Streams — When They Help and Hurt — Java Advanced — RefreshYourself">
+<meta property="og:description" content="Parallel streams split work across the common ForkJoinPool — why can turning a stream parallel sometimes make it slower?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Parallel Streams — When They Help and Hurt — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Parallel Streams — When They Help and Hurt</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Java · Advanced · Should Know</div>
+    <h1>Parallel streams — <span class="hl hl-basic">genuine speedup</span> or <span class="hl hl-hot">slower than sequential</span>?</h1>
+    <p class="interview-q">"Why would turning a stream parallel sometimes make it slower?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">⚙️ .parallelStream()</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A loop/stream over a huge, CPU-heavy collection only uses one core, leaving the other cores idle while it grinds through the work sequentially.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Calling <code>.parallelStream()</code> splits the pipeline's work across the common <code>ForkJoinPool</code> so multiple cores process different chunks at once — but the split/merge machinery itself has a cost, so it only pays off when the work being split genuinely dwarfs that cost.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Parallel streams trade setup cost for core count — worth it only when the work is big enough to absorb that cost.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Parallel streams = <b>"free speedup only if the job is big, CPU-heavy, and split-friendly."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> splitting a huge pile of rocks between four
+    people saves time. Splitting <i>one</i> rock between four people just adds hand-off time.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shJ22" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arJ22Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arJ22Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arJ22Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <line x1="320" y1="26" x2="320" y2="280" stroke="#e2e8f0" stroke-width="2"/>
+
+      <text x="160" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#166534" letter-spacing="0.3">LARGE, CPU-HEAVY, SPLITTABLE</text>
+      <text x="480" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b" letter-spacing="0.3">SMALL COLLECTION</text>
+
+      <g filter="url(#shJ22)"><rect x="70" y="36" width="180" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="60" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">📦 10M elements</text>
+
+      <g filter="url(#shJ22)"><rect x="390" y="36" width="180" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="60" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">📦 20 elements</text>
+
+      <path d="M160,76 V94" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ22Gray)"/>
+      <path d="M480,76 V94" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ22Gray)"/>
+
+      <text x="160" y="108" text-anchor="middle" font-size="10.5" fill="#5b6472">ForkJoinPool splits into chunks</text>
+      <text x="480" y="108" text-anchor="middle" font-size="10.5" fill="#5b6472">ForkJoinPool splits into chunks</text>
+
+      <path d="M160,114 V128" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M60,128 H260" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M80,128 V148" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arJ22Green)"/>
+      <path d="M160,128 V148" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arJ22Green)"/>
+      <path d="M240,128 V148" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arJ22Green)"/>
+
+      <g filter="url(#shJ22)"><rect x="50" y="148" width="60" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="80" y="169" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">core 1</text>
+      <g filter="url(#shJ22)"><rect x="130" y="148" width="60" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="160" y="169" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">core 2</text>
+      <g filter="url(#shJ22)"><rect x="210" y="148" width="60" height="34" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="240" y="169" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">core 3+</text>
+
+      <path d="M160,182 V210" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arJ22Green)"/>
+      <g filter="url(#shJ22)"><rect x="60" y="212" width="200" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="233" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ Real speedup</text>
+      <text x="160" y="248" text-anchor="middle" font-size="10" fill="#5b6472">work saved &gt;&gt; split/merge cost</text>
+
+      <path d="M480,114 V210" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arJ22Red)"/>
+      <text x="505" y="162" font-size="10" fill="#991b1b">split + merge</text>
+      <text x="505" y="175" font-size="10" fill="#991b1b">overhead itself</text>
+
+      <g filter="url(#shJ22)"><rect x="380" y="212" width="200" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="480" y="233" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐛 Net slower</text>
+      <text x="480" y="248" text-anchor="middle" font-size="10" fill="#5b6472">overhead &gt; work saved</text>
+
+      <text x="320" y="288" text-anchor="middle" font-size="9.5" fill="#5b6472">same API call, opposite outcome — it depends on the shape of the work</text>
+    </svg>
+    <figcaption>Same <code>.parallelStream()</code> call — the size and shape of the work decides whether it helps or hurts.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Parallel is not a free "make it faster" switch.</b> On a small collection,
+    or I/O-bound work where threads just block, the ForkJoinPool's splitting and merging overhead
+    can cost more than the time it saves — making the parallel version measurably slower.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Is it ever unsafe to use <code>.parallelStream()</code>, not just
+    slow?"</b> Yes — any stateful or order-dependent operation, or a <code>peek()</code>/lambda
+    that mutates shared state from outside the stream, can produce wrong results under
+    concurrent execution, not just a performance hit.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>.parallelStream()</code> splits the pipeline across the common
+    <code>ForkJoinPool</code>. It genuinely helps on large, CPU-bound, easily-splittable
+    workloads with no shared mutable state — it hurts on small collections, I/O-bound work, or
+    anything stateful or order-dependent, because the splitting and merging overhead can outweigh
+    the work saved."</p>
+    <ul>
+      <li>Large + CPU-bound + splittable → <span class="hl hl-basic">genuine speedup</span>, more cores doing real work.</li>
+      <li>Small collection → <span class="hl hl-hot">overhead dominates</span>, often net slower than sequential.</li>
+      <li>I/O-bound work → <span class="hl hl-hot">threads just block</span>, parallel gains nothing.</li>
+      <li>Shared mutable state (e.g. a mutating <code>peek()</code>) → <span class="hl hl-inter">unsafe under concurrency</span>, not just slow.</li>
+      <li>Always on the shared pool → <span class="hl hl-adv">every parallel stream in the JVM competes for the same ForkJoinPool</span> threads.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><code>.parallelStream()</code> (on a collection) or <code>.stream().parallel()</code>
+      recursively splits the source into chunks using a <span class="hl hl-blue">work-stealing
+      fork/join algorithm</span>, processes each chunk on a worker thread from the JVM's single,
+      shared <code>ForkJoinPool.commonPool()</code>, then combines the partial results back
+      together. All of that — splitting, scheduling, combining — is real work on its own, on top
+      of whatever the pipeline itself does.</p>
+
+      <p>That's why size and shape matter more than intent. A huge collection doing genuinely
+      expensive per-element work (heavy computation, not a cheap comparison) amortizes the
+      splitting cost across a large payoff. A small collection, or cheap per-element work, pays
+      the same splitting cost for almost no payoff — the overhead can dominate and the parallel
+      version runs slower than the plain sequential stream would have. I/O-bound work (a network
+      call, a blocking read) is its own separate problem: the worker threads just sit blocked,
+      so adding parallelism buys nothing — the bottleneck was never CPU availability.</p>
+
+      <p>Order-sensitive operations (<code>forEach</code> on an ordered stream where sequence
+      matters, or <code>findFirst</code>) and anything relying on <span class="hl hl-hot">shared
+      mutable state</span> accessed from multiple threads at once (a counter incremented inside
+      <code>peek()</code>, a non-thread-safe collection built up by hand) aren't just slower in
+      parallel — they can produce incorrect results, because the stream's threads genuinely run
+      concurrently.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th>Workload shape</th><th>Parallel effect</th></tr></thead>
+        <tbody>
+          <tr><th>Large, CPU-heavy, easily split</th><td class="yes">✅ real speedup — work saved &gt;&gt; overhead</td></tr>
+          <tr><th>Small collection</th><td class="no">❌ split/merge overhead often exceeds the work</td></tr>
+          <tr><th>I/O-bound (network, disk)</th><td class="no">❌ threads block — no CPU benefit either way</td></tr>
+          <tr><th>Stateful / order-dependent</th><td class="no">❌ risks wrong results, not just slowness</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">Long</span>&gt; numbers = loadTenMillionNumbers(); <span class="cx-cmt">// big, CPU-heavy</span>
+
+<span class="kw">long</span> total = numbers.parallelStream()
+    .mapToLong(Analytics::expensiveScore) <span class="cx-cmt">// real per-element work</span>
+    .sum();
+<span class="cx-ok">// ✅ split across cores, payoff dwarfs the ForkJoinPool overhead</span></code></pre>
+      </div>
+      <p class="cx-note">Worth parallelizing: millions of elements, real CPU work per element, a
+      plain stateless <code>sum()</code> combining the results.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="ty">List</span>.of(<span class="str">"Ana"</span>, <span class="str">"Bo"</span>, <span class="str">"Cid"</span>); <span class="cx-cmt">// only 3 elements</span>
+
+<span class="ty">String</span> joined = names.parallelStream()
+    .map(String::toUpperCase)
+    .collect(Collectors.joining(<span class="str">", "</span>));
+<span class="cx-err">// ❌ splitting 3 tiny elements across threads costs more than it saves</span></code></pre>
+      </div>
+      <p class="cx-note">The plain <code>.stream()</code> version of this same line is almost
+      always faster — there's nothing here worth splitting.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; hits = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(); <span class="cx-cmt">// not thread-safe</span>
+
+ids.parallelStream()
+    .peek(id -&gt; { <span class="kw">if</span> (isMatch(id)) hits.add(id); }) <span class="cx-cmt">// mutated from many threads</span>
+    .forEach(Analytics::record);
+<span class="cx-err">// ❌ concurrent ArrayList.add() can corrupt state or throw — not just slow, wrong</span></code></pre>
+      </div>
+      <p class="cx-note">Mutating a plain <code>ArrayList</code> from a parallel stream's worker
+      threads is a correctness bug, not a performance one.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A large, CPU-heavy, stateless batch computation</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ22a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">BIG + CPU-HEAVY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">📦 5M+ records</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">real scoring per item</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcJ22a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ Use parallel</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the textbook case: a large dataset, genuine per-element CPU
+          work, and no shared mutable state to coordinate. <b>This is the scenario parallel
+          streams were actually built for.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Big + CPU-heavy + stateless → parallel pays off.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> A small list, "parallelized" out of habit</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ22b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">TINY COLLECTION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">📦 10 elements</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">cheap per-item work</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcJ22b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 Slower, measured</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">overhead &gt; payoff</text>
+            </svg>
+          </div>
+          <p class="uc-what">Someone adds <code>.parallelStream()</code> assuming "parallel ==
+          faster." On ten elements, the ForkJoinPool's split and merge machinery costs more than
+          the sequential loop ever would have. <b>A common interview trap:</b> treating
+          parallelism as free.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Small collection → parallel usually costs more than it saves.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> A pipeline that calls a remote service per element</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ22c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">I/O-BOUND WORK</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🌐 HTTP call/item</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">threads mostly waiting</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcJ22c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">⏳ No CPU gain</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">blocking, not computing</text>
+            </svg>
+          </div>
+          <p class="uc-what">The bottleneck here was never CPU availability — the threads spend
+          their time blocked on network I/O either way. Parallel streams (and the shared
+          ForkJoinPool) aren't the right tool; a dedicated async/non-blocking I/O approach is.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">I/O-bound → parallel streams don't fix a blocking bottleneck.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your nightly batch job scores 8 million customer records and it's too slow.</b>
+      Switching the scoring stream to <code>.parallelStream()</code> is a good first move — it's
+      large, CPU-bound, and stateless. But a teammate who "parallelizes everything" on a
+      20-row lookup table, or on a stream that calls out to a payment gateway per record, is
+      applying the same fix to a problem it was never built to solve.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="21.html">← ThreadLocal — Use Cases and Memory-Leak Risks</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="23.html">Synchronization, Lock Contention and Throughput →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

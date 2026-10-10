@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Design a high-throughput lookup service with frequent reads, updates, and duplicate values. Which collection do you actually reach for?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: Choosing a Collection for a High-Throughput Lookup Service — Java Advanced — RefreshYourself">
+<meta property="og:description" content="Design a high-throughput lookup service with frequent reads, updates, and duplicate values. Which collection do you actually reach for?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: Choosing a Collection for a High-Throughput Lookup Service — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: Choosing a Collection for a High-Throughput Lookup Service</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Java · Advanced · Should Know</div>
+    <h1>Not every lookup problem is <span class="hl hl-blue">a map</span> — let <span class="hl hl-hot">the access pattern</span> pick the collection</h1>
+    <p class="interview-q">"Design a high-throughput lookup service with frequent reads, updates, and duplicate values. Which collection do you actually reach for?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🗂️ The Access Pattern Decides</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>"High-throughput lookup service" sounds like it just needs a bigger, faster <code>HashMap</code> — but a plain <code>HashMap</code> under real concurrent reads and writes corrupts or throws under load, and "duplicate values" can quietly mean the data isn't even a keyed lookup at all.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Name the actual access pattern first — concurrent read/write at scale, read-heavy with rare updates, or a stream of items rather than a keyed lookup — and the right collection (<code>ConcurrentHashMap</code>, an immutable map behind a <code>volatile</code> reference, or a concurrent queue) falls out of that, not out of habit.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Name the access pattern first — the collection is the answer to that, not the starting point.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>HashMap</code> <span class="rarrow">→</span> <b>single-threaded</b> only</p>
+      <p class="rrow"><code>ConcurrentHashMap</code> <span class="rarrow">→</span> <b>concurrent</b> read + write</p>
+      <p class="rrow">immutable map + <code>volatile</code> <span class="rarrow">→</span> <b>read-heavy</b>, rare updates</p>
+      <p class="rrow">concurrent queue <span class="rarrow">→</span> <b>a stream</b>, not a keyed lookup</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> ask "what's the real access pattern" before
+    reaching for a type — "duplicate values" is often the tell that it's not a map problem at all.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh33" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar33" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#sh33)"><rect x="220" y="14" width="200" height="40" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="38" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">What's the access pattern?</text>
+
+      <path d="M320,54 V70" fill="none" stroke="#64748b" stroke-width="1.6"/>
+      <path d="M320,70 H90 V92" fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#ar33)"/>
+      <path d="M320,70 H250 V92" fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#ar33)"/>
+      <path d="M320,70 H410 V92" fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#ar33)"/>
+      <path d="M320,70 H555 V92" fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#ar33)"/>
+
+      <g filter="url(#sh33)"><rect x="20" y="92" width="140" height="48" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="90" y="112" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">single-threaded</text>
+      <text x="90" y="126" text-anchor="middle" font-size="10" fill="#5b6472">🐛 only, really</text>
+
+      <g filter="url(#sh33)"><rect x="180" y="92" width="140" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="250" y="112" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">concurrent</text>
+      <text x="250" y="126" text-anchor="middle" font-size="10" fill="#5b6472">read + write</text>
+
+      <g filter="url(#sh33)"><rect x="340" y="92" width="140" height="48" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="410" y="112" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">read-heavy</text>
+      <text x="410" y="126" text-anchor="middle" font-size="10" fill="#5b6472">rare updates</text>
+
+      <g filter="url(#sh33)"><rect x="485" y="92" width="140" height="48" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="555" y="112" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">a stream</text>
+      <text x="555" y="126" text-anchor="middle" font-size="10" fill="#5b6472">of work items</text>
+
+      <path d="M90,140 V162" fill="none" stroke="#dc2626" stroke-width="1.6" marker-end="url(#ar33)"/>
+      <path d="M250,140 V162" fill="none" stroke="#16a34a" stroke-width="1.6" marker-end="url(#ar33)"/>
+      <path d="M410,140 V162" fill="none" stroke="#3b82f6" stroke-width="1.6" marker-end="url(#ar33)"/>
+      <path d="M555,140 V162" fill="none" stroke="#d97706" stroke-width="1.6" marker-end="url(#ar33)"/>
+
+      <g filter="url(#sh33)"><rect x="20" y="162" width="140" height="48" rx="12" fill="#ffffff" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3"/></g>
+      <text x="90" y="182" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">HashMap</text>
+      <text x="90" y="196" text-anchor="middle" font-size="9.5" fill="#5b6472">corrupts under load</text>
+
+      <g filter="url(#sh33)"><rect x="180" y="162" width="140" height="48" rx="12" fill="#ffffff" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="250" y="182" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">ConcurrentHashMap</text>
+      <text x="250" y="196" text-anchor="middle" font-size="9.5" fill="#5b6472">per-bin locking</text>
+
+      <g filter="url(#sh33)"><rect x="340" y="162" width="140" height="48" rx="12" fill="#ffffff" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="410" y="182" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">immutable map</text>
+      <text x="410" y="196" text-anchor="middle" font-size="9.5" fill="#5b6472">+ volatile swap</text>
+
+      <g filter="url(#sh33)"><rect x="485" y="162" width="140" height="48" rx="12" fill="#ffffff" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="555" y="182" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">concurrent queue</text>
+      <text x="555" y="196" text-anchor="middle" font-size="9.5" fill="#5b6472">not a Map at all</text>
+
+      <rect x="20" y="236" width="605" height="20" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+      <text x="322" y="250" text-anchor="middle" font-size="10" font-weight="700" fill="#334155">"duplicate values" often means events to process, not keys to look up</text>
+    </svg>
+    <figcaption>Same starting question, four different right answers — the collection is the output of naming the access pattern, not the input.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Duplicate values" means I need a <code>Map&lt;K, List&lt;V&gt;&gt;</code>.</b>
+    Often it actually means the data isn't a keyed lookup at all — it's a stream of events or work
+    items to process, which is a concurrent queue problem, not a map problem forced into one.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why not just synchronize a plain HashMap instead of using
+    ConcurrentHashMap?"</b> A synchronized <code>HashMap</code> serializes every reader and writer
+    behind one lock, so throughput collapses under real concurrent load;
+    <code>ConcurrentHashMap</code>'s per-bin locking lets unrelated keys be read and written at
+    the same time, which is the whole reason it exists.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd start from the actual access pattern — a plain
+    <code>HashMap</code> is only safe single-threaded, <code>ConcurrentHashMap</code> is the
+    default for real concurrent reads and writes, an immutable map swapped through a
+    <code>volatile</code> reference is best when reads vastly outnumber updates, and if
+    'duplicate values' really means a stream of work items, that's a concurrent queue, not a map
+    at all."</p>
+    <ul>
+      <li><code>HashMap</code> → <span class="hl hl-hot">fine only single-threaded or externally synchronized — a bottleneck under real load</span>.</li>
+      <li><code>ConcurrentHashMap</code> → <span class="hl hl-basic">default correct choice for concurrent read+write at scale, via per-bin locking</span>.</li>
+      <li>Immutable map + <code>volatile</code> → <span class="hl hl-blue">zero-synchronization reads when data is read-heavy and rarely updated</span>.</li>
+      <li>Concurrent queue → <span class="hl hl-inter">the right shape when it's really a stream of items, not a keyed lookup</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A plain <code>HashMap</code> is genuinely fine when the service really is
+      single-threaded, or every access already goes through external synchronization — but under
+      real concurrent load without that protection, it can corrupt its internal structure or throw
+      during iteration, and wrapping it in a single lock just turns every reader and writer into a
+      queue behind one gate. <code>ConcurrentHashMap</code> is the default correct choice at scale
+      specifically because it doesn't need that single gate: Java 8+ uses per-bin locking (with
+      per-bin treeification once a bin gets crowded), so unrelated keys can be read and written
+      concurrently without contending with each other.</p>
+
+      <p>When the data is read far more often than it's written — a feature-flag set, a routing
+      table, a config snapshot — an <b>immutable map behind a <code>volatile</code> reference</b>
+      beats even <code>ConcurrentHashMap</code> for reads: a reader just dereferences the current
+      volatile reference and reads a map that can never change underneath it, with zero
+      synchronization cost per read. An update builds a brand-new immutable map and swaps the
+      reference atomically — more expensive per update, but updates here are rare by assumption,
+      so that cost is the right one to pay.</p>
+
+      <p>"Duplicate values" is the detail worth pausing on: if it actually describes a flow of
+      events or work items arriving over time — not a value you look up by key — forcing that into
+      a <code>Map&lt;K, List&lt;V&gt;&gt;</code> is solving the wrong problem. A
+      <code>ConcurrentLinkedQueue</code>, or a <code>BlockingQueue</code> when producers need to be
+      slowed down when consumers fall behind (backpressure), is the shape that actually matches a
+      stream of items — recognizing that distinction is exactly what separates a candidate reciting
+      "use ConcurrentHashMap" from one who checked the access pattern first.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Session</span>&gt; sessions = <span class="kw">new</span> <span class="ty">ConcurrentHashMap</span>&lt;&gt;();
+sessions.computeIfAbsent(id, k -&gt; loadSession(k)); <span class="cx-ok">// ✅ per-key atomic, high concurrent throughput</span></code></pre>
+      </div>
+      <p class="cx-note">Unrelated session keys can be read and written at the same time —
+      <code>ConcurrentHashMap</code> never serializes the whole map behind one lock.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">private volatile</span> <span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Flag</span>&gt; flags = <span class="ty">Map</span>.copyOf(loadFlags());
+
+<span class="kw">void</span> reload() {
+    flags = <span class="ty">Map</span>.copyOf(loadFlags()); <span class="cx-ok">// ✅ build new, swap the reference atomically</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Readers just dereference <code>flags</code> — zero synchronization per
+      read, because the map they see can never be mutated underneath them.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A cache or session store is read and written by many threads at once</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc33a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">many threads</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">per-bin locking →</text>
+              <path d="M170,33 H310" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc33a)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">ConcurrentHashMap</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: real concurrent read and write traffic hitting the same keyed store. <code>ConcurrentHashMap</code> is the default here precisely because its per-bin locking lets unrelated keys proceed without contending with each other, unlike a synchronized <code>HashMap</code> serialized behind one lock.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Concurrent read + write at scale → ConcurrentHashMap, not a synchronized HashMap.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> Config or routing data is read constantly but only reloaded occasionally</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc33b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">read-heavy</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">volatile swap →</text>
+              <path d="M170,33 H310" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc33b)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">zero-sync reads</text>
+            </svg>
+          </div>
+          <p class="uc-what">When updates are rare and reads vastly dominate, an immutable map rebuilt in full and swapped through a <code>volatile</code> reference beats <code>ConcurrentHashMap</code> for pure read throughput — readers never pay any synchronization cost at all, because the map they see can never change underneath them.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Rare updates, heavy reads → rebuild immutable, swap the volatile reference.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">3</span> "Duplicate values" turns out to mean a stream of incoming events, not a keyed lookup</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc33c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="20" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">events arrive</text>
+              <text x="240" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">BlockingQueue →</text>
+              <path d="M170,33 H310" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc33c)"/>
+              <rect x="310" y="19" width="150" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="385" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">workers drain it</text>
+            </svg>
+          </div>
+          <p class="uc-what">A candidate who forces this into a <code>Map&lt;K, List&lt;V&gt;&gt;</code> has solved the wrong problem — there's no key being looked up, just items arriving and needing processing. A concurrent queue (<code>ConcurrentLinkedQueue</code>, or a <code>BlockingQueue</code> when producers need to slow down for consumers) is the shape that actually fits.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A stream of items to process is a queue problem, not a map problem.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A session store is hit by thousands of concurrent requests per second, almost evenly
+      split between reads and writes.</b> <code>ConcurrentHashMap</code> is the right default
+      here: its per-bin locking lets unrelated sessions be read and written at the same time, which
+      is exactly the throughput profile this workload needs.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="32.html">← Scenario: A CompletableFuture in a Group of Calls Fails</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="34.html">Scenario: High CPU, Slow Requests →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

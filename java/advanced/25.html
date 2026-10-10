@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Dynamic proxies — the mechanism behind a framework's 'magic' call interception, and what reflection actually costs.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Reflection Costs, Dynamic Proxies and Annotations — Java Advanced — RefreshYourself">
+<meta property="og:description" content="Dynamic proxies — the mechanism behind a framework's 'magic' call interception, and what reflection actually costs.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Reflection Costs, Dynamic Proxies and Annotations — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Reflection Costs, Dynamic Proxies and Annotations</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 Java · Advanced · Deep Dive</div>
+    <h1>The framework's "magic" — it's a <span class="hl hl-blue">dynamic proxy</span> quietly intercepting your call</h1>
+    <p class="interview-q">"What's the actual mechanism behind a framework's 'magic' — how does it intercept a method call on an interface it didn't write?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🪞 Dynamic Proxy</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A framework needs to add behavior around a method call — logging, a transaction, a lazy-loaded value, a mock — without the original interface's author writing that behavior in.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>java.lang.reflect.Proxy</code> generates a real implementation of that interface at runtime that routes every call through an <code>InvocationHandler</code> first — the actual mechanism behind lazy-loading proxies, AOP-style interceptors, and mocking libraries, at the cost of reflective overhead and reduced IDE/compiler traceability.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Dynamic proxy = a generated stand-in that routes every call through a handler first.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Dynamic proxy = <b>"a generated impostor interface that calls a handler before the real logic."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> a hotel front desk that takes every guest
+    request first, decides what to do with it, then forwards it to the actual staff.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 230" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shJ25" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arJ25Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arJ25Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arJ25Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">LOOKS LIKE A NORMAL CALL — ISN'T</text>
+
+      <g filter="url(#shJ25)"><rect x="20" y="30" width="130" height="50" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="85" y="51" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">📞 Caller</text>
+      <text x="85" y="66" text-anchor="middle" font-size="9.5" fill="#5b6472">repo.save(order)</text>
+
+      <path d="M150,55 H215" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ25Gray)"/>
+      <text x="183" y="46" text-anchor="middle" font-size="9" fill="#5b6472">calls interface</text>
+
+      <g filter="url(#shJ25)"><rect x="220" y="30" width="170" height="50" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="305" y="50" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🎭 Dynamic Proxy</text>
+      <text x="305" y="65" text-anchor="middle" font-size="9.5" fill="#5b6472">generated at runtime</text>
+
+      <path d="M390,55 H455" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arJ25Amber)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/>
+      </path>
+      <text x="423" y="46" text-anchor="middle" font-size="9" fill="#92400e">extra hop</text>
+
+      <g filter="url(#shJ25)"><rect x="460" y="30" width="160" height="50" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="540" y="50" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🧰 InvocationHandler</text>
+      <text x="540" y="65" text-anchor="middle" font-size="9.5" fill="#5b6472">decides what runs</text>
+
+      <path d="M540,80 V98" fill="none" stroke="#d97706" stroke-width="1.8"/>
+      <path d="M540,98 H85" fill="none" stroke="#d97706" stroke-width="1.8"/>
+      <path d="M85,98 V124" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arJ25Green)"/>
+
+      <g filter="url(#shJ25)"><rect x="20" y="126" width="170" height="54" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="105" y="148" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ Real logic runs</text>
+      <text x="105" y="163" text-anchor="middle" font-size="9.5" fill="#5b6472">the actual save() code</text>
+
+      <path d="M540,98 H440" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arJ25Amber)"/>
+      <text x="470" y="90" text-anchor="middle" font-size="9" fill="#92400e">forwards after logic</text>
+
+      <text x="320" y="202" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">the mechanism behind a lot of framework "magic"</text>
+      <text x="320" y="217" text-anchor="middle" font-size="9.5" fill="#5b6472">lazy-loading, AOP-style interceptors, mocking libraries</text>
+    </svg>
+    <figcaption>The caller thinks it's talking to the real implementation — every call is actually routed through the handler first.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A dynamic proxy is not free.</b> It only works for interfaces (it
+    generates a class implementing one or more interfaces at runtime) and every call through it
+    pays reflective overhead plus the handler's own logic — it's a real mechanism with real
+    cost, not something the JVM does for nothing.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Can a dynamic proxy intercept calls on a concrete class with no
+    interface?"</b> Not with <code>java.lang.reflect.Proxy</code> — it only proxies interfaces;
+    intercepting a concrete class needs bytecode-generation libraries (e.g. ones that build a
+    runtime subclass) instead, which is a different mechanism with its own trade-offs.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A dynamic proxy, via <code>java.lang.reflect.Proxy</code>, generates a
+    real implementation of an interface at runtime that routes every call through an
+    <code>InvocationHandler</code> before the real logic runs. That's the actual mechanism
+    behind a lot of framework 'magic' — lazy-loading proxies, AOP-style interceptors, mocking
+    libraries — at the cost of reflective overhead and code that's harder to trace from the IDE."</p>
+    <ul>
+      <li><code>Method.invoke</code> → <span class="hl hl-hot">meaningfully slower than a direct call</span>, though modern JVMs narrow the gap.</li>
+      <li><code>Proxy.newProxyInstance</code> → <span class="hl hl-blue">generates an interface implementation at runtime</span>.</li>
+      <li><code>InvocationHandler.invoke</code> → <span class="hl hl-basic">the single place every call gets routed through</span>.</li>
+      <li>Framework "magic" (lazy loading, AOP, mocks) → <span class="hl hl-adv">usually a dynamic proxy or similar interception underneath</span>.</li>
+      <li>Trade-off → <span class="hl hl-inter">reflective cost and reduced IDE/compiler traceability</span> for that flexibility.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-hot">Reflective calls</span> — <code>Method.invoke</code>, reading
+      a field through <code>Field</code> — go through extra layers the JVM's direct-call path
+      skips: argument boxing/unboxing into an <code>Object[]</code>, access checks, and
+      historically, code the JIT compiler couldn't inline or optimize the way it inlines a
+      direct call. Modern JVMs have narrowed that gap with better JIT support for reflective
+      call sites, but it's a narrowing, not an elimination — reflection is still meaningfully
+      slower than calling the method directly.</p>
+
+      <p><span class="hl hl-blue">A dynamic proxy</span> uses exactly this machinery on purpose:
+      <code>Proxy.newProxyInstance</code> generates a new class at runtime that implements the
+      requested interface(s), and every method call on an instance of that generated class gets
+      routed to a single <code>InvocationHandler.invoke</code> method instead of running real
+      code directly. The handler decides what happens — forward the call to a real object, add
+      logging around it, return a canned value for a mock, throw for an unsupported operation —
+      entirely at runtime, with nothing about that behavior visible in the interface's own
+      source.</p>
+
+      <p>That's the actual trick behind a lot of what looks like framework magic: a repository
+      interface with no implementation that somehow works, a lazily-initialized object that
+      only loads its real data on first access, a mock that returns configured values for any
+      method. In every case, the caller is holding a generated proxy, not the thing it looks
+      like it's holding — and that indirection is exactly what makes the behavior hard to
+      trace by just reading the interface or jumping to its implementation in an IDE.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">interface</span> <span class="ty">OrderRepository</span> { <span class="ty">Order</span> save(<span class="ty">Order</span> o); }
+
+<span class="ty">InvocationHandler</span> handler = (proxy, method, args) -&gt; {
+    System.out.println(<span class="str">"before: "</span> + method.getName()); <span class="cx-cmt">// logging, added here</span>
+    <span class="ty">Object</span> result = method.invoke(realRepository, args);   <span class="cx-cmt">// forwards to real logic</span>
+    System.out.println(<span class="str">"after: "</span> + method.getName());
+    <span class="kw">return</span> result;
+};
+
+<span class="ty">OrderRepository</span> proxy = (<span class="ty">OrderRepository</span>) <span class="ty">Proxy</span>.newProxyInstance(
+    OrderRepository.<span class="kw">class</span>.getClassLoader(),
+    <span class="kw">new</span> <span class="ty">Class</span>&lt;?&gt;[] { OrderRepository.<span class="kw">class</span> },
+    handler); <span class="cx-ok">// ✅ generated at runtime — no hand-written class</span></code></pre>
+      </div>
+      <p class="cx-note">Calling <code>proxy.save(order)</code> never touches a hand-written
+      class — it runs <code>handler.invoke(...)</code>, which forwards to the real repository.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Method</span> m = OrderRepository.<span class="kw">class</span>.getMethod(<span class="str">"save"</span>, Order.<span class="kw">class</span>);
+<span class="ty">Order</span> result = (<span class="ty">Order</span>) m.invoke(realRepository, order); <span class="cx-cmt">// reflective call</span>
+<span class="cx-err">// slower than realRepository.save(order) directly — boxing args, access checks</span></code></pre>
+      </div>
+      <p class="cx-note">The direct call <code>realRepository.save(order)</code> skips all of
+      this — reflection's cost is exactly this extra machinery.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A testing framework hands you a "mock" of an interface</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ25a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">MOCKING LIBRARY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">mock(Repo.class)</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">no real class written</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcJ25a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ Proxy returned</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#166534">returns configured values</text>
+            </svg>
+          </div>
+          <p class="uc-what">The "mock" you get back is a dynamic proxy whose
+          <code>InvocationHandler</code> returns whatever values the test configured — there's
+          no hand-written implementation anywhere.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A mock is a proxy with a scripted handler.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> A lazily-loaded association only fetches data on first access</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ25b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">LAZY LOADING</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">placeholder proxy</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">first field access</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcJ25b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">✅ Real data fetched</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">handler triggers the load</text>
+            </svg>
+          </div>
+          <p class="uc-what">The object you're handed is a proxy standing in for data that
+          hasn't loaded yet — the handler's first intercepted call triggers the real fetch, then
+          forwards to it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Lazy loading → a proxy delays the real work until it's actually needed.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Stepping through a call in the debugger lands inside a generated class</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ25c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">REDUCED TRACEABILITY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">"jump to source"</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">no file exists</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcJ25c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 Confusing stack trace</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">generated class, no source</text>
+            </svg>
+          </div>
+          <p class="uc-what">The call actually ran through a generated proxy class with no
+          corresponding source file — an IDE's "jump to implementation" has nothing real to show.
+          <b>A common interview trap:</b> assuming every object you hold was written by a human
+          somewhere.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Generated proxy classes have no source file to jump to.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>You annotate a repository interface and a framework somehow produces a working
+      implementation with no code behind it in your project.</b> Under the hood, that's a
+      dynamic proxy: the framework reads the interface's methods (and often its annotations)
+      and builds an <code>InvocationHandler</code> at startup that knows how to satisfy each one
+      — the "magic" is entirely this interception mechanism, not anything special about the
+      interface itself.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="24.html">← JVM Profiling and Java Performance Tuning</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="26.html">Serialization, Deserialization and Compatibility →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

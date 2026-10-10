@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What's the real trade-off between a blocking (lock-based) algorithm and a non-blocking (CAS-based) one? Wait your turn, or retry on contention.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Blocking vs. Non-Blocking Algorithms — Java Advanced — RefreshYourself">
+<meta property="og:description" content="What's the real trade-off between a blocking (lock-based) algorithm and a non-blocking (CAS-based) one? Wait your turn, or retry on contention.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Blocking vs. Non-Blocking Algorithms — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Blocking vs. Non-Blocking Algorithms</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 Java · Advanced · Deep Dive</div>
+    <h1>Blocking vs. Non-Blocking Algorithms — <span class="hl hl-inter">wait your turn</span>, or <span class="hl hl-hot">retry on contention</span></h1>
+    <p class="interview-q">"What's the real trade-off between a blocking (lock-based) algorithm and a non-blocking (CAS-based) one?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-2">
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">🚦 Blocking (lock-based)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Multiple threads need exclusive turns on shared state — letting them all barge in at once corrupts it.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A blocking (lock-based) algorithm parks a contending thread — no CPU spent while waiting — until it can proceed, at the cost of latency and context-switch overhead.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Blocking = park and wait, zero CPU, real latency.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">🔁 Non-blocking (CAS-based)</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Parking and waking threads has real overhead — under heavy contention, that overhead itself can dominate.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A non-blocking algorithm (typically CAS-based, "lock-free") lets a thread retry immediately instead of waiting — higher potential throughput, at the cost of real implementation complexity.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Non-blocking = retry now, spend CPU instead of waiting.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Blocking <span class="rarrow">→</span> <b>parked</b>, 0% CPU, real latency</p>
+      <p class="rrow">Non-blocking <span class="rarrow">→</span> <b>retries</b>, burns CPU, no parking cost</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> blocking is a line at a door. Non-blocking is
+    rattling the handle until it happens to be unlocked.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shP19" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arP19" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arP19Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arP19Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <line x1="320" y1="24" x2="320" y2="288" stroke="#e2e8f0" stroke-width="2"/>
+
+      <text x="160" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e" letter-spacing="0.3">BLOCKING — PARK AND WAIT</text>
+      <text x="480" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b" letter-spacing="0.3">NON-BLOCKING — RETRY ON CONTENTION</text>
+
+      <g filter="url(#shP19)"><rect x="50" y="30" width="220" height="36" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="160" y="52" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">🔒 Contended resource</text>
+
+      <path d="M160,66 V88" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP19)"/>
+
+      <g filter="url(#shP19)"><rect x="50" y="88" width="220" height="46" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="160" y="109" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🧵 Thread parked</text>
+      <text x="160" y="123" text-anchor="middle" font-size="9.5" fill="#5b6472">0% CPU — just waiting</text>
+
+      <path d="M160,134 V156" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP19)"/>
+
+      <g filter="url(#shP19)"><rect x="50" y="156" width="220" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="177" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">⏳ Woken when lock frees</text>
+      <text x="160" y="191" text-anchor="middle" font-size="9.5" fill="#5b6472">context-switch cost</text>
+
+      <text x="160" y="224" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">no CPU spent waiting — but real latency</text>
+
+      <g filter="url(#shP19)"><rect x="370" y="30" width="220" height="36" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="480" y="52" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">🔒 Contended resource</text>
+
+      <path d="M480,66 V88" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP19)"/>
+
+      <g filter="url(#shP19)"><rect x="370" y="88" width="220" height="38" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="480" y="112" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🔁 CAS attempt — fails</text>
+
+      <path d="M480,126 V148" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arP19Red)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/>
+      </path>
+      <text x="505" y="140" font-size="9" fill="#991b1b">retry</text>
+
+      <rect x="370" y="148" width="220" height="38" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/>
+      <text x="480" y="172" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🔁 CAS attempt — retries</text>
+
+      <path d="M480,186 V208" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arP19Green)"/>
+
+      <g filter="url(#shP19)"><rect x="370" y="208" width="220" height="38" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="232" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ CAS succeeds</text>
+
+      <text x="480" y="264" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">CPU spent spinning — but no parking latency</text>
+    </svg>
+    <figcaption>Same contended resource, two very different ways to handle the wait.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Non-blocking doesn't mean free.</b> A thread retrying a failed CAS in a
+    tight loop still burns real CPU cycles — under very heavy contention, that spinning can cost
+    more than a short, well-managed block would.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Does a non-blocking algorithm guarantee no thread ever starves?"</b>
+    No — CAS-based retry gives no absolute starvation-freedom guarantee the way a fair lock can;
+    a thread can in theory keep losing the race on every retry, though in practice this is rare.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A blocking algorithm parks a contending thread — no CPU spent while
+    waiting, but real latency and context-switch overhead — until it can proceed. A non-blocking,
+    typically CAS-based algorithm lets a thread retry immediately on contention instead of
+    waiting, which can mean higher throughput under contention, at the cost of real
+    implementation complexity."</p>
+    <ul>
+      <li>Blocking → <span class="hl hl-inter">parked thread</span>, zero CPU, real wait latency.</li>
+      <li>Non-blocking → <span class="hl hl-hot">retries immediately</span>, spends CPU instead of waiting.</li>
+      <li>Heavy contention → non-blocking can <span class="hl hl-basic">out-throughput</span> locking, or waste CPU spinning — depends on the workload.</li>
+      <li>Starvation → <span class="hl hl-adv">no absolute guarantee</span> under CAS retry, unlike a fair lock.</li>
+      <li>Real cost → <span class="hl hl-teal">implementation complexity</span>, not a free upgrade.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <span class="hl hl-inter">blocking</span> algorithm relies on the OS to park a thread
+      that can't proceed — the thread is descheduled, consumes no CPU, and is woken (a real
+      context-switch) once the resource is free. That's efficient when contention is low or
+      moderate, but every wake-up and lock hand-off has a real, measurable cost.</p>
+
+      <p>A <span class="hl hl-hot">non-blocking</span> algorithm never parks — a thread that loses
+      a compare-and-swap just retries the whole operation against the (now-changed) current
+      state. Under light contention, this is usually cheaper than a lock, because there's no
+      park/wake round-trip at all. Under very heavy contention, the same retry loop can waste CPU
+      cycles that a well-designed lock would have spent more productively.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Blocking</th><th>Non-blocking</th></tr></thead>
+        <tbody>
+          <tr><th>Mechanism</th><td>OS-level park / wake</td><td>CAS retry loop</td></tr>
+          <tr><th>CPU while contended</th><td>none — thread is parked</td><td>burns CPU retrying</td></tr>
+          <tr><th>Latency source</th><td>context-switch, wake-up</td><td>retry attempts</td></tr>
+          <tr><th>Starvation guarantee</th><td>possible with a fair lock</td><td>none, by default</td></tr>
+          <tr><th>Implementation complexity</th><td>lower — synchronized/Lock</td><td>higher — manual CAS reasoning</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Blocking — contending threads park until the lock is free</span>
+<span class="kw">synchronized</span> (lock) {
+    balance += amount;
+}</code></pre>
+      </div>
+      <p class="cx-note">A contending thread is parked by the JVM/OS — no CPU spent, but it waits
+      its turn.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Non-blocking — AtomicLong's internal CAS retry loop, conceptually:</span>
+<span class="kw">long</span> current, updated;
+<span class="kw">do</span> {
+    current = balance.get();
+    updated = current + amount;
+} <span class="kw">while</span> (!balance.compareAndSet(current, updated)); <span class="cx-ok">// ✅ retries on failure</span></code></pre>
+      </div>
+      <p class="cx-note">No thread ever parks — a failed <code>compareAndSet</code> just means
+      the loop reads the latest value and tries again.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">AtomicLong</span> counter = <span class="kw">new</span> <span class="ty">AtomicLong</span>();
+counter.incrementAndGet(); <span class="cx-ok">// ✅ the same CAS loop, already written for you</span></code></pre>
+      </div>
+      <p class="cx-note">In practice you rarely hand-write the CAS loop — <code>java.util.concurrent.atomic</code>
+      classes already implement it correctly.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A simple shared counter under light-to-moderate contention</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc19a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">LIGHT CONTENTION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">📊 request counter</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">occasional increments</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc19a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">AtomicLong</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#166534">non-blocking, simple</text>
+            </svg>
+          </div>
+          <p class="uc-what">For most counters, an <code>AtomicLong</code>/<code>AtomicInteger</code>
+          (non-blocking) is simpler and usually faster than a <code>synchronized</code> block —
+          there's no park/wake overhead for what's normally a very short operation.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Simple counter, light contention → AtomicLong.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> An extremely hot counter, updated by hundreds of threads per millisecond</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc19b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">EXTREME CONTENTION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🔥 very hot counter</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#0f766e">constant CAS retries</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc19b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">LongAdder</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#0f766e">striped, less contention</text>
+            </svg>
+          </div>
+          <p class="uc-what">Under genuinely extreme contention, even a plain CAS loop spends a
+          lot of CPU retrying — <code>LongAdder</code> spreads updates across internal cells
+          specifically to reduce that contention, at the cost of a slightly more expensive read.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Extreme contention → consider LongAdder over a single AtomicLong.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Assuming "non-blocking" always means "faster"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc19c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">ASSUMED FASTER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🔁 CAS under heavy load</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">constant retries</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUc19c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">💥 CPU wasted spinning</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">slower than a lock here</text>
+            </svg>
+          </div>
+          <p class="uc-what">Under very high contention, a tight CAS retry loop can burn more CPU
+          than a short, well-managed lock would have cost. <b>A common interview trap:</b>
+          treating "lock-free" as a synonym for "always faster," regardless of contention level.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Non-blocking can lose to blocking under extreme contention.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A payment service increments a shared "transactions processed" counter from
+      thousands of threads per second at peak load.</b> A plain <code>synchronized</code>
+      increment would park most of those threads waiting their turn; an <code>AtomicLong</code>
+      avoids that parking cost, and if profiling later shows even the CAS loop is contended
+      enough to matter, <code>LongAdder</code> is the next practical step — not a hand-rolled
+      lock-free algorithm.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="18.html">← ConcurrentHashMap Internals and Atomic Operations</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="20.html">Virtual Threads vs. Platform Threads →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

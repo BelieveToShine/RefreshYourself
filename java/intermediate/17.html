@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What's the difference between filter() and map() on a Stream?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="filter() vs. map() — Java Intermediate — RefreshYourself">
+<meta property="og:description" content="What's the difference between filter() and map() on a Stream?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>filter() vs. map() — Java Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">filter() vs. map()</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Java · Intermediate · Should Know</div>
+    <h1><code>filter()</code> vs. <code>map()</code> — <span class="hl hl-inter">fewer elements, or different elements</span></h1>
+    <p class="interview-q">"What's the difference between <code>filter()</code> and <code>map()</code> on a <code>Stream</code>?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+        <div class="wc-head">🧮 Narrow vs. Reshape</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Sometimes the goal is a shorter list of the same kind of thing (only the matching orders); sometimes it's the exact same number of items reshaped into something new (each order's total). Reaching for the wrong one either drops data that should have stayed, or leaves data unreshaped that needed converting.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>filter()</code> narrows the stream down using a <code>Predicate</code> — same shape, possibly fewer elements. <code>map()</code> reshapes every element using a <code>Function</code> — same count, possibly a different type.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">filter() = fewer, same shape. map() = same count, different shape.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>filter()</code> <span class="rarrow">→</span> fewer out, <b>never transformed</b></p>
+      <p class="rrow"><code>map()</code> <span class="rarrow">→</span> same count, <b>different shape</b></p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>filter()</code></b> answers "does it
+    belong?" <b><code>map()</code></b> answers "what does it become?"</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 290" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shJ17" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arJ17Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arJ17Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arJ17Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">SAME INPUT — FEWER OUT, OR DIFFERENT OUT?</text>
+
+      <g filter="url(#shJ17)"><rect x="199" y="38" width="50" height="46" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="224" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">1</text>
+      <g filter="url(#shJ17)"><rect x="263" y="38" width="50" height="46" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="288" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">2</text>
+      <g filter="url(#shJ17)"><rect x="327" y="38" width="50" height="46" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="352" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">3</text>
+      <g filter="url(#shJ17)"><rect x="391" y="38" width="50" height="46" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="416" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">4</text>
+
+      <path d="M320,84 V92 H160 V112" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arJ17Amber)"/>
+      <path d="M320,84 V92 H480 V112" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arJ17Blue)"/>
+
+      <rect x="110" y="112" width="100" height="26" rx="13" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+      <text x="160" y="130" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">filter(x &gt; 2)</text>
+      <rect x="415" y="112" width="130" height="26" rx="13" fill="#ffffff" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="480" y="130" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">map(x -&gt; x * 10)</text>
+
+      <path d="M160,138 V160" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M480,138 V160" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+
+      <rect x="88" y="160" width="30" height="26" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <text x="103" y="178" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">1</text>
+      <rect x="126" y="160" width="30" height="26" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <text x="141" y="178" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">2</text>
+      <g filter="url(#shJ17)"><rect x="164" y="160" width="30" height="26" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="179" y="178" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">3</text>
+      <g filter="url(#shJ17)"><rect x="202" y="160" width="30" height="26" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="217" y="178" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">4</text>
+      <text x="122" y="204" text-anchor="middle" font-size="9.5" fill="#991b1b">2 removed</text>
+
+      <g filter="url(#shJ17)"><rect x="408" y="160" width="30" height="26" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="423" y="178" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">10</text>
+      <g filter="url(#shJ17)"><rect x="446" y="160" width="30" height="26" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="461" y="178" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">20</text>
+      <g filter="url(#shJ17)"><rect x="484" y="160" width="30" height="26" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="499" y="178" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">30</text>
+      <g filter="url(#shJ17)"><rect x="522" y="160" width="30" height="26" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="537" y="178" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">40</text>
+      <text x="480" y="204" text-anchor="middle" font-size="9.5" fill="#1d4ed8">all 4 transformed</text>
+
+      <path d="M179,186 V200 H150 V220" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arJ17Green)"/>
+      <path d="M217,186 V200 H170 V220" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arJ17Green)"/>
+      <path d="M423,186 V200 H420 V220" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arJ17Blue)"/>
+      <path d="M461,186 V200 H450 V220" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arJ17Blue)"/>
+      <path d="M499,186 V200 H510 V220" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arJ17Blue)"/>
+      <path d="M537,186 V200 H540 V220" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arJ17Blue)"/>
+
+      <g filter="url(#shJ17)"><rect x="90" y="220" width="140" height="40" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="244" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ kept: [3, 4]</text>
+
+      <g filter="url(#shJ17)"><rect x="390" y="220" width="180" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="244" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">mapped: [10, 20, 30, 40]</text>
+
+      <text x="160" y="278" text-anchor="middle" font-size="10.5" fill="#5b6472">fewer elements, same shape</text>
+      <text x="480" y="278" text-anchor="middle" font-size="10.5" fill="#5b6472">same count, different shape</text>
+    </svg>
+    <figcaption>Same four elements — <code>filter()</code> keeps only the ones that match, unchanged; <code>map()</code> keeps all of them, reshaped.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>A <code>filter()</code> lambda can also change the value it returns.</b> It
+    can't — <code>filter()</code> only ever accepts a <code>Predicate</code>, so its lambda must
+    return <code>true</code>/<code>false</code>; no matter how complex the condition looks, the
+    element itself passes through completely unchanged. Only <code>map()</code> changes what the
+    element actually is.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Does it matter whether you call <code>filter()</code> before or after
+    <code>map()</code>?"</b> Yes — putting <code>filter()</code> first discards the elements that
+    don't match before an expensive <code>map()</code> ever runs on them; doing it the other way
+    around wastes that transformation work on elements that get thrown away right afterward.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>filter()</code> takes a <code>Predicate</code> and keeps only the
+    elements that return true — same shape, possibly fewer elements. <code>map()</code> takes a
+    <code>Function</code> and transforms every element — same count, possibly a different shape
+    or type."</p>
+    <ul>
+      <li><code>filter()</code> <span class="hl hl-hot">→ narrows down, same shape, never transforms</span>.</li>
+      <li><code>map()</code> <span class="hl hl-blue">→ transforms every element, same count</span>.</li>
+      <li>Order <span class="hl hl-inter">→ filter before an expensive map() avoids wasted transformation work</span>.</li>
+      <li>Need both fewer and different <span class="hl hl-basic">→ chain filter().map()</span>, they're not exclusive.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><code>filter()</code> takes a <span class="hl hl-hot">Predicate&lt;T&gt;</span> — a
+      function that returns <code>true</code> or <code>false</code> for each element — and only
+      lets the ones that return <code>true</code> continue down the pipeline. Every element that
+      survives is the exact same value it was before; <code>filter()</code> has no way to change
+      it, only to decide whether it stays.</p>
+
+      <p><code>map()</code> takes a <span class="hl hl-blue">Function&lt;T,R&gt;</span> and runs
+      it against every single element, with no decision involved — every element goes in, and
+      every element comes out, just possibly as a different type or value. The two are often
+      chained together (<code>filter().map()</code>) because narrowing down and reshaping are
+      usually two separate, composable steps rather than one operation trying to do both.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>filter()</code></th><th><code>map()</code></th></tr></thead>
+        <tbody>
+          <tr><th>Takes</th><td><code>Predicate&lt;T&gt;</code></td><td><code>Function&lt;T,R&gt;</code></td></tr>
+          <tr><th>Output count</th><td>same or fewer</td><td>always the same</td></tr>
+          <tr><th>Can change the element's type?</th><td class="no">❌ no — same <code>T</code> throughout</td><td>✅ yes — <code>T</code> → <code>R</code></td></tr>
+          <tr><th>Typical use</th><td>keep only the valid/matching items</td><td>reshape or convert each item</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; nums = <span class="ty">List</span>.of(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>);
+
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; evens = nums.stream()
+    .filter(n -&gt; n % <span class="num">2</span> == <span class="num">0</span>)   <span class="cx-ok">// ✅ keeps 2 and 4, unchanged</span>
+    .collect(<span class="ty">Collectors</span>.toList());</code></pre>
+      </div>
+      <p class="cx-note">Same <code>Integer</code> type throughout — <b>fewer elements, nothing
+      transformed</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; labels = nums.stream()
+    .map(n -&gt; <span class="str">"#"</span> + n)        <span class="cx-ok">// ✅ all 4 kept, Integer → String</span>
+    .collect(<span class="ty">Collectors</span>.toList());   <span class="cx-cmt">// ["#1", "#2", "#3", "#4"]</span></code></pre>
+      </div>
+      <p class="cx-note">Every element survives — <b>same count, different type</b> entirely.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">1</span> You only want the active users from a bigger list</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ17a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">100 users</text>
+              <path d="M210,33 H330" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcJ17a)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">30 active</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: narrowing a list
+          down to only the ones that matter, still as the same <code>User</code> objects.
+          <code>filter(User::isActive)</code> is exactly that — no transformation, just fewer.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Want fewer of the same thing → filter(), nothing more.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> Converting entities into DTOs for an API response</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ17b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">List&lt;Order&gt;</text>
+              <path d="M210,33 H330" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcJ17b)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">List&lt;OrderDto&gt;</text>
+            </svg>
+          </div>
+          <p class="uc-what">Every order becomes its own DTO — same count going in as coming out,
+          just a different, API-friendly shape. <code>map(Order::toDto)</code> is reshaping, not
+          narrowing, so <code>map()</code> is the correct tool here, not <code>filter()</code>.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same count, new shape for every item → map(), not filter().</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You try to validate and transform in the same filter() call</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ17c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">filter(parse(x)!=null)</text>
+              <path d="M210,33 H330" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcJ17c)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 parses twice</text>
+            </svg>
+          </div>
+          <p class="uc-what">Writing <code>.filter(x -&gt; parse(x) != null)</code> to both validate
+          and secretly compute a value throws that computed value away — <code>filter()</code> only
+          keeps the original <code>x</code>. Whatever <code>parse()</code> returned has to be
+          computed <i>again</i> inside a following <code>map()</code>, doubling the work for no
+          reason.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">filter() can't hand its computed value forward — map() afterward recomputes it from scratch.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>An inventory report needs only in-stock products, shown as a short price list.</b>
+      <code>filter(p -&gt; p.getStock() &gt; 0)</code> narrows the catalog down to what's actually
+      available, then <code>map(p -&gt; p.getName() + ": $" + p.getPrice())</code> turns each
+      surviving product into the display line the report actually needs — two separate, composable
+      steps, not one operation doing both jobs.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="16.html">← map() vs. flatMap()</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="18.html">findFirst() vs. findAny() →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

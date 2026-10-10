@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Profile first — how to find where a slow JVM application's time is actually going before tuning anything.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="JVM Profiling and Java Performance Tuning — Java Advanced — RefreshYourself">
+<meta property="og:description" content="Profile first — how to find where a slow JVM application's time is actually going before tuning anything.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>JVM Profiling and Java Performance Tuning — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">JVM Profiling and Java Performance Tuning</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Java · Advanced · Should Know</div>
+    <h1><span class="hl hl-blue">Profile first</span> — never guess which lever a slow JVM actually needs</h1>
+    <p class="interview-q">"Before tuning anything, how do you actually find where a slow JVM application's time is going?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔬 Profiling</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Under pressure, it's tempting to just pick a lever — bump heap size, swap the GC collector, add a JIT flag — without knowing which one the application's actual bottleneck even calls for.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Profiling distinguishes <i>where</i> time and resources actually go — CPU sampling for hot methods, allocation profiling for GC pressure, lock-contention profiling for where threads actually wait — so the lever that gets pulled matches the real bottleneck.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Profile first — tuning without it is guessing with extra steps.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Profiling = <b>"measure where time actually goes before touching a single knob."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> a doctor runs tests before prescribing — not
+    the other way around.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shJ24" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arJ24Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arJ24Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shJ24)"><rect x="220" y="14" width="200" height="44" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="34" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🔬 Profile first</text>
+      <text x="320" y="49" text-anchor="middle" font-size="10" fill="#5b6472">mandatory, not optional</text>
+
+      <path d="M320,58 V72" fill="none" stroke="#3b82f6" stroke-width="1.8"/>
+      <path d="M100,72 H540" fill="none" stroke="#3b82f6" stroke-width="1.8"/>
+      <path d="M100,72 V96" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arJ24Blue)"/>
+      <path d="M320,72 V96" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arJ24Blue)"/>
+      <path d="M540,72 V96" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arJ24Blue)"/>
+
+      <g filter="url(#shJ24)"><rect x="20" y="96" width="160" height="50" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="100" y="117" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🔥 CPU-hot method</text>
+      <text x="100" y="132" text-anchor="middle" font-size="9.5" fill="#5b6472">CPU sampling found it</text>
+
+      <g filter="url(#shJ24)"><rect x="240" y="96" width="160" height="50" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="117" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🗑️ High allocation / GC</text>
+      <text x="320" y="132" text-anchor="middle" font-size="9.5" fill="#5b6472">allocation profiling found it</text>
+
+      <g filter="url(#shJ24)"><rect x="460" y="96" width="160" height="50" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="540" y="117" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🔒 Lock contention</text>
+      <text x="540" y="132" text-anchor="middle" font-size="9.5" fill="#5b6472">contention profiling found it</text>
+
+      <path d="M100,146 V180" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ24Gray)"/>
+      <path d="M320,146 V180" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ24Gray)"/>
+      <path d="M540,146 V180" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ24Gray)"/>
+
+      <g filter="url(#shJ24)"><rect x="20" y="182" width="160" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="100" y="203" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ Optimize the code</text>
+      <text x="100" y="218" text-anchor="middle" font-size="9" fill="#5b6472">algorithm, caching,</text>
+      <text x="100" y="230" text-anchor="middle" font-size="9" fill="#5b6472">or JIT-related flags</text>
+
+      <g filter="url(#shJ24)"><rect x="240" y="182" width="160" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="203" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ Heap / GC tuning</text>
+      <text x="320" y="218" text-anchor="middle" font-size="9" fill="#5b6472">-Xms / -Xmx sizing,</text>
+      <text x="320" y="230" text-anchor="middle" font-size="9" fill="#5b6472">collector choice</text>
+
+      <g filter="url(#shJ24)"><rect x="460" y="182" width="160" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="540" y="203" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ Shrink/split locks</text>
+      <text x="540" y="218" text-anchor="middle" font-size="9" fill="#5b6472">see this track's</text>
+      <text x="540" y="230" text-anchor="middle" font-size="9" fill="#5b6472">contention page</text>
+
+      <text x="320" y="268" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="700">🐛 Skip profiling → the wrong lever gets pulled, nothing improves</text>
+      <text x="320" y="286" text-anchor="middle" font-size="9.5" fill="#5b6472">three different findings, three genuinely different fixes</text>
+    </svg>
+    <figcaption>Profiling is the fork in the road — each finding leads to a different, specific fix.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Tuning JVM flags is not a substitute for profiling.</b> Bumping heap size
+    or switching the GC collector before finding the actual bottleneck can mask a symptom for a
+    while without fixing — or even identifying — the real problem, which might not be memory at
+    all.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's the difference between CPU sampling and allocation
+    profiling?"</b> CPU sampling periodically captures which methods are actually executing
+    (finds hot code); allocation profiling tracks where objects get created and how fast (finds
+    what's generating GC pressure) — two different questions about the same running process.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd profile before touching any JVM flag — CPU sampling to find hot
+    methods, allocation profiling to find what's driving GC pressure, and lock-contention
+    profiling to find where threads actually wait. Only then would I reach for a tuning lever
+    like heap sizing, GC collector choice, or JIT flags — because skipping that step risks tuning
+    a lever that was never the actual bottleneck."</p>
+    <ul>
+      <li>CPU sampling → <span class="hl hl-blue">finds the hot methods</span> actually burning CPU.</li>
+      <li>Allocation profiling → <span class="hl hl-inter">finds what's driving GC pressure</span>, not just that GC is slow.</li>
+      <li>Lock-contention profiling → <span class="hl hl-hot">finds where threads actually wait</span>, not where you assume they wait.</li>
+      <li><code>-Xms</code>/<code>-Xmx</code>, GC choice, JIT flags → <span class="hl hl-basic">tuning levers</span>, applied after profiling, not instead of it.</li>
+      <li>Skipping profiling under pressure → <span class="hl hl-adv">the most commonly skipped step</span>, and the most costly one to skip.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">CPU sampling</span> periodically snapshots every thread's
+      call stack while the application runs, then aggregates those snapshots into "which methods
+      were actually executing, how often" — the direct answer to "where is CPU time going."
+      <span class="hl hl-inter">Allocation profiling</span> tracks where objects get created and
+      how quickly, which is the real driver behind GC pressure: an application spending a lot of
+      time in garbage collection usually has an allocation problem upstream of it, not a GC
+      configuration problem. <span class="hl hl-hot">Lock-contention profiling</span> shows where
+      threads are actually blocked waiting for a lock, instead of guessing from the symptom
+      (slow response times) which lock, if any, is the cause.</p>
+
+      <p>Only after one of those points at a specific bottleneck does a JVM-level tuning lever
+      make sense: <code>-Xms</code>/<code>-Xmx</code> heap sizing if allocation profiling shows
+      the heap is genuinely under-sized for the live-object volume; a different GC collector if
+      the pause-time/throughput trade-off itself is the problem; JIT-related flags in the rare
+      case where warm-up behavior or a specific compilation decision is the actual issue. Each of
+      those is a real, narrow fix for a specific finding — not a general-purpose "make it
+      faster" switch.</p>
+
+      <p>The step most commonly skipped under pressure is exactly this profiling step — picking
+      a lever first feels like progress, but a lever that doesn't match the real bottleneck
+      changes nothing measurable, and the team is often no closer to the actual answer after
+      trying it than before.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th>Profiling type</th><th>What it finds</th></tr></thead>
+        <tbody>
+          <tr><th>CPU sampling</th><td>which methods are actually consuming CPU time</td></tr>
+          <tr><th>Allocation profiling</th><td>what code is driving object creation / GC pressure</td></tr>
+          <tr><th>Lock-contention profiling</th><td>where threads are actually blocked waiting</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Shell</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt"># Profile the running JVM process first — don't guess</span>
+jcmd &lt;pid&gt; JFR.start duration=60s filename=recording.jfr
+<span class="cx-ok"># ✅ captures CPU, allocation, and lock-contention data in one recording</span></code></pre>
+      </div>
+      <p class="cx-note">Java Flight Recorder is a built-in way to capture exactly this — no
+      extra tool needed before reaching for a profiler-specific one.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Shell</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err"># ❌ picking a lever before profiling</span>
+java -Xmx8g -XX:+UseZGC -jar service.jar
+<span class="cx-cmt"># if the real bottleneck was a hot method or lock contention, neither flag helps at all</span></code></pre>
+      </div>
+      <p class="cx-note">Both flags are legitimate levers — but only if a profiling finding
+      actually pointed at memory or GC pause time as the bottleneck.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> CPU sampling shows one method dominating every snapshot</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ24a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">CPU-HOT METHOD</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔥 one method</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#92400e">dominates samples</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUcJ24a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">✅ Fix the code</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#92400e">algorithm, not JVM flags</text>
+            </svg>
+          </div>
+          <p class="uc-what">A clear CPU-sampling hot spot means the fix is in the code itself —
+          a better algorithm, caching a repeated computation — not a JVM-level flag at all.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Hot method found → fix the code, not the JVM settings.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> Allocation profiling shows constant short-lived object churn</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ24b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">HIGH ALLOCATION RATE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🗑️ GC runs often</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">short-lived objects</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcJ24b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">✅ Cut allocations</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">heap tuning, 2nd choice</text>
+            </svg>
+          </div>
+          <p class="uc-what">High GC frequency is usually a symptom of allocation volume
+          upstream. Reducing unnecessary object creation fixes the cause; resizing the heap only
+          treats the symptom, and may just delay the same GC pressure.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">GC pressure → look at what's allocating, not just heap size.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Someone tunes GC flags without ever profiling first</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ24c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">TUNING WITHOUT PROFILING</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🎲 guessed flags</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">real cause was contention</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcJ24c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 No improvement</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">wrong lever entirely</text>
+            </svg>
+          </div>
+          <p class="uc-what">If the real bottleneck was lock contention, no heap or GC flag will
+          move the needle — the team just spent effort tuning a lever the profiling step would
+          have ruled out immediately. <b>A common interview trap:</b> treating "performance
+          tuning" as a fixed checklist of flags instead of a diagnosis-then-fix process.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Tuning without profiling risks fixing nothing at all.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A service's p99 latency spikes under load and the team's first instinct is to raise
+      <code>-Xmx</code>.</b> A 60-second JFR recording instead shows most threads blocked on one
+      lock, not the heap running low. The real fix is the lock, found in minutes by profiling —
+      the heap flag would have shipped, cost a deploy, and changed nothing.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="23.html">← Synchronization, Lock Contention and Throughput</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="25.html">Reflection Costs, Dynamic Proxies and Annotations →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

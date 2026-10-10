@@ -43,8 +43,8 @@ junior/mid-level interview. Two groups of tracks:
   [`specs/htmlcss/overview.md`](superpowers/specs/htmlcss/overview.md). React and Angular already
   existed as separate tracks and simply moved into this new section on the homepage — no content
   changed.
-- **Other tracks**, not part of the ordered path: Python, DSA, and AI (all 7 phases complete, see
-  below).
+- **Other tracks**, not part of the ordered path: Python, DSA, AI, and Java (all 7 phases
+  complete, see below).
 
 Every track goes through 7 phases before any page is built — see
 [`specs/README.md`](superpowers/specs/README.md) for the full pipeline, and
@@ -262,6 +262,20 @@ all through all 7 phases:**
   verification script, run independently against every single page. Sits in the "🎨 Frontend"
   homepage section, not the ordered core-backend path. See
   [`specs/htmlcss/overview.md`](superpowers/specs/htmlcss/overview.md). *(2026-10-07: +4 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +3 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +4 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +4 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +3 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +4 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +5 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)*
+- **Java** — **all 7 phases complete, 88/88 pages written** (added 2026-10-10):
+  [`question-taxonomy.md`](superpowers/specs/java/question-taxonomy.md) (17 concept groups — 16
+  Java-concept groups + 1 scenario group — sourced from the user's own detailed proposed roadmap,
+  already organized into 3 tiers plus a dedicated 10-scenario section) →
+  [`roadmap.md`](superpowers/specs/java/roadmap.md) → 88 tiered/prioritized pages (Basic 24 /
+  Intermediate 28 / Advanced 36, the last 10 of which are a labeled "Java Scenarios" sub-block),
+  live on the site and on [`java/roadmap.html`](../java/roadmap.html). A standalone
+  general-purpose language track (like C#/Python), not part of the ordered core-backend path —
+  grouped with Python/DSA/AI under "🗂️ Other tracks." Scoped to core Java — the language, OOP
+  mechanics, the collections framework, streams/lambdas, the JVM, memory, and concurrency —
+  explicitly deferring Spring Boot/enterprise Java and Java I/O/NIO to a later pass. Every
+  diagram passed the mandatory automated verification script, run independently against every
+  single page (zero genuine defects; two unrelated pager-link bugs found and fixed separately).
+  See [`specs/java/overview.md`](superpowers/specs/java/overview.md).
 
 ## Adding a new track's spec
 

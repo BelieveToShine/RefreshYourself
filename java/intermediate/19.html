@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What's the difference between orElse() and orElseGet(), and why does it matter for performance?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="orElse() vs. orElseGet() vs. orElseThrow() — Java Intermediate — RefreshYourself">
+<meta property="og:description" content="What's the difference between orElse() and orElseGet(), and why does it matter for performance?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>orElse() vs. orElseGet() vs. orElseThrow() — Java Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">orElse() vs. orElseGet() vs. orElseThrow()</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Java · Intermediate · Should Know</div>
+    <h1><code>orElse()</code> vs. <code>orElseGet()</code> vs. <code>orElseThrow()</code> — <span class="hl hl-hot">eager, lazy, or an exception</span></h1>
+    <p class="interview-q">"What's the difference between <code>orElse()</code> and <code>orElseGet()</code>, and why does it matter for performance?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+        <div class="wc-head">⏱️ Eager vs. Lazy Fallbacks</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Writing <code>orElse(computeExpensiveDefault())</code> looks perfectly normal, but it runs <code>computeExpensiveDefault()</code> on every single call — even when the <code>Optional</code> already had a value and that fallback was never actually needed.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>orElse(value)</code> always evaluates its argument eagerly; <code>orElseGet(supplier)</code> only invokes its <code>Supplier</code> lambda when the <code>Optional</code> is actually empty — lazy, and the right choice whenever the fallback is expensive.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">orElse() always runs. orElseGet() runs only if empty.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>orElse(value)</code> <span class="rarrow">→</span> <b>always</b> evaluates, even if present</p>
+      <p class="rrow"><code>orElseGet(supplier)</code> <span class="rarrow">→</span> <b>only</b> if empty, lazy</p>
+      <p class="rrow"><code>orElseThrow(...)</code> <span class="rarrow">→</span> <b>throws</b> if empty</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>orElse()</code></b> pays upfront no
+    matter what. <b><code>orElseGet()</code></b> only pays if it has to.
+    <b><code>orElseThrow()</code></b> walks away empty-handed, loudly.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 305" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shJ19" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arJ19Rose" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arJ19Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arJ19Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">SAME PRESENT OPTIONAL — DIFFERENT COST</text>
+
+      <g filter="url(#shJ19)"><rect x="210" y="34" width="220" height="44" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Optional.of(user)</text>
+      <text x="320" y="72" text-anchor="middle" font-size="10" fill="#166534">PRESENT — already has a value</text>
+
+      <path d="M320,78 V85 H160 V100" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arJ19Rose)"/>
+      <path d="M320,78 V85 H480 V100" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arJ19Green)"/>
+
+      <rect x="50" y="100" width="220" height="28" rx="14" fill="#ffffff" stroke="#dc2626" stroke-width="1.5"/>
+      <text x="160" y="118" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">orElse(fetchDefault())</text>
+      <rect x="370" y="100" width="220" height="28" rx="14" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="480" y="118" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">orElseGet(supplier)</text>
+
+      <path d="M160,128 V150" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arJ19Rose)"><animate attributeName="stroke-dashoffset" values="9;0" dur="0.8s" repeatCount="indefinite"/></path>
+      <path d="M480,128 V150" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arJ19Green)"/>
+
+      <g filter="url(#shJ19)"><rect x="50" y="150" width="220" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="172" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">fetchDefault() runs anyway</text>
+      <text x="160" y="190" text-anchor="middle" font-size="10" fill="#5b6472">😮 result thrown away</text>
+
+      <g filter="url(#shJ19)"><rect x="370" y="150" width="220" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="172" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">fetchDefault() never runs</text>
+      <text x="480" y="190" text-anchor="middle" font-size="10" fill="#5b6472">✅ supplier skipped entirely</text>
+
+      <path d="M160,200 V210 H320 V225" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ19Gray)"/>
+      <path d="M480,200 V210 H320 V225" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arJ19Gray)"/>
+
+      <g filter="url(#shJ19)"><rect x="220" y="225" width="200" height="40" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="250" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">returns: user</text>
+
+      <text x="320" y="288" text-anchor="middle" font-size="10.5" fill="#5b6472">Same final result — orElse() just did unnecessary work to get there</text>
+    </svg>
+    <figcaption>The <code>Optional</code> already has a value either way — <code>orElse()</code> still runs the fallback for nothing, <code>orElseGet()</code> skips it entirely.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>orElse(computeExpensiveDefault())</code> only computes the default
+    when it's actually needed.</b> It doesn't — Java evaluates a method's arguments before the
+    method itself runs, so <code>computeExpensiveDefault()</code> executes on every call, present
+    or not; only passing a <code>Supplier</code> to <code>orElseGet()</code> defers that call.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's the difference between <code>orElseThrow()</code> with no
+    arguments and <code>orElseThrow(supplier)</code>?"</b> The no-argument form throws a default
+    <code>NoSuchElementException</code> with a generic message. Passing a
+    <code>Supplier&lt;? extends Throwable&gt;</code> lets the caller throw a specific, meaningful
+    exception type with its own message instead.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>orElse(value)</code> always eagerly evaluates its argument, even
+    when the <code>Optional</code> is present — wasted work if that argument is expensive.
+    <code>orElseGet(supplier)</code> only calls its <code>Supplier</code> lambda when the
+    <code>Optional</code> is actually empty. <code>orElseThrow()</code> throws a default or
+    supplied exception when there's nothing there."</p>
+    <ul>
+      <li><code>orElse(value)</code> <span class="hl hl-hot">→ always evaluates eagerly</span>, fine only for cheap constants.</li>
+      <li><code>orElseGet(supplier)</code> <span class="hl hl-basic">→ lazy, runs only if empty</span> — correct for expensive fallbacks.</li>
+      <li><code>orElseThrow()</code> <span class="hl hl-inter">→ throws instead of falling back</span>, default or custom exception.</li>
+      <li><code>orElse(expensiveCall())</code> <span class="hl hl-blue">→ a very common accidental performance bug</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Java evaluates a method call's arguments before it makes the call — that rule applies to
+      <code>orElse(x)</code> like any other method, so whatever expression is passed as
+      <code>x</code> runs immediately, regardless of whether the <code>Optional</code> ends up
+      using it. That's exactly why <code>orElse()</code> is <span class="hl hl-hot">eager</span>:
+      there's no way to pass it an unevaluated expression.</p>
+
+      <p><code>orElseGet()</code> and <code>orElseThrow()</code> both sidestep that by taking a
+      <span class="hl hl-basic">lambda</span> instead of a value — a <code>Supplier</code> isn't
+      run until something explicitly calls it, so the <code>Optional</code> only invokes it after
+      confirming it's actually empty. The fallback computation or the exception is <i>described</i>
+      upfront, but only <i>runs</i> on demand.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>orElse()</code></th><th><code>orElseGet()</code></th><th><code>orElseThrow()</code></th></tr></thead>
+        <tbody>
+          <tr><th>Argument type</th><td>a value</td><td><code>Supplier&lt;T&gt;</code></td><td><code>Supplier&lt;X&gt;</code> (or none)</td></tr>
+          <tr><th>Evaluated when</th><td>always, eagerly</td><td>only if empty, lazily</td><td>only if empty</td></tr>
+          <tr><th>Returns / throws</th><td>the value, or the fallback</td><td>the value, or the supplier's result</td><td>the value, or throws</td></tr>
+          <tr><th>Use for</th><td>a cheap constant or already-computed default</td><td>an expensive fallback (a DB call, a computation)</td><td>treating absence as an error, not a fallback</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Optional</span>&lt;<span class="ty">User</span>&gt; found = repo.findById(id);   <span class="cx-cmt">// present</span>
+<span class="ty">User</span> user = found.orElse(fetchDefaultUser());
+                           <span class="cx-err">// ❌ fetchDefaultUser() runs every time, even here</span></code></pre>
+      </div>
+      <p class="cx-note">The argument is evaluated <b>before</b> <code>orElse()</code> even gets
+      called — there's no way around it.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">User</span> user2 = found.orElseGet(() -&gt; fetchDefaultUser());
+                           <span class="cx-ok">// ✅ the lambda only runs if found was empty</span></code></pre>
+      </div>
+      <p class="cx-note">Wrapped in a <code>Supplier</code> — <b>nothing runs</b> until
+      <code>orElseGet()</code> decides it has to.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">User</span> user3 = found.orElseThrow(() -&gt;
+    <span class="kw">new</span> <span class="ty">UserNotFoundException</span>(id));   <span class="cx-ok">// ✅ throws only if empty</span></code></pre>
+      </div>
+      <p class="cx-note">Absence here is treated as a <b>real error</b>, not something to quietly
+      paper over with a default.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> The fallback is a cheap constant, like <code>"Guest"</code></div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ19a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">name.orElse("Guest")</text>
+              <path d="M210,33 H330" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcJ19a)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">fine as-is</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into: a literal or an
+          already-computed value costs nothing extra to evaluate, so <code>orElse()</code> is
+          simpler and just as fast as <code>orElseGet()</code> here.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Fallback is already cheap/computed → orElse() is fine, no need to complicate it.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> The fallback needs a database call or real computation</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ19b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">expensive query</text>
+              <path d="M210,33 H330" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcJ19b)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">orElseGet()</text>
+            </svg>
+          </div>
+          <p class="uc-what">A fallback that hits a database, calls a remote service, or does real
+          computation must never run unconditionally — <code>orElseGet(() -&gt;
+          queryDefault())</code> is what keeps that call from firing on every present value.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Fallback is expensive → always orElseGet(), never orElse().</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Absence should actually be an error, not quietly papered over</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ19c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">orElse(null)</text>
+              <path d="M210,33 H330" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcJ19c)"/>
+              <rect x="330" y="19" width="130" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="395" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 NPE later</text>
+            </svg>
+          </div>
+          <p class="uc-what">Falling back to <code>null</code> (or a silently wrong default) just
+          moves a real "this record must exist" bug further down the call stack, where it surfaces
+          as a confusing <code>NullPointerException</code>. <code>orElseThrow()</code> surfaces the
+          real problem immediately, at the point where it's actually known.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A missing value that's really a bug → orElseThrow(), don't mask it with a default.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A profile page falls back to a freshly generated avatar image when a user has none.</b>
+      Generating that avatar is real work (rendering, maybe a remote call) — writing
+      <code>avatar.orElseGet(this::generateAvatar)</code> instead of
+      <code>orElse(generateAvatar())</code> is the difference between generating it only for the
+      users who actually need it, and generating it for every single profile view.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="18.html">← findFirst() vs. findAny()</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="20.html">reduce() vs. collect() →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

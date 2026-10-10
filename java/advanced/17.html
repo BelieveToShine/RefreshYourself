@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="If a stage in a CompletableFuture chain throws, what happens to the rest of the chain? exceptionally(), handle(), and whenComplete() compared.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Exception Handling in CompletableFuture — Java Advanced — RefreshYourself">
+<meta property="og:description" content="If a stage in a CompletableFuture chain throws, what happens to the rest of the chain? exceptionally(), handle(), and whenComplete() compared.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Exception Handling in CompletableFuture — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Exception Handling in CompletableFuture</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Java · Advanced · Should Know</div>
+    <h1>A stage throws — <span class="hl hl-hot">what happens</span> to the rest of the <code>CompletableFuture</code> chain?</h1>
+    <p class="interview-q">"If a stage in a CompletableFuture chain throws, what happens to the rest of the chain?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">🛟 exceptionally()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>An exception mid-chain skips every remaining <code>thenApply</code>/<code>thenCompose</code> stage — without a recovery step, the caller just gets a failed future.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>exceptionally(fn)</code> catches the failure and recovers with a fallback value, letting the rest of the chain resume normally.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">exceptionally = catch, but only for the failure path.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔀 handle()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Sometimes you need to react no matter how the stage ended — success or failure — without writing two separate callbacks.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>handle(fn)</code> always runs, and its function receives either the result or the exception (one of the two is always <code>null</code>).</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">handle = runs either way, sees both possible outcomes.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#92400e; --why-bg:#fef3c7">
+          <div class="wc-head">👁️ whenComplete()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Logging or metrics code needs to observe the outcome of a stage without changing what the rest of the chain actually sees.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>whenComplete(fn)</code> is a side-effect observer — it sees the result/exception but doesn't change the outcome, and re-throws whatever exception came in.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">whenComplete = watch, never change, never swallow.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>exceptionally</code> <span class="rarrow">→</span> <b>recover</b> with a fallback value</p>
+      <p class="rrow"><code>handle</code> <span class="rarrow">→</span> <b>always</b> runs, sees result or exception</p>
+      <p class="rrow"><code>whenComplete</code> <span class="rarrow">→</span> <b>observes</b> only, re-throws</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> an exception <b>short-circuits</b> every
+    normal stage after it, until one of these three finally catches it.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shP17" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arP17" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arP17Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569" letter-spacing="0.3">EXCEPTION PROPAGATES, THEN RECOVERS</text>
+
+      <g filter="url(#shP17)"><rect x="30" y="80" width="100" height="50" rx="11" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="80" y="102" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">supplyAsync()</text>
+      <text x="80" y="117" text-anchor="middle" font-size="8.5" fill="#5b6472">starts chain</text>
+
+      <path d="M130,105 H150" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP17)"/>
+
+      <g filter="url(#shP17)"><rect x="150" y="80" width="100" height="50" rx="11" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="200" y="102" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">thenApply #1</text>
+      <text x="200" y="117" text-anchor="middle" font-size="8.5" fill="#5b6472">✅ succeeds</text>
+
+      <path d="M250,105 H270" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP17)"/>
+
+      <g filter="url(#shP17)"><rect x="270" y="80" width="100" height="50" rx="11" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="102" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">thenApply #2</text>
+      <text x="320" y="117" text-anchor="middle" font-size="8.5" fill="#991b1b">💥 throws here</text>
+
+      <path d="M370,105 H390" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arP17Red)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shP17)"><rect x="390" y="80" width="100" height="50" rx="11" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="4 3"/></g>
+      <text x="440" y="102" text-anchor="middle" font-size="10.5" font-weight="700" fill="#64748b">thenApply #3</text>
+      <text x="440" y="117" text-anchor="middle" font-size="8.5" fill="#64748b">⏭️ skipped</text>
+
+      <path d="M490,105 H510" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arP17Red)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shP17)"><rect x="510" y="80" width="100" height="50" rx="11" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.8"/></g>
+      <text x="560" y="102" text-anchor="middle" font-size="9" font-weight="700" fill="#0f766e">exceptionally()</text>
+      <text x="560" y="117" text-anchor="middle" font-size="8.5" fill="#0f766e">fallback value</text>
+
+      <rect x="30" y="168" width="580" height="24" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="320" y="184" text-anchor="middle" font-size="10" fill="#475569">Skipped stages never run their function — the failure just keeps propagating until something catches it.</text>
+    </svg>
+    <figcaption>One throw, two silently-skipped stages, and one recovery point.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>whenComplete()</code> does not stop the exception.</b> It observes
+    the result or the exception for side effects (logging, metrics) and then re-throws whatever
+    exception it saw — only <code>exceptionally()</code> or <code>handle()</code> actually recover
+    the chain with a new value.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What does handle() receive if the stage actually succeeded?"</b> Its
+    function gets <code>(result, null)</code> — the exception argument is <code>null</code> on
+    success, and the result argument is <code>null</code> on failure; exactly one of the two is
+    always populated.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"An exception thrown inside any stage short-circuits the normal
+    <code>thenApply</code>/<code>thenCompose</code> chain — those stages are skipped entirely
+    until a stage that handles failure: <code>exceptionally</code> recovers with a fallback value,
+    <code>handle</code> runs regardless and sees either outcome, and <code>whenComplete</code>
+    only observes before re-throwing."</p>
+    <ul>
+      <li>Exception mid-chain → <span class="hl hl-hot">every later thenApply/thenCompose is skipped</span>.</li>
+      <li><code>exceptionally(fn)</code> → <span class="hl hl-teal">recovers with a fallback value</span>, only on failure.</li>
+      <li><code>handle(fn)</code> → <span class="hl hl-blue">always runs</span>, sees result or exception.</li>
+      <li><code>whenComplete(fn)</code> → <span class="hl hl-inter">observes only</span>, re-throws whatever it saw.</li>
+      <li>Want to react to both outcomes <i>and</i> change the result? → <span class="hl hl-adv">handle(), not whenComplete()</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <code>CompletableFuture</code> chain is built from stages, and each stage either
+      completes normally or completes <i>exceptionally</i>. Once a stage fails, every subsequent
+      <code>thenApply</code>/<code>thenAccept</code>/<code>thenCompose</code> stage simply
+      <span class="hl hl-hot">propagates that same failure forward without running its own
+      function</span> — the callback you wrote for those stages never executes at all.</p>
+
+      <p>The three recovery methods differ in what they're allowed to do with that failure.
+      <span class="hl hl-teal">exceptionally</span> only fires on failure and must produce a
+      replacement value. <span class="hl hl-blue">handle</span> fires on both outcomes and can
+      also produce a replacement value either way. <span class="hl hl-inter">whenComplete</span>
+      fires on both outcomes too, but purely for observation — whatever it returns is ignored, and
+      the original outcome (success or the same exception) continues unchanged afterward.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>exceptionally</th><th>handle</th><th>whenComplete</th></tr></thead>
+        <tbody>
+          <tr><th>Runs on</th><td>failure only</td><td>success or failure</td><td>success or failure</td></tr>
+          <tr><th>Can change result?</th><td>yes — fallback value</td><td>yes — new value either way</td><td>no — outcome unchanged</td></tr>
+          <tr><th>Exception after it?</th><td>cleared, if it recovers</td><td>cleared, if it recovers</td><td>re-thrown if one was present</td></tr>
+          <tr><th>Typical use</th><td>fallback/default value</td><td>uniform success/failure logic</td><td>logging, metrics, cleanup</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>CompletableFuture.supplyAsync(() -> riskyLookup())
+    .thenApply(v -> v * <span class="num">2</span>)              <span class="cx-err">// ❌ skipped if riskyLookup() throws</span>
+    .exceptionally(ex -> <span class="num">0</span>);           <span class="cx-ok">// ✅ fallback value on failure only</span></code></pre>
+      </div>
+      <p class="cx-note">If <code>riskyLookup()</code> throws, <code>thenApply</code> never runs
+      — the chain lands straight on <code>exceptionally</code> with a safe fallback.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>future.handle((result, ex) -> {
+    <span class="kw">if</span> (ex != <span class="kw">null</span>) <span class="kw">return</span> fallback(); <span class="cx-cmt">// result is null here</span>
+    <span class="kw">return</span> result;                         <span class="cx-cmt">// ex is null here</span>
+});</code></pre>
+      </div>
+      <p class="cx-note">Exactly one of <code>result</code>/<code>ex</code> is non-null — never
+      both, never neither.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>future.whenComplete((result, ex) -> {
+    <span class="kw">if</span> (ex != <span class="kw">null</span>) log.warn(<span class="str">"lookup failed"</span>, ex);
+    <span class="kw">else</span> metrics.record(result);
+}); <span class="cx-err">// ❌ does NOT stop ex from propagating further</span></code></pre>
+      </div>
+      <p class="cx-note">Purely observational — the returned future still carries the original
+      exception onward if one was present.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">1</span> A downstream call might fail, and a safe default is good enough</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">SAFE DEFAULT IS ENOUGH</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">💥 call fails</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#0f766e">downstream timeout</text>
+              <path d="M190,43 H290" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc17a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">exceptionally()</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#0f766e">returns cached value</text>
+            </svg>
+          </div>
+          <p class="uc-what">A recommendation service that can fall back to a cached or generic
+          result if the live call fails is a textbook <code>exceptionally</code> case — simple,
+          one fallback value, done.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Good-enough fallback → exceptionally().</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> The caller needs uniform handling whether the call succeeded or failed</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">EITHER OUTCOME</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">✅/💥 either way</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">result or exception</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc17b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">handle()</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">one response shape</text>
+            </svg>
+          </div>
+          <p class="uc-what">Building an HTTP response object that looks the same shape whether
+          the underlying call succeeded or failed (just with different fields populated) is a
+          natural fit for <code>handle</code>, since it sees both outcomes in one place.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Need one unified outcome → handle().</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Logging inside whenComplete(), expecting it to stop the failure</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">STILL PROPAGATES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">whenComplete()</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">just logs</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUc17c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">💥 exception continues</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">not recovered</text>
+            </svg>
+          </div>
+          <p class="uc-what">Logging the failure inside <code>whenComplete</code> feels like
+          "handling" it, but the exception still propagates to whatever's next in the chain.
+          <b>A common interview trap:</b> assuming any callback that "sees" the exception also
+          clears it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">whenComplete observes → it never clears the exception.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A price-lookup call occasionally times out, and the UI should show a cached price
+      instead of an error screen.</b> Wrapping the async call with
+      <code>exceptionally(ex -> cache.getLastKnownPrice())</code> gives the rest of the chain a
+      usable value either way, while a separate <code>whenComplete</code> alongside it can still
+      log the timeout for monitoring, without affecting what the UI actually receives.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="16.html">← thenApply() vs. thenCompose() vs. thenCombine()</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="18.html">ConcurrentHashMap Internals and Atomic Operations →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

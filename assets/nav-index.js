@@ -1567,4 +1567,173 @@ window.NAV_INDEX = {
       }
     ]
   },
+  "java/basic": {
+    track: "Java",
+    trackIcon: "☕",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 7,
+        items: [
+          { n: 1, file: "1.html", short: "JDK vs JRE vs JVM", title: "JDK vs. JRE vs. JVM", tail: "who runs it, who builds it?", priority: "🔥" },
+          { n: 2, file: "2.html", short: "How Java Code Executes", title: "How Java Code Executes", tail: "compilation and bytecode", priority: "⭐" },
+          { n: 3, file: "3.html", short: "Primitive Types vs", title: "Primitive Types vs. Reference Types", tail: "what's actually stored where?", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Stack vs Heap Memory", title: "Stack vs. Heap Memory", tail: "per-thread frames vs. one shared heap", priority: "🔥" },
+          { n: 5, file: "5.html", short: "== vs equals()", title: "== vs. equals()", tail: "identity, or content?", priority: "🔥" },
+          { n: 6, file: "6.html", short: "equals() and hashCode()", title: "equals() and hashCode() Contract", tail: "break one, break every hash-based collection", priority: "🔥" },
+          { n: 7, file: "7.html", short: "String vs StringBuilder", title: "String vs. StringBuilder vs. StringBuffer", tail: "immutable, mutable, or mutable and thread-safe", priority: "🔥" },
+          { n: 8, file: "8.html", short: "String Pool and String", title: "String Pool and String Interning", tail: "why some literals share one object", priority: "⭐" },
+          { n: 9, file: "9.html", short: "final/finally/finalize", title: "final vs. finally vs. finalize", tail: "three unrelated keywords, one shared root word", priority: "🔥" },
+          { n: 10, file: "10.html", short: "static Members", title: "static Members and Static Initialization", tail: "one shared copy, run once", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11–20",
+        hot: 5,
+        items: [
+          { n: 11, file: "11.html", short: "Method Overloading vs", title: "Method Overloading vs. Overriding", tail: "compile-time choice, or runtime dispatch?", priority: "🔥" },
+          { n: 12, file: "12.html", short: "Abstract Class vs", title: "Abstract Class vs. Interface", tail: "shared state, or a pure contract?", priority: "🔥" },
+          { n: 13, file: "13.html", short: "The Four Pillars", title: "Encapsulation, Inheritance, Polymorphism and Abstraction", tail: "the four pillars", priority: "🔥" },
+          { n: 14, file: "14.html", short: "Access Modifiers", title: "Access Modifiers", tail: "one spectrum, not two combinable boundaries", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Constructor Chaining", title: "Constructor Chaining and Initialization Order", tail: "this(), super(), and what actually runs first", priority: "⭐" },
+          { n: 16, file: "16.html", short: "Pass-by-Value in Java", title: "Pass-by-Value in Java", tail: "even for objects, always a copy", priority: "🔥" },
+          { n: 17, file: "17.html", short: "this vs super", title: "this vs. super", tail: "this instance, or the parent's version", priority: "⭐" },
+          { n: 18, file: "18.html", short: "instanceof vs Casting", title: "instanceof, Casting and Type Checking", tail: "a safe test, vs. an unchecked bet", priority: "⭐" },
+          { n: 19, file: "19.html", short: "Packages and Imports", title: "Packages and Imports", tail: "namespacing, not a performance switch", priority: "🧠" },
+          { n: 20, file: "20.html", short: "Immutable Classes", title: "Immutability and Designing Immutable Classes", tail: "the recipe, not just the definition", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 21–24",
+        hot: 2,
+        items: [
+          { n: 21, file: "21.html", short: "Wrapper Classes", title: "Wrapper Classes, Autoboxing and Unboxing", tail: "the Integer cache trap", priority: "🔥" },
+          { n: 22, file: "22.html", short: "var Type Inference", title: "var and Local Variable Type Inference", tail: "inferred, never dynamic", priority: "⭐" },
+          { n: 23, file: "23.html", short: "Enums", title: "Enums", tail: "a fixed set of type-safe, behavior-carrying constants", priority: "⭐" },
+          { n: 24, file: "24.html", short: "Records", title: "Records and Data-Carrying Types", tail: "one line, a whole immutable data class", priority: "🔥" }
+        ]
+      }
+    ]
+  },
+  "java/intermediate": {
+    track: "Java",
+    trackIcon: "☕",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 6,
+        items: [
+          { n: 1, file: "1.html", short: "List/Set/Map/Queue", title: "List vs. Set vs. Map vs. Queue", tail: "four root collection shapes", priority: "🔥" },
+          { n: 2, file: "2.html", short: "ArrayList vs LinkedList", title: "ArrayList vs. LinkedList", tail: "array-backed, or a doubly-linked chain", priority: "🔥" },
+          { n: 3, file: "3.html", short: "HashMap vs Hashtable", title: "HashMap vs. Hashtable vs. ConcurrentHashMap", tail: "the real choice is only ever two of these three", priority: "🔥" },
+          { n: 4, file: "4.html", short: "HashMap Internals", title: "HashMap Internals", tail: "hashing, collisions and resizing", priority: "🔥" },
+          { n: 5, file: "5.html", short: "HashSet Internals", title: "HashSet Internals", tail: "a HashMap wearing a disguise", priority: "⭐" },
+          { n: 6, file: "6.html", short: "Comparable vs Comparator", title: "Comparable vs. Comparator", tail: "one natural order, or as many as you need", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Iterator vs ListIterator", title: "Iterator vs. ListIterator", tail: "forward-only, or both directions plus edits", priority: "⭐" },
+          { n: 8, file: "8.html", short: "Fail-Fast vs Fail-Safe", title: "Fail-Fast vs. Fail-Safe Iteration", tail: "throws on a structural change, or tolerates it", priority: "⭐" },
+          { n: 9, file: "9.html", short: "Generics, Type Erasure", title: "Generics, Type Erasure and Bounded Types", tail: "gone by runtime, enforced at compile time", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Wildcards (extends/super)", title: "Wildcards: ? extends vs. ? super", tail: "Producer Extends, Consumer Super", priority: "🧠" }
+        ]
+      },
+      {
+        label: "Questions 11–20",
+        hot: 6,
+        items: [
+          { n: 11, file: "11.html", short: "Checked vs Unchecked", title: "Checked vs. Unchecked Exceptions", tail: "compiler-enforced, or not", priority: "🔥" },
+          { n: 12, file: "12.html", short: "throw vs throws", title: "throw vs. throws", tail: "raising one now, or declaring the possibility", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Try-with-Resources", title: "Try-with-Resources and AutoCloseable", tail: "automatic close(), no manual finally", priority: "🔥" },
+          { n: 14, file: "14.html", short: "Functional Interfaces", title: "Functional Interfaces, Lambdas and Method References", tail: "one abstract method, many shapes of syntax", priority: "🔥" },
+          { n: 15, file: "15.html", short: "Stream API Ops", title: "Stream API — Intermediate vs. Terminal Operations", tail: "a plan, until something triggers it", priority: "🔥" },
+          { n: 16, file: "16.html", short: "map() vs flatMap()", title: "map() vs. flatMap()", tail: "one result per item, or flattened?", priority: "🔥" },
+          { n: 17, file: "17.html", short: "filter() vs map()", title: "filter() vs. map()", tail: "fewer elements, or different elements", priority: "⭐" },
+          { n: 18, file: "18.html", short: "findFirst() vs findAny()", title: "findFirst() vs. findAny()", tail: "ordered, or whichever finishes first", priority: "🧠" },
+          { n: 19, file: "19.html", short: "orElse() vs orElseGet()", title: "orElse() vs. orElseGet() vs. orElseThrow()", tail: "eager, lazy, or an exception", priority: "⭐" },
+          { n: 20, file: "20.html", short: "reduce() vs collect()", title: "reduce() vs. collect()", tail: "fold to one value, or gather into a container", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 21–28",
+        hot: 1,
+        items: [
+          { n: 21, file: "21.html", short: "Streams vs Collections", title: "Streams vs. Collections", tail: "a computation pipeline, not a data structure", priority: "⭐" },
+          { n: 22, file: "22.html", short: "groupingBy vs partition", title: "groupingBy() vs. partitioningBy()", tail: "any number of groups, or always exactly two", priority: "⭐" },
+          { n: 23, file: "23.html", short: "map() vs peek()", title: "map() vs. peek() and Side Effects", tail: "one transforms, the other isn't even guaranteed to run", priority: "🧠" },
+          { n: 24, file: "24.html", short: "Optional Usage", title: "Optional — Correct Usage and Common Mistakes", tail: "a return type, not a field or a parameter", priority: "🔥" },
+          { n: 25, file: "25.html", short: "Date and Time API", title: "Date and Time API", tail: "LocalDate, Instant, ZonedDateTime", priority: "⭐" },
+          { n: 26, file: "26.html", short: "Annotations/Reflection", title: "Annotations and Reflection", tail: "metadata the compiler reads, or code reads at runtime", priority: "⭐" },
+          { n: 27, file: "27.html", short: "Sealed Classes", title: "Sealed Classes, Pattern Matching and Switch Expressions", tail: "a closed set, exhaustively checked", priority: "⭐" },
+          { n: 28, file: "28.html", short: "Text Blocks", title: "Text Blocks and Modern Java Language Features", tail: "multi-line strings without the escaping", priority: "🧠" }
+        ]
+      }
+    ]
+  },
+  "java/advanced": {
+    track: "Java",
+    trackIcon: "☕",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 7,
+        items: [
+          { n: 1, file: "1.html", short: "JVM Architecture", title: "JVM Architecture and Class Loading", tail: "loading, linking, initialization", priority: "🔥" },
+          { n: 2, file: "2.html", short: "ClassLoader Hierarchy", title: "ClassLoader Hierarchy and Class Initialization", tail: "bootstrap, platform, application", priority: "⭐" },
+          { n: 3, file: "3.html", short: "Garbage Collection", title: "Garbage Collection", tail: "generations, collectors and trade-offs", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Memory Leaks in Java", title: "Memory Leaks in Java Despite Garbage Collection", tail: "still reachable, no longer needed", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Strong/Soft/Weak/Phantom", title: "Strong, Soft, Weak and Phantom References", tail: "four different promises to the GC", priority: "⭐" },
+          { n: 6, file: "6.html", short: "Heap & Thread Dumps", title: "Heap Dumps, Thread Dumps and Out-of-Memory Errors", tail: "what's retained, vs. what's stuck", priority: "🔥" },
+          { n: 7, file: "7.html", short: "JIT Compilation", title: "JIT Compilation and JVM Optimization", tail: "why a long-running JVM gets faster", priority: "⭐" },
+          { n: 8, file: "8.html", short: "Java Memory Model", title: "Java Memory Model and Happens-Before", tail: "no guarantee without one", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Thread vs Runnable vs", title: "Thread vs. Runnable vs. Callable", tail: "the unit of execution, or the task description", priority: "🔥" },
+          { n: 10, file: "10.html", short: "synchronized vs Lock", title: "synchronized vs. Lock", tail: "automatic, or explicit and flexible", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11–20",
+        hot: 5,
+        items: [
+          { n: 11, file: "11.html", short: "volatile/sync/Atomic", title: "volatile vs. synchronized vs. Atomic Classes", tail: "visibility, mutual exclusion, or lock-free", priority: "🔥" },
+          { n: 12, file: "12.html", short: "Race Conditions", title: "Race Conditions, Deadlocks and Starvation", tail: "three different ways concurrency breaks", priority: "⭐" },
+          { n: 13, file: "13.html", short: "wait() vs sleep() vs", title: "wait() vs. sleep() vs. notify()", tail: "releasing the lock, or just pausing", priority: "⭐" },
+          { n: 14, file: "14.html", short: "ExecutorService", title: "ExecutorService and Thread Pools", tail: "reusable workers, not a Thread per task", priority: "🔥" },
+          { n: 15, file: "15.html", short: "Future vs Completable", title: "Future vs. CompletableFuture", tail: "blocking get(), or a composable async chain", priority: "🔥" },
+          { n: 16, file: "16.html", short: "thenApply vs thenCompose", title: "thenApply() vs. thenCompose() vs. thenCombine()", tail: "transform, flatten, or join two", priority: "⭐" },
+          { n: 17, file: "17.html", short: "CompletableFuture Errors", title: "Exception Handling in CompletableFuture", tail: "exceptionally, handle, and whenComplete", priority: "⭐" },
+          { n: 18, file: "18.html", short: "ConcurrentHashMap", title: "ConcurrentHashMap Internals and Atomic Operations", tail: "per-bin locking, not one lock for the table", priority: "🔥" },
+          { n: 19, file: "19.html", short: "Blocking vs Non-Blocking", title: "Blocking vs. Non-Blocking Algorithms", tail: "wait your turn, or retry on contention", priority: "🧠" },
+          { n: 20, file: "20.html", short: "Virtual Threads vs", title: "Virtual Threads vs. Platform Threads", tail: "millions of them, managed by the JVM", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 21–30",
+        hot: 4,
+        items: [
+          { n: 21, file: "21.html", short: "ThreadLocal", title: "ThreadLocal", tail: "use cases and memory-leak risks", priority: "⭐" },
+          { n: 22, file: "22.html", short: "Parallel Streams", title: "Parallel Streams", tail: "when they help, and when they hurt", priority: "⭐" },
+          { n: 23, file: "23.html", short: "Lock Contention", title: "Synchronization, Lock Contention and Throughput", tail: "more threads isn't always the fix", priority: "⭐" },
+          { n: 24, file: "24.html", short: "JVM Profiling & Tuning", title: "JVM Profiling and Java Performance Tuning", tail: "find the bottleneck before tuning anything", priority: "⭐" },
+          { n: 25, file: "25.html", short: "Reflection & Proxies", title: "Reflection Costs, Dynamic Proxies and Annotations", tail: "the mechanism behind framework \"magic\"", priority: "🧠" },
+          { n: 26, file: "26.html", short: "Serialization", title: "Serialization, Deserialization and Compatibility", tail: "versioning, and a real security risk", priority: "⭐" },
+          { n: 27, file: "27.html", short: "Scenario: HashMap", title: "Scenario: HashMap Behaves Unexpectedly with a Mutable Key", tail: "", priority: "🔥" },
+          { n: 28, file: "28.html", short: "Scenario: Memory Leak", title: "Scenario: Diagnosing a Production Memory Leak", tail: "", priority: "🔥" },
+          { n: 29, file: "29.html", short: "Scenario: Race Condition", title: "Scenario: Diagnosing a Race Condition on a Shared Balance", tail: "", priority: "🔥" },
+          { n: 30, file: "30.html", short: "Scenario: Slow Stream", title: "Scenario: A Slow or Side-Effecting Stream Pipeline", tail: "", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 31–36",
+        hot: 1,
+        items: [
+          { n: 31, file: "31.html", short: "Scenario: Thread Pool", title: "Scenario: Thread Pool Exhaustion", tail: "", priority: "🔥" },
+          { n: 32, file: "32.html", short: "Scenario: Future Fails", title: "Scenario: A CompletableFuture in a Group of Calls Fails", tail: "", priority: "⭐" },
+          { n: 33, file: "33.html", short: "Scenario: Collection Choice", title: "Scenario: Choosing a Collection for a High-Throughput Lookup Service", tail: "", priority: "⭐" },
+          { n: 34, file: "34.html", short: "Scenario: High CPU", title: "Scenario: High CPU, Slow Requests", tail: "", priority: "⭐" },
+          { n: 35, file: "35.html", short: "Scenario: Java Upgrade", title: "Scenario: Upgrading to a Newer Java Version", tail: "", priority: "🧠" },
+          { n: 36, file: "36.html", short: "Scenario: Concurrent Cache", title: "Scenario: Designing a Concurrent Cache", tail: "", priority: "🧠" }
+        ]
+      }
+    ]
+  }
 };

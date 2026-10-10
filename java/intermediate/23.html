@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Why is it unsafe to rely on peek() to perform a required side effect?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="map() vs. peek() and Side Effects — Java Intermediate — RefreshYourself">
+<meta property="og:description" content="Why is it unsafe to rely on peek() to perform a required side effect?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>map() vs. peek() and Side Effects — Java Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">map() vs. peek() and Side Effects</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 Java · Intermediate · Deep Dive</div>
+    <h1><code>map()</code> vs. <code>peek()</code> — <span class="hl hl-hot">one call might never even run</span></h1>
+    <p class="interview-q">"Why is it unsafe to rely on <code>peek()</code> to perform a required side effect?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔁 map()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Turning each element into something else (an ID into a full <code>User</code>) needs an operation that's guaranteed to run for every element actually reached, with a predictable result the rest of the pipeline can depend on.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>map(Function)</code> transforms every element 1:1 into the next stream's elements — it's meant to be a pure function, so its output is the real work the pipeline is built on.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">map = the transformation the pipeline actually depends on.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">👀 peek()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Debugging a pipeline — "did this element actually reach this stage?" — needs a way to look at an element in transit without changing it or anything downstream depending on it having run.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>peek(Consumer)</code> is for non-interfering observation only; per the <code>java.util.stream</code> Javadoc, the JVM is explicitly allowed to skip a <code>peek()</code> call entirely if it can tell the element isn't needed to produce the final result.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">peek = a debug window the JVM is allowed to board up.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>map()</code> <span class="rarrow">→</span> <b>pure transform</b>, always runs</p>
+      <p class="rrow"><code>peek()</code> <span class="rarrow">→</span> <b>observe only</b>, may be skipped</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>map</code></b> is the pipeline's real work. <b><code>peek</code></b> is a debug peek-hole the JVM can board up.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 246" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh23" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar23" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.5">STREAM PIPELINE — filter → peek → findFirst</text>
+
+      <g filter="url(#sh23)"><rect x="53" y="30" width="120" height="34" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="113" y="51" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">list.stream()</text>
+
+      <path d="M173,47 H198" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar23)"/>
+
+      <g filter="url(#sh23)"><rect x="198" y="30" width="110" height="34" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="253" y="51" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">filter(x&gt;0)</text>
+
+      <path d="M308,47 H333" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar23)"/>
+
+      <g filter="url(#sh23)"><rect x="333" y="30" width="110" height="34" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="388" y="51" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">peek(log)</text>
+
+      <path d="M443,47 H468" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar23)"/>
+
+      <g filter="url(#sh23)"><rect x="468" y="30" width="120" height="34" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="528" y="51" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">findFirst()</text>
+
+      <path d="M388,64 V78" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M258,78 H458" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M258,78 V104" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar23)"/>
+      <path d="M458,78 V104" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar23)"/>
+
+      <g filter="url(#sh23)"><rect x="178" y="104" width="160" height="70" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="258" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🟢 Element 1 (value 5)</text>
+      <text x="258" y="142" text-anchor="middle" font-size="9.5" fill="#5b6472">peek runs → logs "5"</text>
+      <text x="258" y="158" text-anchor="middle" font-size="9.5" fill="#5b6472">findFirst() matches, stream stops</text>
+
+      <g filter="url(#sh23)"><rect x="378" y="104" width="160" height="70" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 3"/></g>
+      <text x="458" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">⛔ Element 2 (value 8)</text>
+      <text x="458" y="142" text-anchor="middle" font-size="9.5" fill="#5b6472" text-decoration="line-through">peek() → logs nothing</text>
+      <text x="458" y="158" text-anchor="middle" font-size="9.5" fill="#5b6472">findFirst() already has its answer</text>
+
+      <text x="320" y="196" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">peek() has NO guarantee it runs — never rely on it for a required side effect</text>
+      <text x="320" y="218" text-anchor="middle" font-size="10.5" fill="#5b6472">map() has no such exception — it always executes for every element reached</text>
+    </svg>
+    <figcaption>A short-circuiting <code>findFirst()</code> can finish before the stream ever reaches element 2's <code>peek()</code> — that call simply never happens.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Never use <code>peek()</code> or <code>map()</code> to smuggle in a meaningful side effect</b> (mutating a shared list, incrementing a counter the program depends on) — <code>map()</code>'s contract assumes a pure function, and <code>peek()</code>'s calls aren't even guaranteed to run.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"So what should I use for debug logging instead, if I actually need it to always run?"</b> For a pipeline that must observe every element unconditionally, avoid a short-circuiting terminal operation downstream (like <code>findFirst</code>/<code>anyMatch</code>), or log inside the <code>map()</code>/<code>filter()</code> lambda itself where the call is already guaranteed by that stage's own contract.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>map()</code> is for transformation — a pure function that always runs for every element the pipeline actually reaches. <code>peek()</code> is for non-interfering observation only, and the Javadoc explicitly allows the JVM to skip a <code>peek()</code> call if a short-circuiting operation downstream doesn't need that element — so it must never be relied on for a required side effect."</p>
+    <ul>
+      <li><code>map()</code> <span class="hl hl-blue">→ pure transform, always runs</span> for every reached element.</li>
+      <li><code>peek()</code> <span class="hl hl-inter">→ observation only, may be skipped</span> by the JVM.</li>
+      <li>A short-circuiting op (<code>findFirst</code>, <code>anyMatch</code>) <span class="hl hl-hot">can make peek() never execute</span> for later elements.</li>
+      <li>Required side effects <span class="hl hl-basic">belong outside the stream</span>, or inside a stage whose contract already guarantees execution.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><code>map()</code>'s whole contract assumes a <b>pure function</b> — given the same input,
+      it should always produce the same output, with no side effects anyone else depends on. That's
+      what lets the stream pipeline reorder, skip, or short-circuit work freely: nothing downstream
+      is relying on <code>map()</code> having done anything other than hand back a value.</p>
+
+      <p><code>peek()</code> is documented as existing purely to support debugging — "to see the
+      elements as they flow past a certain point." Because a stream pipeline is lazy and can
+      short-circuit, the JVM is free to skip a stage entirely for an element it can prove the final
+      result doesn't need. A <code>peek()</code> call sitting before a <code>findFirst()</code> or
+      <code>anyMatch()</code> can simply never run for elements the pipeline never had to visit.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>map()</code></th><th><code>peek()</code></th></tr></thead>
+        <tbody>
+          <tr><th>Purpose</th><td>transform elements</td><td>observe elements (debugging)</td></tr>
+          <tr><th>Returns</th><td>a new stream of transformed values</td><td>the same stream, unchanged</td></tr>
+          <tr><th>Guaranteed to run?</th><td class="no">❌ not for required side effects — must be pure</td><td class="no">❌ may be skipped by a short-circuit</td></tr>
+          <tr><th>Safe for a required side effect?</th><td class="no">❌ no — breaks the pure-function contract</td><td class="no">❌ no — not guaranteed to execute</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">Optional</span>&lt;<span class="ty">Integer</span>&gt; first = <span class="ty">Stream</span>.of(5, 8, 12, 20)
+    .filter(x -&gt; x &gt; 0)
+    .peek(x -&gt; System.out.println(<span class="str">"peek saw: "</span> + x))
+    .findFirst();
+<span class="cx-err">// ❌ prints only "peek saw: 5" — the rest are never visited</span></code></pre>
+      </div>
+      <p class="cx-note"><code>findFirst()</code> short-circuits <b>before</b> <code>peek()</code> ever sees 8, 12, or 20.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; doubled = <span class="ty">Stream</span>.of(5, 8, 12)
+    .map(x -&gt; x * 2)
+    .collect(<span class="ty">Collectors</span>.toList());
+<span class="cx-ok">// ✅ map() has no short-circuit exception — every element gets doubled</span></code></pre>
+      </div>
+      <p class="cx-note"><code>map()</code>'s transformation is <b>always applied</b> to every element the pipeline reaches.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> Transforming a list of IDs into full objects</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc23a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">1:1 TRANSFORM</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🔢 id → </text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc23a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">👤 User object</text>
+            </svg>
+          </div>
+          <p class="uc-what">Turning a <code>List&lt;Long&gt;</code> of IDs into a
+          <code>List&lt;User&gt;</code> via <code>userRepository::findById</code> is exactly what
+          <code>map()</code> is for — a required, pure transformation the rest of the code depends
+          on actually happening for every ID.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A required transformation → <code>map()</code>, never <code>peek()</code>.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Watching a pipeline to debug which elements reach a stage</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc23b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">DEBUG, NO SHORT-CIRCUIT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">.peek(log)</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc23b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">.collect(toList())</text>
+            </svg>
+          </div>
+          <p class="uc-what">A <code>peek()</code> placed before a non-short-circuiting terminal
+          operation like <code>collect(Collectors.toList())</code> does run for every element,
+          because nothing downstream ever decides it can stop early — a safe, legitimate debugging
+          use.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No short-circuit downstream → <code>peek()</code> is safe to use for debugging.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Using <code>peek()</code> to increment a counter the logic depends on</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc23c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">UNSAFE SIDE EFFECT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">.peek(counter++)</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc23c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">❓ wrong count</text>
+            </svg>
+          </div>
+          <p class="uc-what">A <code>peek()</code> that mutates an external counter, feeding logic
+          that decides something important, can silently under-count the moment any downstream
+          operation short-circuits or the JDK changes how it optimizes the pipeline — the Javadoc
+          never promised this call would happen.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A counter your logic depends on → never inside <code>peek()</code>.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A teammate adds <code>.peek(user -&gt; auditLog.record(user))</code> before a
+      <code>findFirst()</code> to "log every user that was checked."</b> In production, only the
+      first matching user ever gets audited — every other user the pipeline never needed to visit
+      is silently skipped, and nothing throws an error to say so.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="22.html">← <code>groupingBy()</code> vs. <code>partitioningBy()</code></a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="24.html">Optional — Correct Usage and Common Mistakes →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

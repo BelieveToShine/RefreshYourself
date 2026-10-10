@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What's the difference between a race condition, a deadlock, and starvation? Three different ways concurrency breaks, and the fix for each.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Race Conditions, Deadlocks and Starvation — Java Advanced — RefreshYourself">
+<meta property="og:description" content="What's the difference between a race condition, a deadlock, and starvation? Three different ways concurrency breaks, and the fix for each.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Race Conditions, Deadlocks and Starvation — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Race Conditions, Deadlocks and Starvation</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Java · Advanced · Must Know</div>
+    <h1>Wrong answer, no answer, or never your turn — three ways <span class="hl hl-hot">concurrency breaks</span></h1>
+    <p class="interview-q">"What's the difference between a race condition, a deadlock, and starvation?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">🎲 Race Condition</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Two threads reading and writing the same shared state without coordination can interleave in an order neither of them controls — the result silently depends on timing, not logic.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A race condition is exactly that: correctness depends on unpredictable thread interleaving. Guard the shared state (<code>synchronized</code>, <code>Lock</code>, Atomic classes) so the outcome stops depending on timing.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Race condition = the answer depends on who got there first.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+          <div class="wc-head">🔗 Deadlock</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Two threads can each grab one of two locks and then wait for the other lock, which the other thread is holding — neither can ever proceed.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A deadlock is that exact circular wait. The classic fix: always acquire multiple locks in the same, consistent order across every thread.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Deadlock = two threads, two locks, each other's missing piece.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🐢 Starvation</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A thread can be technically runnable and never actually blocked, yet keep losing out to other threads for a resource — it's running, just never making real progress.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>That's starvation: perpetual denial of access, often from priority imbalance or an unfair scheduling/locking policy. A fairness policy (e.g. a fair <code>Lock</code>) is the usual fix.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Starvation = always ready, never picked.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Race condition <span class="rarrow">→</span> <b>wrong</b> result from timing</p>
+      <p class="rrow">Deadlock <span class="rarrow">→</span> <b>stuck</b> forever, circular wait</p>
+      <p class="rrow">Starvation <span class="rarrow">→</span> <b>never</b> gets a turn</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> a race gives you the <b>wrong</b> answer. A
+    deadlock gives you <b>no</b> answer. Starvation keeps you <b>waiting</b> for an answer.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shJ12" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arJ12Red" markerWidth="8" markerHeight="8" refX="5" refY="2.5" orient="auto">
+          <path d="M0,0 L5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="arJ12Purple" markerWidth="8" markerHeight="8" refX="5" refY="2.5" orient="auto">
+          <path d="M0,0 L5,2.5 L0,5 Z" fill="#6d28d9"/>
+        </marker>
+        <marker id="arJ12Amber" markerWidth="8" markerHeight="8" refX="5" refY="2.5" orient="auto">
+          <path d="M0,0 L5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <line x1="214" y1="30" x2="214" y2="280" stroke="#e2e8f0" stroke-width="1.5"/>
+      <line x1="428" y1="30" x2="428" y2="280" stroke="#e2e8f0" stroke-width="1.5"/>
+
+      <text x="107" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🎲 RACE CONDITION</text>
+      <g filter="url(#shJ12)"><rect x="17" y="36" width="80" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="57" y="54" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">T1</text>
+      <text x="57" y="67" text-anchor="middle" font-size="8.5" fill="#5b6472">reads x</text>
+      <g filter="url(#shJ12)"><rect x="117" y="36" width="80" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="157" y="54" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">T2</text>
+      <text x="157" y="67" text-anchor="middle" font-size="8.5" fill="#5b6472">reads x</text>
+      <path d="M57,76 V96 H157 V116" fill="none" stroke="#dc2626" stroke-width="1.6" marker-end="url(#arJ12Red)"/>
+      <path d="M157,76 V116" fill="none" stroke="#dc2626" stroke-width="1.6" marker-end="url(#arJ12Red)"/>
+      <g filter="url(#shJ12)"><rect x="17" y="122" width="180" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="107" y="140" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">both write x+1</text>
+      <text x="107" y="153" text-anchor="middle" font-size="8.5" fill="#5b6472">one update is lost</text>
+      <rect x="27" y="170" width="160" height="34" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/>
+      <text x="107" y="189" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">❌ x = 1 (expected 2)</text>
+      <text x="107" y="228" text-anchor="middle" font-size="9" fill="#5b6472">depends on thread timing</text>
+
+      <text x="321" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#5b21b6">🔗 DEADLOCK</text>
+      <g filter="url(#shJ12)"><rect x="231" y="44" width="80" height="40" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/></g>
+      <text x="271" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b21b6">T1</text>
+      <text x="271" y="75" text-anchor="middle" font-size="8.5" fill="#5b6472">holds A</text>
+      <g filter="url(#shJ12)"><rect x="331" y="44" width="80" height="40" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/></g>
+      <text x="371" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b21b6">T2</text>
+      <text x="371" y="75" text-anchor="middle" font-size="8.5" fill="#5b6472">holds B</text>
+      <path d="M311,58 H331" fill="none" stroke="#6d28d9" stroke-width="1.6" marker-end="url(#arJ12Purple)"/>
+      <text x="321" y="50" text-anchor="middle" font-size="8" font-weight="700" fill="#5b21b6">wants B</text>
+      <path d="M331,72 H311" fill="none" stroke="#6d28d9" stroke-width="1.6" marker-end="url(#arJ12Purple)"/>
+      <text x="321" y="90" text-anchor="middle" font-size="8" font-weight="700" fill="#5b21b6">wants A</text>
+      <rect x="241" y="170" width="160" height="34" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.4"/>
+      <text x="321" y="189" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b21b6">🔒 both blocked forever</text>
+      <text x="321" y="228" text-anchor="middle" font-size="9" fill="#5b6472">circular wait, no timeout</text>
+
+      <text x="534" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🐢 STARVATION</text>
+      <g filter="url(#shJ12)"><rect x="445" y="44" width="70" height="36" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="480" y="66" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">T-high</text>
+      <g filter="url(#shJ12)"><rect x="520" y="44" width="70" height="36" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="555" y="66" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">T-high</text>
+      <g filter="url(#shJ12)"><rect x="482" y="90" width="70" height="36" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="517" y="112" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">T-low</text>
+      <path d="M480,80 V98 H500" fill="none" stroke="#d97706" stroke-width="1.4" marker-end="url(#arJ12Amber)"/>
+      <path d="M555,80 V98 H535" fill="none" stroke="#d97706" stroke-width="1.4" marker-end="url(#arJ12Amber)"/>
+      <text x="517" y="140" text-anchor="middle" font-size="8.5" font-weight="700" fill="#991b1b">always loses the resource</text>
+      <rect x="455" y="170" width="160" height="34" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/>
+      <text x="535" y="189" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🐢 T-low never runs</text>
+      <text x="535" y="228" text-anchor="middle" font-size="9" fill="#5b6472">runnable, just never picked</text>
+    </svg>
+    <figcaption>Three different failures — a wrong answer, a frozen pair, and a thread stuck on the bench.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Starvation is not the same as a deadlock.</b> A starved thread is still
+    running and eligible, simply never winning the resource; a deadlocked thread is actually
+    blocked forever, unable to proceed at all.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's the classic fix for a deadlock caused by lock ordering?"</b>
+    Always acquire multiple locks in the same, consistent order across every thread and code path
+    — if thread A always locks X before Y, make sure thread B never locks Y before X.
+    <code>tryLock()</code> with a timeout is a fallback when a consistent order isn't practical.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A race condition means the result depends on unpredictable thread
+    timing. A deadlock means two or more threads are each waiting on a lock the other holds, and
+    neither can proceed. Starvation means a thread is technically running but keeps losing out to
+    others and never makes real progress."</p>
+    <ul>
+      <li>Race condition → <span class="hl hl-hot">wrong result</span>, caused by unguarded shared state.</li>
+      <li>Deadlock → <span class="hl hl-hot">stuck forever</span>, classic cause is inconsistent lock-acquisition order.</li>
+      <li>Starvation → <span class="hl hl-inter">never progresses</span>, despite technically being runnable.</li>
+      <li>Fix for a race → <span class="hl hl-basic">guard the shared state</span> — synchronized, Lock, or an Atomic class.</li>
+      <li>Fix for a deadlock → <span class="hl hl-basic">consistent lock order</span>, or tryLock() with a timeout.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <span class="hl hl-hot">race condition</span> happens when correctness depends on which
+      thread's instructions get interleaved in which order — nothing is blocked, nothing hangs,
+      the program just produces a different (and often wrong) answer depending on timing that
+      isn't controlled anywhere in the code. A <span class="hl hl-adv">deadlock</span> is a
+      completely different failure shape: two or more threads are each blocked, waiting on a
+      resource (almost always a lock) that another one of them is holding, and none of them can
+      ever make progress because the wait is circular.</p>
+
+      <p><span class="hl hl-inter">Starvation</span> sits apart from both — a starved thread isn't
+      blocked at all, it's perfectly eligible to run, but something about the scheduling or
+      locking policy keeps picking other threads over it. A classic cause is thread-priority
+      imbalance, or an unfair lock implementation that happens to keep favoring recently-arrived
+      threads over one that's been waiting the longest.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Race Condition</th><th>Deadlock</th><th>Starvation</th></tr></thead>
+        <tbody>
+          <tr><th>What's happening</th><td>unordered interleaving produces a wrong result</td><td>circular wait on locks</td><td>unfair access to a resource</td></tr>
+          <tr><th>Thread state</th><td>running, just wrong output</td><td>blocked, permanently</td><td>running/ready, but never selected</td></tr>
+          <tr><th>Typical cause</th><td>unguarded shared mutable state</td><td>locks acquired in inconsistent order</td><td>priority imbalance, unfair locking policy</td></tr>
+          <tr><th>Typical fix</th><td>guard with synchronized/Lock/Atomic</td><td>consistent lock order, or tryLock(timeout)</td><td>a fairness policy (e.g. a fair Lock)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">int</span> balance = <span class="num">100</span>;
+
+<span class="cx-cmt">// two threads both run this concurrently, unguarded</span>
+<span class="kw">void</span> withdraw(<span class="kw">int</span> amount) {
+    <span class="kw">if</span> (balance &gt;= amount) {       <span class="cx-err">// ❌ check and update aren't one step</span>
+        balance -= amount;          <span class="cx-err">// another thread may have changed balance between the two</span>
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">Both threads can pass the check with the same stale <code>balance</code>,
+      then both subtract — the account can go negative despite the guard.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Thread 1</span>
+<span class="kw">synchronized</span> (lockA) {
+    <span class="kw">synchronized</span> (lockB) { transfer(); }  <span class="cx-err">// ❌ A then B</span>
+}
+
+<span class="cx-cmt">// Thread 2 — same two locks, opposite order</span>
+<span class="kw">synchronized</span> (lockB) {
+    <span class="kw">synchronized</span> (lockA) { transfer(); }  <span class="cx-err">// ❌ B then A — classic deadlock</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">If Thread 1 grabs <code>lockA</code> and Thread 2 grabs
+      <code>lockB</code> at nearly the same moment, each then waits forever for the lock the
+      other is holding.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> Two threads both do check-then-update on a shared account, unguarded</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ12a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">RACE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">check, then update</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">no lock between them</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcJ12a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">lost update</text>
+            </svg>
+          </div>
+          <p class="uc-what">Both threads can read the same balance before either writes back —
+          a withdrawal can silently succeed twice, or the account can go negative despite a
+          guard that looked correct.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Check-then-act unguarded → classic race condition.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">2</span> Two transfer methods lock the same two accounts in opposite order</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ12b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#6d28d9"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b21b6" letter-spacing=".03em">DEADLOCK</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#5b21b6">lock(A) then lock(B)</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#5b21b6">Thread 1</text>
+              <path d="M190,43 H290" stroke="#6d28d9" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcJ12b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#5b21b6">lock(B) then lock(A)</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#5b21b6">Thread 2</text>
+            </svg>
+          </div>
+          <p class="uc-what">A transfer from account A to B locks A then B; a transfer from B to
+          A locks B then A. Run concurrently, each thread can grab its first lock and then wait
+          forever for the other's. <b>A common interview trap:</b> assuming "it'll usually be
+          fine" because it only fails under the right timing.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same two locks, opposite order → deadlock.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">3</span> A low-priority background thread keeps losing a lock to a flood of requests</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ12c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">STARVATION</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">flood of requests</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#92400e">always wins the lock</text>
+              <path d="M190,43 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUcJ12c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">cleanup never runs</text>
+            </svg>
+          </div>
+          <p class="uc-what">A background cleanup thread competing for the same lock as a
+          constant stream of request-handling threads can be technically runnable forever while
+          never actually winning the lock — it's not blocked, it's just never picked.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Always ready, never picked → starvation, not a deadlock.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Two transfer operations between the same two accounts occasionally hang completely,
+      with thread dumps showing both threads <code>BLOCKED</code> on each other's lock.</b> That's
+      a classic deadlock from acquiring the two account locks in opposite order. The fix is a
+      single consistent lock order (e.g. always lock the account with the smaller ID first), or
+      <code>tryLock()</code> with a timeout as a fallback.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="11.html">← volatile vs. synchronized vs. Atomic Classes</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="13.html">wait() vs. sleep() vs. notify() →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

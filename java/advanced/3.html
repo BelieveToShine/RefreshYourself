@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Why does the JVM split the heap into generations, and how would you choose between G1, ZGC, and Parallel GC?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Garbage Collection — Generations, Collectors and Trade-offs — Java Advanced — RefreshYourself">
+<meta property="og:description" content="Why does the JVM split the heap into generations, and how would you choose between G1, ZGC, and Parallel GC?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Garbage Collection — Generations, Collectors and Trade-offs — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Garbage Collection — Generations, Collectors and Trade-offs</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Java · Advanced · Must Know</div>
+    <h1>Most objects <span class="hl hl-blue">die young</span> — why the heap is split, and which collector to reach for</h1>
+    <p class="interview-q">"Why does the JVM split the heap into generations, and how would you choose between G1, ZGC, and Parallel GC?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🌱 Generational Heap</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Scanning the entire heap on every collection to find garbage is wasteful when most objects (request-scoped data, temporary buffers) die within milliseconds of being created.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Split the heap into a small, frequently-collected <b>young generation</b> for new objects and a larger, rarely-collected <b>old generation</b> for objects that survive — "the generational hypothesis": most objects die young.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Most objects die young — collect the young generation often, the old generation rarely.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+          <div class="wc-head">⚖️ Choosing a Collector</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>"Always use the newest collector" ignores that throughput and pause time are a real trade-off — a collector tuned for one costs something in the other.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>G1 balances both for most general workloads; ZGC/Shenandoah target very low pause times for latency-sensitive apps at some throughput/memory cost; Parallel GC favors raw throughput over pause time.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Pick by what you're optimizing for — pause time and throughput trade off against each other.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Young gen <span class="rarrow">→</span> <b>small</b>, collected often</p>
+      <p class="rrow">Old gen <span class="rarrow">→</span> <b>large</b>, collected rarely</p>
+      <p class="rrow">Survives enough cycles <span class="rarrow">→</span> <b>promoted/tenured</b> to old gen</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b>G1</b> = balanced default.
+    <b>ZGC/Shenandoah</b> = lowest pause time. <b>Parallel</b> = highest throughput.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shJ3" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arJ3Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="195" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">THE HEAP, SPLIT BY GENERATION</text>
+
+      <g filter="url(#shJ3)"><rect x="20" y="32" width="150" height="250" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="95" y="56" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🌱 Young Gen</text>
+      <text x="95" y="72" text-anchor="middle" font-size="9.5" fill="#5b6472">small</text>
+      <text x="95" y="86" text-anchor="middle" font-size="9.5" fill="#5b6472">new objects</text>
+
+      <circle cx="55" cy="130" r="7" fill="#fde68a" stroke="#d97706" stroke-width="1.3"/>
+      <circle cx="85" cy="150" r="7" fill="#fde68a" stroke="#d97706" stroke-width="1.3"/>
+      <circle cx="115" cy="125" r="7" fill="#fde68a" stroke="#d97706" stroke-width="1.3"/>
+      <circle cx="70" cy="175" r="7" fill="#fde68a" stroke="#d97706" stroke-width="1.3"/>
+      <circle cx="130" cy="170" r="7" fill="#fde68a" stroke="#d97706" stroke-width="1.3"/>
+
+      <path d="M95,235 a30,10 0 1,0 0.1,0" fill="none" stroke="#d97706" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arJ3Amber)"><animate attributeName="stroke-dashoffset" values="14;0" dur="1.4s" repeatCount="indefinite"/></path>
+      <text x="95" y="265" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">minor GC — frequent</text>
+
+      <g filter="url(#shJ3)"><rect x="210" y="32" width="250" height="250" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="335" y="56" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🪨 Old Gen</text>
+      <text x="335" y="72" text-anchor="middle" font-size="9.5" fill="#5b6472">large</text>
+      <text x="335" y="86" text-anchor="middle" font-size="9.5" fill="#5b6472">long-lived survivors</text>
+
+      <rect x="240" y="110" width="40" height="40" rx="6" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1.3"/>
+      <rect x="300" y="130" width="40" height="40" rx="6" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1.3"/>
+      <rect x="360" y="105" width="40" height="40" rx="6" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1.3"/>
+      <rect x="270" y="190" width="40" height="40" rx="6" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1.3"/>
+      <rect x="400" y="190" width="40" height="40" rx="6" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1.3"/>
+
+      <text x="335" y="265" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">major GC — rare</text>
+
+      <path d="M170,150 H208" fill="none" stroke="#166534" stroke-width="2" marker-end="url(#arJ3Amber)"/>
+      <rect x="130" y="130" width="90" height="18" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1"/>
+      <text x="175" y="142.5" text-anchor="middle" font-size="8.5" font-weight="700" fill="#166534">promoted</text>
+
+      <path d="M495,32 V282" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+
+      <text x="585" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#475569" letter-spacing="0.2">PICK BY GOAL</text>
+
+      <path d="M520,110 H650" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <text x="520" y="100" text-anchor="start" font-size="8.5" fill="#5b6472">throughput</text>
+      <text x="650" y="100" text-anchor="end" font-size="8.5" fill="#5b6472">low pause</text>
+
+      <circle cx="535" cy="110" r="7" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+      <text x="535" y="135" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">Parallel</text>
+
+      <circle cx="585" cy="110" r="7" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+      <text x="585" y="135" text-anchor="middle" font-size="9.5" font-weight="700" fill="#6d28d9">G1</text>
+      <text x="585" y="148" text-anchor="middle" font-size="8" fill="#5b6472">default</text>
+
+      <circle cx="635" cy="110" r="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="635" y="135" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">ZGC /</text>
+      <text x="635" y="148" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">Shenandoah</text>
+
+      <text x="585" y="185" text-anchor="middle" font-size="8.5" fill="#5b6472">balances both —</text>
+      <text x="585" y="197" text-anchor="middle" font-size="8.5" fill="#5b6472">most workloads</text>
+    </svg>
+    <figcaption>Young gen fills and empties fast; old gen grows slowly from what survives — the right side shows where each collector sits on the throughput-vs-pause trade-off.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Always use the newest collector" is not real advice.</b> ZGC's very low
+    pause times come at a real cost in throughput and memory overhead — a batch-processing
+    workload with no latency requirement is often better served by Parallel GC's higher
+    throughput, not whichever collector is newest.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What happens during a major/full GC that doesn't happen during a
+    minor GC?"</b> A minor GC only scans the young generation; a major/full GC also examines the
+    old generation (and sometimes the whole heap), which is why it takes much longer and happens
+    far less often.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"The JVM splits the heap into a young generation, collected often and
+    cheaply because most objects die quickly, and an old generation for objects that survive
+    enough young-gen cycles to get promoted. G1 is the default and balances throughput with pause
+    time for most workloads; ZGC and Shenandoah trade some throughput for very low, sub-millisecond-class
+    pause times; Parallel GC favors raw throughput. Which one to use is a real trade-off, not a
+    'pick the newest' question."</p>
+    <ul>
+      <li>Young gen <span class="hl hl-inter">collected often</span>, cheap — most objects die here.</li>
+      <li>Old gen <span class="hl hl-blue">collected rarely</span>, holds long-lived survivors.</li>
+      <li>G1 → <span class="hl hl-adv">balanced default</span> for general-purpose workloads.</li>
+      <li>ZGC/Shenandoah → <span class="hl hl-basic">lowest pause times</span>, for latency-sensitive services.</li>
+      <li>Parallel GC → <span class="hl hl-hot">highest throughput</span>, for batch/offline jobs that can tolerate longer pauses.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>The <span class="hl hl-inter">generational hypothesis</span> — most objects become
+      garbage shortly after allocation — is what justifies splitting the heap at all. A
+      <b>minor GC</b> only has to scan the young generation, which stays small, so it's fast and
+      frequent. An object that survives several minor collections gets <b>promoted</b> (also
+      called tenured) into the <b>old generation</b>, which is scanned far less often because it
+      holds the objects expected to live a long time anyway.</p>
+
+      <p>Which collector to reach for is a genuine trade-off, not a ranking. <b>G1</b> (the
+      default in modern JDKs) divides the heap into regions and collects incrementally, aiming
+      for a configurable pause-time target while still keeping reasonable throughput — the right
+      starting point for most services. <b>ZGC</b> and <b>Shenandoah</b> do most of their work
+      concurrently with the application threads to push pause times into the sub-millisecond
+      class, which matters for strict latency SLAs, at some cost in CPU/memory overhead and
+      slightly lower raw throughput. <b>Parallel GC</b> stops the application during collection
+      but uses multiple threads to do it fast, maximizing total throughput for workloads (batch
+      jobs, offline processing) where occasional longer pauses are acceptable.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>G1</th><th>ZGC / Shenandoah</th><th>Parallel GC</th></tr></thead>
+        <tbody>
+          <tr><th>Optimizes for</th><td>balance</td><td>pause time</td><td>throughput</td></tr>
+          <tr><th>Typical pause</th><td>tens of ms, tunable</td><td>sub-millisecond class</td><td>can be long (stop-the-world)</td></tr>
+          <tr><th>Overhead cost</th><td>moderate</td><td>higher CPU/memory</td><td>lowest overhead</td></tr>
+          <tr><th>Best for</th><td>general-purpose services</td><td>latency-sensitive apps</td><td>batch/offline jobs</td></tr>
+          <tr><th>Default since</th><td>JDK 9+</td><td>opt-in flag</td><td>opt-in flag</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Shell</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt"># Balanced default — usually no flag needed, G1 is already the default</span>
+java -XX:+UseG1GC -jar app.jar
+
+<span class="cx-cmt"># Latency-sensitive service — very low pause times</span>
+java -XX:+UseZGC -jar app.jar
+
+<span class="cx-cmt"># Batch job — maximize throughput, pauses are acceptable</span>
+java -XX:+UseParallelGC -jar app.jar</code></pre>
+      </div>
+      <p class="cx-note">The collector is a startup flag, not something your code calls directly
+      — the choice is an operational/deployment decision tied to the workload's actual latency
+      and throughput needs.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">1</span> A typical web service with no extreme latency SLA</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ7" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#6d28d9"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#6d28d9" letter-spacing=".03em">GENERAL-PURPOSE SERVICE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#6d28d9">🌐 Web API</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#6d28d9">balanced needs</text>
+              <path d="M190,43 H290" stroke="#6d28d9" stroke-width="1.6" fill="none" marker-end="url(#arUcJ7)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#6d28d9">⚖️ G1 (default)</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#6d28d9">no flag needed</text>
+            </svg>
+          </div>
+          <p class="uc-what">Most everyday services don't have an extreme pause-time budget — G1's
+          balance of throughput and pause time is already the right fit, and it's the default, so
+          there's usually nothing to configure.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No special latency need → G1's default balance is correct.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> A trading or real-time system with a strict p99 latency budget</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ8" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">STRICT LATENCY BUDGET</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">⏱️ p99 &lt; 1ms pause</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">any long pause fails SLA</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcJ8)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🎯 ZGC / Shenandoah</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#166534">trades throughput for it</text>
+            </svg>
+          </div>
+          <p class="uc-what">When any multi-millisecond pause would blow a latency SLA, ZGC or
+          Shenandoah's near-concurrent collection is worth the extra CPU/memory overhead — this is
+          the scenario those collectors exist for.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Strict latency SLA → pay for ZGC/Shenandoah's low pauses.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A nightly batch job processing millions of records with no user waiting</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ9" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">THROUGHPUT, NOT LATENCY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">📦 Batch job</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">no one waits on a pause</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcJ9)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🚀 Parallel GC</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">finishes the whole job fastest</text>
+            </svg>
+          </div>
+          <p class="uc-what">A job with no interactive user waiting on any single response cares
+          about total completion time, not individual pause length — Parallel GC's higher
+          throughput finishes the overall job sooner, even with occasional longer stop-the-world
+          pauses.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Nobody's waiting on a single pause → optimize for throughput instead.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A checkout service suddenly shows 2-second response-time spikes under load.</b>
+      Before touching any application code, check the GC logs for a long major/full GC pause — if
+      the old generation is filling up and triggering expensive full collections, the fix might
+      be as simple as increasing heap size to give promoted objects more room, or switching to a
+      collector with a lower pause-time target, rather than assuming it's a code-level bug.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="2.html">← ClassLoader Hierarchy and Class Initialization</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="4.html">Memory Leaks in Java Despite Garbage Collection →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

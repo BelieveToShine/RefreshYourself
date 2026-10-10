@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Serialization versioning with serialVersionUID, and why deserializing untrusted data is a serious, documented security risk.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Serialization, Deserialization and Compatibility — Java Advanced — RefreshYourself">
+<meta property="og:description" content="Serialization versioning with serialVersionUID, and why deserializing untrusted data is a serious, documented security risk.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Serialization, Deserialization and Compatibility — Java Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="java/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fffbeb;--crumb-ink:#78350f;">☕ Java</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Serialization, Deserialization and Compatibility</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Java · Advanced · Should Know</div>
+    <h1>Deserializing a byte stream — <span class="hl hl-blue">versioning headache</span>, or <span class="hl hl-hot">real security risk</span>?</h1>
+    <p class="interview-q">"Why is deserializing data from an untrusted source considered a serious security risk in Java?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-2">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔢 serialVersionUID</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A class that implements <code>Serializable</code> changes over time (a field added, a compiler upgraded) — without a pinned version identifier, deserializing an older byte stream can silently fail against the newer class.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>An explicit <code>serialVersionUID</code> field pins a version identifier the reader checks against the writer's — without one, the compiler generates one from class details that can silently change between compiler versions or class edits, breaking old data with <code>InvalidClassException</code>.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">serialVersionUID = the version check between the writer and the reader.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">☠️ Untrusted deserialization</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Deserializing a byte stream reconstructs objects by calling constructors and setters implied by the stream itself — a crafted stream exploiting a class already on the classpath can trigger arbitrary code execution during that process.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Never deserialize data from an untrusted source with Java's built-in <code>Serializable</code> mechanism — modern guidance favors safer formats (JSON, a dedicated library with allow-listing) for anything crossing a trust boundary.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Untrusted bytes in + Serializable = a well-documented attack class, not a hypothetical.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>serialVersionUID</code> <span class="rarrow">→</span> <b>version check</b> between writer and reader</p>
+      <p class="rrow">No explicit UID <span class="rarrow">→</span> <b>compiler-generated</b>, can silently change</p>
+      <p class="rrow">Untrusted byte stream <span class="rarrow">→</span> <b>real</b> code-execution risk</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>serialVersionUID</code></b> is a
+    shared password between old and new versions of a class. An <b>untrusted stream</b> is a
+    locked box you open without knowing what's actually inside it.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shJ26" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arJ26Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arJ26Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <line x1="320" y1="26" x2="320" y2="226" stroke="#e2e8f0" stroke-width="2"/>
+
+      <text x="160" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#166534" letter-spacing="0.3">TRUSTED SOURCE</text>
+      <text x="480" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b" letter-spacing="0.3">UNTRUSTED SOURCE</text>
+
+      <g filter="url(#shJ26)"><rect x="70" y="36" width="180" height="44" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="57" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">📦 Your own byte stream</text>
+      <text x="160" y="72" text-anchor="middle" font-size="9.5" fill="#5b6472">written by your own app</text>
+
+      <g filter="url(#shJ26)"><rect x="390" y="36" width="180" height="44" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="480" y="57" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">📦 Crafted byte stream</text>
+      <text x="480" y="72" text-anchor="middle" font-size="9.5" fill="#5b6472">from an attacker</text>
+
+      <path d="M160,80 V104" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arJ26Green)"/>
+      <path d="M480,80 V104" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arJ26Red)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#shJ26)"><rect x="70" y="110" width="180" height="44" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="131" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">ObjectInputStream</text>
+      <text x="160" y="145" text-anchor="middle" font-size="9.5" fill="#5b6472">readObject() rebuilds it</text>
+
+      <g filter="url(#shJ26)"><rect x="390" y="110" width="180" height="44" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="131" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">ObjectInputStream</text>
+      <text x="480" y="145" text-anchor="middle" font-size="9.5" fill="#5b6472">readObject() rebuilds it</text>
+
+      <path d="M160,154 V178" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arJ26Green)"/>
+      <path d="M480,154 V178" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arJ26Red)"/>
+
+      <g filter="url(#shJ26)"><rect x="60" y="184" width="200" height="44" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="205" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ Object restored safely</text>
+      <text x="160" y="219" text-anchor="middle" font-size="9" fill="#5b6472">classes you trust</text>
+
+      <g filter="url(#shJ26)"><rect x="380" y="184" width="200" height="44" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="480" y="203" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🐛 Arbitrary code runs</text>
+      <text x="480" y="218" text-anchor="middle" font-size="9" fill="#5b6472">a real, documented attack class</text>
+    </svg>
+    <figcaption>Same <code>readObject()</code> call — the only difference is who controls the bytes going in.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Deserialization is not a passive "read the data back" operation.</b> It
+    can reconstruct objects and execute code (constructors, custom <code>readObject</code>
+    methods) along the way — a crafted stream exploiting a class already on the classpath can
+    trigger arbitrary code execution, which is exactly why untrusted input is dangerous.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What would you actually recommend instead of
+    <code>Serializable</code> for data crossing a trust boundary?"</b> A safer format like JSON,
+    or a dedicated serialization library with explicit allow-listing of which classes may be
+    deserialized — never Java's built-in mechanism unfiltered against untrusted input.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Implementing <code>Serializable</code> lets an object's state convert
+    to a byte stream and back. <code>serialVersionUID</code> pins a version identifier so the
+    reader can check compatibility with the writer — without one, the compiler generates one
+    that can silently change and break old data. Separately, deserializing data from an
+    untrusted source is a well-documented security risk — crafted byte streams can trigger
+    arbitrary code execution — so untrusted input should never go through Java's built-in
+    deserialization unfiltered."</p>
+    <ul>
+      <li><code>serialVersionUID</code> missing → <span class="hl hl-blue">compiler-generated, can silently change</span> between builds.</li>
+      <li>Version mismatch → <span class="hl hl-inter"><code>InvalidClassException</code></span>, not silent data corruption.</li>
+      <li>Untrusted byte stream + <code>Serializable</code> → <span class="hl hl-hot">a well-documented, real attack class</span>.</li>
+      <li>Safer alternative → <span class="hl hl-basic">JSON or an allow-listing serialization library</span> for anything crossing a trust boundary.</li>
+      <li>Trust boundary → <span class="hl hl-adv">the deciding factor</span>, not whether the data "looks" safe.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Implementing <code>java.io.Serializable</code> is a marker — it tells the JVM a class's
+      state is allowed to be written out via <code>ObjectOutputStream</code> and read back via
+      <code>ObjectInputStream</code>. The <span class="hl hl-blue">serialVersionUID</span> field
+      that comes with it is what lets the reader confirm the class version it has locally
+      actually matches the version that wrote the stream it's reading. Without an explicit one,
+      the compiler computes a UID from details of the class (its members, modifiers, and more) —
+      details that can change across compiler versions or even harmless-looking edits, which
+      silently changes the generated UID and breaks deserialization of previously-written data
+      with an <code>InvalidClassException</code>, even though nothing about the class's actual
+      behavior changed.</p>
+
+      <p>Separately — and more seriously — <span class="hl hl-hot">deserializing untrusted
+      data</span> is a real, well-documented security risk, not a theoretical one.
+      <code>readObject()</code> reconstructs objects by invoking constructors and custom
+      deserialization logic implied by the stream itself; if an attacker controls the bytes and
+      the classpath happens to contain a class whose deserialization logic can be chained into
+      doing something dangerous, that chain can execute arbitrary code during the deserialization
+      call itself — before the calling code ever gets to inspect the resulting object.</p>
+
+      <p>The standing guidance that follows from this: use Java's built-in
+      <code>Serializable</code> mechanism only for data you fully control (your own
+      application's internal state, written and read by the same trusted codebase) — never for
+      data arriving from outside a trust boundary. For anything crossing that boundary, prefer a
+      safer format like JSON, or a dedicated serialization library that supports allow-listing
+      exactly which classes are permitted to be deserialized.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Trusted source</th><th>Untrusted source</th></tr></thead>
+        <tbody>
+          <tr><th>Risk level</th><td class="yes">normal versioning concerns only</td><td class="no">serious, documented code-execution risk</td></tr>
+          <tr><th>Recommended approach</th><td><code>Serializable</code> is fine</td><td>JSON, or allow-listed deserialization</td></tr>
+          <tr><th>serialVersionUID still matters?</th><td>✅ yes — avoids version breakage</td><td>n/a — don't use raw <code>Serializable</code> here</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">Session</span> <span class="kw">implements</span> <span class="ty">Serializable</span> {
+    <span class="kw">private</span> <span class="kw">static</span> <span class="kw">final</span> <span class="kw">long</span> serialVersionUID = <span class="num">1L</span>; <span class="cx-ok">// ✅ pinned explicitly</span>
+    <span class="kw">private</span> <span class="ty">String</span> userId;
+    <span class="cx-cmt">// adding a field later won't silently change this UID</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">An explicit <code>serialVersionUID</code> means a later field addition
+      doesn't accidentally break deserialization of data written before the change.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">byte</span>[] rawBytesFromAnHttpRequest = request.getBody(); <span class="cx-cmt">// attacker-controlled</span>
+
+<span class="kw">try</span> (<span class="ty">ObjectInputStream</span> in = <span class="kw">new</span> <span class="ty">ObjectInputStream</span>(
+        <span class="kw">new</span> <span class="ty">ByteArrayInputStream</span>(rawBytesFromAnHttpRequest))) {
+    <span class="ty">Object</span> obj = in.readObject(); <span class="cx-err">// ❌ a documented, serious risk on untrusted bytes</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Calling <code>readObject()</code> directly on attacker-controlled bytes
+      is the exact shape of the real-world vulnerability class this topic is about.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Java</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="ty">String</span> json = request.getBody(); <span class="cx-cmt">// still untrusted, but...</span>
+<span class="ty">SessionDto</span> dto = objectMapper.readValue(json, SessionDto.<span class="kw">class</span>);
+<span class="cx-ok">// ✅ a data-only format with a known schema — no arbitrary object graph to exploit</span></code></pre>
+      </div>
+      <p class="cx-note">Parsing into a known, data-only shape removes the mechanism the attack
+      class relies on — there's no arbitrary class graph being reconstructed from the bytes.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Your own app writes and reads its own serialized cache files</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ26a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">TRUSTED ROUND-TRIP</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">writeObject()</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">your own code</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcJ26a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ Fine to use</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#166534">pin serialVersionUID</text>
+            </svg>
+          </div>
+          <p class="uc-what">A cache file only your own trusted code ever writes and reads is a
+          legitimate use of <code>Serializable</code> — just pin
+          <code>serialVersionUID</code> so a future code change doesn't break old cache files.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Trusted round-trip → Serializable is fine, version it explicitly.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> An API endpoint deserializes a client-supplied byte stream</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ26b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">CLIENT-SUPPLIED BYTES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">readObject(request)</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">attacker-controlled</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcJ26b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🐛 Code execution risk</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">real attack class</text>
+            </svg>
+          </div>
+          <p class="uc-what">Any endpoint that deserializes a byte stream a client controls is
+          exposed to this exact risk. <b>A common interview trap:</b> assuming input validation
+          on the resulting object is enough — the dangerous part happens during deserialization
+          itself, before any validation code runs.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Client-controlled bytes + readObject() → never do this unfiltered.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> A class gets a new field, and old serialized data stops loading</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcJ26c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">VERSION MISMATCH</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">No explicit UID</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">compiler-generated</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcJ26c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">InvalidClassException</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">old data rejected</text>
+            </svg>
+          </div>
+          <p class="uc-what">Without a pinned <code>serialVersionUID</code>, the compiler's
+          generated UID can change on a routine class edit — old data that used to deserialize
+          fine now fails with <code>InvalidClassException</code>, even though nothing
+          dangerous happened.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No pinned UID → a routine class edit can break old data.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A legacy internal service accepts a serialized Java object over the network from a
+      caller your team doesn't fully control.</b> That's exactly the shape of several real,
+      widely-documented Java deserialization vulnerabilities — the fix isn't a smarter filter on
+      the resulting object, it's not deserializing untrusted bytes with
+      <code>Serializable</code> at all, switching that endpoint to a data-only format instead.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="25.html">← Reflection Costs, Dynamic Proxies and Annotations</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Java Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="27.html">Scenario: HashMap Behaves Unexpectedly with a Mutable Key →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Java · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
