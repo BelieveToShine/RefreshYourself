@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Why did cookies(), headers(), and params become async in Next.js 15 — and what happens to the old synchronous access?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Next.js 15's Async Request APIs — Next.js Advanced — RefreshYourself">
+<meta property="og:description" content="Why did cookies(), headers(), and params become async in Next.js 15 — and what happens to the old synchronous access?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Next.js 15's Async Request APIs — Next.js Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="nextjs/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#f4f4f5;--crumb-ink:#171717;">⏭️ Next.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Next.js 15's Async Request APIs</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Next.js · Advanced · Must Know</div>
+    <h1><code>params</code>, <code>cookies()</code>, <code>headers()</code> — why they all turned <span class="hl hl-hot">async</span> in Next.js 15</h1>
+    <p class="interview-q">"Why did cookies(), headers(), and params become async in Next.js 15?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+        <div class="wc-head">⏳ Async request APIs</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Rendering can't start on any part of a page that genuinely needs request-specific data (a cookie, a header, a route param) until that request has actually arrived — synchronous access forced Next.js to treat the whole page as blocked on it.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Starting in Next.js 15, <code>cookies()</code>, <code>headers()</code>, <code>draftMode()</code>, and the <code>params</code>/<code>searchParams</code> props all became Promise-based — <code>await</code>ed instead of read synchronously — so Next.js can start rendering the parts of a page that don't depend on them sooner.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Async request APIs = don't block the whole page on data that hasn't arrived yet.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Next.js 14 <span class="rarrow">→</span> <b>sync</b>, <code>params.slug</code></p>
+      <p class="rrow">Next.js 15 <span class="rarrow">→</span> <b>async</b>, <code>await params</code></p>
+      <p class="rrow">Next.js 16 <span class="rarrow">→</span> <b>sync access removed</b></p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> Next.js 15 is the <b>deprecation window</b> —
+    the old sync call still runs, but it's already on borrowed time.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 310" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shN10" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arN10" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">READING params (SAME IDEA FOR cookies() / headers())</text>
+
+      <g filter="url(#shN10)"><rect x="170" y="30" width="300" height="56" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="51" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">Next.js 14 and earlier</text>
+      <text x="320" y="70" text-anchor="middle" font-size="11" font-family="Fira Code" fill="#334155">const { slug } = params</text>
+
+      <path d="M320,86 V120" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arN10)"/>
+      <rect x="340" y="92" width="150" height="18" rx="9" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+      <text x="415" y="105" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">Next.js 15 changes this</text>
+
+      <g filter="url(#shN10)"><rect x="140" y="120" width="360" height="70" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="141" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">Next.js 15 (deprecation window)</text>
+      <text x="320" y="160" text-anchor="middle" font-size="11" font-family="Fira Code" fill="#92400e">const { slug } = await params</text>
+      <text x="320" y="177" text-anchor="middle" font-size="9.5" fill="#5b6472">old sync destructure still runs — now warns</text>
+
+      <path d="M320,190 V224" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arN10)"/>
+      <rect x="340" y="196" width="150" height="18" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+      <text x="415" y="209" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991b1b">Next.js 16 removes it</text>
+
+      <g filter="url(#shN10)"><rect x="170" y="224" width="300" height="56" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="245" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">Next.js 16</text>
+      <text x="320" y="263" text-anchor="middle" font-size="10" fill="#5b6472">sync access removed — await is required</text>
+    </svg>
+    <figcaption>Next.js 15 is the bridge: the old syntax still runs, but only until Next.js 16.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Writing <code>const { slug } = params</code> in Next.js 15+ code is not
+    safe long-term.</b> It still technically runs during the deprecation window, with a warning —
+    the forward-compatible form is <code>const { slug } = await params</code>.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why make these async in the first place?"</b> It lets Next.js start
+    rendering the parts of a page that don't depend on request-specific data before the request
+    itself (and its headers/cookies) has even fully arrived — a performance/architecture change,
+    not arbitrary API churn.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Starting in Next.js 15, cookies(), headers(), draftMode(), and the
+    params/searchParams props all became Promise-based — you await them instead of reading them
+    synchronously. The old synchronous access still works with a deprecation warning in Next.js
+    15, and is removed starting in Next.js 16."</p>
+    <ul>
+      <li>Next.js 15 → <span class="hl hl-hot">await params / cookies() / headers()</span>, sync still runs but warns.</li>
+      <li>Next.js 16 → <span class="hl hl-hot">sync access removed</span> entirely.</li>
+      <li>Why → <span class="hl hl-blue">lets non-request-dependent parts of a page start rendering sooner</span>.</li>
+      <li>Forward-compatible form → <span class="hl hl-basic"><code>await params</code>, not <code>params.slug</code></span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Before this change, <code>params</code>, <code>searchParams</code>, <code>cookies()</code>,
+      and <code>headers()</code> were read <span class="hl hl-blue">synchronously</span> — a plain
+      object or function call, available the instant the component ran. That convenience came
+      with a cost: anything touching these values had to wait for request data that genuinely
+      isn't known until the request itself has arrived.</p>
+
+      <p><span class="hl hl-hot">Starting in Next.js 15</span>, all of these became
+      Promise-based. <code>await cookies()</code>, <code>await headers()</code>, <code>await
+      params</code> — the shape of the call barely changes, but it lets the framework start
+      rendering everything that doesn't depend on request data while that data is still arriving,
+      instead of serializing the whole page behind it.</p>
+
+      <p>Next.js 15 keeps the old synchronous form working, with a console warning — a real
+      deprecation window, not a hard break yet. <b>That sync fallback is removed starting in
+      Next.js 16</b>, so code still written the old way needs to move to <code>await</code>
+      before upgrading past 15.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Next.js 14 and earlier</th><th>Next.js 15</th><th>Next.js 16</th></tr></thead>
+        <tbody>
+          <tr><th>Reading <code>params</code></th><td><code>params.slug</code></td><td><code>await params</code> (sync still runs, warns)</td><td><code>await params</code> only</td></tr>
+          <tr><th><code>cookies()</code> / <code>headers()</code></th><td>synchronous call</td><td>returns a Promise — <code>await</code> it</td><td>Promise only</td></tr>
+          <tr><th>Old sync code</th><td>the only way</td><td>still runs, deprecation warning</td><td>no longer works</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JSX</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Next.js 14 and earlier — synchronous</span>
+<span class="kw">export</span> <span class="kw">default</span> <span class="kw">function</span> Page({ params }) {
+  <span class="kw">const</span> { slug } = params; <span class="cx-cmt">// plain object, no await</span>
+  <span class="kw">return</span> &lt;h1&gt;{slug}&lt;/h1&gt;;
+}</code></pre>
+      </div>
+      <p class="cx-note">Still the only form that <b>exists</b> before Next.js 15 — nothing to
+      await yet.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JSX</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Next.js 15 — correct, forward-compatible form</span>
+<span class="kw">export</span> <span class="kw">default</span> <span class="kw">async</span> <span class="kw">function</span> Page({ params }) {
+  <span class="kw">const</span> { slug } = <span class="kw">await</span> params; <span class="cx-ok">// ✅ ready for Next.js 16</span>
+  <span class="kw">return</span> &lt;h1&gt;{slug}&lt;/h1&gt;;
+}
+
+<span class="cx-err">// const { slug } = params;   // ⚠️ still runs in 15, warns, removed in 16</span></code></pre>
+      </div>
+      <p class="cx-note">Same destructure, same variable — only the <code>await</code> changes,
+      and it's the part that keeps working past Next.js 15.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your build logs suddenly fill with deprecation warnings after upgrading to Next.js
+      15, even though nothing visibly broke.</b> That's expected — every route/layout still
+      reading <code>params</code> or <code>cookies()</code> synchronously keeps working during
+      this release, just noisily. Treat the warnings as a to-do list: fix them before the jump to
+      Next.js 16, where the old sync calls stop working entirely.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="9.html">← Turbopack vs. Webpack</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Next.js Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="11.html">Securing Server Actions →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Next.js · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A component is re-rendering far more often than you'd expect — how do you track down why?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: Debugging Unexpected Re-Renders — Vue.js Advanced — RefreshYourself">
+<meta property="og:description" content="A component is re-rendering far more often than you'd expect — how do you track down why?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: Debugging Unexpected Re-Renders — Vue.js Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="vuejs/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ecfdf5;--crumb-ink:#42b883;">💚 Vue.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: Debugging Unexpected Re-Renders</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Vue.js · Advanced · Must Know</div>
+    <h1>A component re-renders too often — chase <span class="hl hl-hot">the reference</span>, not <span class="hl hl-blue">the values</span></h1>
+    <p class="interview-q">"A component is re-rendering far more often than you'd expect — how do you track down why?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">🔁 Unexpected Re-Renders</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A component re-renders far more than the data flowing into it seems to justify — the usual culprits are an inline object/array literal created fresh every render, or a watcher with no real dependency boundary, and none of them throw an error to point at.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Use Vue DevTools' render tracking to confirm which component re-renders and how often, then check whether the "same-looking" dependency that triggered it is actually a brand-new object/array reference each time.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Same values, different reference — that's almost always the actual trigger.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Unexpected re-render = <b>"a dependency that LOOKS the same but is a NEW reference every render."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <code>{a:1}</code> is never <code>===</code> to last render's <code>{a:1}</code>, even though every value inside it matches.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 690 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh17" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar17Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="345" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">PARENT RE-RENDERS, CHILD HAS A STABLE-LOOKING PROP</text>
+
+      <g filter="url(#sh17)"><rect x="35" y="55" width="140" height="70" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="105" y="83" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Parent renders</text>
+      <text x="105" y="99" text-anchor="middle" font-size="10" fill="#5b6472">for any reason</text>
+      <text x="105" y="113" text-anchor="middle" font-size="10" fill="#5b6472">at all</text>
+
+      <path d="M175,90 H195" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar17Gray)"/>
+
+      <g filter="url(#sh17)"><rect x="195" y="55" width="140" height="70" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="265" y="83" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">New {} each time</text>
+      <text x="265" y="99" text-anchor="middle" font-size="9.5" fill="#5b6472">:config="{a:1}"</text>
+      <text x="265" y="113" text-anchor="middle" font-size="9.5" fill="#5b6472">in the template</text>
+
+      <path d="M335,90 H355" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar17Gray)"/>
+
+      <g filter="url(#sh17)"><rect x="355" y="55" width="140" height="70" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="425" y="83" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">Child sees a</text>
+      <text x="425" y="99" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">"different" prop</text>
+      <text x="425" y="113" text-anchor="middle" font-size="9.5" fill="#5b6472">same values inside</text>
+
+      <path d="M495,90 H515" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#ar17Gray)"/>
+
+      <g filter="url(#sh17)"><rect x="515" y="55" width="140" height="70" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="585" y="83" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">Child re-renders</text>
+      <text x="585" y="99" text-anchor="middle" font-size="10" fill="#5b6472">🐛 unnecessarily</text>
+
+      <rect x="195" y="152" width="300" height="24" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+      <text x="345" y="168" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">Reference check fails — never "===" the old one</text>
+
+      <text x="345" y="210" text-anchor="middle" font-size="10.5" fill="#5b6472">Fix: hoist the literal into a computed(), or build it once outside the render path</text>
+    </svg>
+    <figcaption>Identical-looking values, a brand-new object every render — that's the "different" prop the child sees.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Assuming "same values means same reference."</b> A freshly-created
+    <code>{a: 1}</code> object literal is never <code>===</code> to a previous render's
+    <code>{a: 1}</code>, even though they look identical.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's the actual fix once you've found the inline object literal?"</b>
+    Hoist it into a <code>computed</code> — cached, and only produces a new reference when its own
+    dependencies actually change — or define it once outside the render path entirely if it's
+    truly static.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd use Vue DevTools' render tracking to confirm which component is
+    re-rendering and on what, then look for a dependency that looks identical between renders but
+    is actually a new object, array, or inline literal reference each time — an inline prop
+    object, a method called in the template that returns a new array, or a watcher with too wide
+    a dependency boundary are the usual suspects."</p>
+    <ul>
+      <li>Vue DevTools render tracking → <span class="hl hl-blue">confirms which component re-renders and how often</span>.</li>
+      <li>Inline object/array literal prop → <span class="hl hl-hot">a new reference every render, even with identical values</span>.</li>
+      <li>Fix → <span class="hl hl-basic">hoist it into a `computed`</span>, or define it once outside the render path.</li>
+      <li>Watcher with no clear dependency boundary → <span class="hl hl-inter">fires on changes wider than it actually needs</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Start with <span class="hl hl-blue">Vue DevTools' render tracking</span> (the component
+      inspector panel), which can flag exactly which component re-rendered and, often, which
+      reactive dependency changed to cause it. Once you know the component, the real question is
+      never "did the value change" — it's "did the <i>reference</i> change," because that's what
+      Vue's reactivity and prop-diffing actually compare for objects and arrays.</p>
+
+      <p>The classic case: a computed or method called directly inside the template
+      (<code>:config="getConfig()"</code>) that builds and returns a new object or array literal
+      on every single call. Even if every property inside it is identical to last render's, it's
+      a brand-new value in memory — the child receiving it as a prop sees a "different" reference
+      and re-renders, with nothing in the values themselves actually having changed.</p>
+
+      <p>A prop passed a new <span class="hl hl-hot">inline object literal</span> directly in the
+      parent's template (<code>:config="{a: 1}"</code>) is the same bug from the other direction —
+      the parent recreates that literal every time it renders, regardless of whether <code>a</code>
+      ever changes. A watcher with no real dependency boundary — watching a whole object instead of
+      the one field it actually cares about — fires on changes to parts of that object the watcher
+      never needed to react to at all.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>&lt;template&gt;
+  &lt;Child :config=<span class="str">"{ a: 1 }"</span> /&gt;  <span class="cx-err">// ❌ a NEW object every single render</span>
+&lt;/template&gt;</code></pre>
+      </div>
+      <p class="cx-note">Even though <code>{ a: 1 }</code> never changes in value, it's a
+      <b>different reference</b> every time the parent renders — the child re-renders too.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>&lt;script setup&gt;
+<span class="kw">import</span> { computed } <span class="kw">from</span> <span class="str">'vue'</span>;
+
+<span class="kw">const</span> config = computed(() => ({ a: <span class="num">1</span> })); <span class="cx-ok">// ✅ stable reference, recomputed only if deps change</span>
+&lt;/script&gt;
+&lt;template&gt;
+  &lt;Child :config=<span class="str">"config"</span> /&gt;
+&lt;/template&gt;</code></pre>
+      </div>
+      <p class="cx-note">A <code>computed</code> caches its result — the child gets the
+      <b>same object reference</b> across renders until a real dependency actually changes.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> An inline object/array literal is passed as a prop, directly in the parent's template</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">:config="{a:1}"</text>
+              <path d="M210,33 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc17a)"/>
+              <rect x="290" y="19" width="170" height="28" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">child re-renders</text>
+            </svg>
+          </div>
+          <p class="uc-what">The parent rebuilds that literal fresh every render, so the child
+          always receives a "new" prop reference, regardless of whether its contents ever
+          change. <b>This is the #1 scenario you'll actually run into.</b></p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Inline literal prop → a new reference, every single render.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> A computed or method called inline in the template returns a new array/object every call</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">getItems() called</text>
+              <path d="M210,33 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc17b)"/>
+              <rect x="290" y="19" width="170" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">new [] each call</text>
+            </svg>
+          </div>
+          <p class="uc-what">A plain method invoked in the template runs again on every render and
+          builds a brand-new array or object each time — unlike a <code>computed</code>, it has no
+          cache to return a stable reference from.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A template-called method has no cache — every call is a fresh value.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A watcher has no real dependency boundary — it watches a whole object instead of one field</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">watch(wholeObject)</text>
+              <path d="M210,33 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc17c)"/>
+              <rect x="290" y="19" width="170" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">fires too often</text>
+            </svg>
+          </div>
+          <p class="uc-what">Watching an entire reactive object fires the callback for changes to
+          <i>any</i> field on it, not just the one the watcher actually cares about — a candidate
+          might assume "it's watching, so it must be precise," when the boundary is really the
+          whole object.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Watch the specific field, not the whole object, unless you mean to.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A product-list page feels janky, and a quick check in Vue DevTools shows a card
+      component re-rendering on every scroll event, not just when its own data changes.</b> The
+      parent passes a filter object built inline in the template — hoisting that into a
+      <code>computed</code> gives every card a stable reference again, and the unnecessary
+      re-renders stop.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="16.html">← Vue DevTools and Debugging Reactivity</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Vue.js Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="18.html">Scenario: A v-for List Loses State on Reorder →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Vue.js · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

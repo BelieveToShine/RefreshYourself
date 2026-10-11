@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="When would you still reach for SWR or TanStack Query in a Next.js App Router project?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="fetch() Caching vs. SWR/TanStack Query — Next.js Intermediate — RefreshYourself">
+<meta property="og:description" content="When would you still reach for SWR or TanStack Query in a Next.js App Router project?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>fetch() Caching vs. SWR/TanStack Query — Next.js Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="nextjs/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#f4f4f5;--crumb-ink:#171717;">⏭️ Next.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">fetch() Caching vs. SWR/TanStack Query</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Next.js · Intermediate · Should Know</div>
+    <h1><code>fetch()</code> already caches on the server — <span class="hl hl-inter">so why would you still reach for SWR?</span></h1>
+    <p class="interview-q">"When would you still reach for SWR or TanStack Query in a Next.js App Router project?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🗄️ fetch() Data Cache</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A Server Component re-fetching the same rarely-changing data on every single request would be slow and wasteful.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Next's own <code>fetch()</code> caching (the Data Cache, <code>revalidate</code> options) caches a server-side fetch automatically, scoped to the server-rendering lifecycle.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">fetch() caching = server-side, settled once per cache window.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🔄 SWR / TanStack Query</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Some data genuinely needs to refetch based on client-side events — the window regaining focus, an interval, a search box's own keystrokes — which a one-time server fetch can't react to after the page has already loaded.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A client-side library refetches on those events automatically, inside a Client Component, with built-in loading/error state and cache-sharing across components.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Client libraries = reactive to whatever happens after the page already loaded.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>fetch()</code> <span class="rarrow">→</span> <b>server</b>-side, one-time per cache window</p>
+      <p class="rrow">SWR / TanStack <span class="rarrow">→</span> <b>client</b>-side, reactive to focus/interval</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>fetch()</code></b> answers "what's true right now, on the server." <b>SWR/TanStack</b> answers "keep this updated while the user's looking."</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 230" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shR17" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arR17" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arR17Amber" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="160" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.3">SERVER COMPONENT — fetch()</text>
+      <text x="480" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e" letter-spacing="0.3">CLIENT COMPONENT — SWR/TANSTACK</text>
+      <path d="M320,30 V200" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <g filter="url(#shR17)"><rect x="40" y="34" width="240" height="36" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="56" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🧩 Server Component</text>
+      <g filter="url(#shR17)"><rect x="360" y="34" width="240" height="36" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="56" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🧩 Client Component</text>
+
+      <path d="M160,70 V88" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR17)"/>
+      <path d="M480,70 V88" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR17)"/>
+
+      <g filter="url(#shR17)"><rect x="30" y="88" width="260" height="42" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="160" y="108" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">fetch(url, { cache })</text>
+      <text x="160" y="124" text-anchor="middle" font-size="9.5" fill="#5b6472">cached per revalidate window</text>
+
+      <g filter="url(#shR17)"><rect x="350" y="88" width="260" height="42" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="480" y="108" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">useSWR() / useQuery()</text>
+      <text x="480" y="124" text-anchor="middle" font-size="9.5" fill="#5b6472">refetch on focus / interval</text>
+
+      <path d="M160,130 V148" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR17)"/>
+      <path d="M480,130 V148" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arR17Amber)"><animate attributeName="stroke-dashoffset" values="7;0" dur="1s" repeatCount="indefinite"/></path>
+
+      <g filter="url(#shR17)"><rect x="30" y="148" width="260" height="38" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="171" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ cached once per window</text>
+
+      <g filter="url(#shR17)"><rect x="350" y="148" width="260" height="38" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="171" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔁 stays fresh while open</text>
+
+      <text x="320" y="214" text-anchor="middle" font-size="11" fill="#5b6472">fetch() answers once per request; SWR/TanStack keep answering while you're looking</text>
+    </svg>
+    <figcaption>Server-side caching settles once per window; the client library's job only starts after that.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Reaching for SWR or TanStack Query inside a Server Component.</b> Their value — client-side caching, refetch-on-focus, state tied to React re-renders — only applies in a Client Component; a Server Component should just call Next's own <code>fetch()</code> directly.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"When would a Client Component need its own data-fetching library instead of just receiving server-fetched data as a prop?"</b> When the data genuinely needs to update after the initial load based on client-side interaction — live polling, refetch-on-window-focus, or a search-as-you-type result list.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Next's own fetch() caching is for server-side data fetching inside Server Components — it settles once per request or revalidate window. SWR and TanStack Query solve a different problem: client-side data that needs to refetch based on client events like focus or an interval, with their own loading and error state built in."</p>
+    <ul>
+      <li><code>fetch()</code> <span class="hl hl-blue">→ Server Component default</span>, no library needed.</li>
+      <li>SWR / TanStack Query <span class="hl hl-inter">→ Client Component only</span>, reactive to focus/interval.</li>
+      <li>Built-in <span class="hl hl-basic">loading/error state and cache-sharing</span> is the real value they add.</li>
+      <li>Never the two <span class="hl hl-hot">in the same spot</span> — pick by which component type is doing the fetching.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Next.js extends the native <code>fetch()</code> so a call made inside a <span class="hl hl-blue">Server
+      Component</span> can be cached (the Data Cache) and revalidated on a schedule or on demand. It's built for
+      data that's genuinely a server-side concern — fetched once as part of producing a response, not something the
+      already-rendered page keeps checking on.</p>
+
+      <p><span class="hl hl-inter">SWR</span> and <span class="hl hl-inter">TanStack Query</span> are client-side
+      libraries solving a different problem entirely: data that needs to stay current *after* the page has already
+      loaded, driven by things that only happen in the browser — the tab regaining focus, a polling interval, a
+      user typing into a search box.</p>
+
+      <p>They're not competitors so much as tools for two different lifecycles — a Server Component's fetch happens
+      once as part of rendering a response; a client library's fetch happens again and again, for as long as the
+      component stays mounted and something tells it to refetch.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>fetch() (Server Component)</th><th>SWR / TanStack Query</th></tr></thead>
+        <tbody>
+          <tr><th>Runs</th><td>server-side, during rendering</td><td>client-side, in the browser</td></tr>
+          <tr><th>Refetch trigger</th><td>revalidate window / on-demand</td><td>focus, interval, user action</td></tr>
+          <tr><th>Loading/error state</th><td class="no">you write it yourself</td><td>built in</td></tr>
+          <tr><th>Best for</th><td>data that's a server concern</td><td>data that needs to stay live client-side</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JSX</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Server Component — no client library needed</span>
+<span class="kw">export</span> <span class="kw">default</span> <span class="kw">async</span> <span class="kw">function</span> Page() {
+  <span class="kw">const</span> res = <span class="kw">await</span> fetch(<span class="str">'https://api.example.com/stats'</span>, {
+    next: { revalidate: <span class="num">60</span> },  <span class="cx-ok">// ✅ cached, refreshed at most once a minute</span>
+  });
+  <span class="kw">const</span> stats = <span class="kw">await</span> res.json();
+  <span class="kw">return</span> &lt;Stats data={stats} /&gt;;
+}</code></pre>
+      </div>
+      <p class="cx-note">One fetch, cached by Next — <b>no loading state to write</b>, because it resolves before the page renders.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JSX</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="str">'use client'</span>;  <span class="cx-ok">// ✅ required — this is a Client Component</span>
+
+<span class="kw">function</span> LiveTicker() {
+  <span class="kw">const</span> { data, isLoading } = useSWR(<span class="str">'/api/price'</span>, fetcher, {
+    refreshInterval: <span class="num">5000</span>,  <span class="cx-ok">// 🔁 refetches every 5s while mounted</span>
+  });
+  <span class="kw">if</span> (isLoading) <span class="kw">return</span> &lt;Spinner /&gt;;
+  <span class="kw">return</span> &lt;p&gt;{data.price}&lt;/p&gt;;
+}</code></pre>
+      </div>
+      <p class="cx-note">The loading state and the repeating refetch <b>are the whole reason SWR is here</b>.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A dashboard page just needs today's numbers when it loads</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">ONE-TIME LOAD</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🧩 Server Component</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc17a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">✅ fetch() is enough</text>
+            </svg>
+          </div>
+          <p class="uc-what">Nothing on this page needs to update after it loads, so plain <code>fetch()</code> inside
+          the Server Component covers it completely — this is the <b>most common case</b>, and no client library is needed at all.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No reason to refetch after load → fetch() alone is the right call.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> A live price ticker or notification badge needs to stay current while the tab is open</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">KEEPS POLLING</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🧩 Client Component</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc17b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🔁 useSWR polling</text>
+            </svg>
+          </div>
+          <p class="uc-what">A server fetch only runs once when the page first renders — it has no way to keep
+          updating after that. <code>useSWR</code>'s <code>refreshInterval</code> keeps polling for as long as the
+          component stays mounted.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Needs to stay live after load → a client-side library, not fetch().</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You call <code>useSWR</code> inside a Server Component</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc17c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">WRONG COMPONENT TYPE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🧩 Server Component</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc17c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">❌ useSWR() errors</text>
+            </svg>
+          </div>
+          <p class="uc-what">Hooks like <code>useSWR</code>/<code>useQuery</code> rely on React state and effects,
+          which don't exist in a Server Component — it has to be marked <code>'use client'</code> first, and even
+          then the value this library adds (refetch-on-focus, client cache) is wasted if the data never needed to
+          update after load in the first place.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A client data hook needs a Client Component — no exceptions.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A trading dashboard shows a price that updates every few seconds, inside a page that was otherwise
+      server-rendered.</b> The surrounding layout and static data load once via <code>fetch()</code> in a Server
+      Component, while just the price widget is a small Client Component using <code>useSWR</code> with a short
+      <code>refreshInterval</code> — each tool handles the half of the page it's actually good at.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="16.html">← Auth: Middleware vs. Server Component Checks</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Next.js Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="18.html">Internationalized (i18n) Routing →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Next.js · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

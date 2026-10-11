@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How would you structure a real Vue app's test suite across unit, component, and E2E layers?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Testing Strategy at Scale — Unit vs. Component vs. E2E — Vue.js Advanced — RefreshYourself">
+<meta property="og:description" content="How would you structure a real Vue app's test suite across unit, component, and E2E layers?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Testing Strategy at Scale — Unit vs. Component vs. E2E — Vue.js Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="vuejs/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ecfdf5;--crumb-ink:#42b883;">💚 Vue.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Testing Strategy at Scale</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Vue.js · Advanced · Should Know</div>
+    <h1>Unit, component, E2E — <span class="hl hl-blue">which test actually catches</span> which bug</h1>
+    <p class="interview-q">"How would you structure a real Vue app's test suite across unit, component, and E2E layers?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🧪 Testing strategy</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Testing everything at one layer either misses real bugs (unit tests alone never catch a broken page flow) or makes the suite painfully slow and brittle (E2E tests alone take forever and break on unrelated UI changes).</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Split coverage across three layers by what each is actually good at: many fast unit tests for logic, a solid middle layer of component tests for template/logic integration, and a small number of E2E tests for the critical flows only.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">More tests the lower/faster the layer — fewer the higher/slower it gets.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Unit <span class="rarrow">→</span> <b>fast</b>, logic only, no DOM</p>
+      <p class="rrow">Component <span class="rarrow">→</span> <b>medium</b>, real component + template</p>
+      <p class="rrow">E2E <span class="rarrow">→</span> <b>slow</b>, real browser, real app</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> a pyramid — <b>many</b> unit tests at the base, <b>few</b> E2E tests at the top.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shD12" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">THE TESTING PYRAMID — WIDER LAYER, MORE TESTS</text>
+
+      <g filter="url(#shD12)"><rect x="210" y="40" width="220" height="56" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="62" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🌐 E2E</text>
+      <text x="320" y="78" text-anchor="middle" font-size="10" fill="#5b6472">few, slow — real browser</text>
+
+      <g filter="url(#shD12)"><rect x="150" y="112" width="340" height="56" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="134" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">🧩 Component</text>
+      <text x="320" y="150" text-anchor="middle" font-size="10" fill="#5b6472">medium — mounts real components</text>
+
+      <g filter="url(#shD12)"><rect x="70" y="184" width="500" height="56" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="206" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">⚡ Unit</text>
+      <text x="320" y="222" text-anchor="middle" font-size="10" fill="#5b6472">many, fast — composables &amp; plain functions, no DOM</text>
+    </svg>
+    <figcaption>Coverage shrinks as speed drops — many fast unit tests, a solid middle layer, a few critical E2E tests.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"E2E is the most realistic, so test everything there" is backwards.</b> E2E is also the slowest and most brittle layer — the standard guidance is many unit tests, a solid middle layer of component tests, and only a small number of E2E tests for critical flows.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Where would testing a Pinia store itself fit?"</b> Largely at the unit level — a store's actions/getters are plain-enough logic to test directly without mounting any component, same as testing a composable.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Unit tests target a composable or plain function in isolation — fast, no DOM. Component tests mount a real component with Vue Test Utils and assert on rendered output and interaction. E2E tests drive a real browser against the running app — slow, but the only layer that catches real cross-page and network issues. Most of the suite should be unit tests, a smaller set component tests, and only critical flows covered end-to-end."</p>
+    <ul>
+      <li>Unit <span class="hl hl-basic">→ logic in isolation</span>, no DOM, fastest to run.</li>
+      <li>Component <span class="hl hl-inter">→ template + logic together</span>, medium speed.</li>
+      <li>E2E <span class="hl hl-hot">→ real browser, real app</span> — slow, so keep it to critical flows.</li>
+      <li>Pinia store logic <span class="hl hl-blue">→ test at the unit level</span>, same as a composable.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-basic">Unit tests</span> call a composable or plain function directly
+      and assert on its return value — no component, no template, no DOM at all. They're the
+      cheapest tests to write and the fastest to run, which is exactly why there should be the
+      most of them.</p>
+
+      <p><span class="hl hl-inter">Component tests</span>, using Vue Test Utils, actually mount a
+      real component and let its template render — this is the layer that catches a bug where the
+      logic is correct but the template binds it wrong (a typo'd prop name, a missing
+      <code>v-if</code>). It's slower than a unit test because it has to render, but far faster
+      than spinning up a real browser.</p>
+
+      <p><span class="hl hl-hot">E2E tests</span> (Cypress, Playwright) drive an actual browser
+      against the actual running app, including real network calls. They're the only layer that
+      catches a genuinely cross-page or cross-service issue — but they're slow and more likely to
+      break from an unrelated UI change, which is why they're reserved for the handful of flows
+      that matter most (checkout, login).</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Unit</th><th>Component</th><th>E2E</th></tr></thead>
+        <tbody>
+          <tr><th>Mounts a real component?</th><td class="no">❌ no</td><td>✅ yes</td><td>✅ yes, in a real browser</td></tr>
+          <tr><th>Speed</th><td>fastest</td><td>medium</td><td>slowest</td></tr>
+          <tr><th>Catches</th><td>logic bugs</td><td>template/logic integration bugs</td><td>cross-page/network bugs</td></tr>
+          <tr><th>Typical count in a suite</th><td>most tests</td><td>a solid middle layer</td><td>a small number, critical flows only</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// unit test — no component, no DOM</span>
+<span class="kw">import</span> { useCounter } <span class="kw">from</span> <span class="str">'./useCounter'</span>
+
+test(<span class="str">'increments the count'</span>, () =&gt; {
+  <span class="kw">const</span> { count, increment } = useCounter()
+  increment()
+  expect(count.value).toBe(<span class="num">1</span>)   <span class="cx-ok">// ✅ just calling a function</span>
+})</code></pre>
+      </div>
+      <p class="cx-note">No rendering happens here at all — this is as fast and cheap as a test
+      gets.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// component test — mounts the real component</span>
+<span class="kw">import</span> { mount } <span class="kw">from</span> <span class="str">'@vue/test-utils'</span>
+<span class="kw">import</span> Counter <span class="kw">from</span> <span class="str">'./Counter.vue'</span>
+
+test(<span class="str">'clicking the button updates the displayed count'</span>, <span class="kw">async</span> () =&gt; {
+  <span class="kw">const</span> wrapper = mount(Counter)
+  <span class="kw">await</span> wrapper.find(<span class="str">'button'</span>).trigger(<span class="str">'click'</span>)
+  expect(wrapper.text()).toContain(<span class="str">'1'</span>)  <span class="cx-ok">// ✅ catches a template/logic mismatch</span>
+})</code></pre>
+      </div>
+      <p class="cx-note">This catches a bug a unit test can't — the logic could be correct while
+      the template binds it to the wrong place.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// E2E test — a real browser against the running app</span>
+it(<span class="str">'completes checkout'</span>, () =&gt; {
+  cy.visit(<span class="str">'/cart'</span>)
+  cy.get(<span class="str">'[data-test=checkout]'</span>).click()
+  cy.get(<span class="str">'[data-test=confirmation]'</span>).should(<span class="str">'be.visible'</span>)
+  <span class="cx-ok">// ✅ real navigation, real network calls — reserved for critical flows</span>
+})</code></pre>
+      </div>
+      <p class="cx-note">Slow enough that only the handful of flows that truly matter get this
+      level of coverage.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A price-calculation composable used across several components</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc12a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">PURE LOGIC → UNIT TEST</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🧮 useDiscount()</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc12a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">⚡ fast unit tests</text>
+            </svg>
+          </div>
+          <p class="uc-what">Discount math has no DOM dependency at all — call it directly with a
+          range of inputs. This is the cheapest, most valuable place to put edge-case coverage
+          (zero, negative, over-100%-off).</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No DOM involved → it belongs at the unit layer.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> A form that should show a validation error on bad input</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc12b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">TEMPLATE REACTION → COMPONENT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">⌨️ Types bad input</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc12b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🧩 error text renders?</text>
+            </svg>
+          </div>
+          <p class="uc-what">This needs the actual template to react to state — mount the
+          component, trigger the input, and assert the error message actually shows up in the
+          rendered output.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Does the template react correctly? → component test.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> The checkout flow, end to end</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc12c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">CRITICAL FLOW → E2E ONLY</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🛒 Cart → pay → confirm</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc12c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🌐 real browser run</text>
+            </svg>
+          </div>
+          <p class="uc-what">Checkout spans multiple pages and a real payment call — exactly the
+          cross-page, cross-service behavior only an E2E test actually exercises. It's slow, so
+          it's one of the very few flows that earns this level of test.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Spans pages/services and it's business-critical → E2E, sparingly.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A mid-size e-commerce app with hundreds of components.</b> Its suite might run 800
+      unit tests covering composables and store logic, 150 component tests covering individual
+      UI pieces, and 10 E2E tests covering login, search, and checkout — the shape of the pyramid
+      in practice, not just in theory.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="11.html">← v-html and XSS</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Vue.js Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="13.html">Migrating from Vue 2 to Vue 3 →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Vue.js · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

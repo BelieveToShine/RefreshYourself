@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How would you structure routes for a SaaS app serving many different customer tenants?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: Designing Route Structure for a Multi-Tenant App — Next.js Advanced — RefreshYourself">
+<meta property="og:description" content="How would you structure routes for a SaaS app serving many different customer tenants?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: Designing Route Structure for a Multi-Tenant App — Next.js Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="nextjs/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#f4f4f5;--crumb-ink:#171717;">⏭️ Next.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: Designing Route Structure for a Multi-Tenant App</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Next.js · Advanced · Should Know</div>
+    <h1>One SaaS app, many tenants — <span class="hl hl-blue">path</span> or <span class="hl hl-hot">subdomain</span>?</h1>
+    <p class="interview-q">"How would you structure routes for a SaaS app serving many different customer tenants?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🧵 Path-Based <code>[tenant]/dashboard</code></div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Hard-coding tenant-specific logic scattered across many individual route files doesn't scale, and the team still needs a straightforward way to test a specific tenant locally.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A dynamic top-level segment (<code>[tenant]/dashboard</code>) reads the tenant straight from the URL path — simple to set up and test locally, with no DNS or certificate work needed.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Path-based tenancy = tenant in the URL path, simplest to stand up.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🌐 Subdomain-Based <code>tenant.example.com</code></div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A path-based URL doesn't give each customer what feels like their own real address, and some SaaS products want a genuine per-tenant domain.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Middleware resolves the subdomain (or a custom domain via a stored domain→tenant mapping) and rewrites internally to a shared route structure, passing the tenant down through a header or cookie — needs DNS and wildcard-certificate infrastructure.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Subdomain tenancy feels native per customer, at the cost of DNS/certificate infrastructure.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><b><code>Path-based</code></b> <span class="rarrow">→</span> simplest, test locally, no DNS</p>
+      <p class="rrow"><b><code>Subdomain-based</code></b> <span class="rarrow">→</span> native per-tenant, needs DNS/certs</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> resolve the tenant <b>once</b> in Middleware,
+    pass it down consistently — never scatter tenant logic across individual route files.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 265" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh22" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar22Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="ar22Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+      </defs>
+
+      <text x="160" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📂 /[tenant]/dashboard</text>
+      <text x="480" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🌐 tenant.example.com</text>
+      <path d="M320,10 V235" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <g filter="url(#sh22)"><rect x="60" y="34" width="200" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="52" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">Request: /acme/dashboard</text>
+      <text x="160" y="66" text-anchor="middle" font-size="9" fill="#5b6472">tenant in the URL path</text>
+      <path d="M160,74 V94" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#ar22Blue)"/>
+
+      <g filter="url(#sh22)"><rect x="50" y="94" width="220" height="44" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="113" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">App reads params.tenant</text>
+      <text x="160" y="128" text-anchor="middle" font-size="9" fill="#5b6472">= "acme", no Middleware needed</text>
+      <path d="M160,138 V158" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#ar22Blue)"/>
+
+      <g filter="url(#sh22)"><rect x="380" y="34" width="200" height="40" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="52" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">Request: acme.example.com</text>
+      <text x="480" y="66" text-anchor="middle" font-size="9" fill="#5b6472">tenant in the subdomain</text>
+      <path d="M480,74 V94" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#ar22Amber)"/>
+
+      <g filter="url(#sh22)"><rect x="370" y="94" width="220" height="44" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="113" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">Middleware resolves + rewrites</text>
+      <text x="480" y="128" text-anchor="middle" font-size="9" fill="#5b6472">tenant passed via header/cookie</text>
+      <path d="M480,138 V158" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#ar22Amber)"/>
+
+      <path d="M160,158 V182 H320 V202" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#ar22Blue)"/>
+      <path d="M480,158 V182 H320 V202" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#ar22Amber)"/>
+
+      <g filter="url(#sh22)"><rect x="200" y="202" width="240" height="44" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="221" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🧩 Same shared route structure</text>
+      <text x="320" y="236" text-anchor="middle" font-size="9" fill="#5b6472">same underlying app, two entry patterns</text>
+    </svg>
+    <figcaption>Two different ways to identify the tenant on the way in — both land on the exact same shared route structure underneath.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Hard-coding tenant-specific logic scattered across many individual route
+    files.</b> The scalable approach resolves the tenant once in Middleware and passes it down
+    consistently through a header or cookie — not a fresh "which tenant is this" check copied
+    into every route.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How would custom domains per tenant, not just subdomains, change
+    this?"</b> Middleware would need to map the incoming domain to a tenant ID — typically via a
+    lookup against a stored domain→tenant mapping — then proceed the same way as the subdomain
+    approach from there.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd resolve the tenant in one place — either a dynamic [tenant] URL
+    segment or Middleware reading the subdomain — and pass it down consistently from there,
+    rather than scattering tenant checks across individual route files. Path-based is simpler to
+    set up and test locally; subdomain-based feels more native per customer but needs DNS and
+    wildcard-certificate infrastructure."</p>
+    <ul>
+      <li>Path-based <code>[tenant]/dashboard</code> → <span class="hl hl-blue">simplest to set up and test locally</span>, no DNS needed.</li>
+      <li>Subdomain-based <code>tenant.example.com</code> → <span class="hl hl-inter">resolved in Middleware</span>, needs DNS/wildcard certificates.</li>
+      <li>Route Groups → <span class="hl hl-basic">separate a shared marketing/auth layout</span> from the tenant dashboard layout cleanly.</li>
+      <li>Resolve the tenant → <span class="hl hl-hot">once, in Middleware</span> — never scattered across individual routes.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>The <span class="hl hl-blue">path-based</span> approach is the plainest: a dynamic
+      top-level segment like <code>[tenant]</code> captures the tenant identifier directly from
+      the URL, and every route underneath it reads that same <code>params.tenant</code> value —
+      no extra infrastructure, and any tenant can be tested locally just by changing the URL.</p>
+
+      <p>The <span class="hl hl-inter">subdomain-based</span> approach moves tenant resolution
+      into Middleware, which runs before the route itself: it reads the incoming hostname, figures
+      out which tenant that subdomain belongs to, and rewrites the request internally to the same
+      shared route structure — passing the resolved tenant down through a header or cookie so the
+      actual page/route code doesn't need to know whether it arrived via subdomain or path. This
+      needs real DNS wildcard setup (<code>*.example.com</code>) and a matching wildcard
+      certificate, which path-based tenancy never has to deal with.</p>
+
+      <p>Either way, Route Groups (a folder in parentheses, like <code>(marketing)</code>) let a
+      shared public layout — a marketing site, a login page — sit cleanly alongside the
+      tenant-specific dashboard layout, without either one leaking into the other's folder
+      structure.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Path-based</th><th>Subdomain-based</th></tr></thead>
+        <tbody>
+          <tr><th>Tenant identified via</th><td>URL segment, <code>params.tenant</code></td><td>Middleware reading the hostname</td></tr>
+          <tr><th>Infrastructure needed</th><td>none extra</td><td>DNS wildcard + certificate</td></tr>
+          <tr><th>Local testing</th><td>✅ just change the URL</td><td>needs a local hosts/DNS setup</td></tr>
+          <tr><th>Feels like a real per-tenant address?</th><td>❌ no, shared domain</td><td>✅ yes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JSX</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// app/[tenant]/dashboard/page.js</span>
+<span class="kw">export default function</span> Dashboard({ params }) {
+  <span class="kw">const</span> { tenant } = params; <span class="cx-ok">// ✅ "acme" — straight from the URL path</span>
+  <span class="kw">return</span> &lt;p&gt;Dashboard for {tenant}&lt;/p&gt;;
+}</code></pre>
+      </div>
+      <p class="cx-note">No Middleware needed — the tenant is just a normal
+      <b>dynamic route param</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// middleware.js</span>
+<span class="kw">export function</span> middleware(request) {
+  <span class="kw">const</span> host = request.headers.get(<span class="str">'host'</span>) || <span class="str">''</span>;
+  <span class="kw">const</span> tenant = host.split(<span class="str">'.'</span>)[0]; <span class="cx-ok">// ✅ "acme" from acme.example.com</span>
+
+  <span class="kw">const</span> url = request.nextUrl.clone();
+  url.pathname = <span class="cx-ok">`/${tenant}${url.pathname}`</span>; <span class="cx-ok">// ✅ rewrite to the shared route structure</span>
+  <span class="kw">return</span> NextResponse.rewrite(url);
+}</code></pre>
+      </div>
+      <p class="cx-note">The rewrite happens <b>internally</b> — the URL the browser shows stays
+      <code>acme.example.com</code>, but the app serves it through the same shared
+      <code>[tenant]</code> route underneath.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A B2B SaaS product is adding its first few customers and needs to decide on a route
+      structure before onboarding scales past a handful of tenants.</b> Starting with a
+      path-based <code>[tenant]/dashboard</code> segment ships fastest and needs no DNS
+      infrastructure; if customers later expect their own subdomain, Middleware can be added to
+      resolve and rewrite without changing the underlying shared route structure at all.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="21.html">← Scenario: Hydration Mismatch in Production</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Next.js Advanced</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Next.js · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

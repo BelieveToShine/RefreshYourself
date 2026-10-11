@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Name the four caching layers in the Next.js App Router and what each one actually stores — they invalidate independently.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="The Four Caching Layers — Next.js Advanced — RefreshYourself">
+<meta property="og:description" content="Name the four caching layers in the Next.js App Router and what each one actually stores — they invalidate independently.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>The Four Caching Layers — Next.js Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="nextjs/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#f4f4f5;--crumb-ink:#171717;">⏭️ Next.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">The Four Caching Layers</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Next.js · Advanced · Must Know</div>
+    <h1>The App Router has <span class="hl hl-hot">four</span> caching layers — not <span class="hl hl-blue">one</span></h1>
+    <p class="interview-q">"Name the four caching layers in the Next.js App Router and what each one actually stores."</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🗂️ Four independent caches</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A bug report says "the data looks stale" — but the App Router has four separate caching layers, each populated and invalidated differently, so clearing or checking the wrong one wastes the whole investigation.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Treat each layer as its own thing — Request Memoization, Data Cache, Full Route Cache, Router Cache — and diagnose by asking which ONE of the four is still holding the old value.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Four caches, four different jobs — never debug "the cache" as if it were one thing.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Request Memoization <span class="rarrow">→</span> <b>one render pass</b>, dedupes fetch()</p>
+      <p class="rrow">Data Cache <span class="rarrow">→</span> <b>server</b>, across requests &amp; deploys</p>
+      <p class="rrow">Full Route Cache <span class="rarrow">→</span> <b>server</b>, rendered HTML + RSC</p>
+      <p class="rrow">Router Cache <span class="rarrow">→</span> <b>client</b>, this browser session</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> the first three live on the <b>server</b> and
+    are shared by every user. The <b>last one</b> lives in one person's browser tab.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shN1" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arN1" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arN1Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">A REQUEST FLOWS THROUGH ALL FOUR LAYERS, IN ORDER</text>
+
+      <rect x="18" y="46" width="453" height="196" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.6" stroke-dasharray="6 4"/>
+      <text x="244" y="66" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">🖥️ SERVER-SIDE</text>
+
+      <rect x="474" y="46" width="149" height="196" rx="16" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.6" stroke-dasharray="6 4"/>
+      <text x="548" y="66" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">📱 CLIENT-SIDE</text>
+
+      <g filter="url(#shN1)"><rect x="30" y="82" width="125" height="120" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="92" y="101" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Request</text>
+      <text x="92" y="116" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Memoization</text>
+      <text x="92" y="132" text-anchor="middle" font-size="10" fill="#5b6472">dedupes repeat</text>
+      <text x="92" y="146" text-anchor="middle" font-size="10" fill="#5b6472">fetch() per render</text>
+      <text x="92" y="166" text-anchor="middle" font-size="9" font-weight="700" fill="#64748b">ALWAYS ON</text>
+      <text x="92" y="179" text-anchor="middle" font-size="9" fill="#64748b">resets each request</text>
+
+      <g filter="url(#shN1)"><rect x="182" y="82" width="125" height="120" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="244" y="106" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">Data Cache</text>
+      <text x="244" y="124" text-anchor="middle" font-size="10" fill="#5b6472">persists results</text>
+      <text x="244" y="138" text-anchor="middle" font-size="10" fill="#5b6472">across requests &amp;</text>
+      <text x="244" y="152" text-anchor="middle" font-size="10" fill="#5b6472">deployments</text>
+      <text x="244" y="172" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">set via fetch() opts</text>
+
+      <g filter="url(#shN1)"><rect x="334" y="82" width="125" height="120" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="396" y="101" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">Full Route</text>
+      <text x="396" y="116" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">Cache</text>
+      <text x="396" y="132" text-anchor="middle" font-size="10" fill="#5b6472">static HTML +</text>
+      <text x="396" y="146" text-anchor="middle" font-size="10" fill="#5b6472">RSC payload</text>
+      <text x="396" y="166" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">cleared by</text>
+      <text x="396" y="179" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">revalidatePath/Tag</text>
+
+      <g filter="url(#shN1)"><rect x="486" y="82" width="125" height="120" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="548" y="106" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Router Cache</text>
+      <text x="548" y="124" text-anchor="middle" font-size="10" fill="#5b6472">RSC payloads for</text>
+      <text x="548" y="138" text-anchor="middle" font-size="10" fill="#5b6472">visited routes —</text>
+      <text x="548" y="152" text-anchor="middle" font-size="10" fill="#5b6472">this session only</text>
+      <text x="548" y="172" text-anchor="middle" font-size="9" font-weight="700" fill="#1d4ed8">cleared by refresh()</text>
+
+      <path d="M155,142 H182" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arN1)"/>
+      <path d="M307,142 H334" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arN1)"/>
+      <path d="M459,142 H486" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arN1Blue)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+
+      <text x="320" y="270" text-anchor="middle" font-size="10.5" font-weight="600" fill="#475569">Same word, four different jobs — each one invalidates on its own schedule.</text>
+    </svg>
+    <figcaption>Request Memoization → Data Cache → Full Route Cache are server-side and shared by every user; the Router Cache is the one layer that lives only in this browser.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"The cache" is not one thing.</b> A caching bug can only be diagnosed by
+    naming which of the four layers is actually holding the stale value — they invalidate
+    completely independently of each other.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Which of the four is scoped to a single user's browser session, not
+    shared across users?"</b> The Router Cache — it's entirely client-side, per browser tab. The
+    other three are server-side and shared by every user hitting that server or deployment.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"The App Router has four caching layers: Request Memoization dedupes
+    identical <code>fetch()</code> calls within one render pass, the Data Cache persists
+    <code>fetch()</code> results across requests and deployments, the Full Route Cache stores a
+    static route's rendered HTML and RSC payload, and the Router Cache holds RSC payloads
+    client-side for routes the user has already visited this session."</p>
+    <ul>
+      <li>Request Memoization → <span class="hl hl-blue">one render pass only</span>, always on, never persists.</li>
+      <li>Data Cache → <span class="hl hl-inter">server-side, across requests &amp; deployments</span>, controlled by fetch options.</li>
+      <li>Full Route Cache → <span class="hl hl-basic">rendered HTML + RSC payload</span>, cleared by <code>revalidatePath()</code>/<code>revalidateTag()</code>.</li>
+      <li>Router Cache → <span class="hl hl-blue">client-side only</span>, makes back/forward feel instant.</li>
+      <li>Stale-data bugs → <span class="hl hl-hot">name the exact layer</span> before touching anything — they invalidate independently.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Request Memoization</span> is the shortest-lived of the four —
+      it only exists for the duration of a single render pass on the server, automatically
+      deduping identical <code>fetch()</code> calls (same URL, same options) so ten components
+      asking for the same data only trigger one real network call. It resets on the very next
+      request and is never something you configure.</p>
+
+      <p>The <span class="hl hl-inter">Data Cache</span> and <span class="hl hl-basic">Full Route
+      Cache</span> both live on the server and both outlive a single request, but they cache
+      different things: the Data Cache stores raw <code>fetch()</code> results (keyed by URL and
+      options), while the Full Route Cache stores the already-rendered output — HTML plus the RSC
+      payload — for an entire static route. A route can lose its Full Route Cache entry via
+      <code>revalidatePath()</code>/<code>revalidateTag()</code> while the underlying Data Cache
+      entries that fed it are invalidated by the exact same calls, which is why the two are easy
+      to conflate even though they're genuinely separate stores.</p>
+
+      <p>The <span class="hl hl-blue">Router Cache</span> is the odd one out: it runs entirely in
+      the browser, holding RSC payloads for routes already visited in this session so navigating
+      back doesn't re-fetch anything. It has nothing to do with any other user's browser and
+      nothing to do with the server at all — it's cleared by <code>router.refresh()</code> or on
+      its own timer.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Request Memoization</th><th>Data Cache</th><th>Full Route Cache</th><th>Router Cache</th></tr></thead>
+        <tbody>
+          <tr><th>Lives where</th><td>server, one render</td><td>server</td><td>server</td><td>client (browser)</td></tr>
+          <tr><th>Stores</th><td>in-flight fetch() results</td><td>fetch() results</td><td>rendered HTML + RSC</td><td>visited routes' RSC</td></tr>
+          <tr><th>Persists across</th><td>nothing — resets per request</td><td>requests &amp; deploys</td><td>requests &amp; deploys</td><td>this browser session</td></tr>
+          <tr><th>Cleared by</th><td>n/a, automatic</td><td>fetch cache options expiring</td><td><code>revalidatePath</code>/<code>revalidateTag</code></td><td><code>router.refresh()</code> or timer</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">async</span> <span class="kw">function</span> Header() {
+  <span class="kw">const</span> user = <span class="kw">await</span> fetch(<span class="str">'https://api.example.com/user'</span>); <span class="cx-cmt">// call #1</span>
+  ...
+}
+
+<span class="kw">async</span> <span class="kw">function</span> Sidebar() {
+  <span class="kw">const</span> user = <span class="kw">await</span> fetch(<span class="str">'https://api.example.com/user'</span>); <span class="cx-ok">// ✅ deduped — same call, same render pass</span>
+  ...
+}</code></pre>
+      </div>
+      <p class="cx-note">Two components both call the exact same <code>fetch()</code> during one
+      render — Request Memoization means only <b>one</b> real network request happens.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">const</span> res = <span class="kw">await</span> fetch(<span class="str">'https://api.example.com/posts'</span>, {
+  <span class="kw">next</span>: { tags: [<span class="str">'posts'</span>] }, <span class="cx-cmt">// tags the Data Cache entry</span>
+});</code></pre>
+      </div>
+      <p class="cx-note">Tagging a <code>fetch()</code> call writes into the <b>Data Cache</b>, not
+      the Full Route Cache — the two are invalidated together by <code>revalidateTag</code> but
+      are physically separate stores.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A page shows the same data twice, fetched by two different components</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcN1a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">SAME fetch() TWICE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🧩 2 components</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">call same fetch()</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcN1a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">1️⃣ real request</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">Request Memoization</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is Request Memoization doing its job within a single render —
+          it's automatic and resets on the next request, so don't reach for it to explain data
+          staying fresh across page loads.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same fetch(), same render → deduped to one call, nothing more.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You call <code>revalidatePath()</code> but the page still shows old data</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcN1b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">STILL LOOKS STALE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">📄 Full Route Cache</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">cleared — correctly</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcN1b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">📱 Router Cache</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">still holding old RSC</text>
+            </svg>
+          </div>
+          <p class="uc-what">The server-side Full Route Cache may be cleared correctly while the
+          client's Router Cache still has the old RSC payload for that visited route. <b>A common
+          interview trap:</b> assuming one invalidation call reaches every layer.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Each layer needs its own trigger — one call doesn't clear all four.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">3</span> You're diagnosing exactly where a stale value is sitting</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcN1c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">NAME THE LAYER FIRST</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🐛 "Looks stale"</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">vague bug report</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcN1c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ 1 of 4, named</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#166534">correct fix applies</text>
+            </svg>
+          </div>
+          <p class="uc-what">Before touching any config, ask which of the four layers is actually
+          responsible — server-side (Data/Route) vs. client-side (Router) fixes are completely
+          different, and guessing wastes the investigation.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Name the layer before you reach for a fix.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A teammate reports "the dashboard still shows yesterday's numbers after I fixed the
+      data."</b> The fix: ask which layer. If they changed the database directly, the Data Cache
+      entry for that <code>fetch()</code> may still be valid. If they called
+      <code>revalidateTag()</code> server-side but the user never reloaded or navigated, the
+      client's Router Cache for that already-visited route can still be serving the old RSC
+      payload until a <code>router.refresh()</code> or a fresh navigation happens.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <a class="to-index" href="index.html">↑ Back to Next.js Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="2.html">Cache Invalidation →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Next.js · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

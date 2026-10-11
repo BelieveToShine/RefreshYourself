@@ -1735,5 +1735,263 @@ window.NAV_INDEX = {
         ]
       }
     ]
+  },
+  "vuejs/basic": {
+    track: "Vue.js",
+    trackIcon: "💚",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 9,
+        items: [
+          { n: 1, file: "1.html", short: "What is Vue.js?", title: "What is Vue.js?", tail: "", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Creating and Mounting a Vue", title: "Creating and Mounting a Vue App", tail: "", priority: "⭐" },
+          { n: 3, file: "3.html", short: "Template Syntax and", title: "Template Syntax and Interpolation", tail: "", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Directives Overview", title: "Directives Overview", tail: "v-bind, v-on, v-if, v-show, v-for, Class/Style Bindings, Modifiers", priority: "🔥" },
+          { n: 5, file: "5.html", short: "v-if vs. v-show", title: "v-if vs. v-show", tail: "", priority: "🔥" },
+          { n: 6, file: "6.html", short: "v-for and the Role of :key", title: "v-for and the Role of :key", tail: "", priority: "🔥" },
+          { n: 7, file: "7.html", short: "v-model", title: "v-model", tail: "Two-Way Data Binding", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Computed Properties vs Methods", title: "Computed Properties vs. Methods", tail: "", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Computed vs. Watch", title: "Computed vs. Watch", tail: "", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Lifecycle Hooks", title: "Lifecycle Hooks", tail: "", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11–18",
+        hot: 4,
+        items: [
+          { n: 11, file: "11.html", short: "Props", title: "Props", tail: "Parent to Child", priority: "🔥" },
+          { n: 12, file: "12.html", short: "Custom Events ($emit)", title: "Custom Events ($emit)", tail: "Child to Parent", priority: "🔥" },
+          { n: 13, file: "13.html", short: "Slots", title: "Slots", tail: "Default and Named", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Single File Components and", title: "Single File Components and Scoped Styles", tail: "", priority: "⭐" },
+          { n: 15, file: "15.html", short: "Options API vs Composition API", title: "Options API vs. Composition API", tail: "", priority: "🔥" },
+          { n: 16, file: "16.html", short: "ref() vs. reactive()", title: "ref() vs. reactive()", tail: "", priority: "🔥" },
+          { n: 17, file: "17.html", short: "<script setup>", title: "<script setup>", tail: "", priority: "⭐" },
+          { n: 18, file: "18.html", short: "Vue 2 vs. Vue 3", title: "Vue 2 vs. Vue 3", tail: "What Changed", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "vuejs/intermediate": {
+    track: "Vue.js",
+    trackIcon: "💚",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 8,
+        items: [
+          { n: 1, file: "1.html", short: "Vue Router", title: "Vue Router", tail: "Routes, <router-view>, <router-link>", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Dynamic Routes and Route", title: "Dynamic Routes and Route Params", tail: "", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Nested Routes", title: "Nested Routes", tail: "", priority: "⭐" },
+          { n: 4, file: "4.html", short: "Navigation Guards and", title: "Navigation Guards and Programmatic Navigation", tail: "", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Pinia vs. Vuex", title: "Pinia vs. Vuex", tail: "", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Pinia Store Basics", title: "Pinia Store Basics", tail: "State, Getters, Actions", priority: "🔥" },
+          { n: 7, file: "7.html", short: "provide/inject", title: "provide/inject", tail: "", priority: "⭐" },
+          { n: 8, file: "8.html", short: "watch vs. watchEffect", title: "watch vs. watchEffect", tail: "", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Reactivity Caveats", title: "Reactivity Caveats", tail: "Losing Reactivity on Destructure", priority: "🔥" },
+          { n: 10, file: "10.html", short: "Composables", title: "Composables", tail: "Reusable Composition API Logic", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11–20",
+        hot: 1,
+        items: [
+          { n: 11, file: "11.html", short: "Composables vs. Mixins", title: "Composables vs. Mixins", tail: "", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Custom Directives", title: "Custom Directives", tail: "", priority: "🧠" },
+          { n: 13, file: "13.html", short: "Dynamic Components", title: "Dynamic Components (<component :is>)", tail: "", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Async Components and", title: "Async Components and defineAsyncComponent", tail: "", priority: "⭐" },
+          { n: 15, file: "15.html", short: "<Teleport>", title: "<Teleport>", tail: "", priority: "⭐" },
+          { n: 16, file: "16.html", short: "<Suspense> and Async setup()", title: "<Suspense> and Async setup()", tail: "", priority: "🧠" },
+          { n: 17, file: "17.html", short: "<Transition> and", title: "<Transition> and <TransitionGroup>", tail: "", priority: "⭐" },
+          { n: 18, file: "18.html", short: "<KeepAlive>", title: "<KeepAlive>", tail: "", priority: "⭐" },
+          { n: 19, file: "19.html", short: "Template Refs and v-model", title: "Template Refs and v-model on Custom Components", tail: "", priority: "🔥" },
+          { n: 20, file: "20.html", short: "Testing Vue Components", title: "Testing Vue Components", tail: "", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 21–22",
+        hot: 0,
+        items: [
+          { n: 21, file: "21.html", short: "Error Handling", title: "Error Handling", tail: "errorCaptured and the Global Handler", priority: "🧠" },
+          { n: 22, file: "22.html", short: "Plugins and app.use()", title: "Plugins and app.use()", tail: "", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "vuejs/advanced": {
+    track: "Vue.js",
+    trackIcon: "💚",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 4,
+        items: [
+          { n: 1, file: "1.html", short: "reactive()", title: "reactive()", tail: "Vue 3's reactivity system under the hood", priority: "🔥" },
+          { n: 2, file: "2.html", short: "track() / trigger()", title: "track() / trigger()", tail: "how a computed property actually re-evaluates", priority: "🧠" },
+          { n: 3, file: "3.html", short: ".vue template → VNode tree", title: ".vue template → VNode tree → DOM", tail: "from a reactive data change to an updated DOM", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Static Hoisting & Patch", title: "Static Hoisting & Patch Flags", tail: "what makes Vue 3's diffing faster than Vue 2's", priority: "⭐" },
+          { n: 5, file: "5.html", short: "v-once vs v-memo", title: "v-once vs v-memo", tail: "when to reach for v-memo over the compiler's own optimization", priority: "⭐" },
+          { n: 6, file: "6.html", short: "h()", title: "h()", tail: "writing render functions instead of templates", priority: "🧠" },
+          { n: 7, file: "7.html", short: "Performance Tuning", title: "Performance Tuning", tail: "Lazy Loading, Code Splitting", priority: "🔥" },
+          { n: 8, file: "8.html", short: "pinia.use()", title: "pinia.use()", tail: "shared behavior across every Pinia store at once", priority: "🧠" },
+          { n: 9, file: "9.html", short: "Vue Router at Scale", title: "Vue Router at Scale", tail: "Meta Fields, Lazy Routes, Scroll Behavior", priority: "⭐" },
+          { n: 10, file: "10.html", short: "Server-Side Rendering and", title: "Server-Side Rendering and Hydration (and Nuxt's Role)", tail: "", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11–20",
+        hot: 4,
+        items: [
+          { n: 11, file: "11.html", short: "v-html and XSS", title: "v-html and XSS", tail: "", priority: "🔥" },
+          { n: 12, file: "12.html", short: "Testing Strategy at Scale", title: "Testing Strategy at Scale", tail: "Unit vs. Component vs. E2E", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Migrating from Vue 2 to Vue", title: "Migrating from Vue 2 to Vue 3", tail: "", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Micro-Frontends with Vue", title: "Micro-Frontends with Vue", tail: "", priority: "🧠" },
+          { n: 15, file: "15.html", short: "Advanced App-Level API", title: "Advanced App-Level API", tail: "Plugins, Multiple App Instances", priority: "🧠" },
+          { n: 16, file: "16.html", short: "Vue DevTools and Debugging", title: "Vue DevTools and Debugging Reactivity", tail: "", priority: "⭐" },
+          { n: 17, file: "17.html", short: "Scenario: Debugging", title: "Scenario: Debugging Unexpected Re-Renders", tail: "", priority: "🔥" },
+          { n: 18, file: "18.html", short: "Scenario: A v-for List", title: "Scenario: A v-for List Loses State on Reorder", tail: "", priority: "🔥" },
+          { n: 19, file: "19.html", short: "Scenario: Designing a", title: "Scenario: Designing a Large-Scale Pinia Store Architecture", tail: "", priority: "⭐" },
+          { n: 20, file: "20.html", short: "Scenario: Diagnosing a", title: "Scenario: Diagnosing a Memory Leak from an Unremoved Watcher", tail: "", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 21–22",
+        hot: 0,
+        items: [
+          { n: 21, file: "21.html", short: "Scenario: A Large List", title: "Scenario: A Large List Renders Slowly", tail: "", priority: "⭐" },
+          { n: 22, file: "22.html", short: "Scenario: SSR Hydration", title: "Scenario: SSR Hydration Mismatch in Production", tail: "", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "nextjs/basic": {
+    track: "Next.js",
+    trackIcon: "⏭️",
+    tier: "Basic",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 6,
+        items: [
+          { n: 1, file: "1.html", short: "What is Next.js?", title: "What is Next.js?", tail: "", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Pages Router vs. App Router", title: "Pages Router vs. App Router", tail: "", priority: "🔥" },
+          { n: 3, file: "3.html", short: "File-Based Routing Basics", title: "File-Based Routing Basics", tail: "", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Layouts", title: "Layouts", tail: "layout.js, template.js, and Why They Don't Re-Render", priority: "⭐" },
+          { n: 5, file: "5.html", short: "Dynamic Routes", title: "Dynamic Routes", tail: "[slug] and Catch-All Segments", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Navigation with <Link> vs.", title: "Navigation with <Link> vs. a Plain <a> Tag", tail: "", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Static Assets and the", title: "Static Assets and the public Folder", tail: "", priority: "⭐" },
+          { n: 8, file: "8.html", short: "next/image", title: "next/image", tail: "Automatic Image Optimization", priority: "🔥" },
+          { n: 9, file: "9.html", short: "next/font", title: "next/font", tail: "Font Optimization", priority: "⭐" },
+          { n: 10, file: "10.html", short: "CSS Support", title: "CSS Support", tail: "Global CSS, CSS Modules, Tailwind", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11–15",
+        hot: 3,
+        items: [
+          { n: 11, file: "11.html", short: "The Metadata API", title: "The Metadata API", tail: "SEO Tags", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Environment Variables and", title: "Environment Variables and NEXT_PUBLIC_", tail: "", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Server Components vs.", title: "Server Components vs. Client Components", tail: "", priority: "🔥" },
+          { n: 14, file: "14.html", short: "The 'use client' Directive", title: "The 'use client' Directive", tail: "", priority: "🔥" },
+          { n: 15, file: "15.html", short: "Rendering Strategies", title: "Rendering Strategies Overview", tail: "CSR, SSR, SSG, ISR", priority: "🔥" }
+        ]
+      }
+    ]
+  },
+  "nextjs/intermediate": {
+    track: "Next.js",
+    trackIcon: "⏭️",
+    tier: "Intermediate",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 8,
+        items: [
+          { n: 1, file: "1.html", short: "Data Fetching in Server", title: "Data Fetching in Server Components", tail: "", priority: "🔥" },
+          { n: 2, file: "2.html", short: "fetch() Cache and", title: "fetch() Cache and Revalidate Options", tail: "", priority: "🔥" },
+          { n: 3, file: "3.html", short: "getStaticProps/getServerSide", title: "getStaticProps/getServerSideProps vs. App Router Fetching", tail: "", priority: "⭐" },
+          { n: 4, file: "4.html", short: "Static Site Generation and", title: "Static Site Generation and generateStaticParams()", tail: "", priority: "🔥" },
+          { n: 5, file: "5.html", short: "Incremental Static", title: "Incremental Static Regeneration (ISR)", tail: "", priority: "🔥" },
+          { n: 6, file: "6.html", short: "Server-Side Rendering in", title: "Server-Side Rendering in the App Router", tail: "", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Route Handlers vs API Routes", title: "Route Handlers vs. API Routes", tail: "", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Server Actions", title: "Server Actions", tail: "", priority: "🔥" },
+          { n: 9, file: "9.html", short: "Middleware", title: "Middleware", tail: "", priority: "🔥" },
+          { n: 10, file: "10.html", short: "loading.js and Streaming", title: "loading.js and Streaming", tail: "how loading.js relates to React Suspense", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11–20",
+        hot: 1,
+        items: [
+          { n: 11, file: "11.html", short: "error.js and not-found.js", title: "error.js and not-found.js", tail: "", priority: "⭐" },
+          { n: 12, file: "12.html", short: "Route Groups", title: "Route Groups", tail: "", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Parallel Routes", title: "Parallel Routes", tail: "", priority: "🧠" },
+          { n: 14, file: "14.html", short: "Intercepting Routes", title: "Intercepting Routes", tail: "", priority: "🧠" },
+          { n: 15, file: "15.html", short: "redirects() vs. rewrites()", title: "redirects() vs. rewrites()", tail: "next.config.js redirect vs. rewrite", priority: "⭐" },
+          { n: 16, file: "16.html", short: "Auth: Middleware vs. Server", title: "Auth: Middleware vs. Server Component Checks", tail: "where auth checks actually belong", priority: "🔥" },
+          { n: 17, file: "17.html", short: "fetch() Caching vs.", title: "fetch() Caching vs. SWR/TanStack Query", tail: "", priority: "⭐" },
+          { n: 18, file: "18.html", short: "Internationalized (i18n)", title: "Internationalized (i18n) Routing", tail: "", priority: "🧠" },
+          { n: 19, file: "19.html", short: "next/script", title: "next/script", tail: "Third-Party Scripts", priority: "⭐" },
+          { n: 20, file: "20.html", short: "Deploying to Vercel vs.", title: "Deploying to Vercel vs. Self-Hosting", tail: "", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Question 21",
+        hot: 0,
+        items: [
+          { n: 21, file: "21.html", short: "Testing a Next.js App", title: "Testing a Next.js App", tail: "", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "nextjs/advanced": {
+    track: "Next.js",
+    trackIcon: "⏭️",
+    tier: "Advanced",
+    groups: [
+      {
+        label: "Questions 1–10",
+        hot: 5,
+        items: [
+          { n: 1, file: "1.html", short: "The Four Caching Layers", title: "The Four Caching Layers", tail: "Request Memoization, Data Cache, Full Route Cache, Router Cache", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Cache Invalidation", title: "Cache Invalidation", tail: "revalidateTag vs. revalidatePath vs. router.refresh()", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Next.js 15's Caching", title: "Next.js 15's Caching Default Change", tail: "", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Partial Prerendering (PPR)", title: "Partial Prerendering (PPR)", tail: "", priority: "⭐" },
+          { n: 5, file: "5.html", short: "Streaming SSR and", title: "Streaming SSR and <Suspense> Boundaries", tail: "", priority: "⭐" },
+          { n: 6, file: "6.html", short: "React Server Components", title: "React Server Components Internals", tail: "the RSC Payload", priority: "🧠" },
+          { n: 7, file: "7.html", short: "Hydration and Hydration", title: "Hydration and Hydration Mismatches", tail: "", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Edge Runtime vs Node.js Runtime", title: "Edge Runtime vs. Node.js Runtime", tail: "", priority: "⭐" },
+          { n: 9, file: "9.html", short: "Turbopack vs. Webpack", title: "Turbopack vs. Webpack", tail: "", priority: "🧠" },
+          { n: 10, file: "10.html", short: "Next.js 15's Async Request", title: "Next.js 15's Async Request APIs", tail: "", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11–20",
+        hot: 4,
+        items: [
+          { n: 11, file: "11.html", short: "Securing Server Actions", title: "Securing Server Actions", tail: "", priority: "🔥" },
+          { n: 12, file: "12.html", short: "Bundle Analysis and", title: "Bundle Analysis and Code-Splitting Strategy", tail: "", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Image/Font Optimization and", title: "Image/Font Optimization and Core Web Vitals", tail: "", priority: "⭐" },
+          { n: 14, file: "14.html", short: "Monorepo and Multi-Zone", title: "Monorepo and Multi-Zone Next.js Apps", tail: "", priority: "🧠" },
+          { n: 15, file: "15.html", short: "Self-Hosting", title: "Self-Hosting", tail: "Standalone Output and Docker", priority: "⭐" },
+          { n: 16, file: "16.html", short: "Migrating from the Pages", title: "Migrating from the Pages Router to the App Router", tail: "", priority: "⭐" },
+          { n: 17, file: "17.html", short: "Scenario: Stale Data", title: "Scenario: Stale Data Despite a revalidate Value", tail: "", priority: "🔥" },
+          { n: 18, file: "18.html", short: "Scenario: A Server Action", title: "Scenario: A Server Action Exposes Sensitive Logic", tail: "", priority: "🔥" },
+          { n: 19, file: "19.html", short: "Scenario: Diagnosing Slow", title: "Scenario: Diagnosing Slow Time-to-First-Byte", tail: "", priority: "🔥" },
+          { n: 20, file: "20.html", short: "Scenario: Choosing a", title: "Scenario: Choosing a Rendering Strategy for a Mixed Static/Dynamic Page", tail: "", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 21–22",
+        hot: 1,
+        items: [
+          { n: 21, file: "21.html", short: "Scenario: Hydration", title: "Scenario: Hydration Mismatch in Production", tail: "", priority: "🔥" },
+          { n: 22, file: "22.html", short: "Scenario: Designing Route", title: "Scenario: Designing Route Structure for a Multi-Tenant App", tail: "", priority: "⭐" }
+        ]
+      }
+    ]
   }
 };

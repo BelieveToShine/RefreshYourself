@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A page has revalidate: 60 set but users still report seeing stale data — how do you track down which layer is actually serving it?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: Stale Data Despite a revalidate Value — Next.js Advanced — RefreshYourself">
+<meta property="og:description" content="A page has revalidate: 60 set but users still report seeing stale data — how do you track down which layer is actually serving it?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: Stale Data Despite a revalidate Value — Next.js Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="nextjs/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#f4f4f5;--crumb-ink:#171717;">⏭️ Next.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: Stale Data Despite a revalidate Value</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Next.js · Advanced · Must Know</div>
+    <h1><code>revalidate: 60</code> is set — so <span class="hl hl-hot">which cache</span> is actually serving the stale page?</h1>
+    <p class="interview-q">"A page has revalidate: 60 set but users still report seeing stale data — how do you track down which layer is actually serving it?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+        <div class="wc-head">🗂️ Four Possible Layers, One Symptom</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Stale data looks identical no matter which of four caching layers — the Data Cache, the Full Route Cache, the client's Router Cache, or a CDN/edge cache in front of the whole deployment — is actually responsible, so fixing the wrong one wastes effort and still doesn't fix anything.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Triage in order: check the Data Cache's actual elapsed time against the <code>revalidate</code> window (remembering ISR serves one more stale response before regenerating), try <code>router.refresh()</code> to rule out the client's Router Cache, and check response headers for a CDN/edge cache sitting in front of everything else.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Same symptom, four possible layers — confirm which one before reaching for a fix.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><b><code>Data Cache</code></b> <span class="rarrow">→</span> <code>revalidateTag</code>/<code>revalidatePath</code></p>
+      <p class="rrow"><b><code>Full Route Cache</code></b> <span class="rarrow">→</span> <code>revalidatePath</code></p>
+      <p class="rrow"><b><code>Router Cache</code></b> <span class="rarrow">→</span> <code>router.refresh()</code></p>
+      <p class="rrow"><b><code>CDN / edge</code></b> <span class="rarrow">→</span> purge, or a <code>Cache-Control</code> header</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> same symptom, four possible layers — confirm which one before reaching for a fix.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 230" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh17" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar17Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="ar17Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="ar17Slate" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">ONE "STALE DATA" REPORT — FOUR LAYERS TO CHECK</text>
+
+      <g filter="url(#sh17)"><rect x="200" y="26" width="240" height="44" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="46" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🐌 Stale data reported</text>
+      <text x="320" y="61" text-anchor="middle" font-size="10.5" fill="#5b6472">which layer is actually serving it?</text>
+
+      <path d="M320,70 V85" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M80,85 H560" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M80,85 V115" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#ar17Blue)"/>
+      <path d="M247,85 V115" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#ar17Blue)"/>
+      <path d="M393,85 V115" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#ar17Amber)"/>
+      <path d="M560,85 V115" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar17Slate)"/>
+
+      <g filter="url(#sh17)"><rect x="7" y="115" width="146" height="90" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="80" y="134" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🗄️ Data Cache</text>
+      <text x="80" y="151" text-anchor="middle" font-size="9.5" fill="#5b6472">stale past its window?</text>
+      <text x="80" y="165" text-anchor="middle" font-size="9.5" fill="#5b6472">(ISR serves 1 more first)</text>
+      <text x="80" y="188" text-anchor="middle" font-size="9" font-weight="700" fill="#1d4ed8">Fix: revalidateTag/Path</text>
+
+      <g filter="url(#sh17)"><rect x="167" y="115" width="160" height="90" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="247" y="134" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🧭 Full Route Cache</text>
+      <text x="247" y="151" text-anchor="middle" font-size="9.5" fill="#5b6472">cached route segment</text>
+      <text x="247" y="165" text-anchor="middle" font-size="9.5" fill="#5b6472">still being served?</text>
+      <text x="247" y="188" text-anchor="middle" font-size="9" font-weight="700" fill="#1d4ed8">Fix: revalidatePath</text>
+
+      <g filter="url(#sh17)"><rect x="337" y="115" width="110" height="90" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="392" y="134" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">🔁 Router Cache</text>
+      <text x="392" y="151" text-anchor="middle" font-size="9.5" fill="#5b6472">old RSC payload</text>
+      <text x="392" y="165" text-anchor="middle" font-size="9.5" fill="#5b6472">cached client-side?</text>
+      <text x="392" y="188" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">Fix: router.refresh()</text>
+
+      <g filter="url(#sh17)"><rect x="457" y="115" width="176" height="90" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="545" y="134" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">☁️ CDN / Edge</text>
+      <text x="545" y="151" text-anchor="middle" font-size="9.5" fill="#5b6472">caching outside Next.js's</text>
+      <text x="545" y="165" text-anchor="middle" font-size="9.5" fill="#5b6472">own layers entirely?</text>
+      <text x="545" y="188" text-anchor="middle" font-size="9" font-weight="700" fill="#475569">Fix: purge / Cache-Control</text>
+    </svg>
+    <figcaption>Same "stale data" symptom, four independent layers that could be the real cause — confirm which one before picking a fix.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"I set revalidate, so it must be the Data Cache."</b> The symptom looks
+    identical whether it's the Data Cache, the Full Route Cache, the client's Router Cache, or a
+    CDN sitting in front of the whole deployment — skipping the other three layers means calling
+    <code>revalidateTag</code> and still seeing stale data, with no idea why.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's the fastest way to rule layers in or out?"</b> Hard-refresh with
+    caching disabled in devtools to rule out the client's Router Cache, check the response headers
+    for a CDN cache indicator, and — if you can — log or inspect the Data Cache's actual
+    last-fetched timestamp directly.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Stale data can come from four different layers — the Data Cache, the
+    Full Route Cache, the client's Router Cache, or a CDN/edge cache — and the symptom looks the
+    same from all four, so I'd confirm which layer is actually responsible before reaching for a
+    fix, instead of assuming it's the one I happened to configure."</p>
+    <ul>
+      <li>Data Cache past its window → <span class="hl hl-blue">revalidateTag/revalidatePath</span>, the layer-specific fix.</li>
+      <li>Stale client-side RSC payload → <span class="hl hl-inter">router.refresh()</span> clears the Router Cache, not a server-side call.</li>
+      <li>A CDN in front of the deployment → <span class="hl hl-hot">it caches independently of Next.js's own layers</span> — purge it or fix its headers.</li>
+      <li>ISR specifically → <span class="hl hl-basic">serves one more stale response before regenerating</span>, so "just past 60s" can still look stale once.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Each of the four layers caches independently, and none of them know about the others —
+      which is exactly why a <span class="hl hl-blue">Data Cache</span> fix doesn't help if the
+      real culprit is the client's <span class="hl hl-inter">Router Cache</span> holding an old
+      React Server Component payload from before the last navigation. <code>router.refresh()</code>
+      re-fetches the current route from the server without a full page reload or losing client
+      state — that's the targeted fix for this one layer only.</p>
+
+      <p>The <span class="hl hl-blue">Full Route Cache</span> stores the rendered result of a
+      whole route segment at build time (or after ISR regenerates it); it sits on the server, one
+      layer up from the Data Cache that individual <code>fetch</code> calls populate.
+      <code>revalidatePath</code> clears both — the route's cached render and the underlying data
+      — while <code>revalidateTag</code> targets only the tagged data fetches.</p>
+
+      <p>A CDN or edge cache in front of the whole deployment is the layer easiest to forget,
+      because it isn't part of Next.js at all — it's infrastructure sitting between the browser
+      and the deployment, caching the response by its own rules (often an HTTP
+      <code>Cache-Control</code> header) regardless of what Next.js's own revalidation does
+      underneath it.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Data Cache</th><th>Full Route Cache</th><th>Router Cache</th><th>CDN/Edge</th></tr></thead>
+        <tbody>
+          <tr><th>Lives where</th><td>server, per fetch</td><td>server, per route</td><td>client browser</td><td>in front of the deployment</td></tr>
+          <tr><th>Cleared by</th><td>revalidateTag/Path</td><td>revalidatePath</td><td>router.refresh()</td><td>purge / headers</td></tr>
+          <tr><th>Known to Next.js?</th><td>✅ yes</td><td>✅ yes</td><td>✅ yes</td><td>❌ fully external</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// Data Cache / Full Route Cache — clear by tag or by path</span>
+<span class="kw">import</span> { revalidateTag, revalidatePath } <span class="kw">from</span> <span class="str">'next/cache'</span>;
+
+<span class="kw">await</span> revalidateTag(<span class="str">'products'</span>);   <span class="cx-ok">// ✅ targets tagged fetch() calls only</span>
+<span class="kw">await</span> revalidatePath(<span class="str">'/products/42'</span>); <span class="cx-ok">// ✅ clears the route's cached render too</span></code></pre>
+      </div>
+      <p class="cx-note">Neither call touches the client's <b>Router Cache</b> — a user already
+      on that page still sees the old RSC payload until they navigate again, or it's refreshed.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JSX</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="str">'use client'</span>;
+<span class="kw">import</span> { useRouter } <span class="kw">from</span> <span class="str">'next/navigation'</span>;
+
+<span class="kw">const</span> router = useRouter();
+router.refresh(); <span class="cx-ok">// ✅ re-fetches the current route — clears only the Router Cache</span></code></pre>
+      </div>
+      <p class="cx-note">This is the one tool that reaches the <b>client-side</b> layer — the
+      server-side calls above can't touch it.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A product page sets revalidate: 60, but a customer reports seeing a price that's
+      several minutes old.</b> First check the Data Cache's actual elapsed time — ISR still
+      serves one more stale hit before regenerating, so "just past 60 seconds" can genuinely look
+      stale once. If the timing checks out, the next suspects are the client's Router Cache (try
+      <code>router.refresh()</code>) and then a CDN or edge cache sitting in front of the
+      deployment entirely, which Next.js's own revalidation can't reach.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="16.html">← Migrating from the Pages Router to the App Router</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Next.js Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="18.html">Scenario: A Server Action Exposes Sensitive Logic →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Next.js · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

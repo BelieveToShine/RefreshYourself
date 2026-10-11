@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="revalidateTag vs. revalidatePath vs. router.refresh() — which cache each one actually busts.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Cache Invalidation — Next.js Advanced — RefreshYourself">
+<meta property="og:description" content="revalidateTag vs. revalidatePath vs. router.refresh() — which cache each one actually busts.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Cache Invalidation — Next.js Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="nextjs/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#f4f4f5;--crumb-ink:#171717;">⏭️ Next.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Cache Invalidation</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Next.js · Advanced · Must Know</div>
+    <h1><code>revalidateTag</code> vs. <code>revalidatePath</code> vs. <span class="hl hl-blue">router.refresh()</span> — which cache do they actually touch?</h1>
+    <p class="interview-q">"What's the difference between revalidateTag, revalidatePath, and router.refresh()?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+          <div class="wc-head">🏷️ revalidateTag</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>The same data (e.g. "posts") is fetched by several different pages — invalidating each page one by one after an edit is easy to forget one of.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>revalidateTag('posts')</code> invalidates every cached <code>fetch()</code> tagged <code>'posts'</code>, wherever it was used, in one call.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">revalidateTag = invalidate by data, across every page that used it.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🛣️ revalidatePath</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>One specific route's rendered output is stale and you know exactly which URL — tagging every fetch on that page is more setup than the situation needs.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>revalidatePath('/blog/post-1')</code> clears the Full Route Cache for that one path directly.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">revalidatePath = invalidate by URL, one specific route.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">💻 router.refresh()</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>After a client-side action, the user needs the current route's data re-fetched — but a full page reload would blow away scroll position and unrelated form state.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>router.refresh()</code> re-fetches the current route from the client and updates the Router Cache, with no full reload.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">router.refresh() = client-side refresh of the Router Cache only.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>revalidateTag</code> <span class="rarrow">→</span> <b>by data</b>, every page using that tag</p>
+      <p class="rrow"><code>revalidatePath</code> <span class="rarrow">→</span> <b>by URL</b>, one route's Full Route Cache</p>
+      <p class="rrow"><code>router.refresh()</code> <span class="rarrow">→</span> <b>client-only</b>, Router Cache, no reload</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> the first two run <b>on the server</b> and
+    bust server caches. <b>router.refresh()</b> never leaves the browser.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shN2" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arN2" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#6d28d9"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">ONE revalidateTag() CALL FANS OUT TO EVERY PAGE USING THAT TAG</text>
+
+      <g filter="url(#shN2)"><rect x="210" y="26" width="220" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="46" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🖊️ Server Action</text>
+      <text x="320" y="61" text-anchor="middle" font-size="10" fill="#5b6472">mutates data, e.g. updatePost()</text>
+
+      <path d="M320,76 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arN2)"/>
+
+      <g filter="url(#shN2)"><rect x="190" y="100" width="260" height="56" rx="12" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.8"/></g>
+      <text x="320" y="121" text-anchor="middle" font-size="13" font-weight="700" fill="#4c1d95">revalidateTag('posts')</text>
+      <text x="320" y="137" text-anchor="middle" font-size="10" fill="#5b6472">invalidates every tagged fetch</text>
+      <text x="320" y="150" text-anchor="middle" font-size="10" fill="#5b6472">server-side, Data Cache</text>
+
+      <path d="M320,156 V180" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M95,180 H545" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M95,180 V204" fill="none" stroke="#6d28d9" stroke-width="1.8" marker-end="url(#arN2)"/>
+      <path d="M320,180 V204" fill="none" stroke="#6d28d9" stroke-width="1.8" marker-end="url(#arN2)"/>
+      <path d="M545,180 V204" fill="none" stroke="#6d28d9" stroke-width="1.8" marker-end="url(#arN2)"/>
+
+      <g filter="url(#shN2)"><rect x="20" y="204" width="150" height="62" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="95" y="226" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">/blog/post-1</text>
+      <text x="95" y="241" text-anchor="middle" font-size="10" fill="#5b6472">used tag 'posts'</text>
+      <text x="95" y="255" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">✅ invalidated</text>
+
+      <g filter="url(#shN2)"><rect x="245" y="204" width="150" height="62" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="226" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">/blog (index)</text>
+      <text x="320" y="241" text-anchor="middle" font-size="10" fill="#5b6472">used tag 'posts'</text>
+      <text x="320" y="255" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">✅ invalidated</text>
+
+      <g filter="url(#shN2)"><rect x="470" y="204" width="150" height="62" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="545" y="226" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">/dashboard</text>
+      <text x="545" y="241" text-anchor="middle" font-size="10" fill="#5b6472">used tag 'posts'</text>
+      <text x="545" y="255" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">✅ invalidated</text>
+    </svg>
+    <figcaption>One tag, one call, every page that used it — revalidatePath would only have hit one of these three boxes.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>router.refresh()</code> does not bust the server caches.</b> It only
+    re-fetches and updates the client-side Router Cache — the server's Data Cache and Full Route
+    Cache still need <code>revalidateTag</code>/<code>revalidatePath</code> to actually clear.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why would you tag a fetch call instead of just using
+    revalidatePath?"</b> Tags let you invalidate data used across multiple different routes in one
+    call — <code>revalidatePath</code> only targets one specific path's own cache entry.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>revalidateTag</code> invalidates every cached fetch tagged with
+    that string, wherever it's used; <code>revalidatePath</code> invalidates the Full Route Cache
+    for one specific path; <code>router.refresh()</code> is client-side only — it re-fetches the
+    current route and updates the Router Cache, without a full reload."</p>
+    <ul>
+      <li><code>revalidateTag('x')</code> → <span class="hl hl-blue">targets data, fans out to every page</span> that tagged a fetch with it.</li>
+      <li><code>revalidatePath('/x')</code> → <span class="hl hl-basic">targets one route's Full Route Cache</span>, nothing else.</li>
+      <li><code>router.refresh()</code> → <span class="hl hl-hot">client-only, never touches the server cache</span>, preserves scroll/state.</li>
+      <li>After a mutation → <span class="hl hl-inter">call revalidateTag/Path from the Server Action</span>, not from the client.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">revalidateTag</span> and <span class="hl hl-basic">revalidatePath</span>
+      both run server-side and both clear real server cache entries, but they key on different
+      things: a tag is attached to individual <code>fetch()</code> calls via
+      <code>{next:{tags:[...]}}</code> and can span any number of routes, while a path targets the
+      Full Route Cache for exactly one URL (optionally including its layout). Calling either one
+      is typically done from inside a Server Action, right after the mutation that made the old
+      data wrong.</p>
+
+      <p><span class="hl hl-hot">router.refresh()</span> is a different kind of tool entirely —
+      it's a client-side API that asks the current route to re-render with fresh data, without
+      throwing away client state like scroll position or inputs in components that didn't change.
+      It updates the Router Cache for the route you're currently on; it has no way to reach into
+      the server's Data Cache or Full Route Cache at all.</p>
+
+      <p>In practice the two layers cooperate: a Server Action calls
+      <code>revalidateTag</code>/<code>revalidatePath</code> to fix the server-side truth, and the
+      client often follows up with <code>router.refresh()</code> (or Next.js triggers it
+      automatically after a Server Action completes) so the current view picks up the now-fresh
+      data immediately.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>revalidateTag</code></th><th><code>revalidatePath</code></th><th><code>router.refresh()</code></th></tr></thead>
+        <tbody>
+          <tr><th>Runs</th><td>server-side</td><td>server-side</td><td>client-side</td></tr>
+          <tr><th>Keys on</th><td>a fetch's own tag</td><td>a specific URL</td><td>the current route</td></tr>
+          <tr><th>Scope</th><td>every page using that tag</td><td>one path (+ layout)</td><td>only the page you're on</td></tr>
+          <tr><th>Full page reload?</th><td>n/a — server only</td><td>n/a — server only</td><td>no — preserves client state</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// app/actions.js</span>
+<span class="str">'use server'</span>;
+<span class="kw">import</span> { revalidateTag } <span class="kw">from</span> <span class="str">'next/cache'</span>;
+
+<span class="kw">export</span> <span class="kw">async</span> <span class="kw">function</span> updatePost(id, data) {
+  <span class="kw">await</span> db.posts.update(id, data);
+  revalidateTag(<span class="str">'posts'</span>); <span class="cx-ok">// ✅ hits every page that tagged a fetch 'posts'</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Every route that fetched <code>'posts'</code> with
+      <code>next:{'{'}tags:['posts']{'}'}</code> gets invalidated — the Server Action never needs
+      to know which routes those are.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// client component</span>
+<span class="str">'use client'</span>;
+<span class="kw">import</span> { useRouter } <span class="kw">from</span> <span class="str">'next/navigation'</span>;
+
+<span class="kw">const</span> router = useRouter();
+<span class="kw">function</span> onRetry() {
+  router.refresh(); <span class="cx-err">// ❌ does NOT call revalidateTag/Path for you</span>
+}</code></pre>
+      </div>
+      <p class="cx-note"><code>router.refresh()</code> only re-reads whatever the server caches
+      already say right now — it can't force a server cache that's still fresh to change.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">1</span> The same data feeds several different routes</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcN2a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#6d28d9"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4c1d95" letter-spacing=".03em">DATA USED BY MANY PAGES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#4c1d95">🏷️ tag: 'posts'</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#4c1d95">3 routes use it</text>
+              <path d="M190,43 H290" stroke="#6d28d9" stroke-width="1.6" fill="none" marker-end="url(#arUcN2a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#4c1d95">revalidateTag</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#4c1d95">clears all 3 at once</text>
+            </svg>
+          </div>
+          <p class="uc-what">Reach for <code>revalidateTag</code> whenever more than one route
+          depends on the same underlying data — it's the only one of the three that fans out by
+          data rather than by URL.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Shared data, many routes → tag it once, invalidate once.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> You know the exact single URL that went stale</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcN2b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">ONE KNOWN URL</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">🛣️ /blog/post-1</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#166534">stale right now</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUcN2b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">revalidatePath</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#166534">just that one route</text>
+            </svg>
+          </div>
+          <p class="uc-what">No tagging needed — <code>revalidatePath</code> is the simpler,
+          direct tool when exactly one route's Full Route Cache is the thing that needs to go.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Know the exact URL → revalidatePath, no tag plumbing required.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You call <code>router.refresh()</code> hoping it busts the server cache too</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcN2c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">STILL SAME DATA</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">💻 router.refresh()</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">client only</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcN2c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🗄️ server cache</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">untouched, still stale</text>
+            </svg>
+          </div>
+          <p class="uc-what">The server's Data Cache and Full Route Cache are completely
+          unaffected by this call. <b>A common interview trap:</b> assuming "refresh" means
+          "revalidate everywhere."</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">router.refresh() ≠ server-side invalidation.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your service is leaking stale likes-counts on a social feed.</b> The like button's
+      Server Action updates the database and calls
+      <code>revalidateTag('post-likes')</code> — every card on every page that rendered that post
+      picks up the new count on its next fetch. The client that clicked "like" then calls
+      <code>router.refresh()</code> so its own current view updates immediately too, without a
+      full page reload.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="1.html">← The Four Caching Layers</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Next.js Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="3.html">Next.js 15's Caching Default Change →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Next.js · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

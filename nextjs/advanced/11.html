@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Why isn't 'it's only called from authenticated pages' enough to secure a Server Action? It compiles to a real, callable HTTP endpoint.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Securing Server Actions — Next.js Advanced — RefreshYourself">
+<meta property="og:description" content="Why isn't 'it's only called from authenticated pages' enough to secure a Server Action? It compiles to a real, callable HTTP endpoint.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Securing Server Actions — Next.js Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="nextjs/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#f4f4f5;--crumb-ink:#171717;">⏭️ Next.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Securing Server Actions</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Next.js · Advanced · Must Know</div>
+    <h1>Securing Server Actions — hidden <span class="hl hl-hot">isn't</span> the same as <span class="hl hl-basic">safe</span></h1>
+    <p class="interview-q">"Why isn't 'it's only called from authenticated pages' enough to secure a Server Action?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+        <div class="wc-head">🔐 Server Action security</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A Server Action compiles down to a real, callable HTTP endpoint (identified by a generated action ID) — assuming "the UI only shows this to authorized users" makes it safe leaves the actual endpoint open to anyone who can construct the request.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Treat every Server Action like a public API endpoint: re-verify the caller's authentication/authorization inside the action itself, validate and sanitize inputs, and don't expose logic as an action that doesn't need to be callable at all.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Server Action = a real endpoint wearing a function's clothes.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Server Action = <b>"a real HTTP endpoint that looks like a function call."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> hiding a door's location isn't the same as
+    locking it — <b>check who's allowed in, every time, from inside the room</b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 290" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shN11" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arN11Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arN11Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">TWO WAYS TO REACH THE SAME ENDPOINT</text>
+
+      <g filter="url(#shN11)"><rect x="40" y="36" width="220" height="64" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="150" y="58" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🖥️ Admin UI</text>
+      <text x="150" y="76" text-anchor="middle" font-size="10" fill="#5b6472">delete button shown</text>
+      <text x="150" y="89" text-anchor="middle" font-size="10" fill="#5b6472">only to admins</text>
+
+      <path d="M260,68 H370" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arN11Blue)"/>
+
+      <g filter="url(#shN11)"><rect x="370" y="36" width="230" height="64" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="485" y="58" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">⚙️ deleteUser() Server Action</text>
+      <text x="485" y="76" text-anchor="middle" font-size="10" fill="#5b6472">a real POST endpoint,</text>
+      <text x="485" y="89" text-anchor="middle" font-size="10" fill="#5b6472">identified by an action ID</text>
+
+      <g filter="url(#shN11)"><rect x="40" y="170" width="220" height="64" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="150" y="192" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">🐛 Anyone with the ID</text>
+      <text x="150" y="210" text-anchor="middle" font-size="10" fill="#5b6472">never opened the admin</text>
+      <text x="150" y="223" text-anchor="middle" font-size="10" fill="#5b6472">UI at all</text>
+
+      <path d="M260,202 H370" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arN11Red)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/>
+      </path>
+
+      <text x="485" y="130" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">same box, no gate at the door —</text>
+      <text x="485" y="146" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">the check has to live INSIDE it</text>
+
+      <g filter="url(#shN11)"><rect x="370" y="170" width="230" height="64" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="485" y="192" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">⚙️ deleteUser() Server Action</text>
+      <text x="485" y="210" text-anchor="middle" font-size="10" fill="#5b6472">same endpoint — reachable</text>
+      <text x="485" y="223" text-anchor="middle" font-size="10" fill="#5b6472">either way</text>
+
+      <text x="320" y="262" text-anchor="middle" font-size="10.5" fill="#475569">The UI's restriction controls who SEES the button — not who can CALL the endpoint.</text>
+    </svg>
+    <figcaption>The UI gate and the endpoint's real security boundary are two separate things.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"This Server Action is never imported into public-facing client code, so
+    it's safe" is wrong.</b> Safety from casual discovery isn't the same as being inaccessible —
+    its endpoint exists and is callable by anyone who knows or finds its action ID, same threat
+    model as an unauthenticated REST endpoint.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's a concrete example of a Server Action vulnerability?"</b> A
+    <code>deleteUser(id)</code> action that trusts the <code>id</code> argument and deletes
+    without re-checking that the caller is actually authorized to delete that specific user —
+    exactly the broken-access-control bug a traditional API endpoint would also have if it
+    skipped the same check.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A Server Action compiles to a real, callable HTTP endpoint identified
+    by a generated action ID — I treat it with the same security discipline as any public API:
+    re-verify auth inside the action itself, validate every input, and never rely on the UI only
+    showing it to the right people."</p>
+    <ul>
+      <li>Server Action → <span class="hl hl-hot">a real, independently callable endpoint</span>, not a hidden function.</li>
+      <li>UI restriction → <span class="hl hl-blue">controls visibility, not access</span>.</li>
+      <li>Correct check → <span class="hl hl-basic">re-verify auth/authorization inside the action itself</span>, every call.</li>
+      <li><code>deleteUser(id)</code> example → <span class="hl hl-adv">check the CALLER is allowed to delete THAT id</span>, not just that they're logged in.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A Server Action looks like a normal function call from the client component that invokes
+      it, but <span class="hl hl-hot">under the hood it's compiled into a real POST endpoint</span>,
+      reachable by its own generated action ID. The framework doesn't keep that endpoint private
+      to the page that defines it — anything that can send the right request can call it.</p>
+
+      <p>That means the usual API-security checklist applies in full: <b>re-check
+      authentication and authorization inside the action</b> (never assume the caller already
+      passed a gate elsewhere), <b>validate and sanitize every argument</b> the same way you would
+      for a REST body, and <b>don't turn something into a Server Action at all</b> if it doesn't
+      genuinely need to be called from the client.</p>
+
+      <p>The failure mode to watch for is specifically <b>broken access control</b> — a check that
+      verifies the caller is logged in, but not that they're allowed to act on the specific
+      resource (user ID, record ID) they passed in.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>What it looks like</th><th>What it actually is</th></tr></thead>
+        <tbody>
+          <tr><th>Server Action call</th><td>a plain function call in client code</td><td>a POST request to a generated endpoint</td></tr>
+          <tr><th>"Only used by the admin page"</th><td>feels private</td><td>the endpoint itself has no idea who's calling</td></tr>
+          <tr><th>Security check location</th><td>easy to assume: "the page already checked"</td><td>must live inside the action itself</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JSX</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="str">"use server"</span>;
+
+<span class="cx-err">// ❌ trusts the caller — no re-check inside the action itself</span>
+<span class="kw">export</span> <span class="kw">async</span> <span class="kw">function</span> deleteUser(id) {
+  <span class="kw">await</span> db.user.delete({ where: { id } }); <span class="cx-cmt">// anyone who can call this, can run this</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">"Only the admin page renders the button that calls this" is a UI fact —
+      it says nothing about who can actually send this request.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JSX</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="str">"use server"</span>;
+
+<span class="cx-ok">// ✅ re-verifies the caller, and that THEY can act on THIS id</span>
+<span class="kw">export</span> <span class="kw">async</span> <span class="kw">function</span> deleteUser(id) {
+  <span class="kw">const</span> session = <span class="kw">await</span> getSession();
+  <span class="kw">if</span> (!session?.isAdmin) <span class="kw">throw</span> <span class="kw">new</span> <span class="ty">Error</span>(<span class="str">"Unauthorized"</span>);
+  <span class="kw">await</span> db.user.delete({ where: { id } });
+}</code></pre>
+      </div>
+      <p class="cx-note">The check moved <b>inside</b> the action — now it's enforced no matter
+      how the request arrives.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A code review flags a Server Action with the comment "this is fine, it's only called
+      from the internal admin dashboard."</b> That comment describes the UI, not the endpoint —
+      the actual question to ask is whether the action itself re-checks who's calling before it
+      acts, because the dashboard being the only caller in your own code doesn't stop a different
+      caller from reaching the same endpoint directly.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="10.html">← Next.js 15's Async Request APIs</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Next.js Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="12.html">Bundle Analysis and Code-Splitting Strategy →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Next.js · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A security review flags that a Server Action performs a privileged operation with no independent authorization check — walk through the fix.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: A Server Action Exposes Sensitive Logic — Next.js Advanced — RefreshYourself">
+<meta property="og:description" content="A security review flags that a Server Action performs a privileged operation with no independent authorization check — walk through the fix.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: A Server Action Exposes Sensitive Logic — Next.js Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="nextjs/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#f4f4f5;--crumb-ink:#171717;">⏭️ Next.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: A Server Action Exposes Sensitive Logic</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Next.js · Advanced · Must Know</div>
+    <h1>A Server Action is just another endpoint — does your <span class="hl hl-hot">authorization check</span> know that?</h1>
+    <p class="interview-q">"A security review flags that a Server Action performs a privileged operation with no independent authorization check — walk through the fix."</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">🔓 Missing Server-Side Authorization</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A Server Action performs a privileged operation — a refund, a role change — based only on client-supplied data, with no independent server-side re-check of the caller's actual permission to do that specific operation on that specific target. The action's endpoint is independently callable no matter what the UI shows.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Add an explicit auth/ownership check as the very first lines inside the Server Action itself, re-deriving the caller's identity and permissions from the server-side session — never trust an argument the client passed claiming who it is or what it's allowed to do.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Hiding a button is not a security boundary — the Server Action itself has to check.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">A Server Action with no server-side check = <b>a public API endpoint anyone can call directly.</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> a Server Action is callable independently of
+    the UI that renders it — the UI hiding a button is not the real boundary, a check inside the
+    action itself is.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh18" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar18Gray" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="ar18Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="ar18Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="160" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">❌ BEFORE — no check</text>
+      <text x="480" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ AFTER — check first</text>
+      <path d="M320,10 V240" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <g filter="url(#sh18)"><rect x="60" y="32" width="200" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="56" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🌐 Client calls the action</text>
+      <path d="M160,72 V92" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar18Gray)"/>
+
+      <g filter="url(#sh18)"><rect x="60" y="92" width="200" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="116" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">⚙️ Server Action runs</text>
+      <path d="M160,132 V152" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#ar18Red)"><animate attributeName="stroke-dashoffset" values="9;0" dur="1s" repeatCount="indefinite"/></path>
+
+      <rect x="60" y="152" width="200" height="34" rx="12" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4"/>
+      <text x="160" y="173" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">⚠️ no check — empty gap</text>
+      <path d="M160,186 V206" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#ar18Red)"/>
+
+      <g filter="url(#sh18)"><rect x="60" y="206" width="200" height="38" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="160" y="229" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">💸 Runs immediately</text>
+
+      <g filter="url(#sh18)"><rect x="380" y="32" width="200" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="56" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🌐 Client calls the action</text>
+      <path d="M480,72 V92" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar18Gray)"/>
+
+      <g filter="url(#sh18)"><rect x="380" y="92" width="200" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="480" y="116" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">⚙️ Server Action runs</text>
+      <path d="M480,132 V152" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ar18Green)"/>
+
+      <g filter="url(#sh18)"><rect x="380" y="152" width="200" height="34" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="173" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ auth check — allowed?</text>
+      <path d="M480,186 V206" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ar18Green)"/>
+
+      <g filter="url(#sh18)"><rect x="380" y="206" width="200" height="38" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="229" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🔒 Runs only if authorized</text>
+    </svg>
+    <figcaption>Same Server Action, same call from the client — the only difference is a server-side check inserted before the privileged operation runs.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Hiding the Server Action's import path, or renaming it to something less
+    obvious, is not a fix.</b> Obscurity is not a security boundary — the action is still directly
+    callable by anyone who can see the network request, so the real fix is the server-side check
+    itself, not making the endpoint harder to find.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How would you catch this kind of bug before it ships?"</b> A code-review
+    checklist item for every Server Action: "does this independently verify the caller's
+    authorization, not just trust the UI that calls it?" — the same question you'd ask of any
+    public API endpoint.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A Server Action is independently callable, the same as any API
+    endpoint, so I'd put the authorization check as the first lines inside the action itself,
+    re-deriving the caller's identity from the server-side session — never trusting the UI to be
+    the actual boundary."</p>
+    <ul>
+      <li>UI restricting who sees a control → <span class="hl hl-hot">not a security boundary</span>, the action is still directly callable.</li>
+      <li>The real fix → <span class="hl hl-basic">an explicit check as the first lines</span> inside the Server Action.</li>
+      <li>Trust the caller's identity from → <span class="hl hl-blue">the server-side session</span>, never a client-supplied argument.</li>
+      <li>Obscuring the action's name/path → <span class="hl hl-inter">doesn't fix anything</span>, it's still callable by anyone who sees the request.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <span class="hl hl-blue">Server Action</span> compiles down to its own POST endpoint —
+      the client-side function call is really a network request under the hood, and that request
+      can be sent directly, with any arguments, by anyone who can see it in the browser's network
+      tab. The UI only deciding whether to <i>show</i> the control that triggers the action never
+      stops the action itself from being called a different way.</p>
+
+      <p>The fix has to live <b>inside the action</b>, not around it. That means re-deriving who
+      the caller actually is from the server-side session or auth token — never trusting an
+      argument like <code>userId</code> or <code>role</code> that the client itself passed in —
+      and then checking that this specific caller is allowed to perform this specific operation on
+      this specific target (not just "is logged in," but "owns this record" or "holds this
+      role").</p>
+
+      <p>This is exactly the same discipline as securing any other API endpoint: authentication
+      (who is this?) and authorization (are they allowed to do this?) both have to happen on the
+      server, every time, regardless of what a trusted-looking UI already checked before the
+      request was sent.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="str">'use server'</span>;
+
+<span class="kw">export async function</span> issueRefund(orderId, amount) {
+  <span class="cx-err">// ❌ no check at all — trusts whoever can call this endpoint</span>
+  <span class="kw">await</span> db.refunds.create({ orderId, amount });
+}</code></pre>
+      </div>
+      <p class="cx-note">Anyone who can see this request in the network tab can replay it with a
+      <b>different</b> <code>orderId</code> — nothing here checks who's asking.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="str">'use server'</span>;
+
+<span class="kw">export async function</span> issueRefund(orderId, amount) {
+  <span class="kw">const</span> session = <span class="kw">await</span> getServerSession(); <span class="cx-ok">// ✅ server-derived identity</span>
+  <span class="kw">const</span> order = <span class="kw">await</span> db.orders.find(orderId);
+
+  <span class="kw">if</span> (!session?.user || !canRefund(session.user, order)) {
+    <span class="kw">throw new</span> Error(<span class="str">'Not authorized'</span>); <span class="cx-ok">// ✅ checked first, every call</span>
+  }
+  <span class="kw">await</span> db.refunds.create({ orderId, amount });
+}</code></pre>
+      </div>
+      <p class="cx-note">The check is the <b>first thing</b> the action does, and it's derived
+      from the server-side session — not from anything the caller supplied.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A security review flags a "Change user role" Server Action that only support staff
+      should be able to call — but it has no server-side permission check.</b> The UI only shows
+      the button to support staff, which stops nothing: the action's endpoint is directly callable
+      by any authenticated user who finds it. The fix is adding the role check as the first lines
+      of the action itself, re-derived from the server session.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="17.html">← Scenario: Stale Data Despite a revalidate Value</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Next.js Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="19.html">Scenario: Diagnosing Slow Time-to-First-Byte →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Next.js · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Where should auth checks actually live in a Next.js app — Middleware, or inside the page itself?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Auth: Middleware vs. Server Component Checks — Next.js Intermediate — RefreshYourself">
+<meta property="og:description" content="Where should auth checks actually live in a Next.js app — Middleware, or inside the page itself?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Auth: Middleware vs. Server Component Checks — Next.js Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="nextjs/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#f4f4f5;--crumb-ink:#171717;">⏭️ Next.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Auth: Middleware vs. Server Component</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Next.js · Intermediate · Must Know</div>
+    <h1>Middleware says no at the door — <span class="hl hl-hot">who checks again once you're inside?</span></h1>
+    <p class="interview-q">"Where should auth checks actually live in a Next.js app — Middleware, or inside the page itself?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🛡️ Middleware check</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Every protected route needs a session check before it renders — repeating that logic inside every single page is easy to forget on a new route.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Middleware runs on the Edge before the route renders, checking a session cookie on every matching request and redirecting unauthenticated ones away immediately.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Middleware = the fast gate, checked before anything renders.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🧩 Server Component re-check</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Middleware's redirect can be bypassed in edge cases (a misconfigured matcher, a direct API call) and runs on a different runtime, so it's not always the right place for a heavier check.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A Server Component independently re-verifies the session, server-side, right before rendering genuinely sensitive data — a second, real checkpoint, not blind trust in the first.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Server Component = the second gate, right before the sensitive data renders.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><b>Middleware</b> <span class="rarrow">→</span> checks fast, <b>before</b> render</p>
+      <p class="rrow"><b>Server Component</b> <span class="rarrow">→</span> re-checks, <b>before</b> sensitive data</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b>Middleware</b> is the bouncer at the door. <b>Server Component</b> checks ID again before handing over anything valuable.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 370" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shR16" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arR16" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">TWO CHECKPOINTS, NOT ONE</text>
+
+      <g filter="url(#shR16)"><rect x="260" y="26" width="120" height="32" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="320" y="46" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">📨 Request</text>
+
+      <path d="M320,58 V78" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR16)"/>
+
+      <g filter="url(#shR16)"><rect x="190" y="78" width="260" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="99" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🛡️ Middleware</text>
+      <text x="320" y="115" text-anchor="middle" font-size="10.5" fill="#5b6472">checks session cookie</text>
+
+      <path d="M320,124 V136" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M150,136 H490" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M150,136 V160" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR16)"/>
+      <path d="M490,136 V160" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR16)"/>
+
+      <g filter="url(#shR16)"><rect x="40" y="160" width="220" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="150" y="182" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🚪 Redirect to /login</text>
+      <text x="150" y="198" text-anchor="middle" font-size="10" fill="#5b6472">invalid or missing cookie</text>
+
+      <g filter="url(#shR16)"><rect x="380" y="160" width="220" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="490" y="182" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ Pass through</text>
+      <text x="490" y="198" text-anchor="middle" font-size="10" fill="#5b6472">valid session cookie</text>
+
+      <path d="M490,210 V230" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR16)"/>
+
+      <g filter="url(#shR16)"><rect x="380" y="230" width="220" height="50" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="490" y="252" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🧩 Server Component</text>
+      <text x="490" y="268" text-anchor="middle" font-size="10" fill="#5b6472">re-verifies session</text>
+
+      <path d="M490,280 V300" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR16)"/>
+
+      <g filter="url(#shR16)"><rect x="380" y="300" width="220" height="38" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="490" y="323" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ Renders sensitive data</text>
+
+      <text x="320" y="358" text-anchor="middle" font-size="11" fill="#5b6472">Two checkpoints: Middleware is fast, Server Component actually guards the data</text>
+    </svg>
+    <figcaption>Middleware clears the door fast; the Server Component checks again before anything sensitive renders.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Trusting Middleware's redirect as the only auth check.</b> Middleware can be bypassed in edge cases — a misconfigured matcher, a direct API call — so a protected Server Component or Route Handler still needs its own server-side check.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Where does a Server Action fit into this?"</b> A Server Action must independently verify the caller's session at the top of its own function body — it's a real callable endpoint under the hood, not automatically protected just because the UI calling it happens to sit behind an authenticated page.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Middleware checks the session cookie on every matching request and redirects before the route renders, which is cheap and runs on the Edge. The Server Component (or Route Handler) still re-verifies the session itself before touching sensitive data — Middleware alone isn't treated as the only line of defense."</p>
+    <ul>
+      <li><code>Middleware</code> <span class="hl hl-blue">→ fast, Edge-level, first gate</span>, based on the cookie alone.</li>
+      <li><code>Server Component</code> <span class="hl hl-inter">→ heavier, server-side re-check</span> right before sensitive data.</li>
+      <li>Defense in depth <span class="hl hl-hot">→ never rely on one checkpoint</span> for anything genuinely sensitive.</li>
+      <li>A <code>Server Action</code> <span class="hl hl-basic">→ verifies its own caller</span>, independent of the page around it.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Next.js <span class="hl hl-blue">Middleware</span> runs on every request that matches its
+      <code>config.matcher</code>, before the route it's protecting even starts rendering. Reading a cookie and
+      redirecting is cheap, so it's a good fit for a fast, blanket "is anyone logged in at all" check across many
+      routes at once.</p>
+
+      <p>What Middleware is not is a full authorization system. It runs on a constrained Edge runtime, so a heavier
+      check — looking up a user's role in a database, checking a permission table — is often better placed in the
+      <span class="hl hl-inter">Server Component</span> itself, which already has normal server-side access to
+      whatever data store the check needs.</p>
+
+      <p>Treating these as two independent layers, rather than one handing off blind trust to the other, is the
+      actual point: a request that somehow reaches the Server Component without passing through Middleware (a typo
+      in the matcher, a route added later) still gets stopped, because the Server Component never assumed Middleware
+      already did the work.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Middleware</th><th>Server Component</th></tr></thead>
+        <tbody>
+          <tr><th>Runs</th><td>before the route renders, on the Edge</td><td>during rendering, on the server</td></tr>
+          <tr><th>Typical check</th><td>session cookie present?</td><td>session valid, role/permission correct?</td></tr>
+          <tr><th>Can be bypassed?</th><td class="no">yes — matcher gaps, direct calls</td><td>no — it's the last line before data renders</td></tr>
+          <tr><th>Best for</th><td>fast, blanket gating</td><td>the specific data this page is about to show</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JS</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// middleware.js</span>
+<span class="kw">export</span> <span class="kw">function</span> middleware(request) {
+  <span class="kw">const</span> session = request.cookies.get(<span class="str">'session'</span>);
+  <span class="kw">if</span> (!session) {
+    <span class="kw">return</span> NextResponse.redirect(<span class="kw">new</span> URL(<span class="str">'/login'</span>, request.url)); <span class="cx-err">// ❌ no cookie — redirect before render</span>
+  }
+  <span class="kw">return</span> NextResponse.next();  <span class="cx-ok">// ✅ cookie present — let it through</span>
+}
+
+<span class="kw">export</span> <span class="kw">const</span> config = { matcher: [<span class="str">'/dashboard/:path*'</span>] };</code></pre>
+      </div>
+      <p class="cx-note">Cheap and fast — <b>only checks that a cookie exists</b>, not what role it belongs to.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JSX</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// app/dashboard/page.jsx</span>
+<span class="kw">export</span> <span class="kw">default</span> <span class="kw">async</span> <span class="kw">function</span> DashboardPage() {
+  <span class="kw">const</span> session = <span class="kw">await</span> getSession();  <span class="cx-ok">// 🔁 re-verify, don't just trust Middleware</span>
+  <span class="kw">if</span> (!session) redirect(<span class="str">'/login'</span>);        <span class="cx-ok">// ✅ defense in depth</span>
+
+  <span class="kw">const</span> data = <span class="kw">await</span> getSensitiveData(session.userId);
+  <span class="kw">return</span> &lt;Dashboard data={data} /&gt;;
+}</code></pre>
+      </div>
+      <p class="cx-note">The page never assumes Middleware already did the work — it <b>checks again, server-side</b>.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A logged-out visitor types <code>/dashboard</code> straight into the address bar</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc16a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">CAUGHT BEFORE RENDER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🙅 no session</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc16a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">🚪 /login</text>
+            </svg>
+          </div>
+          <p class="uc-what">Middleware sees there's no valid session cookie and redirects before the dashboard route
+          ever starts rendering — the page's own code never even runs. This is the <b>#1 scenario</b> Middleware exists for.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No cookie at all → Middleware alone already handles it.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> An admin-only page needs more than "is this user logged in"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc16b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">ROLE CHECK NEEDS MORE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🍪 cookie valid</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc16b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">🗄️ role check in DB</text>
+            </svg>
+          </div>
+          <p class="uc-what">Middleware's cheap check only confirms a session exists — it typically doesn't do a full
+          database lookup. Checking the user's actual role or permission belongs in the Server Component, which
+          already has normal server-side access to that data.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Role/permission checks beyond "logged in?" → Server Component, not Middleware.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> A new protected route is added, but the Middleware matcher is never updated</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc16c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">MATCHER GAP = SKIPPED GATE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">🆕 /billing (unmatched)</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc16c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">🧩 reaches page unguarded</text>
+            </svg>
+          </div>
+          <p class="uc-what">If the new route isn't covered by <code>config.matcher</code>, Middleware never runs for
+          it at all — the request reaches the Server Component directly. Only that component's own re-check stops an
+          unauthenticated request from seeing real data.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Matcher gaps happen — the Server Component's own check is what actually saves you.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Your app's Middleware only checks <code>/dashboard/*</code>, but a teammate adds a new
+      <code>/billing</code> page under the same account area and forgets to update the matcher.</b> Because the
+      Server Component for <code>/billing</code> still re-verifies the session itself, a logged-out request is
+      stopped there anyway — if that check didn't exist, the missed matcher entry would have quietly exposed billing
+      data to anyone with the URL.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="15.html">← redirects() vs. rewrites()</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Next.js Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="17.html">fetch() Caching vs. SWR/TanStack Query →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Next.js · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

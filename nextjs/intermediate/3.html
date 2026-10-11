@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How did the App Router replace getStaticProps and getServerSideProps?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="getStaticProps/getServerSideProps vs. App Router Fetching — Next.js Intermediate — RefreshYourself">
+<meta property="og:description" content="How did the App Router replace getStaticProps and getServerSideProps?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>getStaticProps/getServerSideProps vs. App Router Fetching — Next.js Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="nextjs/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#f4f4f5;--crumb-ink:#171717;">⏭️ Next.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">getStaticProps/getServerSideProps vs. App Router Fetching</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Next.js · Intermediate · Should Know</div>
+    <h1>One <code>fetch()</code> replaces <span class="hl hl-blue">two separate functions</span></h1>
+    <p class="interview-q">"How did the App Router replace <code>getStaticProps</code> and <code>getServerSideProps</code>?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🧭 Pages Router → App Router fetching</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>In the Pages Router, choosing between build-time and per-request data meant choosing between two entirely separate exported functions for the whole page — <code>getStaticProps</code> or <code>getServerSideProps</code> — with no finer-grained option.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The App Router removes both functions — a Server Component just <code>fetch()</code>es directly, and the <code>cache</code> option on that specific call decides its freshness, independent of every other fetch on the same page.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Two named functions → one fetch() with a cache option, decided per call.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>getStaticProps</code> <span class="rarrow">→</span> <b>separate function</b>, Pages Router only</p>
+      <p class="rrow"><code>getServerSideProps</code> <span class="rarrow">→</span> <b>separate function</b>, Pages Router only</p>
+      <p class="rrow">App Router <span class="rarrow">→</span> <b>inline <code>fetch()</code></b> inside the component</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> Pages Router picked freshness <b>per page</b>. App Router picks it <b>per fetch call</b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shN3" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arN3" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="160" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">PAGES ROUTER</text>
+      <text x="480" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569" letter-spacing="0.3">APP ROUTER</text>
+      <path d="M320,32 V228" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <g filter="url(#shN3)"><rect x="30" y="40" width="130" height="44" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="95" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">getStaticProps()</text>
+      <text x="95" y="74" text-anchor="middle" font-size="9" fill="#5b6472">build-time, separate fn</text>
+
+      <g filter="url(#shN3)"><rect x="170" y="40" width="130" height="44" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="235" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">getServerSideProps()</text>
+      <text x="235" y="74" text-anchor="middle" font-size="9" fill="#5b6472">per-request, separate fn</text>
+
+      <path d="M95,84 V108" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M235,84 V108" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M95,108 H235" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M165,108 V128" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arN3)"/>
+
+      <text x="165" y="118" text-anchor="middle" font-size="9" fill="#5b6472">passes props into</text>
+
+      <g filter="url(#shN3)"><rect x="60" y="128" width="210" height="40" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/></g>
+      <text x="165" y="152" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Component(props)</text>
+
+      <g filter="url(#shN3)"><rect x="390" y="40" width="180" height="48" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="480" y="60" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">async function Page() {</text>
+      <text x="480" y="76" text-anchor="middle" font-size="9" fill="#5b6472">one component, no helper fn</text>
+
+      <path d="M480,88 V112" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arN3)"/>
+
+      <g filter="url(#shN3)"><rect x="390" y="112" width="180" height="40" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="480" y="136" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8">await fetch(url, {cache})</text>
+
+      <path d="M480,152 V176" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arN3)"/>
+
+      <g filter="url(#shN3)"><rect x="390" y="176" width="180" height="36" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="480" y="198" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ data in, rendered</text>
+
+      <text x="320" y="246" text-anchor="middle" font-size="10.5" fill="#5b6472">Pages Router: pick the function per page. App Router: pick the cache option per fetch call</text>
+    </svg>
+    <figcaption>Two named functions collapse into one inline call — the choice moves from page-level to call-level.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>getStaticProps</code> doesn't work inside <code>app/</code>.</b> It's a Pages-Router-only API — the App Router simply never calls it, even if the file exports it, so it silently does nothing instead of erroring.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why did the App Router replace two named functions with one <code>fetch()</code> API?"</b> It turns an all-or-nothing, page-level choice into a per-call choice — finer-grained and composable, so one page can mix a cached fetch with an always-fresh one.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"In the Pages Router, <code>getStaticProps</code> and <code>getServerSideProps</code> were separate exported functions that ran before the component and passed data in as props. The App Router removes that split — the Server Component fetches directly, and the cache option on each <code>fetch()</code> call decides its own freshness."</p>
+    <ul>
+      <li><code>getStaticProps</code> <span class="hl hl-inter">→ Pages Router only</span>, build-time.</li>
+      <li><code>getServerSideProps</code> <span class="hl hl-inter">→ Pages Router only</span>, per-request.</li>
+      <li>App Router <span class="hl hl-blue">→ no separate function</span> — fetch inline, cache option per call.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>In the <span class="hl hl-inter">Pages Router</span>, Next.js needed to know, for the whole
+      page, whether to render it once at build time or fresh on every request — so it looked for one
+      of two specially-named exported functions, <code>getStaticProps</code> or
+      <code>getServerSideProps</code>, ran whichever one existed before the component itself, and
+      handed the result in as <code>props</code>.</p>
+
+      <p>The <span class="hl hl-blue">App Router</span> doesn't have an equivalent function at all.
+      A Server Component's own body is already an async function, so it just calls <code>fetch()</code>
+      directly and <code>await</code>s the result — the freshness decision moves from "which function
+      did you export" to "what cache option did this fetch call use."</p>
+
+      <p>That's a genuine architecture change, not just a rename: a single App Router page can mix a
+      <code>force-cache</code> fetch for rarely-changing data with a <code>no-store</code> fetch for a
+      per-user cart, side by side — something the Pages Router's one-function-per-page model couldn't
+      express at all.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Pages Router</th><th>App Router</th></tr></thead>
+        <tbody>
+          <tr><th>Where data fetching lives</th><td>separate exported function</td><td>inline in the component</td></tr>
+          <tr><th>Freshness granularity</th><td>whole page</td><td>per <code>fetch()</code> call</td></tr>
+          <tr><th>Build-time data</th><td><code>getStaticProps</code></td><td><code>fetch(..., {cache:'force-cache'})</code></td></tr>
+          <tr><th>Per-request data</th><td><code>getServerSideProps</code></td><td><code>fetch(..., {cache:'no-store'})</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Next.js</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// pages/products.js — Pages Router</span>
+<span class="kw">export async function</span> getStaticProps() {
+  <span class="kw">const</span> res = <span class="kw">await</span> fetch(<span class="str">'https://api.example.com/products'</span>);
+  <span class="kw">return</span> { props: { products: <span class="kw">await</span> res.json() } };
+}
+
+<span class="kw">export default function</span> <span class="ty">ProductsPage</span>({ products }) {
+  <span class="kw">return</span> &lt;ProductList items={products} /&gt;;
+}</code></pre>
+      </div>
+      <p class="cx-note">Two separate pieces — <b>the data function, and the component it feeds</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Next.js</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// app/products/page.js — App Router, same outcome</span>
+<span class="kw">export default async function</span> <span class="ty">ProductsPage</span>() {
+  <span class="kw">const</span> res = <span class="kw">await</span> fetch(<span class="str">'https://api.example.com/products'</span>, {
+    cache: <span class="str">'force-cache'</span>
+  });
+  <span class="kw">const</span> products = <span class="kw">await</span> res.json();
+  <span class="kw">return</span> &lt;ProductList items={products} /&gt;;   <span class="cx-ok">// ✅ one function, no props handoff</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">The fetch and the render <b>live in the same function</b> — no handoff step.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> You're migrating a Pages Router page to the App Router</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcN3a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">MIGRATING A PAGE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">getServerSideProps</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcN3a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">fetch(..., no-store)</text>
+            </svg>
+          </div>
+          <p class="uc-what">Moving a page with <code>getServerSideProps</code> into <code>app/</code>
+          means deleting that function and moving its fetch directly into the component with
+          <code>cache: 'no-store'</code> — the per-request freshness carries over, just expressed
+          differently.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">getServerSideProps's job → the fetch call's cache option now.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> One page needs both cached AND always-fresh data</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcN3b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">MIXED FRESHNESS, ONE PAGE</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">product: force-cache</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcN3b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">cart: no-store</text>
+            </svg>
+          </div>
+          <p class="uc-what">The Pages Router had no way to say "this page is half-static, half-live"
+          — it was one function for the whole page. The App Router lets two different
+          <code>fetch()</code> calls in the same component each pick their own cache option.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Mixed freshness on one page → only possible per-fetch, not per-page.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You export getStaticProps from a file inside app/</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcN3c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">EXPORTED, BUT NEVER CALLED</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">app/x/page.js</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcN3c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🐛 silently ignored</text>
+            </svg>
+          </div>
+          <p class="uc-what">The App Router doesn't recognize <code>getStaticProps</code> at all — it
+          isn't an error, the export is just never called, which can hide the mistake until someone
+          notices the data never updates the way they expected.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">getStaticProps in app/ → not an error, just dead code.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A team migrating a large Pages Router site to the App Router, one route at a time.</b>
+      Every route that used to export <code>getStaticProps</code> or <code>getServerSideProps</code>
+      loses that function entirely — the fetch moves inside the component, and whoever did the
+      migration picks the matching <code>cache</code> option so the route keeps the same freshness
+      behavior it had before.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="2.html">← fetch() Cache and Revalidate Options</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Next.js Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="4.html">Static Site Generation and generateStaticParams() →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Next.js · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

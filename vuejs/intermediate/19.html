@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How do you support v-model on your own custom component?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Template Refs and v-model on Custom Components — Vue.js Intermediate — RefreshYourself">
+<meta property="og:description" content="How do you support v-model on your own custom component?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Template Refs and v-model on Custom Components — Vue.js Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="vuejs/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ecfdf5;--crumb-ink:#42b883;">💚 Vue.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Template Refs and v-model on Custom Components</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Vue.js · Intermediate · Must Know</div>
+    <h1><code>ref</code> in the template, <code>v-model</code> on a component — <span class="hl hl-hot">one word, two very different jobs</span></h1>
+    <p class="interview-q">"How do you support <code>v-model</code> on your own custom component?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🎯 Template refs</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Some things — calling <code>focus()</code> on an input, measuring an element's size, reading a child component's exposed method — can't be done through reactive data at all; they need the real DOM node or instance.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A template ref (<code>&lt;input ref="el"&gt;</code> + <code>const el = ref(null)</code>) gives direct access to the real element or child instance once it exists in the DOM.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Template ref = a handle to the real DOM, not reactive data about it.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🔁 Custom v-model</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Two-way binding is built-in for <code>&lt;input&gt;</code>, but your own custom component (a styled text box, a rating picker) has no default way to say "this prop is the one <code>v-model</code> should read and write."</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>v-model</code> on a component is sugar for a <code>modelValue</code> prop plus an <code>update:modelValue</code> emit — implement both and <code>v-model</code> works on your component too.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Custom v-model = modelValue prop + update:modelValue emit, nothing magic.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Template <code>ref</code> <span class="rarrow">→</span> real DOM, only <b>after mount</b></p>
+      <p class="rrow">Component <code>v-model</code> <span class="rarrow">→</span> <code>modelValue</code> prop + <b>emit</b></p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> a ref is <b>null</b> until the DOM exists; <code>v-model</code> is just a prop and an emit wearing a shortcut.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh19a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar19a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">TEMPLATE REF — BEFORE vs. AFTER MOUNT</text>
+
+      <g filter="url(#sh19a)"><rect x="40" y="46" width="200" height="100" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="140" y="74" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">setup() running</text>
+      <text x="140" y="96" text-anchor="middle" font-size="10.5" font-family="'Fira Code', monospace" fill="#5b6472">inputEl.value</text>
+      <text x="140" y="112" text-anchor="middle" font-size="10.5" font-family="'Fira Code', monospace" fill="#991b1b">=== null</text>
+
+      <rect x="285" y="58" width="110" height="22" rx="11" fill="#ffffff" stroke="#94a3b8" stroke-width="1.4"/>
+      <text x="340" y="73" text-anchor="middle" font-size="9.5" font-weight="700" fill="#334155">onMounted</text>
+      <path d="M240,96 H400" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar19a)"/>
+
+      <g filter="url(#sh19a)"><rect x="400" y="46" width="200" height="100" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="500" y="74" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">After mount</text>
+      <text x="500" y="96" text-anchor="middle" font-size="10.5" font-family="'Fira Code', monospace" fill="#5b6472">inputEl.value</text>
+      <text x="500" y="112" text-anchor="middle" font-size="10.5" font-family="'Fira Code', monospace" fill="#166534">= &lt;input&gt; DOM</text>
+
+      <text x="320" y="178" text-anchor="middle" font-size="11" fill="#5b6472">Reading the ref during setup()'s synchronous run always sees null — the DOM doesn't exist yet</text>
+    </svg>
+    <figcaption>A template ref stays <code>null</code> until <code>onMounted</code> fires — the DOM simply doesn't exist before then.</figcaption>
+  </figure>
+
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh19b" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar19b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">CUSTOM v-model — WHAT IT EXPANDS TO</text>
+
+      <g filter="url(#sh19b)"><rect x="40" y="46" width="240" height="100" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="76" text-anchor="middle" font-size="11.5" font-weight="700" font-family="'Fira Code', monospace" fill="#1d4ed8">&lt;MyInput</text>
+      <text x="160" y="94" text-anchor="middle" font-size="11.5" font-weight="700" font-family="'Fira Code', monospace" fill="#1d4ed8">v-model="text"&gt;</text>
+      <text x="160" y="116" text-anchor="middle" font-size="10.5" fill="#5b6472">the sugar you write</text>
+
+      <rect x="285" y="58" width="110" height="22" rx="11" fill="#ffffff" stroke="#94a3b8" stroke-width="1.4"/>
+      <text x="340" y="73" text-anchor="middle" font-size="9.5" font-weight="700" fill="#334155">EXPANDS TO</text>
+      <path d="M280,96 H400" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar19b)"/>
+
+      <g filter="url(#sh19b)"><rect x="400" y="36" width="220" height="120" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="510" y="64" text-anchor="middle" font-size="11" font-weight="700" font-family="'Fira Code', monospace" fill="#92400e">:modelValue="text"</text>
+      <text x="510" y="86" text-anchor="middle" font-size="11" font-weight="700" font-family="'Fira Code', monospace" fill="#92400e">@update:modelValue=</text>
+      <text x="510" y="104" text-anchor="middle" font-size="11" font-weight="700" font-family="'Fira Code', monospace" fill="#92400e">"text = $event"</text>
+
+      <text x="320" y="180" text-anchor="middle" font-size="11" fill="#5b6472">The child must implement BOTH the modelValue prop and the update:modelValue emit</text>
+    </svg>
+    <figcaption><code>v-model</code> on a component is shorthand for a prop binding plus a matching emit listener.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Reading a template ref's value before <code>onMounted</code> fires.</b> It's still <code>null</code> during <code>setup()</code>'s synchronous execution, since the real DOM element doesn't exist yet at that point.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Can a component support multiple v-models?"</b> Yes — <code>v-model:propName</code> syntax lets a component expose several independently-named two-way-bound props/emit pairs on the same instance.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A template ref gives direct access to the real DOM element or child instance, but only after <code>onMounted</code> — it's <code>null</code> before that. <code>v-model</code> on a custom component is sugar for a <code>modelValue</code> prop plus an <code>update:modelValue</code> emit, and a component implements both to support it."</p>
+    <ul>
+      <li>Template <code>ref</code> <span class="hl hl-blue">→ null until mounted</span>, then the real DOM/instance.</li>
+      <li>Custom <code>v-model</code> <span class="hl hl-inter">→ modelValue prop + update:modelValue emit</span>, no magic.</li>
+      <li>Multiple v-models <span class="hl hl-teal">→ v-model:propName</span> per independently-bound prop.</li>
+      <li>Reading a ref too early <span class="hl hl-hot">→ always null</span>, the classic mistake.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <span class="hl hl-blue">template ref</span> is declared by giving an element (or child
+      component) a <code>ref="name"</code> attribute in the template, then creating a matching
+      <code>const name = ref(null)</code> in <code>&lt;script setup&gt;</code>. Vue fills that ref
+      in with the real DOM element — or the child component's public instance — once it actually
+      exists, which is after mount, not during <code>setup()</code>'s own synchronous run.</p>
+
+      <p><span class="hl hl-inter">v-model</span> on a custom component isn't a special feature the
+      component has to "support" through some separate API — it's plain prop-and-emit syntax in
+      disguise. <code>v-model="text"</code> is shorthand for binding a prop named
+      <code>modelValue</code> to <code>text</code> and listening for an
+      <code>update:modelValue</code> event to write back to it. A component that defines a
+      <code>modelValue</code> prop and emits <code>update:modelValue</code> already works with
+      <code>v-model</code>, with no extra configuration.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>&lt;input <span class="kw">ref</span>=<span class="str">"inputEl"</span> /&gt;
+
+&lt;script <span class="kw">setup</span>&gt;
+<span class="kw">import</span> { ref, onMounted } <span class="kw">from</span> <span class="str">'vue'</span>
+
+<span class="kw">const</span> inputEl = ref(<span class="kw">null</span>)
+console.log(inputEl.value)      <span class="cx-err">// ❌ null — setup() runs before mount</span>
+
+onMounted(() =&gt; {
+  inputEl.value.focus()         <span class="cx-ok">// ✅ real &lt;input&gt; element now</span>
+})
+&lt;/script&gt;</code></pre>
+      </div>
+      <p class="cx-note">Same ref, two different moments — only <b>after mount</b> does it point at anything real.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">&lt;!-- MyInput.vue --&gt;</span>
+&lt;script <span class="kw">setup</span>&gt;
+defineProps([<span class="str">'modelValue'</span>])
+defineEmits([<span class="str">'update:modelValue'</span>])
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;input
+    <span class="kw">:value</span>=<span class="str">"modelValue"</span>
+    <span class="kw">@input</span>=<span class="str">"$emit('update:modelValue', $event.target.value)"</span>
+  /&gt;
+&lt;/template&gt;</code></pre>
+      </div>
+      <p class="cx-note">This is the <b>whole</b> implementation — <code>v-model="text"</code> on this component now just works.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A search box that auto-focuses on page load, built as its own component.</b> A
+      template ref on the inner <code>&lt;input&gt;</code> calls <code>.focus()</code> in
+      <code>onMounted</code>, while the component's own <code>modelValue</code>/
+      <code>update:modelValue</code> pair lets the parent bind it with a plain
+      <code>v-model="searchText"</code>, same as a native input.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="18.html">← &lt;KeepAlive&gt;</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Vue.js Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="20.html">Testing Vue Components →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Vue.js · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

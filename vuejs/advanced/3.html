@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Walk me through what happens from a reactive data change to an updated DOM.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content=".vue template → VNode tree → DOM — the real render pipeline — Vue.js Advanced — RefreshYourself">
+<meta property="og:description" content="Walk me through what happens from a reactive data change to an updated DOM.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>.vue template → VNode tree → DOM — the real render pipeline — Vue.js Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="vuejs/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ecfdf5;--crumb-ink:#42b883;">💚 Vue.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">The Render Pipeline</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Vue.js · Advanced · Must Know</div>
+    <h1><code>.vue</code> template → VNode tree → DOM — what <span class="hl hl-hot">really</span> happens on a reactive update?</h1>
+    <p class="interview-q">"Walk me through what happens from a reactive data change to an updated DOM."</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🛠️ Compile time</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Template HTML like <code>&lt;p&gt;{{ count }}&lt;/p&gt;</code> isn't something a browser can run directly — it has to become real JavaScript first.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>A <code>.vue</code> template compiles, at build time, into a JavaScript render function that returns a tree of lightweight VNode objects describing the desired DOM.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Template compiles once → a render function, at build time.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">⚡ Runtime update</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Rebuilding the entire real DOM from scratch on every data change would be far too slow for anything beyond a tiny page.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>On a reactive update, Vue re-runs the render function, gets a new VNode tree, and diffs it against the previous one — only the nodes that actually changed get touched in the real DOM.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Every update → new VNode tree, diffed, minimal DOM patch.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Render pipeline = <b>"compile once, diff VNodes every update."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line">Build time → template → render function</span>
+      <span class="tc-line">Run time → render fn → new VNodes → diff → minimal DOM patch</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh3" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar3Blue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="ar3Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="ar3Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="105" y="78" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.3">🛠️ BUILD TIME</text>
+      <text x="427" y="78" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing="0.3">⚡ RUN TIME — ON EVERY REACTIVE TRIGGER</text>
+
+      <g filter="url(#sh3)"><rect x="20" y="90" width="170" height="60" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="105" y="116" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📄 .vue template</text>
+      <text x="105" y="132" text-anchor="middle" font-size="9.5" fill="#5b6472">HTML-like syntax</text>
+
+      <g filter="url(#sh3)"><rect x="235" y="90" width="170" height="60" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="116" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">⚙️ render function</text>
+      <text x="320" y="132" text-anchor="middle" font-size="9.5" fill="#5b6472">returns a VNode tree</text>
+
+      <g filter="url(#sh3)"><rect x="450" y="90" width="170" height="60" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="535" y="116" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🌳 new VNode tree</text>
+      <text x="535" y="132" text-anchor="middle" font-size="9.5" fill="#5b6472">describes desired DOM</text>
+
+      <path d="M190,120 H235" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#ar3Blue)"/>
+      <path d="M405,120 H450" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#ar3Amber)"/>
+      <path d="M535,150 V200" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ar3Green)"/>
+
+      <g filter="url(#sh3)"><rect x="450" y="200" width="170" height="60" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="535" y="226" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🔍 diff vs previous tree</text>
+      <text x="535" y="242" text-anchor="middle" font-size="9.5" fill="#5b6472">find exactly what changed</text>
+
+      <path d="M450,230 H405" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ar3Green)"/>
+
+      <g filter="url(#sh3)"><rect x="235" y="200" width="170" height="60" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="226" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ minimal DOM patch</text>
+      <text x="320" y="242" text-anchor="middle" font-size="9.5" fill="#5b6472">only changed nodes touched</text>
+    </svg>
+    <figcaption>The template only compiles once — every reactive update replays the right half of this pipeline.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Vue does not re-render the whole DOM on every update.</b> It diffs VNode
+    trees specifically to avoid that — only the nodes that actually changed get touched in the
+    real DOM.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Is the template required, or can you skip straight to VNodes?"</b> You
+    can write a render function by hand using the <code>h()</code> helper instead of a template —
+    templates are the common, compiler-optimized path, but both produce the <b>same</b> VNode
+    tree underneath.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"A <code>.vue</code> template compiles at build time into a JavaScript
+    render function that returns a tree of VNode objects describing the desired DOM. On a
+    reactive update, Vue re-runs that render function, gets a new VNode tree, and diffs it
+    against the previous tree to compute the minimal set of real DOM mutations — it never
+    rebuilds the DOM from scratch."</p>
+    <ul>
+      <li>Template → <span class="hl hl-blue">compiles at build time</span> into a render function.</li>
+      <li>Render function → <span class="hl hl-hot">re-runs on every reactive trigger</span>, returning a new VNode tree.</li>
+      <li>Diffing → <span class="hl hl-basic">compares old vs new VNode tree</span> to find the minimal DOM patch.</li>
+      <li><code>h()</code> → <span class="hl hl-teal">the same function templates compile down to</span>, usable directly for dynamic cases.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A <span class="hl hl-blue">VNode</span> ("virtual node") is just a plain JavaScript
+      object — a tag name, its props, and its children — never a real DOM node. Creating one is
+      cheap: no browser layout, no painting, nothing touches the actual page. A component's
+      render function returns a whole tree of these on every call.</p>
+
+      <p>On a reactive trigger, <span class="hl hl-hot">Vue calls the render function again</span>
+      and gets a brand-new VNode tree. Instead of throwing away the old DOM and building a new
+      one, Vue walks the new tree alongside the previous one, node by node, and only touches the
+      real DOM where something actually differs — a changed text value, an added attribute, a
+      reordered child. Everything identical between the two trees is left completely alone.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Template</th><th><code>h()</code> render function</th></tr></thead>
+        <tbody>
+          <tr><th>Written as</th><td>HTML-like markup in <code>&lt;template&gt;</code></td><td>plain JavaScript function calls</td></tr>
+          <tr><th>Compiles to</th><td>a render function, automatically</td><td>n/a — it already <i>is</i> the render function</td></tr>
+          <tr><th>Compiler optimizations</th><td>✅ static hoisting, patch flags (see next topic)</td><td>❌ none, unless hand-replicated</td></tr>
+          <tr><th>Best for</th><td>the vast majority of components</td><td>highly dynamic, structurally-variable output</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>&lt;script setup&gt;
+  <span class="kw">import</span> { ref } <span class="kw">from</span> <span class="str">'vue'</span>
+  <span class="kw">const</span> count = ref(<span class="num">0</span>)
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;p&gt;{{ count }}&lt;/p&gt;   <span class="cx-cmt">// compiles to a render function</span>
+&lt;/template&gt;</code></pre>
+      </div>
+      <p class="cx-note">The compiler turns this template into a render function you never see —
+      it returns a VNode for this <code>&lt;p&gt;</code> every time it runs.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">function</span> render() {
+  <span class="kw">return</span> h(<span class="str">'p'</span>, <span class="kw">null</span>, count.value)  <span class="cx-ok">// ✅ same VNode tree, hand-written</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">Identical result to the template above — <code>h()</code> is literally
+      the function the compiler calls on your behalf.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> A button click increments a counter shown in the template</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3a1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">count.value++</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">⚙️ render fn re-runs</text>
+              <path d="M210,43 H270" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc3a1)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">🔍 diff → patch 1 text node</text>
+            </svg>
+          </div>
+          <p class="uc-what">Only the one text node showing the count actually differs — the
+          diff finds exactly that, and the DOM patch touches nothing else on the page.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One changed value → one patched node, not a page rebuild.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You assume a big state change means the whole page gets rebuilt</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3a2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">"BIG" STATE CHANGE</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">😟 "rebuild everything?"</text>
+              <text x="115" y="54" text-anchor="middle" font-size="9" fill="#991b1b">common misconception</text>
+              <path d="M210,43 H270" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc3a2)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🚫 no — still diffed first</text>
+            </svg>
+          </div>
+          <p class="uc-what">Even a change that touches many properties still goes through the
+          same diff step — the real DOM only gets patched where the new VNode tree actually
+          differs from the old one, however large the change looks from the data side.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Diffing happens regardless of how "big" the change feels.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> A component's shape is too structurally dynamic for template syntax to express cleanly</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3a3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">DYNAMIC TAG/SHAPE</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">🧩 decided at runtime</text>
+              <path d="M210,43 H270" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3a3)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f766e">⚙️ hand-written h()</text>
+            </svg>
+          </div>
+          <p class="uc-what">A generic wrapper component that picks its own tag name and children
+          shape from a prop can skip the template entirely and call <code>h()</code> directly —
+          same VNode output, just assembled with plain JS logic instead of template syntax.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Template can't express it cleanly → h() is the escape hatch.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>It's like a copy editor comparing a new draft against the previous one.</b> Instead
+      of sending the whole book back to the printer every time one sentence changes, the editor
+      marks exactly which paragraphs differ and only those pages get reprinted.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="2.html">← track() / trigger()</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Vue.js Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="4.html">Compiler Optimizations — Static Hoisting and Patch Flags →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Vue.js · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

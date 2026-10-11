@@ -42,7 +42,14 @@ junior/mid-level interview. Two groups of tracks:
   reading as a tag/property list. See
   [`specs/htmlcss/overview.md`](superpowers/specs/htmlcss/overview.md). React and Angular already
   existed as separate tracks and simply moved into this new section on the homepage — no content
-  changed.
+  changed. **Vue.js and Next.js** (roadmap added 2026-10-11, all 7 phases complete 2026-10-11):
+  two more separate tracks in this section, following the same "separate top-level track, not
+  folded into an existing one" rule — Vue.js is a distinct UI framework with its own mental model
+  (Composition API/reactivity), and Next.js is a distinct framework layer on top of React (the
+  same relationship LINQ has to C#). **Vue.js — all 7 phases complete, 62/62 pages written.
+  Next.js — all 7 phases complete, 58/58 pages written.** See
+  [`specs/vuejs/overview.md`](superpowers/specs/vuejs/overview.md) and
+  [`specs/nextjs/overview.md`](superpowers/specs/nextjs/overview.md).
 - **Other tracks**, not part of the ordered path: Python, DSA, AI, and Java (all 7 phases
   complete, see below).
 
@@ -190,6 +197,30 @@ all through all 7 phases:**
   track was the first to follow correctly. Every diagram passed the mandatory automated
   verification script, run independently against every single page. See
   [`specs/angular/overview.md`](superpowers/specs/angular/overview.md).
+- **Vue.js** — **all 7 phases complete, 62/62 pages written** (roadmap added 2026-10-11, pages
+  written 2026-10-11): [`question-taxonomy.md`](superpowers/specs/vuejs/question-taxonomy.md) (24
+  concept groups) → [`roadmap.md`](superpowers/specs/vuejs/roadmap.md) → 62 tiered/prioritized
+  pages (Basic 18 / Intermediate 22 / Advanced 22, the last 6 of which are a labeled "Vue.js
+  Scenarios" sub-block), live on the site and on [`vuejs/roadmap.html`](../vuejs/roadmap.html).
+  Scoped to Vue 3 the framework (templates/reactivity, Composition API, Vue Router, Pinia) —
+  Nuxt.js's own API surface and Vuex's own store syntax are explicitly deferred. Icon 💚, track
+  color Vue's official brand green `#42b883`. Every diagram independently re-verified, all
+  confirmed `issueCount: 0` (9 pager-text mismatches and 1 text-overflow diagram defect found and
+  fixed during that sweep). See [`specs/vuejs/overview.md`](superpowers/specs/vuejs/overview.md).
+- **Next.js** — **all 7 phases complete, 58/58 pages written** (roadmap added 2026-10-11, pages
+  written 2026-10-11): [`question-taxonomy.md`](superpowers/specs/nextjs/question-taxonomy.md)
+  (19 concept groups) → [`roadmap.md`](superpowers/specs/nextjs/roadmap.md) → 58
+  tiered/prioritized pages (Basic 15 / Intermediate 21 / Advanced 22, the last 6 of which are a
+  labeled "Next.js Scenarios" sub-block), live on the site and on
+  [`nextjs/roadmap.html`](../nextjs/roadmap.html). Scoped to Next.js the React-framework layer
+  (routing/rendering/caching/server-client model) — React itself is explicitly out of scope,
+  assumed knowledge from the `react/` track. Icon ⏭️, track color Next.js's own near-black brand
+  identity `#171717`. Version-accuracy risk is this track's biggest Phase 2 finding: the Next.js
+  15 caching-default reversal, Partial Prerendering's experimental status, and the async
+  request-API change were all verified via live web search against official sources before being
+  locked into the roadmap. Every diagram independently re-verified, all confirmed `issueCount: 0`
+  (3 pager-text mismatches and 2 stale "coming soon" pager placeholders found and fixed during
+  that sweep). See [`specs/nextjs/overview.md`](superpowers/specs/nextjs/overview.md).
 - **Python** — **all 7 phases complete, 47/47 pages written** (2026-09-18):
   [`question-taxonomy.md`](superpowers/specs/python/question-taxonomy.md) (43 concept groups,
   incl. a Phase 2 gap-hunt that added 8 items — `enum`, `collections`, walrus/`match`-`case`,

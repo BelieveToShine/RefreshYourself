@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What happens if you destructure a reactive() object — and how do you avoid it?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Reactivity Caveats — Losing Reactivity on Destructure — Vue.js Intermediate — RefreshYourself">
+<meta property="og:description" content="What happens if you destructure a reactive() object — and how do you avoid it?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Reactivity Caveats — Losing Reactivity on Destructure — Vue.js Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="vuejs/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ecfdf5;--crumb-ink:#42b883;">💚 Vue.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Reactivity Caveats</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Vue.js · Intermediate · Must Know</div>
+    <h1><code>reactive()</code> destructure — <span class="hl hl-hot">where did the reactivity go?</span></h1>
+    <p class="interview-q">"What happens if you destructure a <code>reactive()</code> object — and how do you avoid it?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔌 Reactivity link</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Destructuring a property off a <code>reactive()</code> object (<code>const {x} = state</code>) copies out a plain value — if that variable is handed to a <code>watch</code> or used in a computed, it quietly stops reacting with no error and no warning, so a "broken" feature looks like a mystery bug instead of an obvious mistake.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>toRefs(state)</code> converts every property of a reactive object into its own <code>ref</code> that stays linked back to the source — destructure the result of <code>toRefs()</code> instead of the reactive object itself, and the connection survives.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Destructure <code>reactive()</code> directly → plain copy, disconnected. Destructure <code>toRefs()</code> → live refs.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">naive destructure <span class="rarrow">→</span> <b>plain value</b>, disconnected</p>
+      <p class="rrow"><code>toRefs()</code> destructure <span class="rarrow">→</span> <b>live ref</b>, still connected</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>reactive</code></b> hands you a copy when you pull a property out. <b><code>toRefs</code></b> hands you a pointer.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shR9" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arR9" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arR9Red" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">REACTIVE(STATE) — WHAT HAPPENS WHEN YOU PULL x OUT?</text>
+
+      <g filter="url(#shR9)"><rect x="200" y="32" width="240" height="40" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="57" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">reactive(state) = { x: 1 }</text>
+
+      <path d="M320,72 V82" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M170,82 H470" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M170,82 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR9)"/>
+      <path d="M470,82 V100" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR9)"/>
+
+      <g filter="url(#shR9)"><rect x="40" y="100" width="260" height="48" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="170" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">const { x } = state</text>
+      <text x="170" y="137" text-anchor="middle" font-size="10" fill="#5b6472">x = 1 (plain number)</text>
+
+      <g filter="url(#shR9)"><rect x="340" y="100" width="260" height="48" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="470" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">const { x } = toRefs(state)</text>
+      <text x="470" y="137" text-anchor="middle" font-size="10" fill="#5b6472">x = ref(1)</text>
+
+      <path d="M170,148 V166" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR9)"/>
+      <path d="M470,148 V166" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR9)"/>
+
+      <rect x="110" y="166" width="120" height="28" rx="14" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="170" y="184" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">state.x = 2</text>
+      <rect x="410" y="166" width="120" height="28" rx="14" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="470" y="184" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">state.x = 2</text>
+
+      <path d="M170,194 V212" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arR9Red)"><animate attributeName="stroke-dashoffset" values="7;0" dur="0.8s" repeatCount="indefinite"/></path>
+      <path d="M470,194 V212" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arR9)"/>
+
+      <g filter="url(#shR9)"><rect x="40" y="212" width="260" height="48" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="170" y="232" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">❌ x is still 1</text>
+      <text x="170" y="249" text-anchor="middle" font-size="10" fill="#5b6472">disconnected — watcher never fires</text>
+
+      <g filter="url(#shR9)"><rect x="340" y="212" width="260" height="48" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="470" y="232" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">✅ x.value is 2</text>
+      <text x="470" y="249" text-anchor="middle" font-size="10" fill="#5b6472">ref stayed linked, still reactive</text>
+
+      <text x="320" y="278" text-anchor="middle" font-size="11" fill="#5b6472">Same reactive source — only the ref copy survives being pulled out of it.</text>
+    </svg>
+    <figcaption>Pulling <code>x</code> straight off <code>reactive(state)</code> copies a plain number; pulling it through <code>toRefs()</code> keeps a live <code>ref</code> instead.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Not every value pulled off a reactive object stays "live."</b> Only a <code>ref</code> and the reactive object itself stay connected — a plain property destructured straight off <code>reactive()</code> is a disconnected copy from the moment it's assigned.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Does this affect <code>ref()</code> the same way?"</b> No — a <code>ref</code> is already a boxed object with a <code>.value</code> property, so passing the ref itself around (not its <code>.value</code>) keeps the reactive connection intact even across function boundaries.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Destructuring a property off a <code>reactive()</code> object copies out a plain value, so it's no longer connected to the source. <code>toRefs(state)</code> converts every property into a <code>ref</code> first, so destructuring the result stays safely linked."</p>
+    <ul>
+      <li><code>const {x} = state</code> <span class="hl hl-hot">→ plain copy, disconnected</span> the moment it's assigned.</li>
+      <li><code>toRefs(state)</code> <span class="hl hl-basic">→ every property becomes a ref</span>, safe to destructure.</li>
+      <li>A watcher on a destructured variable <span class="hl hl-inter">→ silently never fires</span> — it was never reactive to begin with.</li>
+      <li><code>ref()</code> itself <span class="hl hl-blue">→ unaffected</span>, since passing a ref around always keeps its link.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><code>reactive()</code> wraps an object in a <span class="hl hl-blue">Proxy</span> — reading or writing
+      a property on that proxy is what triggers Vue's reactivity tracking. The moment you write
+      <code>const {x} = state</code>, JavaScript's own destructuring syntax reads <code>state.x</code> once,
+      copies that primitive value into a brand-new local variable, and the proxy is never touched again after
+      that — <code>x</code> is just a number from then on, like photocopying a page instead of keeping a link
+      to the live document.</p>
+
+      <p><code>toRefs(state)</code> sidesteps this by building a plain object where every property is replaced
+      with its own <code>ref</code> — a small boxed object with a getter/setter <code>.value</code> that reads
+      and writes straight through to the original <code>reactive()</code> source. Destructuring that object
+      copies out the <em>refs</em>, not the raw values, so the link survives.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>destructure <code>reactive()</code></th><th>destructure <code>toRefs()</code></th></tr></thead>
+        <tbody>
+          <tr><th>What you get</th><td>plain value</td><td><code>ref</code> object</td></tr>
+          <tr><th>Stays linked to source?</th><td class="no">❌ no</td><td>✅ yes</td></tr>
+          <tr><th>Safe to pass to a composable?</th><td class="no">❌ breaks reactivity</td><td>✅ safe</td></tr>
+          <tr><th>Use inside template</th><td>n/a — don't destructure</td><td>unwrapped automatically</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">const</span> state = reactive({ x: <span class="num">1</span> })
+<span class="kw">const</span> { x } = state          <span class="cx-cmt">// ❌ plain number, copied out</span>
+
+watch(<span class="kw">() =&gt;</span> x, () =&gt; {
+  console.log(<span class="str">'x changed'</span>)  <span class="cx-err">// never logs</span>
+})
+
+state.x = <span class="num">2</span>                  <span class="cx-cmt">// x is still 1, watcher never fires</span></code></pre>
+      </div>
+      <p class="cx-note">The destructured <code>x</code> is just a number from the instant it's assigned — <b>nothing watches it</b>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">const</span> state = reactive({ x: <span class="num">1</span> })
+<span class="kw">const</span> { x } = toRefs(state)  <span class="cx-ok">// ✅ x is a ref, still linked</span>
+
+watch(x, () =&gt; {
+  console.log(<span class="str">'x changed'</span>)  <span class="cx-ok">// logs "x changed"</span>
+})
+
+state.x = <span class="num">2</span>                  <span class="cx-ok">// x.value is now 2</span></code></pre>
+      </div>
+      <p class="cx-note"><code>toRefs()</code> hands back <b>live refs</b> — <code>watch(x, …)</code> works directly on them.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> A <code>watch</code> set up on a destructured variable silently never fires</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">WATCHER NEVER FIRES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">const {x} = state</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc9a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">watch(x) — silent</text>
+            </svg>
+          </div>
+          <p class="uc-what">The watcher isn't broken — <code>x</code> was never reactive to begin with, because
+          it was destructured straight off <code>state</code>. The component just looks "frozen" with no error
+          anywhere to point at the real cause.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Silent watcher → check whether the watched value came from a plain destructure.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> Fixing it with <code>toRefs()</code> or a getter function</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc9b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">TWO WAYS TO FIX IT</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">toRefs(state).x</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc9b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">watch() fires again</text>
+            </svg>
+          </div>
+          <p class="uc-what">Either watch <code>toRefs(state).x</code> directly, or skip destructuring entirely
+          and watch a getter — <code>watch(() =&gt; state.x, …)</code> — which always reads straight from the
+          live source.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Watch the ref, or watch a getter function — never a destructured plain value.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A form's validation stops updating after a refactor that destructured a composable's state for
+      "cleaner" code.</b> The validation logic was watching a value that had already been copied out of its
+      reactive source — switching the composable to return <code>toRefs()</code> (or just not destructuring)
+      fixes it without touching the validation logic at all.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="8.html">← watch vs. watchEffect</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Vue.js Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="10.html">Composables — Reusable Composition API Logic →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Vue.js · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

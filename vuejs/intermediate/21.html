@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How does Vue's errorCaptured work like an error boundary?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Error Handling — errorCaptured and the Global Handler — Vue.js Intermediate — RefreshYourself">
+<meta property="og:description" content="How does Vue's errorCaptured work like an error boundary?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Error Handling — errorCaptured and the Global Handler — Vue.js Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="vuejs/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ecfdf5;--crumb-ink:#42b883;">💚 Vue.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Error Handling — errorCaptured and the Global Handler</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#ccfbf1; --eyebrow-ink:#0f766e;">🧠 Vue.js · Intermediate · Deep Dive</div>
+    <h1>Error boundaries in Vue — <span class="hl hl-teal">catching a crash before it takes down the page</span></h1>
+    <p class="interview-q">"How does Vue's <code>errorCaptured</code> work like an error boundary?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🛑 onErrorCaptured</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>One failing widget deep in the component tree — a chart that throws while rendering bad data — can crash the entire page if nothing stops the error from propagating all the way up.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>onErrorCaptured</code> on an ancestor catches an error thrown by any descendant during render/watcher/lifecycle execution, like an error boundary, and can stop it from going further.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">onErrorCaptured = a local error boundary for one branch of the tree.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">🌐 Global handler</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Not every component tree has an ancestor with <code>onErrorCaptured</code> — an error with no local boundary above it would otherwise crash the app with no record of what happened.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>app.config.errorHandler</code> catches anything that escapes every component-level boundary, app-wide — the last-resort place to log and report it.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">app.config.errorHandler = the app-wide catch-all, last resort only.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>onErrorCaptured</code> <span class="rarrow">→</span> <b>local</b> boundary, can stop it</p>
+      <p class="rrow"><code>app.config.errorHandler</code> <span class="rarrow">→</span> <b>app-wide</b> catch-all</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b><code>onErrorCaptured</code></b> is tried first, per branch; <b><code>errorHandler</code></b> only sees what nothing else stopped.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh21a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar21a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#475569" letter-spacing="0.5">WHO CATCHES THE ERROR?</text>
+
+      <g filter="url(#sh21a)"><rect x="220" y="40" width="200" height="60" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="65" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">🐛 DeepChild throws</text>
+      <text x="320" y="84" text-anchor="middle" font-size="10.5" fill="#5b6472">during render/lifecycle</text>
+
+      <path d="M320,100 V122 H170 V150" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar21a)"/>
+      <path d="M320,100 V122 H470 V150" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar21a)"/>
+
+      <g filter="url(#sh21a)"><rect x="60" y="150" width="220" height="90" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="170" y="176" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">✅ Ancestor catches it</text>
+      <text x="170" y="196" text-anchor="middle" font-size="10.5" fill="#5b6472">onErrorCaptured runs</text>
+      <text x="170" y="214" text-anchor="middle" font-size="10.5" fill="#5b6472">return false → stops here</text>
+
+      <g filter="url(#sh21a)"><rect x="360" y="150" width="220" height="90" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="470" y="176" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">⬆️ No boundary stops it</text>
+      <text x="470" y="196" text-anchor="middle" font-size="10.5" fill="#5b6472">error escapes every</text>
+      <text x="470" y="214" text-anchor="middle" font-size="10.5" fill="#5b6472">component boundary</text>
+
+      <path d="M170,240 V270" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar21a)"/>
+      <path d="M470,240 V270" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar21a)"/>
+
+      <g filter="url(#sh21a)"><rect x="60" y="270" width="220" height="60" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="170" y="296" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🖼️ Fallback UI shown</text>
+      <text x="170" y="314" text-anchor="middle" font-size="10" fill="#5b6472">bubble stops here</text>
+
+      <g filter="url(#sh21a)"><rect x="360" y="270" width="220" height="60" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="470" y="296" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">app.config.errorHandler</text>
+      <text x="470" y="314" text-anchor="middle" font-size="9.5" fill="#5b6472">logged app-wide (last resort)</text>
+    </svg>
+    <figcaption>An error bubbles up from the component that threw it until an <code>onErrorCaptured</code> boundary stops it — or, failing that, until it reaches the app-wide handler.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>errorCaptured</code> doesn't catch an error from async code inside an event handler the same way.</b> It only catches errors synchronously thrown during Vue's own render/lifecycle/watcher execution paths — a rejected promise in a click handler needs its own try/catch.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What should a well-behaved <code>errorCaptured</code> hook actually do?"</b> Log/report the error, show a fallback UI, and <code>return false</code> to stop the error from propagating further up — returning nothing (<code>undefined</code>) lets it keep bubbling.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>onErrorCaptured</code> on an ancestor component catches an error thrown by any descendant during render, watchers, or lifecycle hooks, like an error boundary — returning <code>false</code> stops it there. Anything that escapes every component boundary ends up in <code>app.config.errorHandler</code>, the app-wide catch-all."</p>
+    <ul>
+      <li><code>onErrorCaptured</code> <span class="hl hl-blue">→ catches descendant errors</span>, can stop them with <code>return false</code>.</li>
+      <li><code>app.config.errorHandler</code> <span class="hl hl-inter">→ app-wide last resort</span>, catches whatever escapes.</li>
+      <li>Doesn't catch <span class="hl hl-hot">async errors in event handlers</span> — those still need their own try/catch.</li>
+      <li>A good handler <span class="hl hl-teal">logs, shows a fallback</span>, and decides whether to keep bubbling.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">onErrorCaptured</span> (Composition API) / <code>errorCaptured</code>
+      (Options API) is a lifecycle hook on an ancestor component. Vue calls it whenever a
+      descendant throws during render, inside a watcher, or inside one of its own lifecycle
+      hooks — the same shape as an error boundary in other component frameworks.</p>
+
+      <p>Returning <code>false</code> from that hook tells Vue the error has been handled and
+      should stop bubbling any further up the tree. Returning nothing (<code>undefined</code>)
+      lets it keep propagating to the next ancestor with its own <code>onErrorCaptured</code>, and
+      eventually to <span class="hl hl-inter">app.config.errorHandler</span> if nothing above ever
+      stops it.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>onErrorCaptured</code></th><th><code>app.config.errorHandler</code></th></tr></thead>
+        <tbody>
+          <tr><th>Scope</th><td>one component and its descendants</td><td>the whole app</td></tr>
+          <tr><th>Catches</th><td>render/watcher/lifecycle errors below it</td><td>anything not stopped by a local boundary</td></tr>
+          <tr><th>Can stop propagation?</th><td>✅ yes, via <code>return false</code></td><td class="no">❌ nothing left to stop</td></tr>
+          <tr><th>Typical use</th><td>fallback UI for one widget/section</td><td>logging/reporting, last resort</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">import</span> { onErrorCaptured, ref } <span class="kw">from</span> <span class="str">'vue'</span>
+
+<span class="kw">const</span> failed = ref(<span class="kw">false</span>)
+
+onErrorCaptured((err) =&gt; {
+  console.error(<span class="str">'Widget crashed:'</span>, err)
+  failed.value = <span class="kw">true</span>
+  <span class="kw">return</span> <span class="kw">false</span>              <span class="cx-ok">// ✅ stop it here, show a fallback instead</span>
+})</code></pre>
+      </div>
+      <p class="cx-note">Without <code>return false</code>, the same error would keep bubbling <b>upward</b> past this ancestor.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">const</span> app = createApp(App)
+
+app.config.errorHandler = (err, instance, info) =&gt; {
+  reportToMonitoring(err, info)   <span class="cx-cmt">// last resort — nothing caught it below</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">This only ever sees an error if <b>no</b> <code>onErrorCaptured</code> above it returned <code>false</code>.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A dashboard with several independent widgets, each fetching its own data.</b> One
+      widget throwing while rendering a malformed response shouldn't take the whole dashboard
+      down — an <code>onErrorCaptured</code> boundary around each widget shows "widget
+      unavailable" locally, while <code>app.config.errorHandler</code> still logs every such
+      failure to a monitoring service app-wide.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="20.html">← Testing Vue Components</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Vue.js Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="22.html">Plugins and app.use() →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Vue.js · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

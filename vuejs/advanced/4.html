@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What specifically makes Vue 3's diffing faster than Vue 2's on the same template?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Static Hoisting &amp; Patch Flags — diffing less, on purpose — Vue.js Advanced — RefreshYourself">
+<meta property="og:description" content="What specifically makes Vue 3's diffing faster than Vue 2's on the same template?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Static Hoisting &amp; Patch Flags — diffing less, on purpose — Vue.js Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="vuejs/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ecfdf5;--crumb-ink:#42b883;">💚 Vue.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Compiler Optimizations</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Vue.js · Advanced · Should Know</div>
+    <h1>Why is Vue 3's diffing often <span class="hl hl-basic">faster</span> than Vue 2's — on the exact same template?</h1>
+    <p class="interview-q">"What specifically makes Vue 3's diffing faster than Vue 2's on the same template?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🧊 Static hoisting</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Re-creating a VNode for markup that has no reactive bindings at all, from scratch, on every single re-render, wastes work for zero benefit.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The compiler creates that VNode <b>once</b>, at compile time, and reuses the exact same object on every re-render instead of rebuilding it each time.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Static hoisting = created once, reused every render.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">🏷️ Patch flags</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Diffing a dynamic VNode by comparing every single prop and attribute, every time, checks far more than usually necessary.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The compiler tags each dynamic VNode with a flag describing exactly what kind of binding is dynamic on it (text, class, props, …) — the runtime diff then only checks that one specific thing.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Patch flags = diff only what's flagged dynamic.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Static hoisting <span class="rarrow">→</span> <b>created once</b>, reused every render</p>
+      <p class="rrow">Patch flags <span class="rarrow">→</span> <b>diff only</b> what's flagged dynamic</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> more compiler smarts at <b>build time</b> →
+    less work diffing at <b>run time</b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 310" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh4" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar4Slate" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="ar4Amber" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="ar4Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="160" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">STATIC NODE</text>
+      <text x="480" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">DYNAMIC NODE</text>
+      <path d="M320,40 V238" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <g filter="url(#sh4)"><rect x="40" y="46" width="240" height="50" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="160" y="66" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">🧊 &lt;footer&gt; (no bindings)</text>
+      <text x="160" y="80" text-anchor="middle" font-size="9.5" fill="#5b6472">nothing here ever changes</text>
+
+      <g filter="url(#sh4)"><rect x="360" y="46" width="240" height="50" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="480" y="66" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">🔤 &lt;span&gt;{{ count }}&lt;/span&gt;</text>
+      <text x="480" y="80" text-anchor="middle" font-size="9.5" fill="#5b6472">text binding is dynamic</text>
+
+      <path d="M160,96 V116" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar4Slate)"/>
+      <path d="M480,96 V116" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#ar4Amber)"/>
+
+      <g filter="url(#sh4)"><rect x="40" y="116" width="240" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="160" y="138" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">📦 hoisted once</text>
+      <text x="160" y="152" text-anchor="middle" font-size="9.5" fill="#5b6472">created at compile time</text>
+
+      <g filter="url(#sh4)"><rect x="360" y="116" width="240" height="46" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="480" y="138" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🏷️ patch flag: TEXT</text>
+      <text x="480" y="152" text-anchor="middle" font-size="9.5" fill="#5b6472">compiler marks what's dynamic</text>
+
+      <path d="M160,162 V182" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#ar4Green)">
+        <animate attributeName="stroke-dashoffset" values="9;0" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+      <path d="M480,162 V182" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#ar4Amber)"/>
+
+      <g filter="url(#sh4)"><rect x="40" y="182" width="240" height="46" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="160" y="204" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">♻️ reused every render</text>
+      <text x="160" y="218" text-anchor="middle" font-size="9.5" fill="#5b6472">same VNode reference, ×N</text>
+
+      <g filter="url(#sh4)"><rect x="360" y="182" width="240" height="46" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="480" y="204" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">🔍 diff checks only TEXT</text>
+      <text x="480" y="218" text-anchor="middle" font-size="9.5" fill="#5b6472">skips class/props/etc. entirely</text>
+
+      <path d="M160,228 V248" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ar4Green)"/>
+      <path d="M480,228 V248" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ar4Green)"/>
+
+      <g filter="url(#sh4)"><rect x="40" y="248" width="560" height="42" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="273" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ SAME RESULT, LESS WORK — know in advance what can possibly change</text>
+    </svg>
+    <figcaption>Two different optimizations, same goal — check less, by knowing more upfront.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Virtual DOM diffing is not "slower because there's more machinery."</b>
+    Static hoisting and patch flags are specifically why Vue 3's diffing is often faster on the
+    same template — it diffs <i>less</i>, not more, by knowing in advance what can possibly
+    change.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Does dynamic content inside a <code>v-for</code> benefit the same
+    way?"</b> Yes, and more — the compiler also tracks which VNodes inside a <code>v-for</code>
+    block are stable vs. dynamic per item, enabling even more targeted patching inside list
+    rendering specifically.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Static hoisting creates the VNode for markup with no reactive
+    bindings once, at compile time, and reuses that same object on every re-render instead of
+    recreating it. Patch flags annotate each dynamic VNode with exactly what kind of binding is
+    dynamic on it — text, class, props — so the runtime diff only checks that one thing instead
+    of comparing every attribute. Together they mean Vue 3 diffs less, not more, by knowing in
+    advance what can possibly change."</p>
+    <ul>
+      <li>Static hoisting → <span class="hl hl-blue">created once</span>, reused every render.</li>
+      <li>Patch flags → <span class="hl hl-hot">tag exactly what's dynamic</span> so the diff checks only that.</li>
+      <li>More machinery ≠ slower → <span class="hl hl-basic">Vue 3 diffs less</span>, on purpose.</li>
+      <li>Inside <code>v-for</code> → <span class="hl hl-teal">stable vs. dynamic per-item tracking</span> enables even more targeted patching.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><span class="hl hl-blue">Static hoisting</span> isn't limited to a single node — the
+      compiler can hoist a whole subtree of markup if none of it has any reactive bindings, not
+      just one isolated element. That hoisted VNode is created exactly once, outside the render
+      function's per-call body, so every re-render simply reuses the same reference instead of
+      allocating a new one.</p>
+
+      <p><span class="hl hl-hot">Patch flags</span> work the opposite way: instead of skipping
+      work entirely, they narrow it. Vue's compiler recognizes a handful of specific dynamic
+      binding shapes — for example a dynamic text binding, or a dynamic <code>class</code> — and
+      tags the VNode with a flag naming which one applies. The runtime diff reads that flag and
+      checks only the thing it names, instead of walking every prop looking for differences.</p>
+
+      <p>Put together, this is the real answer to "why is Vue 3 faster on the same template":
+      it isn't a faster diffing algorithm in the abstract, it's a diff that's been told in
+      advance exactly where to look and where not to bother.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>&lt;template&gt;
+  &lt;footer&gt;© 2026 MyApp&lt;/footer&gt;   <span class="cx-ok">// ✅ static — hoisted once</span>
+  &lt;span&gt;{{ count }}&lt;/span&gt;         <span class="cx-cmt">// dynamic — patch flag TEXT</span>
+&lt;/template&gt;</code></pre>
+      </div>
+      <p class="cx-note">Same template, two completely different compiled strategies for these
+      two lines.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// roughly what the compiler generates (simplified)</span>
+<span class="kw">const</span> _hoisted_1 = h(<span class="str">'footer'</span>, <span class="kw">null</span>, <span class="str">'© 2026 MyApp'</span>)  <span class="cx-ok">// ✅ created once</span>
+
+<span class="kw">function</span> render() {
+  <span class="kw">return</span> [_hoisted_1, h(<span class="str">'span'</span>, <span class="kw">null</span>, count.value, <span class="num">1</span> <span class="cx-cmt">/* PatchFlags.TEXT */</span>)]
+}</code></pre>
+      </div>
+      <p class="cx-note">The number after <code>count.value</code> is the patch flag — it tells
+      the diff "only this node's text can possibly differ."</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A page footer or header has no reactive bindings at all</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc4a1" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing=".03em">STATIC &lt;footer&gt;</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">🧊 hoisted at compile time</text>
+              <path d="M210,43 H270" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc4a1)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">♻️ zero cost every render</text>
+            </svg>
+          </div>
+          <p class="uc-what">A component with hundreds of re-renders never re-creates this
+          markup even once past the first compile — it's pure reuse from then on.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No bindings → hoisted once → free on every future render.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">2</span> You assume "virtual DOM" inherently means slow, no matter the framework</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc4a2" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">"VDOM = SLOW" ASSUMPTION</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">😟 "extra layer = overhead"</text>
+              <path d="M210,43 H270" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc4a2)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="365" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🚫 ignores compiler hints</text>
+              <text x="365" y="54" text-anchor="middle" font-size="9" fill="#991b1b">that skip most of the work</text>
+            </svg>
+          </div>
+          <p class="uc-what">A candidate repeating this line misses that Vue 3's compiler-driven
+          hints are exactly what makes its diffing cheap — the "extra layer" is also where the
+          savings come from.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Compiler hints are the savings, not an extra cost on top.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">3</span> A <code>v-for</code> list where each row has exactly one dynamic text binding</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc4a3" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">v-for="item in items"</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="115" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🏷️ per-row patch flag</text>
+              <text x="115" y="54" text-anchor="middle" font-size="9" fill="#92400e">stable vs. dynamic per item</text>
+              <path d="M210,43 H270" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc4a3)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="365" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">🔍 patches only</text>
+              <text x="365" y="54" text-anchor="middle" font-size="9" fill="#92400e">that row's text</text>
+            </svg>
+          </div>
+          <p class="uc-what">Each row's own patch flag lets the diff target exactly the dynamic
+          piece of that row, instead of re-comparing every row's full markup on every update.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Lists get the same targeting, per row, not just per component.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>It's like a form letter template.</b> The parts that are the same for every
+      recipient get printed once and reused for the whole batch, while only the little window
+      with the recipient's name gets filled in individually, and the printer is told in advance
+      exactly which window that is.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="3.html">← The Render Pipeline</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Vue.js Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="5.html">v-once and v-memo →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Vue.js · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

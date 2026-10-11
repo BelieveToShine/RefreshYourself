@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How do you statically generate a dynamic route like [slug] at build time?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Static Site Generation and generateStaticParams() — Next.js Intermediate — RefreshYourself">
+<meta property="og:description" content="How do you statically generate a dynamic route like [slug] at build time?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Static Site Generation and generateStaticParams() — Next.js Intermediate — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="nextjs/intermediate">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#f4f4f5;--crumb-ink:#171717;">⏭️ Next.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fef3c7;--crumb-ink:#92400e;">Intermediate</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Static Site Generation and generateStaticParams()</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Next.js · Intermediate · Must Know</div>
+    <h1><code>generateStaticParams()</code> — <span class="hl hl-hot">pre-rendering a dynamic route at build time</span></h1>
+    <p class="interview-q">"How do you statically generate a dynamic route like <code>[slug]</code> at build time?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🏗️ generateStaticParams()</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A dynamic route like <code>/blog/[slug]</code> looks like it must be rendered per-request — there's no fixed list of URLs the way a static page has, so it seems to need a live render every time.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span><code>generateStaticParams()</code> returns the actual list of param values (every blog post's slug) up front, so Next.js can pre-render a separate static HTML file for each one at build time — same speed as a fully static page.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">generateStaticParams = the list of param values to pre-build, one file per value.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline"><code>generateStaticParams()</code> = <b>"here's every slug value — build one page per value, up front."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> return 3 slugs → get 3 pre-built HTML files, same speed as fully static.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 220" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shN4" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arN4" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shN4)"><rect x="220" y="20" width="200" height="50" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">generateStaticParams()</text>
+      <text x="320" y="58" text-anchor="middle" font-size="9.5" fill="#5b6472">→ ['post-1','post-2','post-3']</text>
+
+      <path d="M320,70 V94" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M320,94 H110 V114" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arN4)"/>
+      <path d="M320,94 V114" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arN4)"/>
+      <path d="M320,94 H530 V114" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arN4)"/>
+
+      <g filter="url(#shN4)"><rect x="25" y="114" width="170" height="50" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="110" y="136" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">/blog/post-1</text>
+      <text x="110" y="151" text-anchor="middle" font-size="9.5" fill="#5b6472">📄 built at build time</text>
+
+      <g filter="url(#shN4)"><rect x="235" y="114" width="170" height="50" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="320" y="136" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">/blog/post-2</text>
+      <text x="320" y="151" text-anchor="middle" font-size="9.5" fill="#5b6472">📄 built at build time</text>
+
+      <g filter="url(#shN4)"><rect x="445" y="114" width="170" height="50" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/></g>
+      <text x="530" y="136" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">/blog/post-3</text>
+      <text x="530" y="151" text-anchor="middle" font-size="9.5" fill="#5b6472">📄 built at build time</text>
+
+      <text x="320" y="196" text-anchor="middle" font-size="10.5" fill="#5b6472">One returned param = one pre-rendered static HTML file, same speed as a fully static page</text>
+    </svg>
+    <figcaption>Each slug returned by generateStaticParams() fans out into its own static HTML file at build time.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Forgetting <code>generateStaticParams()</code> doesn't make the route error — it makes it dynamic.</b> Without it, Next.js has no list of params to pre-render, so a route you intended to be static silently falls back to rendering on every request instead.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What happens to a param value NOT returned by <code>generateStaticParams()</code>?"</b> By default it's rendered on demand at request time and then cached — unless <code>dynamicParams</code> is explicitly set to <code>false</code>, in which case an unlisted param 404s instead.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>generateStaticParams()</code> returns the list of param values to pre-render for a dynamic route at build time — Next.js generates a separate static HTML file for each one, so the dynamic-looking route performs exactly like a static page."</p>
+    <ul>
+      <li>Returns an array of param objects <span class="hl hl-blue">→ one file built per value</span>.</li>
+      <li>Missing it <span class="hl hl-hot">→ no build-time list</span>, route renders per-request instead.</li>
+      <li>Unlisted param <span class="hl hl-inter">→ rendered on demand and cached</span>, unless <code>dynamicParams: false</code> 404s it.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>A dynamic segment like <code>app/blog/[slug]/page.js</code> doesn't have a fixed set of URLs
+      on its own — <code>slug</code> could be anything. <span class="hl hl-blue">
+      <code>generateStaticParams()</code></span> is how you tell Next.js the actual, concrete list of
+      values that segment should take: it returns an array of objects (e.g.
+      <code>[{ slug: 'post-1' }, { slug: 'post-2' }]</code>), and Next.js pre-renders one static HTML
+      file per entry at build time.</p>
+
+      <p>The result reads as a dynamic route but behaves like a static one — every value returned by
+      <code>generateStaticParams()</code> gets the exact same build-once, serve-many performance
+      profile as a page with no dynamic segments at all.</p>
+
+      <p>What happens to a slug that <i>wasn't</i> in that list is a separate, configurable decision.
+      By default (<code>dynamicParams: true</code>), Next.js renders it on the fly the first time
+      it's requested and caches the result afterward. Setting <code>dynamicParams = false</code>
+      changes that to a hard 404 for anything not explicitly listed.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Next.js</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// app/blog/[slug]/page.js</span>
+<span class="kw">export async function</span> generateStaticParams() {
+  <span class="kw">const</span> posts = <span class="kw">await</span> getAllPostSlugs();   <span class="cx-cmt">// e.g. ['post-1','post-2','post-3']</span>
+  <span class="kw">return</span> posts.map(slug =&gt; ({ slug }));   <span class="cx-ok">// ✅ one static file per slug</span>
+}
+
+<span class="kw">export default async function</span> <span class="ty">BlogPost</span>({ params }) {
+  <span class="kw">const</span> post = <span class="kw">await</span> getPost(params.slug);
+  <span class="kw">return</span> &lt;article&gt;{post.title}&lt;/article&gt;;
+}</code></pre>
+      </div>
+      <p class="cx-note">Every returned <code>{ slug }</code> becomes <b>its own pre-built HTML file</b>.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A blog or docs site with a known, finite set of pages</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcN4a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">KNOWN, FINITE SET OF PAGES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">📚 all post slugs</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcN4a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">⚡ all pre-built</text>
+            </svg>
+          </div>
+          <p class="uc-what">Every post slug is known ahead of time from the CMS or file system —
+          returning the full list from <code>generateStaticParams()</code> pre-builds every post page,
+          so visitors never wait on a render.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Finite, known set → return the whole list, pre-build everything.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Thousands of product pages — too many to all pre-build</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcN4b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">PARTIAL LIST + ON-DEMAND</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">top 100 products</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUcN4b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">rest: on-demand + cached</text>
+            </svg>
+          </div>
+          <p class="uc-what">Returning only the most-visited product slugs keeps build time short —
+          anything not in that list still works, rendered the first time it's visited and cached from
+          then on (since <code>dynamicParams</code> defaults to <code>true</code>).</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Too many to pre-build → return the important subset, let the rest render on demand.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> You forgot generateStaticParams() on a route meant to be static</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcN4c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">NO LIST → NO PRE-RENDER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">[slug]/page.js</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUcN4c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🐛 renders every request</text>
+            </svg>
+          </div>
+          <p class="uc-what">No error is thrown — the route just quietly falls back to rendering
+          on-demand for every request, which can go unnoticed until someone checks build output or
+          server load and wonders why this "static" page isn't actually pre-built.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No generateStaticParams() → no error, just no pre-rendering.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A documentation site with a few hundred pages, each at <code>/docs/[slug]</code>.</b>
+      <code>generateStaticParams()</code> returns every doc's slug once at build time, so the entire
+      site ships as pre-rendered static HTML — fast for every visitor, with no live render cost per
+      request despite the dynamic-looking route.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="3.html">← getStaticProps/getServerSideProps vs. App Router Fetching</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Next.js Intermediate</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="5.html">Incremental Static Regeneration (ISR) →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Next.js · Intermediate
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

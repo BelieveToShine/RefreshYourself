@@ -6,7 +6,7 @@
    sections, and that every local href/src resolves. Also compares page counts to the docs. */
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const ROOT = path.resolve(__dirname, "..");
-const TRACKS = ["csharp","linq","oops","dotnet","webapi","efcore","sql","azure","aws","react","angular","python","ai","dsa","javascript","htmlcss","java"];
+const TRACKS = ["csharp","linq","oops","dotnet","webapi","efcore","sql","azure","aws","react","angular","python","ai","dsa","javascript","htmlcss","java","vuejs","nextjs"];
 const TIERS = ["basic","intermediate","advanced"];
 const errors = [], warns = [];
 const err = (m) => errors.push(m), warn = (m) => warns.push(m);
@@ -70,7 +70,7 @@ for (const t of TRACKS) {
       }
       for (const [name, re] of [["interview-q", /class="interview-q"/], ["recall", /class="recall"/], ["keypoints", /class="keypoints"/], ["explanation", /class="explain/], ["code", /class="codebox/]])
         if (!re.test(html)) warn(`${rel}: missing section ${name}`);
-      const linkScan = html.split("<pre").map((s, i) => (i ? s.slice(s.indexOf("</pre>") + 6) : s)).join(" ").split("<text").map((s, i) => (i ? s.slice(s.indexOf("</text>") + 7) : s)).join(" "); // ignore sample markup in code blocks / diagram text
+      const linkScan = html.split("<pre").map((s, i) => (i ? s.slice(s.indexOf("</pre>") + 6) : s)).join(" ").split("<text").map((s, i) => (i ? s.slice(s.indexOf("</text>") + 7) : s)).join(" ").replace(/<code>(?:[^<]|<(?!\/code>))*<\/code>/g, " "); // ignore sample markup in code blocks / diagram text / inline <code> snippets (e.g. Vue's `:href="url"` binding syntax)
       for (const m of linkScan.matchAll(/(?:href|src)="([^"#:]+?)(?:#[^"]*)?"/g)) {
         if (m[1].startsWith("/")) continue; // escaped sample markup inside diagram text, not a real link
         const target = path.normalize(path.join(path.dirname(rel), m[1]));
@@ -89,7 +89,7 @@ for (const e of SEARCH) if (!exists(e.path)) err(`search-index.js: dead path ${e
 
 // docs: page counts mentioned in overview vs reality
 const overview = read("docs/refreshyourself-overview.md");
-const labels = { csharp: "C#", linq: "LINQ", oops: "OOP", dotnet: ".NET / ASP.NET Core", webapi: "Web API", efcore: "EF Core", sql: "SQL", azure: "Azure", aws: "AWS", react: "React", angular: "Angular", python: "Python", ai: "AI", dsa: "DSA", javascript: "JavaScript", htmlcss: "HTML & CSS", java: "Java" };
+const labels = { csharp: "C#", linq: "LINQ", oops: "OOP", dotnet: ".NET / ASP.NET Core", webapi: "Web API", efcore: "EF Core", sql: "SQL", azure: "Azure", aws: "AWS", react: "React", angular: "Angular", python: "Python", ai: "AI", dsa: "DSA", javascript: "JavaScript", htmlcss: "HTML & CSS", java: "Java", vuejs: "Vue.js", nextjs: "Next.js" };
 for (const t of TRACKS) {
   const at = overview.indexOf("**" + labels[t] + "** — **all 7 phases complete, ");
   const m = at < 0 ? null : overview.slice(at).match(/complete, (\d+)\/(\d+) pages/);

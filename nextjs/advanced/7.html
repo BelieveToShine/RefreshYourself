@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What hydration is, and a classic cause of a hydration mismatch — reading a browser-only value during a shared render path.">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Hydration and Hydration Mismatches — Next.js Advanced — RefreshYourself">
+<meta property="og:description" content="What hydration is, and a classic cause of a hydration mismatch — reading a browser-only value during a shared render path.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Hydration and Hydration Mismatches — Next.js Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="nextjs/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#f4f4f5;--crumb-ink:#171717;">⏭️ Next.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Hydration and Hydration Mismatches</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Next.js · Advanced · Must Know</div>
+    <h1>Hydration only works if the client's first render <span class="hl hl-blue">matches</span> the server's — or it's a <span class="hl hl-hot">mismatch</span></h1>
+    <p class="interview-q">"What's hydration, and what's a classic cause of a hydration mismatch?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">💧 Hydration</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Re-building the entire DOM from scratch on the client, after the server already sent fully-rendered HTML, would waste the work the server just did and cause a visible flash.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Hydration walks the existing server-sent DOM and attaches event listeners/state without rebuilding it — as long as the client's render output matches what the server already sent.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Hydration = reuse the server's DOM, don't rebuild it — if the outputs match.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Hydration mismatch = <b>"client's first render disagreed with the server's."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> <code>window.innerWidth</code>,
+    <code>localStorage</code>, and non-deterministic <code>Date.now()</code> formatting are the
+    classic culprits — the server has <b>no window</b> at all.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shN7" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arN7" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arN7Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shN7)"><rect x="60" y="40" width="220" height="70" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="170" y="63" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🖥️ Server render</text>
+      <text x="170" y="80" text-anchor="middle" font-size="10" fill="#5b6472">deterministic, no window</text>
+      <text x="170" y="94" text-anchor="middle" font-size="9.5" font-family="'Fira Code',monospace" fill="#5b6472">&lt;p&gt;Width: --&lt;/p&gt;</text>
+
+      <g filter="url(#shN7)"><rect x="360" y="40" width="220" height="70" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="470" y="63" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">💻 Client first render</text>
+      <text x="470" y="80" text-anchor="middle" font-size="10" fill="#5b6472">reads window.innerWidth</text>
+      <text x="470" y="94" text-anchor="middle" font-size="9.5" font-family="'Fira Code',monospace" fill="#5b6472">&lt;p&gt;Width: 1024&lt;/p&gt;</text>
+
+      <path d="M170,110 V140" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M470,110 V140" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M170,140 H470" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M320,140 V164" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arN7)"/>
+
+      <g filter="url(#shN7)"><rect x="200" y="164" width="240" height="56" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="186" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">⚠️ Hydration mismatch detected</text>
+      <text x="320" y="202" text-anchor="middle" font-size="10" fill="#5b6472">client output ≠ server output</text>
+
+      <path d="M320,220 V250" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arN7Red)"/>
+
+      <g filter="url(#shN7)"><rect x="185" y="250" width="270" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="272" text-anchor="middle" font-size="12.5" font-weight="700" fill="#991b1b">🔄 Discard &amp; rebuild subtree</text>
+      <text x="320" y="288" text-anchor="middle" font-size="9.5" fill="#5b6472">+ console warning logged</text>
+    </svg>
+    <figcaption>Both renders happen on the SAME shared path — the moment they disagree, React throws out the client's guess and rebuilds.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Reading a browser-only value in a path that runs on both server and
+    client is the classic cause.</b> <code>window.innerWidth</code>, <code>localStorage</code>,
+    <code>Math.random()</code>, or an inconsistently-formatted <code>Date.now()</code> can all
+    differ between the server pass (where <code>window</code> doesn't even exist) and the
+    client's first render.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's the actual fix for a value that legitimately differs between
+    server and client?"</b> Render a deterministic/neutral value (or nothing) on the initial
+    pass, then update it inside <code>useEffect</code> — which only runs client-side, after
+    hydration — so the first render matches on both sides.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Hydration attaches event listeners and state to the server's existing
+    DOM instead of rebuilding it, as long as the client's render output matches the server's. A
+    mismatch happens when they disagree — often from reading a browser-only value like
+    window.innerWidth in a path that runs on both — and React discards and rebuilds that
+    subtree."</p>
+    <ul>
+      <li>Hydration → <span class="hl hl-basic">reuses the server's DOM</span>, doesn't rebuild it.</li>
+      <li>Mismatch → <span class="hl hl-hot">client's first render ≠ server's</span>, triggers a rebuild + warning.</li>
+      <li>Classic cause → <span class="hl hl-inter">window, localStorage, Math.random(), Date.now()</span> in a shared path.</li>
+      <li>Real fix → <span class="hl hl-blue">neutral value first render, update inside useEffect</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>After the server sends fully-rendered HTML, the client doesn't throw that markup away —
+      <span class="hl hl-blue">React "hydrates"</span> it, walking the existing DOM nodes and
+      attaching event listeners and component state to them directly. This only works because
+      React assumes the client's own render of the same component tree would have produced
+      identical output — it skips re-creating the DOM and just wires it up.</p>
+
+      <p>A <span class="hl hl-hot">hydration mismatch</span> happens when that assumption breaks:
+      the client's first render genuinely differs from what the server sent. The most common
+      cause is a value that's only available in the browser — <code>window.innerWidth</code>,
+      <code>localStorage</code>, <code>Math.random()</code>, or a <code>Date</code> formatted in a
+      way that depends on the browser's local timezone — read during a render path that executes
+      identically on both server and client. The server simply has no <code>window</code> object
+      at all, so it renders one thing; the client, running the exact same code, renders another.</p>
+
+      <p>When React detects the mismatch, it discards the mismatched subtree's attempt to reuse
+      the server markup and rebuilds that piece of the DOM from the client's own render, logging a
+      warning. The real fix is to make the two passes agree: render a neutral, deterministic value
+      on the very first pass (identical on both server and client), then update it from inside
+      <code>useEffect</code>, which only ever runs in the browser, after hydration has already
+      completed.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="str">'use client'</span>;
+<span class="kw">function</span> ScreenInfo() {
+  <span class="cx-err">// ❌ window doesn't exist during the server's pass</span>
+  <span class="kw">return</span> <span class="ty">&lt;p&gt;</span>Width: {window.innerWidth}<span class="ty">&lt;/p&gt;</span>;
+}</code></pre>
+      </div>
+      <p class="cx-note">Server renders with no <code>window</code> at all; the client's first
+      render reads a real value — guaranteed mismatch.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> JavaScript</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="str">'use client'</span>;
+<span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>;
+
+<span class="kw">function</span> ScreenInfo() {
+  <span class="kw">const</span> [width, setWidth] = useState(<span class="kw">null</span>); <span class="cx-ok">// ✅ same on both passes</span>
+  useEffect(() =&gt; setWidth(window.innerWidth), []); <span class="cx-ok">// ✅ client-only, after hydration</span>
+  <span class="kw">return</span> <span class="ty">&lt;p&gt;</span>Width: {width ?? <span class="str">'--'</span>}<span class="ty">&lt;/p&gt;</span>;
+}</code></pre>
+      </div>
+      <p class="cx-note">First render is <code>null</code> on both server and client — identical
+      — then <code>useEffect</code> fills in the real value after hydration.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">1</span> A component reads <code>localStorage</code> directly during render</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcN7a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">localStorage DURING RENDER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🖥️ server: undefined</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#991b1b">no localStorage</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arUcN7a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">💻 client: real value</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#991b1b">mismatch</text>
+            </svg>
+          </div>
+          <p class="uc-what">The server has no <code>localStorage</code> at all, so it renders a
+          fallback; the client reads the real stored value on its first pass. <b>A common
+          interview trap:</b> not realizing this applies to every browser-only API, not just
+          <code>window</code>.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Any browser-only API read during shared render → same risk as window.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> Showing a value that's genuinely different per device, correctly</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUcN7b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">FIXED WITH useEffect</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="41" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">1️⃣ render: null</text>
+              <text x="105" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">same both passes</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUcN7b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">2️⃣ useEffect fills in</text>
+              <text x="375" y="54" text-anchor="middle" font-size="9" fill="#1e3a8a">no mismatch</text>
+            </svg>
+          </div>
+          <p class="uc-what">A neutral first render plus a client-only <code>useEffect</code>
+          update is the standard, safe pattern for anything that's legitimately different between
+          server and client.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Neutral first render + useEffect update → no mismatch, by design.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A "time since posted" label shows "5 minutes ago" on the server and briefly flashes
+      "5 minutes ago" then a console warning in production.</b> If the exact formatting depends
+      on the viewer's local timezone or the precise millisecond it's computed, the server's and
+      client's first renders can genuinely differ. The fix: render a stable placeholder (or the
+      raw timestamp) on the first pass, then compute and swap in the relative time inside
+      <code>useEffect</code> once the component is safely client-side.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="6.html">← React Server Components Internals</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Next.js Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="8.html">Edge Runtime vs. Node.js Runtime →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Next.js · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

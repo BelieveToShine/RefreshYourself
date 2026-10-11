@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Your SSR app logs a hydration mismatch warning in production that you can't reproduce locally — how do you track it down?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Scenario: SSR Hydration Mismatch in Production — Vue.js Advanced — RefreshYourself">
+<meta property="og:description" content="Your SSR app logs a hydration mismatch warning in production that you can't reproduce locally — how do you track it down?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Scenario: SSR Hydration Mismatch in Production — Vue.js Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="vuejs/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ecfdf5;--crumb-ink:#42b883;">💚 Vue.js</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Scenario: SSR Hydration Mismatch in Production</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Vue.js · Advanced · Should Know</div>
+    <h1>Same component, two different outputs — <span class="hl hl-hot">server</span> vs. <span class="hl hl-blue">client</span></h1>
+    <p class="interview-q">"Your SSR app logs a hydration mismatch warning in production that you can't reproduce locally — how do you track it down?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">⚡ Hydration Mismatch</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Code reading a browser-only API (<code>window</code>, <code>localStorage</code>, <code>Date.now()</code> producing a different value) during a render path that runs on both server and client produces different markup on each side — flagged as a mismatch, often with a visible flash where content briefly shows the wrong thing before "correcting" itself.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Isolate browser-only logic to run only after mount (<code>onMounted</code>, which never runs during SSR) instead of in the initial render path both environments share.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Anything browser-only belongs in onMounted, never the shared render path.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Hydration mismatch = <b>"the server and client rendered different markup from the same component."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> if the render path reads <code>window</code>, it can't be the same on both sides — the server never has one.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 680 290" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh22" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar22Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="340" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">THE SAME COMPONENT, RENDERED TWICE</text>
+
+      <line x1="340" y1="32" x2="340" y2="230" stroke="#e2e8f0" stroke-width="1.5"/>
+
+      <text x="170" y="52" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🖥️ Server render</text>
+      <text x="510" y="52" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">💻 Client render</text>
+
+      <g filter="url(#sh22)"><rect x="60" y="66" width="220" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="170" y="86" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">no window object</text>
+      <text x="170" y="101" text-anchor="middle" font-size="9.5" fill="#5b6472">window.innerWidth → undefined</text>
+
+      <g filter="url(#sh22)"><rect x="400" y="66" width="220" height="46" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="510" y="86" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">window exists</text>
+      <text x="510" y="101" text-anchor="middle" font-size="9.5" fill="#5b6472">window.innerWidth → 1280</text>
+
+      <path d="M170,112 V134" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+      <path d="M510,112 V134" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+
+      <g filter="url(#sh22)"><rect x="60" y="134" width="220" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="170" y="154" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">renders "Mobile"</text>
+      <text x="170" y="169" text-anchor="middle" font-size="9.5" fill="#5b6472">fallback branch taken</text>
+
+      <g filter="url(#sh22)"><rect x="400" y="134" width="220" height="46" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="510" y="154" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">renders "Desktop"</text>
+      <text x="510" y="169" text-anchor="middle" font-size="9.5" fill="#5b6472">real width branch taken</text>
+
+      <path d="M280,157 H340" fill="none" stroke="#dc2626" stroke-width="1.8"/>
+      <path d="M400,157 H340" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#ar22Red)"/>
+
+      <rect x="230" y="196" width="220" height="34" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="340" y="210" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">🐛 hydration mismatch</text>
+      <text x="340" y="223" text-anchor="middle" font-size="9" fill="#991b1b">"Mobile" ≠ "Desktop"</text>
+
+      <text x="340" y="256" text-anchor="middle" font-size="10.5" fill="#5b6472">Fix: read window.innerWidth inside onMounted, not during the shared render</text>
+    </svg>
+    <figcaption>The exact same component reads <code>window</code> during render and gets two different answers — one on each side.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Assuming a hydration mismatch is always a code bug in your own app.</b> A
+    browser extension injecting DOM attributes before Vue hydrates is a real, external cause
+    worth ruling out, especially when it reproduces in production but not locally.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why would this reproduce in production but not locally?"</b> Production
+    and local environments can genuinely differ in timezone, locale, or which browser extensions
+    are active — exactly the kind of environment-dependent factor that causes server/client
+    output to diverge unpredictably.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd look for code reading a browser-only API, or anything
+    environment-dependent like <code>Date.now()</code> or locale, inside a render path that runs
+    on both server and client — the fix is moving that logic into <code>onMounted</code>, which
+    only ever runs on the client, after hydration's initial comparison is already done."</p>
+    <ul>
+      <li><code>window</code>/<code>localStorage</code> read during render → <span class="hl hl-hot">different output on each side</span>.</li>
+      <li>Fix → <span class="hl hl-basic">move browser-only logic into `onMounted`</span>, never the shared render path.</li>
+      <li>Reproduces in prod, not locally → <span class="hl hl-inter">check timezone, locale, and browser extensions</span>, not just your own code.</li>
+      <li>Visible symptom → <span class="hl hl-blue">a brief flash of the wrong content before it "corrects" itself</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Server-side rendering runs the exact same component code on the server to produce initial
+      HTML, then again on the client to "hydrate" that HTML into a live, interactive app. Vue
+      compares what the client would have rendered against what the server actually sent — if they
+      don't match, it logs a <span class="hl hl-hot">hydration mismatch</span> and falls back to
+      re-rendering the affected part on the client, which is what causes the visible flash.</p>
+
+      <p>The most common cause is a <span class="hl hl-blue">browser-only API</span> read during
+      that shared render path. <code>window</code>, <code>document</code>, and
+      <code>localStorage</code> simply don't exist on the server — code that reads them there
+      either throws or silently takes a different branch than the client would. A value that's
+      environment-dependent in a subtler way, like <code>Date.now()</code> or the user's locale,
+      can also legitimately differ between the moment the server rendered and the moment the
+      client hydrates.</p>
+
+      <p>The fix is to keep that logic out of the shared render path entirely — run it inside
+      <code>onMounted</code>, which Vue guarantees never executes during server rendering, so it
+      only ever runs once on the real client, after the initial hydration comparison has already
+      happened.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>&lt;script setup&gt;
+<span class="kw">const</span> isMobile = window.innerWidth &lt; <span class="num">768</span>; <span class="cx-err">// ❌ window doesn't exist on the server</span>
+&lt;/script&gt;
+&lt;template&gt;
+  &lt;p&gt;{{ isMobile ? <span class="str">'Mobile'</span> : <span class="str">'Desktop'</span> }}&lt;/p&gt;
+&lt;/template&gt;</code></pre>
+      </div>
+      <p class="cx-note">The server can't evaluate <code>window.innerWidth</code> at all — whatever
+      it renders for this branch <b>will not match</b> what the client renders.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> Vue</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>&lt;script setup&gt;
+<span class="kw">import</span> { ref, onMounted } <span class="kw">from</span> <span class="str">'vue'</span>;
+<span class="kw">const</span> isMobile = ref(<span class="kw">false</span>); <span class="cx-ok">// ✅ same initial value, both sides</span>
+
+onMounted(() => {
+  isMobile.value = window.innerWidth &lt; <span class="num">768</span>; <span class="cx-ok">// ✅ only ever runs on the client</span>
+});
+&lt;/script&gt;
+&lt;template&gt;
+  &lt;p&gt;{{ isMobile ? <span class="str">'Mobile'</span> : <span class="str">'Desktop'</span> }}&lt;/p&gt;
+&lt;/template&gt;</code></pre>
+      </div>
+      <p class="cx-note">Server and client agree on the initial render (<code>false</code>) —
+      <code>onMounted</code> then updates it safely, after hydration already succeeded.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#d97706">
+          <div class="uc-sit"><span class="uc-flag">1</span> A component branches on <code>window.innerWidth</code> or another browser-only read, directly in its render path</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc22a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#d97706"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">window read in render</text>
+              <path d="M210,33 H290" stroke="#d97706" stroke-width="1.6" fill="none" marker-end="url(#arUc22a)"/>
+              <rect x="290" y="19" width="170" height="28" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="375" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">server has none</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the #1 scenario you'll actually run into — the server simply
+          has no <code>window</code> to read, so whatever branch that code takes can never match
+          what the client later renders.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Move any window/localStorage read into onMounted.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">2</span> A timestamp or locale-dependent value is computed during render</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc22b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">Date.now() in render</text>
+              <path d="M210,33 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc22b)"/>
+              <rect x="290" y="19" width="170" height="28" rx="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">different ms, each side</text>
+            </svg>
+          </div>
+          <p class="uc-what">The server renders at one moment and the client hydrates at a
+          slightly later one — a value that's legitimately time- or locale-dependent can genuinely
+          differ between the two without either side having a "bug" in the usual sense.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Time/locale-dependent values need the same onMounted treatment as browser APIs.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> The mismatch reproduces for real users in production, but never on your own machine</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc22c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <rect x="20" y="19" width="190" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="115" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">own code "looks fine"</text>
+              <path d="M210,33 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arUc22c)"/>
+              <rect x="290" y="19" width="170" height="28" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="37" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">check extensions too</text>
+            </svg>
+          </div>
+          <p class="uc-what">A candidate might assume the bug has to be in their own render logic
+          — but a real user's browser extension injecting attributes into the DOM before Vue
+          hydrates is a genuine external cause, and it's exactly the kind of thing that shows up
+          only on real users' machines.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Rule out browser extensions and environment differences, not just your own code.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A production SSR app occasionally logs hydration warnings on a "last updated X
+      minutes ago" label, but the local dev team can never reproduce it.</b> The label was
+      computed from <code>Date.now()</code> directly in the render path — moving that calculation
+      into <code>onMounted</code>, so it only ever runs once on the real client, eliminates the
+      mismatch entirely.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="21.html">← Scenario: A Large List Renders Slowly</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Vue.js Advanced</a>
+    <div class="side next"></div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Vue.js · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
