@@ -53,6 +53,16 @@ junior/mid-level interview. Two groups of tracks:
 - **Other tracks**, not part of the ordered path: Python, DSA, AI, and Java (all 7 phases
   complete, see below).
 
+**`scenarios/index.html` — the "Scenario Bank"** (added 2026-10-13): not a 20th track and not
+part of the 7-phase pipeline — a single cross-track index page that lists every dedicated
+"Scenario:"-style applied question already written anywhere on the site (58 pages across 17
+tracks as of this pass), grouped by the track each one belongs to. Every row links to the real
+page in its own track; nothing is duplicated. See
+[`rules/scenario-bank.md`](rules/scenario-bank.md) for the convention — how a page earns a spot
+here, and the two small steps (one roadmap-style row, one back-link pill on the page itself) that
+keep a scenario page reachable both from its own track and from this index. EF Core and AI have
+no scenario page yet, logged there as a known gap, not an oversight.
+
 Every track goes through 7 phases before any page is built — see
 [`specs/README.md`](superpowers/specs/README.md) for the full pipeline, and
 [`rules/interview-depth-and-priority.md`](rules/interview-depth-and-priority.md) for the full

@@ -31,6 +31,7 @@ override default behavior — read the relevant one before doing the thing, not 
 | Run Phase 2 (review) on any track — dedupe AND identify gaps, the second half is easy to skip | [gap-hunting.md](gap-hunting.md) |
 | Run Phase 7 (writing pages) on a track — subagent dispatch, safety, verification, site wiring | [build-process.md](build-process.md) |
 | Report anything as "committed" or "pushed" in chat | [reporting.md](reporting.md) — name the branch and commit hash, not just "done" |
+| Add a scenario question to `scenarios/index.html`, or write a new dedicated "Scenario:"-style page | [scenario-bank.md](scenario-bank.md) |
 
 For the whole-project picture (what this site is, the full topic catalog, what's written vs.
 planned) read [`docs/refreshyourself-overview.md`](../refreshyourself-overview.md) first — before

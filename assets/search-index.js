@@ -3,6 +3,7 @@
    is blocked on a page opened directly from disk, a plain script tag isn't. */
 window.SEARCH_INDEX = [
   { title: "Home", track: "", tier: "", path: "index.html", keywords: "home all tracks csharp oops dotnet sql react dsa" },
+  { title: "Scenario Bank", track: "", tier: "", path: "scenarios/index.html", keywords: "scenario bank production incident diagnose design cross track all scenarios java linq react angular vue next webapi aws azure sql csharp oop dotnet python javascript html css dsa" },
   { title: "C# — track home", track: "C#", tier: "", path: "csharp/index.html", keywords: "csharp c# dotnet language overview" },
   { title: "C# Basic — topic list", track: "C#", tier: "Basic", path: "csharp/basic/index.html", keywords: "csharp basic list interview questions roadmap" },
   { title: "Value Types vs. Reference Types", track: "C#", tier: "Basic", path: "csharp/basic/1.html", keywords: "value type reference type stack heap copy pointer struct class boxing csharp" },
