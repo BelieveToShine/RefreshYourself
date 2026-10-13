@@ -508,3 +508,47 @@ function esc(s) {
     true
   );
 })();
+
+/* Visited-page tracking (localStorage, client-side only — no account, no server). A real topic
+   page (one with a .pager) marks itself visited under "<data-tier-key>/<file, no .html>" —
+   NOT via location.href resolution, which a dev server's "clean URL" rewriting can silently
+   break (an index.html request can come back as e.g. "/csharp/basic" with no trailing slash,
+   which then resolves a same-folder "1.html" link to the wrong parent folder entirely). Every
+   tier index.html now carries the same data-tier-key attribute topic pages already had (added
+   by scripts/add-tier-key-to-index.js) specifically so this check never needs location.href at
+   all: tier-key + the link's own literal href (always a same-folder "N.html") is the exact key
+   the target page marked itself under. Placed last in this file so the paint pass always runs
+   after the tier-nav sidebar IIFE above has finished building its markup. */
+(function () {
+  var KEY = "ry-visited";
+  var tierKey = document.body.getAttribute("data-tier-key");
+  if (!tierKey) return;
+
+  function readVisited() {
+    try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { return {}; }
+  }
+
+  function stripExt(file) { return file.replace(/\.html$/, ""); }
+
+  if (document.querySelector(".pager")) {
+    var file = stripExt(location.pathname.split("/").pop() || "");
+    if (file) {
+      var visited = readVisited();
+      var selfKey = tierKey + "/" + file;
+      if (!visited[selfKey]) {
+        visited[selfKey] = 1;
+        try { localStorage.setItem(KEY, JSON.stringify(visited)); } catch (e) {}
+      }
+    }
+  }
+
+  var visitedMap = readVisited();
+  if (Object.keys(visitedMap).length) {
+    document.querySelectorAll(".topic-row a[href], .tn-item a[href]").forEach(function (a) {
+      var href = a.getAttribute("href") || "";
+      if (!href || href.indexOf("/") > -1 || href.indexOf(":") > -1) return; // skip cross-folder links (e.g. the Scenario Bank "see all")
+      var li = visitedMap[tierKey + "/" + stripExt(href)] && a.closest("li");
+      if (li) li.classList.add("visited");
+    });
+  }
+})();

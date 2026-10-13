@@ -177,3 +177,32 @@ Verified by actually rendering the tile at the grid's real narrowest column widt
 sweeping viewport widths around the 3-to-2-column breakpoint, ~236px), not assumed from the CSS.
 If a future track ever needs its own long tier-pill words, follow the same pattern: a `:has()`
 selector scoped to that tile's own tier class, never a global `.ttier` size change.
+
+## Homepage-only components (added 2026-10-13)
+
+A handful of classes exist only on `index.html` and `quickstart.html`, not shared by track/topic
+pages — listed here so a later session doesn't go hunting through every page for where they're
+used:
+
+- `.hero-stats`/`.hstat`/`.hsep` — the "952 pages · 20 tracks · every page has a diagram" line
+  under the hero paragraph.
+- `.hero-cta`/`.hcta`/`.hcta.primary` — the two hero buttons ("Interview tomorrow? Start here",
+  "Browse the Scenario Bank"). `.primary` is solid `--accent`; the other is an outlined pill —
+  same treatment as every other site pill/chip (`::after{content:none}` to opt out of the global
+  link-underline animation, see [link-hover.md](link-hover.md)).
+- `.recent-strip`/`.rs-label`/`.rs-item` — the "✨ Recently added" row. Manually curated in
+  `index.html` itself (no data file) — keep it to 3-4 items so it stays a glance, not a changelog.
+- `.showcase`/`.showcase-grid`/`.showcase-fig` — the "this is what a page actually looks like"
+  section, two real screenshots (`assets/images/showcase-diagram.png`,
+  `showcase-keypoints.png`) of an actual page's diagram and "say this in the interview" box.
+  Re-capture with Playwright element screenshots (`.diagram-card`, `.keypoints`) if the reference
+  page's content changes — remove `.fixed-pager` from the DOM first (`el.remove()`) or it bleeds
+  into the shot at short viewport heights.
+
+`quickstart.html` itself reuses existing components verbatim (`.roadmap-tier.toggle`,
+`.topic-list`/`.topic-row`) rather than inventing new ones — see
+[`docs/rules/scenario-bank.md`](scenario-bank.md) for the sibling page that established that
+"grouped `<details>` of `.topic-row`-style items" pattern first. Regenerate it with
+`node scripts/build-quickstart.js` whenever a track's 🔥 Must Know set changes in
+`assets/nav-index.js` — never hand-edit it, the whole point is that it can't drift from the real
+per-tier data.

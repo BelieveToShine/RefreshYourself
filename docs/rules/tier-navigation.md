@@ -208,3 +208,28 @@ later, follow the same pattern (computed from data, zero new per-page markup).
 4. Verify like the C# rollout did: open the first topic (no Prev), a middle one, and the last
    one (no Next) at desktop width — confirm the right row highlights and its group is open;
    confirm the sidebar disappears below 960px and the existing `.fixed-pager` still works there.
+
+## Visited-page tracking (added 2026-10-13)
+
+A ✓ instead of the row number on a `.topic-row` (tier index) or `.tn-item` (this sidebar) means
+the reader has already opened that page — purely client-side, `localStorage`, no account. The
+IIFE lives at the very end of `assets/site.js`, after this sidebar's own IIFE, so it always runs
+once the sidebar's markup already exists.
+
+**Why it doesn't use `location.href`/`location.pathname` at all:** an earlier version resolved
+each link's target via `new URL(href, location.href)`, which broke under `npx serve`'s "clean
+URL" rewriting — requesting `.../csharp/basic/index.html` can come back with
+`location.href` = `.../csharp/basic` (no trailing slash), and resolving a same-folder `1.html`
+link against that drops the `basic` segment entirely (standard URL-resolution behavior, not a
+bug in `serve`). The fix: every tier index.html now carries the same `data-tier-key="track/tier"`
+attribute topic pages already had (added sitewide by `scripts/add-tier-key-to-index.js` — safe to
+re-run, skips files that already have it). The visited key is always
+`"<data-tier-key>/<file, no .html>"`, built from that attribute plus either
+`location.pathname.split("/").pop()` (marking the current topic page) or a link's own literal
+`getAttribute("href")` (painting a `.topic-row`/`.tn-item`) — never a resolved absolute URL, so
+the dev-server quirk above can't affect it either way.
+
+**Adding this to a new tier**: nothing to do — `data-tier-key` is already required on both topic
+pages and that tier's `index.html` (see "Adding this to a new tier" above), and the visited-mark
+IIFE reads it the same way everywhere. If you ever hand-write a new index.html instead of copying
+an existing one, don't forget the attribute.
