@@ -131,7 +131,7 @@ window.NAV_INDEX = {
         items: [
           { n: 11, file: "11.html", short: "Attributes",              title: "Attributes",                        tail: "declarative metadata, read back via reflection.", priority: "🧠" },
           { n: 12, file: "12.html", short: "Expression Trees",        title: "Expression Trees",                  tail: "code as data — why EF Core needs this, not a Func.", priority: "🧠" },
-          { n: 13, file: "13.html", short: "Performance checklist",   title: "C# Performance Checklist",          tail: "a hot path is under GC pressure — what do you check first?", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Performance checklist",   title: "C# Performance Checklist",          tail: "a hot path is under GC pressure — what do you check first?", priority: "⭐", scenario: true },
           { n: 14, file: "14.html", short: "Dictionary/HashSet", title: "Dictionary / HashSet Internals", tail: "Hash, bucket, chain; O(1) average; vs SortedDictionary", priority: "🔥" },
           { n: 15, file: "15.html", short: "Task vs ValueTask", title: "Task vs. ValueTask", tail: "When ValueTask avoids allocation, and the one-await rule", priority: "⭐" }
         ]
@@ -200,10 +200,10 @@ window.NAV_INDEX = {
       {
         label: "Questions 1–3",
         items: [
-          { n: 1, file: "1.html", short: "SOLID as a Whole",         title: "SOLID as a Whole",                tail: "applying all five to one real service.", priority: "⭐" },
+          { n: 1, file: "1.html", short: "SOLID as a Whole",         title: "SOLID as a Whole",                tail: "applying all five to one real service.", priority: "⭐", scenario: true },
           { n: 2, file: "2.html", short: "Composition over Inheritance", title: "Why Prefer Composition Over Inheritance", tail: "the fragile base class problem.", priority: "⭐" },
-          { n: 3, file: "3.html", short: "Refactoring a Coupled Service", title: "Refactoring a Tightly Coupled Service", tail: "one method, three hidden dependencies.", priority: "🧠" },
-          { n: 4, file: "4.html", short: "Code Review Refactor", title: "Refactoring a Method Flagged in Code Review", tail: "extract, don't rewrite.", priority: "⭐" }
+          { n: 3, file: "3.html", short: "Refactoring a Coupled Service", title: "Refactoring a Tightly Coupled Service", tail: "one method, three hidden dependencies.", priority: "🧠", scenario: true },
+          { n: 4, file: "4.html", short: "Code Review Refactor", title: "Refactoring a Method Flagged in Code Review", tail: "extract, don't rewrite.", priority: "⭐", scenario: true }
         ]
       }
     ]
@@ -289,7 +289,7 @@ window.NAV_INDEX = {
         items: [
           { n: 1, file: "1.html", short: "Kestrel & Reverse Proxies", title: "Kestrel & Reverse Proxies", tail: "why Kestrel isn't meant to face the internet alone.", priority: "⭐" },
           { n: 2, file: "2.html", short: "Model Binding", title: "Model Binding Internals", tail: "Source priority and custom IModelBinder", priority: "🧠" },
-          { n: 3, file: "3.html", short: "Slow App Triage", title: "Slow MVC App Under Load — Triage", tail: "Measure first, find the hot path, fix one thing", priority: "⭐" },
+          { n: 3, file: "3.html", short: "Slow App Triage", title: "Slow MVC App Under Load — Triage", tail: "Measure first, find the hot path, fix one thing", priority: "⭐", scenario: true },
           { n: 4, file: "4.html", short: "Identity, OAuth2, OIDC", title: "Identity, OAuth2 & OpenID Connect", tail: "OAuth2 = what, OIDC = who, Identity = local users", priority: "🔥" }
         ]
       },
@@ -297,10 +297,10 @@ window.NAV_INDEX = {
         label: "Questions 5–8",
         hot: 2,
         items: [
-          { n: 5, file: "5.html", short: "Monolith to Microservices", title: "Migrating a Monolith to Microservices — Approach", tail: "strangle it one seam at a time.", priority: "🔥" },
-          { n: 6, file: "6.html", short: "In-Memory Cache Loses Data", title: "In-Memory Caching Loses Data on Restart", tail: "IMemoryCache forgets everything — Redis doesn't.", priority: "🔥" },
-          { n: 7, file: "7.html", short: "Real-Time Order Status", title: "Designing Real-Time Order Status Updates", tail: "stop asking, start listening.", priority: "⭐" },
-          { n: 8, file: "8.html", short: "Scalable Notification Service", title: "Designing a Scalable Notification Service", tail: "decouple with a queue.", priority: "⭐" }
+          { n: 5, file: "5.html", short: "Monolith to Microservices", title: "Migrating a Monolith to Microservices — Approach", tail: "strangle it one seam at a time.", priority: "🔥", scenario: true },
+          { n: 6, file: "6.html", short: "In-Memory Cache Loses Data", title: "In-Memory Caching Loses Data on Restart", tail: "IMemoryCache forgets everything — Redis doesn't.", priority: "🔥", scenario: true },
+          { n: 7, file: "7.html", short: "Real-Time Order Status", title: "Designing Real-Time Order Status Updates", tail: "stop asking, start listening.", priority: "⭐", scenario: true },
+          { n: 8, file: "8.html", short: "Scalable Notification Service", title: "Designing a Scalable Notification Service", tail: "decouple with a queue.", priority: "⭐", scenario: true }
         ]
       }
     ]
@@ -379,8 +379,8 @@ window.NAV_INDEX = {
           { n: 2, file: "2.html", short: "Retry vs. Resilience",  title: "Retry vs. Resilience", tail: "circuit breaking, timeouts, and fallback.", priority: "🔥" },
           { n: 3, file: "3.html", short: "Distributed Systems",   title: "Distributed Systems Considerations", tail: "what changes once there's more than one instance.", priority: "🔥" },
           { n: 4, file: "4.html", short: "Large Payloads",        title: "Large Payloads", tail: "streaming without blocking a thread or exhausting memory.", priority: "🧠" },
-          { n: 5, file: "5.html", short: "Traffic Spike Scenario", title: "Traffic Spike Scenario", tail: "10x traffic, what do you check first?", priority: "🔥" },
-          { n: 6, file: "6.html", short: "500 Errors in Prod",    title: "500-Errors-in-Production Scenario", tail: "how you'd actually investigate.", priority: "⭐" },
+          { n: 5, file: "5.html", short: "Traffic Spike Scenario", title: "Traffic Spike Scenario", tail: "10x traffic, what do you check first?", priority: "🔥", scenario: true },
+          { n: 6, file: "6.html", short: "500 Errors in Prod",    title: "500-Errors-in-Production Scenario", tail: "how you'd actually investigate.", priority: "⭐", scenario: true },
           { n: 7, file: "7.html", short: "API Gateway & BFF", title: "API Gateway & BFF", tail: "Gateway vs. BFF vs. reverse proxy — and its SPOF caveat", priority: "⭐" },
           { n: 8, file: "8.html", short: "Polly & Resilience", title: "Resilience in .NET — Polly & Http.Resilience", tail: "Retry, breaker and timeout on outgoing HttpClient calls", priority: "⭐" },
           { n: 9, file: "9.html", short: "Webhooks", title: "Webhooks", tail: "Sign, retry and dedupe callbacks to the client", priority: "⭐" },
@@ -391,14 +391,14 @@ window.NAV_INDEX = {
         label: "Questions 11–18",
         hot: 5,
         items: [
-          { n: 11, file: "11.html", short: "Latency & Exceptions Triage", title: "Diagnosing Latency and Exceptions in a Deployed API", tail: "guess, or read the evidence first?", priority: "🔥" },
-          { n: 12, file: "12.html", short: "Concurrent Request Burst", title: "Handling a Burst of Concurrent Requests", tail: "is async alone enough?", priority: "⭐" },
-          { n: 13, file: "13.html", short: "Backward-Compatible API", title: "Designing a Backward-Compatible API", tail: "additive, or does it break someone?", priority: "⭐" },
-          { n: 14, file: "14.html", short: "JWT vs. OAuth", title: "Choosing Between JWT and OAuth for a New API", tail: "are they even competing options?", priority: "🔥" },
-          { n: 15, file: "15.html", short: "Downstream API Fails", title: "One Downstream API Fails Among Several", tail: "does the whole response go down with it?", priority: "🔥" },
-          { n: 16, file: "16.html", short: "Zero-Loss Architecture", title: "Zero-Loss Architecture Under High Throughput", tail: "process inline, or durably queue it?", priority: "🔥" },
-          { n: 17, file: "17.html", short: "Per-Endpoint Rate Limiting", title: "Designing Per-Endpoint Rate Limiting", tail: "fair, or just lazy?", priority: "⭐" },
-          { n: 18, file: "18.html", short: "Prod Troubleshooting Method", title: "General Production Troubleshooting Approach", tail: "do you have a repeatable method?", priority: "⭐" }
+          { n: 11, file: "11.html", short: "Latency & Exceptions Triage", title: "Diagnosing Latency and Exceptions in a Deployed API", tail: "guess, or read the evidence first?", priority: "🔥", scenario: true },
+          { n: 12, file: "12.html", short: "Concurrent Request Burst", title: "Handling a Burst of Concurrent Requests", tail: "is async alone enough?", priority: "⭐", scenario: true },
+          { n: 13, file: "13.html", short: "Backward-Compatible API", title: "Designing a Backward-Compatible API", tail: "additive, or does it break someone?", priority: "⭐", scenario: true },
+          { n: 14, file: "14.html", short: "JWT vs. OAuth", title: "Choosing Between JWT and OAuth for a New API", tail: "are they even competing options?", priority: "🔥", scenario: true },
+          { n: 15, file: "15.html", short: "Downstream API Fails", title: "One Downstream API Fails Among Several", tail: "does the whole response go down with it?", priority: "🔥", scenario: true },
+          { n: 16, file: "16.html", short: "Zero-Loss Architecture", title: "Zero-Loss Architecture Under High Throughput", tail: "process inline, or durably queue it?", priority: "🔥", scenario: true },
+          { n: 17, file: "17.html", short: "Per-Endpoint Rate Limiting", title: "Designing Per-Endpoint Rate Limiting", tail: "fair, or just lazy?", priority: "⭐", scenario: true },
+          { n: 18, file: "18.html", short: "Prod Troubleshooting Method", title: "General Production Troubleshooting Approach", tail: "do you have a repeatable method?", priority: "⭐", scenario: true }
         ]
       }
     ]
@@ -577,7 +577,7 @@ window.NAV_INDEX = {
           { n: 1, file: "1.html", short: "Isolation Levels", title: "Isolation Levels", tail: "dirty read, non-repeatable read, phantom read.", priority: "🔥" },
           { n: 2, file: "2.html", short: "Deadlock vs Blocking", title: "Deadlock vs. Blocking", tail: "the actual difference.", priority: "🔥" },
           { n: 3, file: "3.html", short: "Execution Plans", title: "Execution Plans", tail: "what reading one actually tells you.", priority: "🔥" },
-          { n: 4, file: "4.html", short: "Perf Regression", title: "Performance Degraded Over Time", tail: "how you'd investigate.", priority: "🔥" },
+          { n: 4, file: "4.html", short: "Perf Regression", title: "Performance Degraded Over Time", tail: "how you'd investigate.", priority: "🔥", scenario: true },
           { n: 5, file: "5.html", short: "Locking", title: "Locking", tail: "mechanically, and how it leads to blocking.", priority: "⭐" },
           { n: 6, file: "6.html", short: "Optimizer & Indexes", title: "How the Optimizer Picks an Index", tail: "or decides not to.", priority: "🧠" }
         ]
@@ -596,8 +596,8 @@ window.NAV_INDEX = {
         label: "Questions 11–12",
         hot: 2,
         items: [
-          { n: 11, file: "11.html", short: "History via Triggers", title: "Maintaining Financial Data History — Triggers?", tail: "whether a trigger is really the right tool.", priority: "🔥" },
-          { n: 12, file: "12.html", short: "Query Deadlock", title: "A Query Goes Into Deadlock", tail: "how will you identify it?", priority: "🔥" }
+          { n: 11, file: "11.html", short: "History via Triggers", title: "Maintaining Financial Data History — Triggers?", tail: "whether a trigger is really the right tool.", priority: "🔥", scenario: true },
+          { n: 12, file: "12.html", short: "Query Deadlock", title: "A Query Goes Into Deadlock", tail: "how will you identify it?", priority: "🔥", scenario: true }
         ]
       }
     ]
@@ -696,11 +696,11 @@ window.NAV_INDEX = {
           { n: 11, file: "11.html", short: "Testing at Scale",             title: "Testing at Scale",                tail: "a pyramid, not a wall.", priority: "⭐" },
           { n: 12, file: "12.html", short: "Security",                      title: "Security",                        tail: "does JSX actually prevent XSS?", priority: "🔥" },
           { n: 13, file: "13.html", short: "Production Performance",        title: "Production Performance",          tail: "where to look after it gets slower.", priority: "🔥" },
-          { n: 14, file: "14.html", short: "Scenario: Runaway Rendering",   title: "Scenario: Runaway Rendering & Requests", tail: "find the loop, not just the symptom.", priority: "🔥" },
-          { n: 15, file: "15.html", short: "Scenario: Scaling Under Load",  title: "Scenario: Scaling Under Load",    tail: "5,000 rows is a scale problem, not a bug.", priority: "🔥" },
-          { n: 16, file: "16.html", short: "Scenario: Incident Response",   title: "Scenario: Production Incident Response", tail: "diagnosing a blank page in prod.", priority: "🔥" },
-          { n: 17, file: "17.html", short: "Scenario: Team Growing Pains",  title: "Scenario: Codebase & Team Growing Pains", tail: "the codebase outgrew its own shape.", priority: "⭐" },
-          { n: 18, file: "18.html", short: "Scenario: Architecture Decisions", title: "Scenario: Architecture Decisions", tail: "CSR, SSR, or Server Components?", priority: "🔥" }
+          { n: 14, file: "14.html", short: "Scenario: Runaway Rendering",   title: "Scenario: Runaway Rendering & Requests", tail: "find the loop, not just the symptom.", priority: "🔥", scenario: true },
+          { n: 15, file: "15.html", short: "Scenario: Scaling Under Load",  title: "Scenario: Scaling Under Load",    tail: "5,000 rows is a scale problem, not a bug.", priority: "🔥", scenario: true },
+          { n: 16, file: "16.html", short: "Scenario: Incident Response",   title: "Scenario: Production Incident Response", tail: "diagnosing a blank page in prod.", priority: "🔥", scenario: true },
+          { n: 17, file: "17.html", short: "Scenario: Team Growing Pains",  title: "Scenario: Codebase & Team Growing Pains", tail: "the codebase outgrew its own shape.", priority: "⭐", scenario: true },
+          { n: 18, file: "18.html", short: "Scenario: Architecture Decisions", title: "Scenario: Architecture Decisions", tail: "CSR, SSR, or Server Components?", priority: "🔥", scenario: true }
         ]
       }
     ]
@@ -792,12 +792,12 @@ window.NAV_INDEX = {
         label: "Questions 11–16",
         hot: 4,
         items: [
-          { n: 11, file: "11.html", short: "Scenario: Performance",     title: "Scenario: Performance Under Load", tail: "profile first, then pick which fix actually applies.", priority: "🔥" },
-          { n: 12, file: "12.html", short: "Scenario: RxJS in Prod",     title: "Scenario: RxJS in Production",     tail: "the same handful of mistakes, again and again.", priority: "🔥" },
-          { n: 13, file: "13.html", short: "Scenario: CD Gone Wrong",    title: "Scenario: Change Detection Gone Wrong", tail: "an OnPush component just following its own rules.", priority: "🔥" },
-          { n: 14, file: "14.html", short: "Scenario: State at Scale",  title: "Scenario: State Management at Scale", tail: "state scattered everywhere, no single source of truth.", priority: "⭐" },
-          { n: 15, file: "15.html", short: "Scenario: Modernizing Legacy", title: "Scenario: Modernizing a Legacy Angular App", tail: "gradual, not a big-bang rewrite.", priority: "🔥" },
-          { n: 16, file: "16.html", short: "Scenario: SSR & Hydration",  title: "Scenario: SSR & Hydration Issues", tail: "the server and client computing something differently.", priority: "⭐" }
+          { n: 11, file: "11.html", short: "Scenario: Performance",     title: "Scenario: Performance Under Load", tail: "profile first, then pick which fix actually applies.", priority: "🔥", scenario: true },
+          { n: 12, file: "12.html", short: "Scenario: RxJS in Prod",     title: "Scenario: RxJS in Production",     tail: "the same handful of mistakes, again and again.", priority: "🔥", scenario: true },
+          { n: 13, file: "13.html", short: "Scenario: CD Gone Wrong",    title: "Scenario: Change Detection Gone Wrong", tail: "an OnPush component just following its own rules.", priority: "🔥", scenario: true },
+          { n: 14, file: "14.html", short: "Scenario: State at Scale",  title: "Scenario: State Management at Scale", tail: "state scattered everywhere, no single source of truth.", priority: "⭐", scenario: true },
+          { n: 15, file: "15.html", short: "Scenario: Modernizing Legacy", title: "Scenario: Modernizing a Legacy Angular App", tail: "gradual, not a big-bang rewrite.", priority: "🔥", scenario: true },
+          { n: 16, file: "16.html", short: "Scenario: SSR & Hydration",  title: "Scenario: SSR & Hydration Issues", tail: "the server and client computing something differently.", priority: "⭐", scenario: true }
         ]
       }
     ]
@@ -896,7 +896,7 @@ window.NAV_INDEX = {
         hot: 3,
         items: [
           { n: 1, file: "1.html", short: "Well-Architected Framework", title: "Well-Architected Framework", tail: "the 5 pillars.", priority: "🔥" },
-          { n: 2, file: "2.html", short: "Scenario: 500s", title: "App Service Returns 500s", tail: "a troubleshooting scenario.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Scenario: 500s", title: "App Service Returns 500s", tail: "a troubleshooting scenario.", priority: "🔥", scenario: true },
           { n: 3, file: "3.html", short: "Disaster Recovery", title: "Disaster Recovery", tail: "RPO, RTO & multi-region strategy.", priority: "🔥" },
           { n: 4, file: "4.html", short: "Hub-Spoke & Peering", title: "Hub-Spoke Topology", tail: "& VNet Peering.", priority: "⭐" },
           { n: 5, file: "5.html", short: "Cost Optimization", title: "Cost Optimization", tail: "the levers beyond a cheaper SKU.", priority: "⭐" },
@@ -909,8 +909,8 @@ window.NAV_INDEX = {
         label: "Questions 9–10",
         hot: 1,
         items: [
-          { n: 9, file: "9.html", short: "Duplicate Messages", title: "Detecting and Handling Duplicate Messages", tail: "the same message, twice — does your code even notice?", priority: "⭐" },
-          { n: 10, file: "10.html", short: "Secret Committed to GitHub", title: "A Real Secret Was Committed to GitHub", tail: "deleted the line — but is the secret still there?", priority: "🔥" }
+          { n: 9, file: "9.html", short: "Duplicate Messages", title: "Detecting and Handling Duplicate Messages", tail: "the same message, twice — does your code even notice?", priority: "⭐", scenario: true },
+          { n: 10, file: "10.html", short: "Secret Committed to GitHub", title: "A Real Secret Was Committed to GitHub", tail: "deleted the line — but is the secret still there?", priority: "🔥", scenario: true }
         ]
       }
     ]
@@ -1005,14 +1005,14 @@ window.NAV_INDEX = {
           { n: 7, file: "7.html", short: "Cost Opt. / FinOps", title: "Cost Optimization / FinOps", tail: "rightsizing, NAT/data-transfer cost traps, cost visibility.", priority: "🔥" },
           { n: 8, file: "8.html", short: "Reliability Eng.", title: "Reliability Engineering", tail: "backoff, jitter, circuit breaker, bulkhead, backpressure.", priority: "🧠" },
           { n: 9, file: "9.html", short: "Security Architecture", title: "AWS Security Architecture", tail: "securing a workload end-to-end, responding to compromised credentials.", priority: "🔥" },
-          { n: 10, file: "10.html", short: "Migration", title: "Migration", tail: "rehost vs. replatform vs. refactor, minimizing downtime.", priority: "⭐" }
+          { n: 10, file: "10.html", short: "Migration", title: "Migration", tail: "rehost vs. replatform vs. refactor, minimizing downtime.", priority: "⭐", scenario: true }
         ]
       },
       {
         label: "Questions 11 – 16",
         hot: 2,
         items: [
-          { n: 11, file: "11.html", short: "Prod. Troubleshooting", title: "Production Troubleshooting", tail: "13 real production-break scenarios, EC2 to billing spikes.", priority: "🔥" },
+          { n: 11, file: "11.html", short: "Prod. Troubleshooting", title: "Production Troubleshooting", tail: "13 real production-break scenarios, EC2 to billing spikes.", priority: "🔥", scenario: true },
           { n: 12, file: "12.html", short: "Architecture Design", title: "Architecture Design Questions", tail: "whiteboard designs with interviewer pushback chains.", priority: "🔥" },
           { n: 13, file: "13.html", short: "Trade-off Questions", title: "Architect-Level Trade-off Questions", tail: "requirement → constraints → options → trade-off → decision.", priority: "🧠" },
           { n: 14, file: "14.html", short: "Sustainability", title: "Sustainability", tail: "the sixth pillar, and where it conflicts with cost/performance.", priority: "⭐" },
@@ -1115,7 +1115,7 @@ window.NAV_INDEX = {
           { n: 15, file: "15.html", short: "Production Troubleshooting", title: "Production Troubleshooting", tail: "11 real production-break scenarios.", priority: "🔥" },
           { n: 16, file: "16.html", short: "Python Web / API", title: "Python Web / API", tail: "WSGI vs. ASGI, FastAPI vs. Django.", priority: "⭐" },
           { n: 17, file: "17.html", short: "Python + Databases", title: "Python + Databases", tail: "ORM, N+1 queries, async DB access.", priority: "⭐" },
-          { n: 18, file: "18.html", short: "Architecture / Senior Scenarios", title: "Python Architecture / Senior Scenarios", tail: "designing a high-throughput API.", priority: "🧠" },
+          { n: 18, file: "18.html", short: "Architecture / Senior Scenarios", title: "Python Architecture / Senior Scenarios", tail: "designing a high-throughput API.", priority: "🧠", scenario: true },
           { n: 19, file: "19.html", short: "TaskGroup & timeout", title: "asyncio TaskGroup & timeout", tail: "Structured concurrency, cancelling siblings, deadlines", priority: "🔥" },
           { n: 20, file: "20.html", short: "ExceptionGroup", title: "ExceptionGroup & except*", tail: "Several errors at once, handled by type with except*", priority: "🧠" }
         ]
@@ -1299,7 +1299,7 @@ window.NAV_INDEX = {
           { n: 3, file: "3.html", short: "Time vs. Memory Trade-offs", title: "Time vs. Memory Trade-offs", tail: "when a faster algorithm is actually slower.", priority: "🔥" },
           { n: 4, file: "4.html", short: "Streaming / Large-Dataset Problems", title: "Streaming / Large-Dataset Problems", tail: "top-K and duplicates without storing everything.", priority: "⭐" },
           { n: 5, file: "5.html", short: "External / Distributed Processing", title: "External / Distributed Processing", tail: "external sort, when data doesn't fit in RAM.", priority: "⭐" },
-          { n: 6, file: "6.html", short: "Scale & Performance Scenarios", title: "Scale & Performance Scenarios", tail: "100M records, when O(n) becomes unacceptable.", priority: "⭐" },
+          { n: 6, file: "6.html", short: "Scale & Performance Scenarios", title: "Scale & Performance Scenarios", tail: "100M records, when O(n) becomes unacceptable.", priority: "⭐", scenario: true },
           { n: 7, file: "7.html", short: "Segment Tree & Fenwick Tree", title: "Segment Tree & Fenwick Tree", tail: "range-query/range-update — Deep Dive.", priority: "🧠" },
           { n: 8, file: "8.html", short: "String Algorithms", title: "String Algorithms", tail: "KMP, Rabin-Karp — Deep Dive.", priority: "🧠" },
           { n: 9, file: "9.html", short: "Design an LRU Cache", title: "Design an LRU Cache", tail: "Hash map + doubly linked list for O(1) get and put.", priority: "🔥" }
@@ -1387,7 +1387,7 @@ window.NAV_INDEX = {
           { n: 5, file: "5.html", short: "Memory & Garbage Collection", title: "Memory & Garbage Collection", tail: "reachability, leaks, detached DOM nodes.", priority: "🔥" },
           { n: 6, file: "6.html", short: "Performance & Rendering", title: "Performance & Rendering", tail: "layout, paint, composite, long tasks.", priority: "🔥" },
           { n: 7, file: "7.html", short: "Security", title: "Security", tail: "XSS, CSRF, CSP, prototype pollution.", priority: "🔥" },
-          { n: 8, file: "8.html", short: "Production JS Scenarios", title: "Production JavaScript Scenarios", tail: "race conditions, cancellation, 10,000 list items.", priority: "🔥" },
+          { n: 8, file: "8.html", short: "Production JS Scenarios", title: "Production JavaScript Scenarios", tail: "race conditions, cancellation, 10,000 list items.", priority: "🔥", scenario: true },
           { n: 9, file: "9.html", short: "Web Workers", title: "Web Workers", tail: "offloading CPU-heavy work from the main thread.", priority: "⭐" },
           { n: 10, file: "10.html", short: "Service Workers", title: "Service Workers", tail: "lifecycle, cache, offline support.", priority: "⭐" }
         ]
@@ -1478,7 +1478,7 @@ window.NAV_INDEX = {
         items: [
           { n: 1, file: "1.html", short: "Browser Rendering", title: "Browser Rendering", tail: "DOM + CSSOM → Render Tree → Layout → Paint → Composite.", priority: "🔥" },
           { n: 2, file: "2.html", short: "CSS Performance", title: "CSS Performance", tail: "layout thrashing, expensive properties, containment.", priority: "🔥" },
-          { n: 3, file: "3.html", short: "Production UI Scenarios", title: "Production UI Scenarios", tail: "real layout bugs, cross-cutting debugging scenarios.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Production UI Scenarios", title: "Production UI Scenarios", tail: "real layout bugs, cross-cutting debugging scenarios.", priority: "🔥", scenario: true },
           { n: 4, file: "4.html", short: "Accessibility in Practice", title: "Accessibility in Practice", tail: "auditing an existing app, retrofitting, testing tools.", priority: "🔥" }
         ]
       },
@@ -1588,22 +1588,22 @@ window.NAV_INDEX = {
           { n: 15, file: "15.html", short: "Streaming vs Buffering", title: "Streaming vs. Buffering Large Results", tail: "constant memory, or the whole result set at once", priority: "⭐" },
           { n: 16, file: "16.html", short: "PLINQ / AsParallel", title: "PLINQ: AsParallel, Ordering, and Trade-offs", tail: "in-memory parallelism, not database parallelism", priority: "🧠" },
           { n: 17, file: "17.html", short: "Modern LINQ Operators", title: "Modern LINQ Operators", tail: "Chunk, MaxBy, MinBy, CountBy, AggregateBy, and the new join operators", priority: "⭐" },
-          { n: 18, file: "18.html", short: "Scenario: SelectMany", title: "Scenario: Flattening Customers and Orders with SelectMany", tail: "", priority: "⭐" },
-          { n: 19, file: "19.html", short: "Scenario: First/Single", title: "Scenario: Choosing First/FirstOrDefault/Single/SingleOrDefault", tail: "", priority: "🔥" },
-          { n: 20, file: "20.html", short: "Scenario: Repeated Query", title: "Scenario: Diagnosing Repeated Queries from Deferred Execution", tail: "", priority: "🔥" }
+          { n: 18, file: "18.html", short: "Scenario: SelectMany", title: "Scenario: Flattening Customers and Orders with SelectMany", tail: "", priority: "⭐", scenario: true },
+          { n: 19, file: "19.html", short: "Scenario: First/Single", title: "Scenario: Choosing First/FirstOrDefault/Single/SingleOrDefault", tail: "", priority: "🔥", scenario: true },
+          { n: 20, file: "20.html", short: "Scenario: Repeated Query", title: "Scenario: Diagnosing Repeated Queries from Deferred Execution", tail: "", priority: "🔥", scenario: true }
         ]
       },
       {
         label: "Questions 21–28",
         items: [
-          { n: 21, file: "21.html", short: "Scenario: Fast/Slow DB", title: "Scenario: Fast In-Memory, Slow Against the Database", tail: "", priority: "🔥" },
-          { n: 22, file: "22.html", short: "Scenario: N+1 Bug", title: "Scenario: Diagnosing an N+1 Query Problem", tail: "", priority: "🔥" },
-          { n: 23, file: "23.html", short: "Scenario: Operator Order", title: "Scenario: Predicting Output When Operator Order Changes", tail: "", priority: "⭐" },
-          { n: 24, file: "24.html", short: "Scenario: Distinct Choice", title: "Scenario: Distinct vs. DistinctBy vs. GroupBy vs. Comparer", tail: "", priority: "⭐" },
-          { n: 25, file: "25.html", short: "Scenario: Highest-Paid", title: "Scenario: Highest-Paid Employee Per Department", tail: "", priority: "⭐" },
-          { n: 26, file: "26.html", short: "Scenario: Untranslatable", title: "Scenario: Fixing an Untranslatable EF Core Query", tail: "", priority: "🔥" },
-          { n: 27, file: "27.html", short: "Scenario: Millions of Rows", title: "Scenario: Processing Millions of Records", tail: "", priority: "⭐" },
-          { n: 28, file: "28.html", short: "Scenario: Custom Where", title: "Scenario: Writing Your Own Custom LINQ Extension Method", tail: "", priority: "⭐" }
+          { n: 21, file: "21.html", short: "Scenario: Fast/Slow DB", title: "Scenario: Fast In-Memory, Slow Against the Database", tail: "", priority: "🔥", scenario: true },
+          { n: 22, file: "22.html", short: "Scenario: N+1 Bug", title: "Scenario: Diagnosing an N+1 Query Problem", tail: "", priority: "🔥", scenario: true },
+          { n: 23, file: "23.html", short: "Scenario: Operator Order", title: "Scenario: Predicting Output When Operator Order Changes", tail: "", priority: "⭐", scenario: true },
+          { n: 24, file: "24.html", short: "Scenario: Distinct Choice", title: "Scenario: Distinct vs. DistinctBy vs. GroupBy vs. Comparer", tail: "", priority: "⭐", scenario: true },
+          { n: 25, file: "25.html", short: "Scenario: Highest-Paid", title: "Scenario: Highest-Paid Employee Per Department", tail: "", priority: "⭐", scenario: true },
+          { n: 26, file: "26.html", short: "Scenario: Untranslatable", title: "Scenario: Fixing an Untranslatable EF Core Query", tail: "", priority: "🔥", scenario: true },
+          { n: 27, file: "27.html", short: "Scenario: Millions of Rows", title: "Scenario: Processing Millions of Records", tail: "", priority: "⭐", scenario: true },
+          { n: 28, file: "28.html", short: "Scenario: Custom Where", title: "Scenario: Writing Your Own Custom LINQ Extension Method", tail: "", priority: "⭐", scenario: true }
         ]
       }
     ]
@@ -1757,22 +1757,22 @@ window.NAV_INDEX = {
           { n: 24, file: "24.html", short: "JVM Profiling & Tuning", title: "JVM Profiling and Java Performance Tuning", tail: "find the bottleneck before tuning anything", priority: "⭐" },
           { n: 25, file: "25.html", short: "Reflection & Proxies", title: "Reflection Costs, Dynamic Proxies and Annotations", tail: "the mechanism behind framework \"magic\"", priority: "🧠" },
           { n: 26, file: "26.html", short: "Serialization", title: "Serialization, Deserialization and Compatibility", tail: "versioning, and a real security risk", priority: "⭐" },
-          { n: 27, file: "27.html", short: "Scenario: HashMap", title: "Scenario: HashMap Behaves Unexpectedly with a Mutable Key", tail: "", priority: "🔥" },
-          { n: 28, file: "28.html", short: "Scenario: Memory Leak", title: "Scenario: Diagnosing a Production Memory Leak", tail: "", priority: "🔥" },
-          { n: 29, file: "29.html", short: "Scenario: Race Condition", title: "Scenario: Diagnosing a Race Condition on a Shared Balance", tail: "", priority: "🔥" },
-          { n: 30, file: "30.html", short: "Scenario: Slow Stream", title: "Scenario: A Slow or Side-Effecting Stream Pipeline", tail: "", priority: "🔥" }
+          { n: 27, file: "27.html", short: "Scenario: HashMap", title: "Scenario: HashMap Behaves Unexpectedly with a Mutable Key", tail: "", priority: "🔥", scenario: true },
+          { n: 28, file: "28.html", short: "Scenario: Memory Leak", title: "Scenario: Diagnosing a Production Memory Leak", tail: "", priority: "🔥", scenario: true },
+          { n: 29, file: "29.html", short: "Scenario: Race Condition", title: "Scenario: Diagnosing a Race Condition on a Shared Balance", tail: "", priority: "🔥", scenario: true },
+          { n: 30, file: "30.html", short: "Scenario: Slow Stream", title: "Scenario: A Slow or Side-Effecting Stream Pipeline", tail: "", priority: "🔥", scenario: true }
         ]
       },
       {
         label: "Questions 31–36",
         hot: 1,
         items: [
-          { n: 31, file: "31.html", short: "Scenario: Thread Pool", title: "Scenario: Thread Pool Exhaustion", tail: "", priority: "🔥" },
-          { n: 32, file: "32.html", short: "Scenario: Future Fails", title: "Scenario: A CompletableFuture in a Group of Calls Fails", tail: "", priority: "⭐" },
-          { n: 33, file: "33.html", short: "Scenario: Collection Choice", title: "Scenario: Choosing a Collection for a High-Throughput Lookup Service", tail: "", priority: "⭐" },
-          { n: 34, file: "34.html", short: "Scenario: High CPU", title: "Scenario: High CPU, Slow Requests", tail: "", priority: "⭐" },
-          { n: 35, file: "35.html", short: "Scenario: Java Upgrade", title: "Scenario: Upgrading to a Newer Java Version", tail: "", priority: "🧠" },
-          { n: 36, file: "36.html", short: "Scenario: Concurrent Cache", title: "Scenario: Designing a Concurrent Cache", tail: "", priority: "🧠" }
+          { n: 31, file: "31.html", short: "Scenario: Thread Pool", title: "Scenario: Thread Pool Exhaustion", tail: "", priority: "🔥", scenario: true },
+          { n: 32, file: "32.html", short: "Scenario: Future Fails", title: "Scenario: A CompletableFuture in a Group of Calls Fails", tail: "", priority: "⭐", scenario: true },
+          { n: 33, file: "33.html", short: "Scenario: Collection Choice", title: "Scenario: Choosing a Collection for a High-Throughput Lookup Service", tail: "", priority: "⭐", scenario: true },
+          { n: 34, file: "34.html", short: "Scenario: High CPU", title: "Scenario: High CPU, Slow Requests", tail: "", priority: "⭐", scenario: true },
+          { n: 35, file: "35.html", short: "Scenario: Java Upgrade", title: "Scenario: Upgrading to a Newer Java Version", tail: "", priority: "🧠", scenario: true },
+          { n: 36, file: "36.html", short: "Scenario: Concurrent Cache", title: "Scenario: Designing a Concurrent Cache", tail: "", priority: "🧠", scenario: true }
         ]
       }
     ]
@@ -1892,18 +1892,18 @@ window.NAV_INDEX = {
           { n: 14, file: "14.html", short: "Micro-Frontends with Vue", title: "Micro-Frontends with Vue", tail: "", priority: "🧠" },
           { n: 15, file: "15.html", short: "Advanced App-Level API", title: "Advanced App-Level API", tail: "Plugins, Multiple App Instances", priority: "🧠" },
           { n: 16, file: "16.html", short: "Vue DevTools and Debugging", title: "Vue DevTools and Debugging Reactivity", tail: "", priority: "⭐" },
-          { n: 17, file: "17.html", short: "Scenario: Debugging", title: "Scenario: Debugging Unexpected Re-Renders", tail: "", priority: "🔥" },
-          { n: 18, file: "18.html", short: "Scenario: A v-for List", title: "Scenario: A v-for List Loses State on Reorder", tail: "", priority: "🔥" },
-          { n: 19, file: "19.html", short: "Scenario: Designing a", title: "Scenario: Designing a Large-Scale Pinia Store Architecture", tail: "", priority: "⭐" },
-          { n: 20, file: "20.html", short: "Scenario: Diagnosing a", title: "Scenario: Diagnosing a Memory Leak from an Unremoved Watcher", tail: "", priority: "🔥" }
+          { n: 17, file: "17.html", short: "Scenario: Debugging", title: "Scenario: Debugging Unexpected Re-Renders", tail: "", priority: "🔥", scenario: true },
+          { n: 18, file: "18.html", short: "Scenario: A v-for List", title: "Scenario: A v-for List Loses State on Reorder", tail: "", priority: "🔥", scenario: true },
+          { n: 19, file: "19.html", short: "Scenario: Designing a", title: "Scenario: Designing a Large-Scale Pinia Store Architecture", tail: "", priority: "⭐", scenario: true },
+          { n: 20, file: "20.html", short: "Scenario: Diagnosing a", title: "Scenario: Diagnosing a Memory Leak from an Unremoved Watcher", tail: "", priority: "🔥", scenario: true }
         ]
       },
       {
         label: "Questions 21–22",
         hot: 0,
         items: [
-          { n: 21, file: "21.html", short: "Scenario: A Large List", title: "Scenario: A Large List Renders Slowly", tail: "", priority: "⭐" },
-          { n: 22, file: "22.html", short: "Scenario: SSR Hydration", title: "Scenario: SSR Hydration Mismatch in Production", tail: "", priority: "⭐" }
+          { n: 21, file: "21.html", short: "Scenario: A Large List", title: "Scenario: A Large List Renders Slowly", tail: "", priority: "⭐", scenario: true },
+          { n: 22, file: "22.html", short: "Scenario: SSR Hydration", title: "Scenario: SSR Hydration Mismatch in Production", tail: "", priority: "⭐", scenario: true }
         ]
       }
     ]
@@ -2019,18 +2019,18 @@ window.NAV_INDEX = {
           { n: 14, file: "14.html", short: "Monorepo and Multi-Zone", title: "Monorepo and Multi-Zone Next.js Apps", tail: "", priority: "🧠" },
           { n: 15, file: "15.html", short: "Self-Hosting", title: "Self-Hosting", tail: "Standalone Output and Docker", priority: "⭐" },
           { n: 16, file: "16.html", short: "Migrating from the Pages", title: "Migrating from the Pages Router to the App Router", tail: "", priority: "⭐" },
-          { n: 17, file: "17.html", short: "Scenario: Stale Data", title: "Scenario: Stale Data Despite a revalidate Value", tail: "", priority: "🔥" },
-          { n: 18, file: "18.html", short: "Scenario: A Server Action", title: "Scenario: A Server Action Exposes Sensitive Logic", tail: "", priority: "🔥" },
-          { n: 19, file: "19.html", short: "Scenario: Diagnosing Slow", title: "Scenario: Diagnosing Slow Time-to-First-Byte", tail: "", priority: "🔥" },
-          { n: 20, file: "20.html", short: "Scenario: Choosing a", title: "Scenario: Choosing a Rendering Strategy for a Mixed Static/Dynamic Page", tail: "", priority: "⭐" }
+          { n: 17, file: "17.html", short: "Scenario: Stale Data", title: "Scenario: Stale Data Despite a revalidate Value", tail: "", priority: "🔥", scenario: true },
+          { n: 18, file: "18.html", short: "Scenario: A Server Action", title: "Scenario: A Server Action Exposes Sensitive Logic", tail: "", priority: "🔥", scenario: true },
+          { n: 19, file: "19.html", short: "Scenario: Diagnosing Slow", title: "Scenario: Diagnosing Slow Time-to-First-Byte", tail: "", priority: "🔥", scenario: true },
+          { n: 20, file: "20.html", short: "Scenario: Choosing a", title: "Scenario: Choosing a Rendering Strategy for a Mixed Static/Dynamic Page", tail: "", priority: "⭐", scenario: true }
         ]
       },
       {
         label: "Questions 21–22",
         hot: 1,
         items: [
-          { n: 21, file: "21.html", short: "Scenario: Hydration", title: "Scenario: Hydration Mismatch in Production", tail: "", priority: "🔥" },
-          { n: 22, file: "22.html", short: "Scenario: Designing Route", title: "Scenario: Designing Route Structure for a Multi-Tenant App", tail: "", priority: "⭐" }
+          { n: 21, file: "21.html", short: "Scenario: Hydration", title: "Scenario: Hydration Mismatch in Production", tail: "", priority: "🔥", scenario: true },
+          { n: 22, file: "22.html", short: "Scenario: Designing Route", title: "Scenario: Designing Route Structure for a Multi-Tenant App", tail: "", priority: "⭐", scenario: true }
         ]
       }
     ]

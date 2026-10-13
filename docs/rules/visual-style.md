@@ -57,6 +57,16 @@ inherited `--tile-color` — fixed by giving `.ttier` its own `.basic`/`.inter`/
 classes instead. The point of fixed tier colour is that "Basic" reads as Basic at a glance no
 matter which track's page you're on.
 
+## Scenario Bank rose accent is fixed, like tier colour (added 2026-10-13)
+
+`#9f1239` ink / `#ffe4e6` background is the one reserved colour pair for anything that means
+"this is part of the cross-track Scenario Bank" — the `🎯` eyebrow/crumb on
+`scenarios/index.html`, the `.scenario-card` badges and left border there, and the sidebar's
+`.tn-group-scenario` group + its `.tn-item-all` "see all" row (see
+[`tier-navigation.md`](tier-navigation.md) and [`scenario-bank.md`](scenario-bank.md)). Same
+reasoning as fixed tier colour above: rose should mean "Scenario Bank" everywhere on the site,
+not shift per track, so a reader learns the colour once.
+
 ## Eyebrow badge (top of every `.hero`)
 
 The small label above every `h1` (e.g. "🔥 C# · Basic · Hot") is a **coloured pill**, not plain

@@ -184,6 +184,17 @@ Concretely:
 - `sessionStorage` (not `localStorage`) is deliberate — "session" here means the current
   browser tab's lifetime, matching how the reader actually works through a tier in one sitting.
 
+## The "🎯 Scenario Bank" group (added 2026-10-13)
+
+An item in `nav-index.js` can carry an extra `scenario: true` flag. When the page the reader is
+on is itself flagged, the builder prepends one additional group — `"🎯 Scenario Bank"`, gathered
+from every `scenario:true` item across the whole tier, styled with `.tn-group-scenario` (rose
+accent) and ending in a `.tn-item-all` link to `scenarios/index.html` — above the tier's normal
+numbered groups. It never appears on a non-scenario page, even in a tier that has some. See
+[`scenario-bank.md`](scenario-bank.md) for the full rationale and how to flag a new page. This is
+the only item-level flag the sidebar currently reads beside `priority`; if you add another one
+later, follow the same pattern (computed from data, zero new per-page markup).
+
 ## Adding this to a new tier (e.g. Azure Basic)
 
 1. Add a new top-level entry to `assets/nav-index.js`, keyed `"azure/basic"` — copy the group

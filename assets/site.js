@@ -287,6 +287,7 @@ function esc(s) {
   var main = document.querySelector("main.wrap");
   var pager = document.querySelector(".pager");
   if (!data || !main || !pager) return;
+  var root = document.body.getAttribute("data-root") || "";
 
   // location.pathname may or may not carry ".html" depending on the host (a dev server with
   // clean URLs strips it; a plain static host or file:// keeps it) — match either way.
@@ -329,13 +330,31 @@ function esc(s) {
   function groupHtml(group, isFirst) {
     var mustKnow = group.items.filter(function (i) { return i.priority === "🔥"; }).length;
     var hotBadge = mustKnow ? '<span class="gn-hot">' + mustKnow + " 🔥</span>" : "";
+    var browseAll = group.isScenario
+      ? '<li class="tn-item tn-item-all"><a href="' + esc(root) + 'scenarios/index.html">🎯 See all 75 in the Scenario Bank →</a></li>'
+      : "";
     return (
-      '<details class="tn-group"' + (groupOpen(group, isFirst) ? " open" : "") + ">" +
+      '<details class="tn-group' + (group.isScenario ? " tn-group-scenario" : "") + '"' +
+        (groupOpen(group, isFirst) ? " open" : "") + ">" +
       "<summary>" + esc(group.label) + hotBadge + '<span class="chev">▾</span></summary>' +
-      '<ol class="tn-list">' + group.items.map(itemHtml).join("") + "</ol>" +
+      '<ol class="tn-list">' + group.items.map(itemHtml).join("") + browseAll + "</ol>" +
       "</details>"
     );
   }
+
+  // "🎯 Scenario Bank" — a separate, leading group gathering every real production-scenario
+  // question already in THIS tier (flagged `scenario:true` on its nav-index item), shown only
+  // when the page the reader is actually on is itself one of those scenario questions. Someone
+  // who clicked in from scenarios/index.html should see scenario siblings first, not the tier's
+  // full mixed topic list — see docs/rules/scenario-bank.md.
+  var scenarioItems = [];
+  data.groups.forEach(function (g) {
+    g.items.forEach(function (i) { if (i.scenario) scenarioItems.push(i); });
+  });
+  var showScenarioGroup = scenarioItems.length > 0 && scenarioItems.some(function (i) { return isCurrent(i.file); });
+  var renderGroups = showScenarioGroup
+    ? [{ label: "🎯 Scenario Bank", items: scenarioItems, isScenario: true }].concat(data.groups)
+    : data.groups;
 
   var aside = document.createElement("aside");
   aside.className = "tier-nav";
@@ -344,7 +363,7 @@ function esc(s) {
   aside.innerHTML =
     '<div class="tn-head"><span class="tn-pill tn-track">' + esc(data.trackIcon + " " + data.track) +
     '</span><span class="tn-pill tn-tier">' + esc(data.tier) + "</span></div>" +
-    data.groups.map(function (g, i) { return groupHtml(g, i === 0); }).join("");
+    renderGroups.map(function (g, i) { return groupHtml(g, i === 0); }).join("");
 
   var topicBody = document.createElement("div");
   topicBody.className = "tn-topicbody";
@@ -357,7 +376,8 @@ function esc(s) {
   toggle.className = "tn-toggle";
   toggle.setAttribute("aria-expanded", "false");
   toggle.setAttribute("aria-controls", "tier-nav-panel");
-  toggle.innerHTML = "☰ Topics in this tier <span class=\"tn-toggle-sub\">" + esc(data.track + " · " + data.tier) + "</span>";
+  toggle.innerHTML = (showScenarioGroup ? "☰ 🎯 Scenario Bank + topics in this tier " : "☰ Topics in this tier ") +
+    "<span class=\"tn-toggle-sub\">" + esc(data.track + " · " + data.tier) + "</span>";
   toggle.addEventListener("click", function () {
     var open = document.body.classList.toggle("tn-open");
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
@@ -372,7 +392,7 @@ function esc(s) {
   var groupEls = aside.querySelectorAll(".tn-group");
   function saveState() {
     var state = {};
-    groupEls.forEach(function (el, i) { state[data.groups[i].label] = el.open; });
+    groupEls.forEach(function (el, i) { state[renderGroups[i].label] = el.open; });
     try { sessionStorage.setItem(storeKey, JSON.stringify(state)); } catch (e) {}
   }
   groupEls.forEach(function (el) { el.addEventListener("toggle", saveState); });
