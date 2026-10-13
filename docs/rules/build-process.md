@@ -122,12 +122,26 @@ reach measured from the marker's actual inner shape, not its declared `markerWid
    one — the subagent must say so plainly, never claim "verified" if it didn't actually render.
 2. **After every page in the track is written**, the orchestrating session runs its own,
    independent pass of the same script against **every single page, one at a time** — not a
-   sample, and not skipped just because every subagent self-reported clean. Start your own
-   throwaway static server (an unusual high port, same safety rule as above), open a dedicated
-   tab, and batch `navigate` + the script per page. Fix any genuine finding and re-run before
-   moving on.
+   sample, and not skipped just because every subagent self-reported clean. Use
+   `node scripts/verify-diagrams.js --only <track>/` (see below) rather than improvising a new
+   throwaway check script per track — it is the exact canonical script from this file, kept in
+   sync, and it starts/stops its own server for you (same unusual-high-port safety rule as
+   above, handled internally). Fix any genuine finding and re-run before moving on.
 3. Only after every page in the track passes with `issueCount: 0` — from your own independent
    run — is Phase 7 done.
+
+**`scripts/verify-diagrams.js`** — the permanent, repo-wide form of the script above. It walks
+every `*.html` file in the repo, finds every one with a `<svg class="topic-diagram">`, loads it
+on a real local server, and runs the exact `checkDiagram()` from `diagram-style.md` against it.
+`node scripts/verify-diagrams.js` with no arguments checks the *entire site*; `--only <substring>`
+filters to paths containing that substring (a track folder, a single file, a tier). This exists
+because of the 2026-10-13 incident documented in `diagram-style.md` — a subagent (and the
+orchestrating session's own "independent" re-run) both ran the same script against a page and
+both reported `issueCount: 0`, yet the page had a real, visible defect the script was
+structurally blind to at the time. The fix was closing that gap in the check itself **and**
+turning "re-run against every page" from a one-off manual script into a standing command, so
+every future check — not just this incident's — runs the full, current rule set against the
+whole site, not whatever subset of checks someone happened to retype that day.
 
 **This same "render it, measure it, don't eyeball it" discipline applies beyond SVGs.** A real
 incident: the CORS page's `.wc-recall`/`.uc-remember` tag+text pairs shipped with zero visible

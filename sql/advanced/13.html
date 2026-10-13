@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What are the performance improvements you would make to a slow SQL database or query?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="SQL Performance Checklist — SQL Advanced — RefreshYourself">
+<meta property="og:description" content="What are the performance improvements you would make to a slow SQL database or query?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>SQL Performance Checklist — SQL Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">SQL Performance Checklist</span>
+  </nav>
+</div>
+
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 SQL · Advanced · Must Know</div>
+    <h1>A query's gone slow — <span class="hl hl-hot">what do you actually check first?</span></h1>
+    <p class="interview-q">What are the performance improvements you would make to a slow SQL database or query?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">🔑 Indexing</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A query that filters or sorts on a column with no useful index forces the engine to scan far more rows than it needs to.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Build the index to match the actual query — equality columns first, then range/sort columns — but every added index also costs every write, so it's a trade-off, not "add more indexes."</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Index for the real query pattern — and remember writes pay for it too.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+          <div class="wc-head">🎯 SARGable Queries</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Wrapping an indexed column in a function (<code>WHERE YEAR(OrderDate)=2024</code>) or a leading wildcard (<code>LIKE '%foo'</code>) stops the optimizer from using an index seek at all.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Rewrite so the column sits bare on one side of the comparison (<code>OrderDate >= '2024-01-01'</code>) — that's what makes a predicate "SARGable" and index-seekable.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Function on the column = no seek. Keep the column bare.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">📊 Plan &amp; Statistics</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Guessing at a fix without looking at the execution plan means the optimizer might already be choosing a bad plan because its row-count estimates (statistics) are stale.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Read the plan for a scan where a seek was expected and a big estimated-vs-actual row mismatch, then refresh statistics after a large bulk load/delete.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Diagnose from the plan first — stale statistics can beat a perfectly good index.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#b45309; --why-bg:#fef3c7">
+          <div class="wc-head">✂️ Query Rewriting</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span><code>SELECT *</code> pulls extra columns off disk and can block a covering index; a correlated subquery can re-run once per outer row.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Name only the columns you need, prefer a <code>JOIN</code> where it's equivalent to a correlated subquery, and filter before joining where possible.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Ask for less data, and ask for it in one pass, not per row.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+          <div class="wc-head">📦 Set-Based Operations</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A cursor that updates one row at a time (RBAR — "row-by-agonizing-row") pays per-row overhead on every single row of a large change.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Rewrite the change as one set-based <code>UPDATE</code>/<code>INSERT</code> statement — the engine processes the whole set in one operation instead of one row at a time.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">A cursor loop over big data is almost always slower than one set-based statement.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">⚡ Caching Above the Database</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A read-heavy, rarely-changing query can get re-run thousands of times a minute, repeatedly doing the same work for the same answer.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Put an application-level or distributed cache in front of it — the fastest query is the one that never has to run against the database at all.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">The cheapest query is the one that never reaches the database.</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">🔑 <b>Indexing</b> <span class="rarrow">→</span> match the real query, column order matters</p>
+      <p class="rrow">🎯 <b>SARGable</b> <span class="rarrow">→</span> keep the column bare so a seek is possible</p>
+      <p class="rrow">📊 <b>Plan &amp; stats</b> <span class="rarrow">→</span> diagnose before you change anything</p>
+      <p class="rrow">✂️ <b>Rewrite</b> <span class="rarrow">→</span> less data, fewer passes</p>
+      <p class="rrow">📦 <b>Set-based</b> <span class="rarrow">→</span> one statement, not a row-by-row cursor</p>
+      <p class="rrow">⚡ <b>Caching</b> <span class="rarrow">→</span> a query that never runs costs nothing</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> the execution plan tells you which box above you're actually in — check it before reaching for any one fix.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 680 240" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shSql13" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arSql13" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shSql13)"><rect x="190" y="18" width="300" height="44" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="340" y="45" text-anchor="middle" font-size="15" font-weight="700" fill="#92400e">🐢 Query / database is slow</text>
+
+      <path d="M340,62 V84" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="4 3">
+        <animate attributeName="stroke-dashoffset" values="7;0" dur="1s" repeatCount="indefinite"/>
+      </path>
+      <path d="M100,84 H580" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M100,84 V110" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSql13)"/>
+      <path d="M260,84 V110" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSql13)"/>
+      <path d="M420,84 V110" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSql13)"/>
+      <path d="M580,84 V110" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arSql13)"/>
+
+      <g filter="url(#shSql13)"><rect x="25" y="110" width="150" height="58" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <g filter="url(#shSql13)"><rect x="185" y="110" width="150" height="58" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <g filter="url(#shSql13)"><rect x="345" y="110" width="150" height="58" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <g filter="url(#shSql13)"><rect x="505" y="110" width="150" height="58" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+
+      <circle cx="27" cy="112" r="8" fill="#3b82f6"/><text x="27" y="115" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">1</text>
+      <circle cx="187" cy="112" r="8" fill="#3b82f6"/><text x="187" y="115" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">2</text>
+      <circle cx="347" cy="112" r="8" fill="#3b82f6"/><text x="347" y="115" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">3</text>
+      <circle cx="507" cy="112" r="8" fill="#3b82f6"/><text x="507" y="115" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">4</text>
+
+      <text x="100" y="144" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">☐ Indexing</text>
+      <text x="100" y="162" text-anchor="middle" font-size="10.5" fill="#5b6472">right columns, right order</text>
+
+      <text x="260" y="144" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">☐ SARGable</text>
+      <text x="260" y="162" text-anchor="middle" font-size="10.5" fill="#5b6472">no function on the column</text>
+
+      <text x="420" y="144" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">☐ Read the plan</text>
+      <text x="420" y="162" text-anchor="middle" font-size="10.5" fill="#5b6472">scan where seek expected</text>
+
+      <text x="580" y="144" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">☐ Statistics</text>
+      <text x="580" y="162" text-anchor="middle" font-size="10.5" fill="#5b6472">current after bulk changes</text>
+
+      <text x="340" y="204" text-anchor="middle" font-size="11" fill="#5b6472">🔍 Work top to bottom — rewriting, bulk ops, partitioning, caching and hardware follow in that order</text>
+    </svg>
+    <figcaption>Four checkpoints to work through first, in priority order — the rest of the full list (query rewriting, set-based operations, partitioning, caching, isolation levels, and hardware last) is in the explanation and key points below.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Reaching for a bigger server is not a performance fix.</b> More CPU/memory/faster storage can mask a bad query or a missing index for a while, but it's the last resort after the query, index, and plan work above — not the first thing to ask for.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Which of these do you actually check first in a real incident?"</b> The execution plan — it tells you whether you're looking at a missing/wrong index, stale statistics, or a non-SARGable predicate, instead of guessing which fix to try.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd start with the execution plan to see what the engine is actually doing, check that the indexes match the query's real filter/sort columns and that predicates are SARGable, and make sure statistics are current. After that I'd look at the query itself — avoiding <code>SELECT *</code>, preferring joins over correlated subqueries, and using set-based operations instead of row-by-row cursors — and only reach for more hardware as a last resort."</p>
+    <ul>
+      <li>Indexing → <span class="hl hl-blue">match the actual query pattern</span>, equality columns before range columns.</li>
+      <li>SARGable → <span class="hl hl-hot">never wrap the indexed column</span> in a function or leading wildcard.</li>
+      <li>Plan &amp; statistics → <span class="hl hl-blue">diagnose first</span>; a scan-not-seek or stale statistics explains a lot.</li>
+      <li>Query rewriting → <span class="hl hl-basic">less data, fewer passes</span>; avoid <code>SELECT *</code> and correlated subqueries.</li>
+      <li>Set-based &amp; caching → <span class="hl hl-inter">bulk operations over cursors</span>, and a cache removes repeat load entirely.</li>
+      <li>Hardware → <span class="hl hl-adv">last resort</span>, after the query/index/plan work, not the first move.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Diagnose before changing anything. The <b>execution plan</b> shows what the engine actually
+      did — a scan where a seek was expected, an expensive sort or key lookup, or a large gap
+      between estimated and actual row counts, which usually means <b>statistics</b> are stale
+      (common right after a large bulk load or delete, even with the right indexes in place).
+      Fixing the real cause the plan points at beats guessing.</p>
+
+      <p>Most of the rest is a short, well-known list: build <b>indexes</b> for the columns the
+      query actually filters and sorts on (equality columns first, then range columns), keep
+      predicates <b>SARGable</b> so an index can be used at all, rewrite the query to ask for less
+      data and fewer passes, do large changes as one <b>set-based</b> statement instead of a
+      row-by-row cursor, and consider <b>partitioning</b> once a table is genuinely large enough
+      that partition elimination skips real work. An application-level <b>cache</b> in front of a
+      read-heavy, rarely-changing query removes repeat load from the database entirely — the
+      fastest query is the one that never runs.</p>
+
+      <p>Two more levers are easy to forget: an unnecessarily strict <b>isolation level</b> (e.g.
+      <code>SERIALIZABLE</code> where <code>READ COMMITTED</code> would do) can serialize work
+      that didn't need to be, and more <b>hardware</b> — memory for the buffer pool/cache, faster
+      storage — is a real lever but should be the last resort, reached for after the query/index/
+      plan work above, not instead of it.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th>Lever</th><th>What it fixes</th><th>Watch out for</th></tr></thead>
+        <tbody>
+          <tr><th>Indexing</th><td>scans that should be seeks</td><td>every index also slows down writes</td></tr>
+          <tr><th>SARGable queries</th><td>a function/wildcard blocking an index seek</td><td>rewrite so the column is bare, not wrapped</td></tr>
+          <tr><th>Execution plan</th><td>tells you which fix actually applies</td><td>read it before changing anything</td></tr>
+          <tr><th>Statistics</th><td>bad row-count estimates after bulk changes</td><td>stale stats can beat a good index</td></tr>
+          <tr><th>Query rewriting</th><td><code>SELECT *</code>, correlated subqueries</td><td>only rewrite where it's truly equivalent</td></tr>
+          <tr><th>Set-based operations</th><td>cursor/RBAR overhead on large changes</td><td>needs a set-based mindset, not a loop</td></tr>
+          <tr><th>Partitioning</th><td>scanning irrelevant data on huge tables</td><td>only pays off at genuinely large scale</td></tr>
+          <tr><th>Caching</th><td>repeat load from a read-heavy query</td><td>staleness trade-off for the cached data</td></tr>
+          <tr><th>Isolation level</th><td>unnecessary serialization of work</td><td>too loose risks dirty/phantom reads instead</td></tr>
+          <tr><th>Hardware</th><td>a genuinely resource-starved box</td><td>last resort — can mask the real problem</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- Not SARGable: the function on OrderDate blocks an index seek</span>
+<span class="kw">SELECT</span> OrderId <span class="kw">FROM</span> Orders
+<span class="kw">WHERE</span> YEAR(OrderDate) = <span class="num">2024</span>;   <span class="cx-err">// ❌ scans every row to compute YEAR()</span>
+
+<span class="cx-cmt">-- SARGable: OrderDate itself is bare, so an index seek can be used</span>
+<span class="kw">SELECT</span> OrderId <span class="kw">FROM</span> Orders
+<span class="kw">WHERE</span> OrderDate >= <span class="str">'2024-01-01'</span> <span class="kw">AND</span> OrderDate &lt; <span class="str">'2025-01-01'</span>;  <span class="cx-ok">// ✅ seekable</span></code></pre>
+      </div>
+      <p class="cx-note">Same result, but only the second query can use an index on <code>OrderDate</code>.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- Composite index: equality column first, then the range/sort column</span>
+<span class="kw">CREATE</span> <span class="kw">INDEX</span> IX_Orders_CustomerId_OrderDate
+  <span class="kw">ON</span> Orders(CustomerId, OrderDate);  <span class="cx-ok">// ✅ matches WHERE CustomerId=@id ORDER BY OrderDate</span></code></pre>
+      </div>
+      <p class="cx-note">Column order has to match how the query actually filters and sorts — swapping it breaks the seek.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- Row-by-row cursor (RBAR) over a large change</span>
+<span class="kw">DECLARE</span> cur <span class="kw">CURSOR</span> <span class="kw">FOR</span> <span class="kw">SELECT</span> OrderId <span class="kw">FROM</span> Orders <span class="kw">WHERE</span> Status = <span class="str">'Pending'</span>;
+<span class="cx-cmt">-- ...FETCH/UPDATE one row per loop iteration...</span>  <span class="cx-err">// ❌ per-row overhead, repeated thousands of times</span>
+
+<span class="cx-cmt">-- Set-based equivalent: one statement, the whole set at once</span>
+<span class="kw">UPDATE</span> Orders <span class="kw">SET</span> Status = <span class="str">'Expired'</span>
+<span class="kw">WHERE</span> Status = <span class="str">'Pending'</span> <span class="kw">AND</span> OrderDate &lt; <span class="str">'2024-01-01'</span>;  <span class="cx-ok">// ✅ one operation, no per-row loop</span></code></pre>
+      </div>
+      <p class="cx-note">Same end result, but the set-based statement lets the engine process the whole batch at once instead of row by row.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> A report that joins three tables started timing out after the tables grew</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arSqlUc13a" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto"><path d="M0,0 L5.5,2.5 L0,5 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="8" y="13" width="204" height="40" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="110" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">3-table join, no good index</text>
+              <path d="M212,33 H266" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#arSqlUc13a)"/>
+              <rect x="270" y="13" width="204" height="40" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="372" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">Index + rewrite the join</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the <b>#1 scenario</b> you'll actually run into — a query that was fine at a small table size scans more and more rows as the tables grow. Add the index that matches the join/filter columns, and check the join itself isn't pulling more columns or rows than it needs.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Growth exposes a missing index first — check that before anything else.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">2</span> A query is fast in dev but slow in production with 10x the data</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arSqlUc13b" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto"><path d="M0,0 L5.5,2.5 L0,5 Z" fill="#0f766e"/></marker></defs>
+              <rect x="8" y="13" width="204" height="40" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="110" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#0f766e">Fast in dev, slow in prod</text>
+              <path d="M212,33 H266" fill="none" stroke="#0f766e" stroke-width="1.6" marker-end="url(#arSqlUc13b)"/>
+              <rect x="270" y="13" width="204" height="40" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="372" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#0f766e">Check plan &amp; stats first</text>
+            </svg>
+          </div>
+          <p class="uc-what">Different data volume usually means a different plan, not just "more work" — pull the production execution plan and check statistics before assuming the box just needs to be bigger.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Dev-vs-prod slowness → compare plans and statistics, not just hardware.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> After 10x data growth, the team's first move is to ask for a bigger database server</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arSqlUc13c" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto"><path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/></marker></defs>
+              <rect x="8" y="13" width="204" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="110" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">Scale up the server</text>
+              <path d="M212,33 H266" fill="none" stroke="#dc2626" stroke-width="1.6" marker-end="url(#arSqlUc13c)"/>
+              <rect x="270" y="13" width="204" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="372" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">Still slow next quarter ❌</text>
+            </svg>
+          </div>
+          <p class="uc-what">More CPU/memory can mask a missing index or a non-SARGable query for a while, but the same query keeps getting slower as data keeps growing — it didn't fix the actual cause. Look at the query/index/plan first; hardware is the last lever, not the first.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Scaling up the server treats the symptom — the query still isn't fixed.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Scenario:</b> a dashboard endpoint that was fine for months starts timing out after a
+      new filter was added to it. Pulling the execution plan shows a table scan where a seek was
+      expected — the new filter wraps a date column in a function, so it isn't SARGable, and the
+      existing index can't be used at all. Rewriting the predicate so the date column is bare,
+      with a composite index matching the filter and sort columns, brings the query back to its
+      old speed without touching the schema or the server.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="12.html">← A Query Goes Into Deadlock</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Advanced</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

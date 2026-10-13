@@ -269,3 +269,15 @@ Numbers are the next free Advanced slots from disk.
 |---|---|---|---|---|---|---|
 | Advanced 11 | Advanced | 🔥 | Maintaining Financial Data History — Triggers? | "Financial data — I want to maintain the history of the data. Can we use a trigger?" | Whether a trigger is the right tool for an audit trail vs. temporal tables / application-level history, and the trade-offs of each | basic/16 (TRUNCATE/DELETE/DROP), intermediate/16 (Triggers) |
 | Advanced 12 | Advanced | 🔥 | A Query Goes Into Deadlock | "A written query goes into deadlock — how will you identify this?" | Identifying a deadlock vs. plain blocking, reading the deadlock graph, and the lock-ordering/isolation-level fixes | advanced/2 (Deadlock vs. Blocking), advanced/5 (Locking) |
+
+---
+
+## Addendum 2026-10-13 — Performance deep-dive page (performance-coverage audit)
+
+1 new page, added after a full-site audit found SQL's only performance coverage was reactive
+(advanced/4, "Performance Degraded Over Time") with no proactive, comprehensive checklist.
+**Status: written, verified, and wired** (track total now 53 = 52 + 1; Advanced 12 -> 13).
+
+| # | Tier | Pri | Title | Interview question | Scope (one concept) | Cross-link |
+|---|---|---|---|---|---|---|
+| Advanced 13 | Advanced | 🔥 | SQL Performance Checklist | "What are the performance improvements you would make to a slow SQL database or query?" | A deep-dive, diagram-backed checklist covering indexing, SARGable queries, execution plans & statistics, query rewriting, set-based operations, caching, partitioning, isolation levels, and hardware as a last resort | advanced/6 (Optimizer & Indexes), intermediate/7-8-10 (Covering/Composite/SARGable), advanced/3 (Execution Plans), advanced/7-8 (Bulk Operations, Partitioning), advanced/1/5 (Isolation Levels, Locking) |

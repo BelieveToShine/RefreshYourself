@@ -182,3 +182,15 @@ Numbers are the next free Advanced slots from disk. All 8 get rows in concept ca
 | Advanced 16 | Advanced | 🔥 | Zero-Loss Architecture Under High Throughput | "10,000 requests in 3 minutes — how do I handle this without missing or losing any request? What should the architecture be?" | Durable queue/broker absorbing bursts vs. processing inline; what "zero loss" actually requires | advanced/9 (webhooks), dotnet/advanced/8 (scalable notifications) |
 | Advanced 17 | Advanced | ⭐ | Designing Per-Endpoint Rate Limiting | "Apply rate limiting for my controller — how do I give different limits to different endpoints? C# side or load balancer?" | Partitioned rate-limiter policies per endpoint vs. a blanket limit; app-level vs. gateway/load-balancer enforcement | basic/5 (rate limiting), advanced/7 (API Gateway & BFF) |
 | Advanced 18 | Advanced | ⭐ | General Production Troubleshooting Approach | "How do you troubleshoot a production issue, generally?" | A repeatable method (reproduce → narrow → evidence → fix → verify), not a one-off checklist; ties the earlier scenario pages together | advanced/11 (latency/exceptions), advanced/6 (500-errors scenario) |
+
+---
+
+## Addendum 2026-10-13 — Performance deep-dive page (performance-coverage audit)
+
+1 new page, added after a full-site audit found Web API had no dedicated, comprehensive
+performance checklist of its own (only scattered mentions on individual pages).
+**Status: written, verified, and wired** (track total now 45 = 44 + 1; Advanced 18 -> 19).
+
+| # | Tier | Pri | Title | Interview question | Scope (one concept) | Cross-link |
+|---|---|---|---|---|---|---|
+| Advanced 19 | Advanced | ⭐ | Web API Performance Checklist | "What performance improvements would you make to a slow Web API?" | A deep-dive, diagram-backed checklist covering HTTP caching, response compression, pagination/field selection, avoiding chattiness, rate limiting, reusing outgoing connections, the N+1 trap, and async I/O | intermediate/13 (Pagination), basic/5 (Rate Limiting), dotnet/intermediate/20 (IHttpClientFactory), efcore/advanced/4 (Beyond N+1) |

@@ -212,3 +212,14 @@ concept-category section ("10. Production Scenarios").
 | Advanced 6 | Advanced | 🔥 | In-Memory Caching Loses Data on Restart | "How to implement caching in .NET Core? Where is data stored — in-memory RAM gets deleted on restart" | `IMemoryCache` is per-process/volatile; a distributed cache (Redis) survives restarts and scales across instances | intermediate/2 (DI container), webapi/advanced/8 (Polly/resilience) |
 | Advanced 7 | Advanced | ⭐ | Designing Real-Time Order Status Updates | "Consider Swiggy/Zomato — how do order status updates reach your mobile?" | Push (SignalR/WebSockets) vs. poll; socket lifecycle — when to open and when to close | intermediate/25 (SignalR vs. WebSockets vs. SSE) |
 | Advanced 8 | Advanced | ⭐ | Designing a Scalable Notification Service | "New service for notification — either email or SMS — it should be scalable, then deploy it" | Decouple the triggering action from delivery with a queue/worker so a slow notification provider never blocks the caller | advanced/6 (caching), webapi/advanced/16 (zero-loss architecture) |
+
+---
+
+## Addendum 2026-10-13 — Performance deep-dive page (performance-coverage audit)
+
+1 new page, added after a full-site audit found .NET had no dedicated, comprehensive performance
+checklist. **Status: written, verified, and wired** (track total now 43 = 42 + 1; Advanced 8 -> 9).
+
+| # | Tier | Pri | Title | Interview question | Scope (one concept) | Cross-link |
+|---|---|---|---|---|---|---|
+| Advanced 9 | Advanced | 🔥 | ASP.NET Core Performance Checklist | "What performance improvements would you make to a slow ASP.NET Core application?" | A deep-dive, diagram-backed checklist covering caching, async I/O, connection reuse, reducing allocations, response compression, and database access patterns | csharp/advanced/13 (C# Performance Checklist), efcore/advanced/4 (Beyond N+1) |

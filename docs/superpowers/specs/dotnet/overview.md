@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 42 pages written (25 earlier + 13 split/gap pages added 2026-10-07 + 4 scenario-bank pages added 2026-10-13)
+## Status — Phases 1–7 complete, all 43 pages written (25 earlier + 13 split/gap pages added 2026-10-07 + 4 scenario-bank pages added 2026-10-13 + 1 performance deep-dive page added 2026-10-13)
 
 **Post-launch addition (2026-09-18):** the user reported that unit testing had no coverage
 anywhere in this track. Confirmed as a genuine gap — no "Testing" group existed in the original

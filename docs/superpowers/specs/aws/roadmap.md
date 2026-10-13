@@ -250,3 +250,15 @@ Active gap-hunt against the 44 live pages and `docs/review-2026-10-06.md` §4/§
 - **Route 53 routing policies, CloudFront** — already pages (`basic/11` lists simple/weighted/latency/failover; `intermediate/19`).
 - **Secrets Manager vs. Parameter Store, Cognito, WAF, GuardDuty, X-Ray** — covered inside existing security/IaC/observability pages.
 - **Athena/Glue/Redshift analytics page** — data architecture (`advanced/6`) covers it at interview depth.
+
+---
+
+## Addendum 2026-10-13 — Performance deep-dive page (performance-coverage audit)
+
+1 new page, added after a full-site audit found AWS's only performance coverage was breadth-only
+(advanced/1, Well-Architected Framework names Performance Efficiency as one of six pillars, no
+deep dive). **Status: written, verified, and wired** (track total now 50 = 49 + 1; Advanced 16 -> 17).
+
+| # | Tier | Pri | Title | Interview question | Scope (one concept) | Cross-link |
+|---|---|---|---|---|---|---|
+| Advanced 17 | Advanced | ⭐ | Performance Optimization — Measure, Scale, Cache & Offload | "What performance improvements would you make to a slow AWS workload?" | A deep-dive, diagram-backed checklist covering measuring first (CloudWatch), scaling, caching with ElastiCache, and offloading work | basic/10 (CloudWatch), intermediate/9 (ElastiCache), advanced/16 (DynamoDB Data Modeling) |

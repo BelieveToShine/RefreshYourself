@@ -198,12 +198,13 @@ window.NAV_INDEX = {
     tier: "Advanced",
     groups: [
       {
-        label: "Questions 1–3",
+        label: "Questions 1–5",
         items: [
           { n: 1, file: "1.html", short: "SOLID as a Whole",         title: "SOLID as a Whole",                tail: "applying all five to one real service.", priority: "⭐", scenario: true },
           { n: 2, file: "2.html", short: "Composition over Inheritance", title: "Why Prefer Composition Over Inheritance", tail: "the fragile base class problem.", priority: "⭐" },
           { n: 3, file: "3.html", short: "Refactoring a Coupled Service", title: "Refactoring a Tightly Coupled Service", tail: "one method, three hidden dependencies.", priority: "🧠", scenario: true },
-          { n: 4, file: "4.html", short: "Code Review Refactor", title: "Refactoring a Method Flagged in Code Review", tail: "extract, don't rewrite.", priority: "⭐", scenario: true }
+          { n: 4, file: "4.html", short: "Code Review Refactor", title: "Refactoring a Method Flagged in Code Review", tail: "extract, don't rewrite.", priority: "⭐", scenario: true },
+          { n: 5, file: "5.html", short: "Cost of Abstraction", title: "The Performance Cost of Abstraction", tail: "abstraction isn't free — but is it ever your actual bottleneck?", priority: "⭐" }
         ]
       }
     ]
@@ -294,13 +295,14 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 5–8",
-        hot: 2,
+        label: "Questions 5–9",
+        hot: 3,
         items: [
           { n: 5, file: "5.html", short: "Monolith to Microservices", title: "Migrating a Monolith to Microservices — Approach", tail: "strangle it one seam at a time.", priority: "🔥", scenario: true },
           { n: 6, file: "6.html", short: "In-Memory Cache Loses Data", title: "In-Memory Caching Loses Data on Restart", tail: "IMemoryCache forgets everything — Redis doesn't.", priority: "🔥", scenario: true },
           { n: 7, file: "7.html", short: "Real-Time Order Status", title: "Designing Real-Time Order Status Updates", tail: "stop asking, start listening.", priority: "⭐", scenario: true },
-          { n: 8, file: "8.html", short: "Scalable Notification Service", title: "Designing a Scalable Notification Service", tail: "decouple with a queue.", priority: "⭐", scenario: true }
+          { n: 8, file: "8.html", short: "Scalable Notification Service", title: "Designing a Scalable Notification Service", tail: "decouple with a queue.", priority: "⭐", scenario: true },
+          { n: 9, file: "9.html", short: "ASP.NET Perf Checklist", title: "ASP.NET Core Performance Checklist", tail: "what you'd actually do to a slow app.", priority: "🔥" }
         ]
       }
     ]
@@ -388,7 +390,7 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–18",
+        label: "Questions 11–19",
         hot: 5,
         items: [
           { n: 11, file: "11.html", short: "Latency & Exceptions Triage", title: "Diagnosing Latency and Exceptions in a Deployed API", tail: "guess, or read the evidence first?", priority: "🔥", scenario: true },
@@ -398,7 +400,8 @@ window.NAV_INDEX = {
           { n: 15, file: "15.html", short: "Downstream API Fails", title: "One Downstream API Fails Among Several", tail: "does the whole response go down with it?", priority: "🔥", scenario: true },
           { n: 16, file: "16.html", short: "Zero-Loss Architecture", title: "Zero-Loss Architecture Under High Throughput", tail: "process inline, or durably queue it?", priority: "🔥", scenario: true },
           { n: 17, file: "17.html", short: "Per-Endpoint Rate Limiting", title: "Designing Per-Endpoint Rate Limiting", tail: "fair, or just lazy?", priority: "⭐", scenario: true },
-          { n: 18, file: "18.html", short: "Prod Troubleshooting Method", title: "General Production Troubleshooting Approach", tail: "do you have a repeatable method?", priority: "⭐", scenario: true }
+          { n: 18, file: "18.html", short: "Prod Troubleshooting Method", title: "General Production Troubleshooting Approach", tail: "do you have a repeatable method?", priority: "⭐", scenario: true },
+          { n: 19, file: "19.html", short: "Web API Perf Checklist", title: "Web API Performance Checklist", tail: "caching, compression, pagination and the N+1 trap.", priority: "⭐" }
         ]
       }
     ]
@@ -593,11 +596,12 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11–12",
-        hot: 2,
+        label: "Questions 11–13",
+        hot: 3,
         items: [
           { n: 11, file: "11.html", short: "History via Triggers", title: "Maintaining Financial Data History — Triggers?", tail: "whether a trigger is really the right tool.", priority: "🔥", scenario: true },
-          { n: 12, file: "12.html", short: "Query Deadlock", title: "A Query Goes Into Deadlock", tail: "how will you identify it?", priority: "🔥", scenario: true }
+          { n: 12, file: "12.html", short: "Query Deadlock", title: "A Query Goes Into Deadlock", tail: "how will you identify it?", priority: "🔥", scenario: true },
+          { n: 13, file: "13.html", short: "Perf Checklist", title: "SQL Performance Checklist", tail: "what you'd actually do to a slow query.", priority: "🔥" }
         ]
       }
     ]
@@ -912,6 +916,12 @@ window.NAV_INDEX = {
           { n: 9, file: "9.html", short: "Duplicate Messages", title: "Detecting and Handling Duplicate Messages", tail: "the same message, twice — does your code even notice?", priority: "⭐", scenario: true },
           { n: 10, file: "10.html", short: "Secret Committed to GitHub", title: "A Real Secret Was Committed to GitHub", tail: "deleted the line — but is the secret still there?", priority: "🔥", scenario: true }
         ]
+      },
+      {
+        label: "Questions 11–11",
+        items: [
+          { n: 11, file: "11.html", short: "Azure Perf Tuning", title: "Azure Performance Tuning", tail: "measure first, then cache, scale and tune the database.", priority: "⭐" }
+        ]
       }
     ]
   },
@@ -1009,7 +1019,7 @@ window.NAV_INDEX = {
         ]
       },
       {
-        label: "Questions 11 – 16",
+        label: "Questions 11 – 17",
         hot: 2,
         items: [
           { n: 11, file: "11.html", short: "Prod. Troubleshooting", title: "Production Troubleshooting", tail: "13 real production-break scenarios, EC2 to billing spikes.", priority: "🔥", scenario: true },
@@ -1017,7 +1027,8 @@ window.NAV_INDEX = {
           { n: 13, file: "13.html", short: "Trade-off Questions", title: "Architect-Level Trade-off Questions", tail: "requirement → constraints → options → trade-off → decision.", priority: "🧠" },
           { n: 14, file: "14.html", short: "Sustainability", title: "Sustainability", tail: "the sixth pillar, and where it conflicts with cost/performance.", priority: "⭐" },
           { n: 15, file: "15.html", short: "Account Governance", title: "Multi-Account Governance — Organizations, Control Tower & Config", tail: "Organizations SCPs, Control Tower, Config drift", priority: "⭐" },
-          { n: 16, file: "16.html", short: "DynamoDB Modeling", title: "DynamoDB Data Modeling — Access Patterns, Single-Table & Streams", tail: "Access patterns, single-table, GSI, Streams, TTL", priority: "⭐" }
+          { n: 16, file: "16.html", short: "DynamoDB Modeling", title: "DynamoDB Data Modeling — Access Patterns, Single-Table & Streams", tail: "Access patterns, single-table, GSI, Streams, TTL", priority: "⭐" },
+          { n: 17, file: "17.html", short: "Performance Optimization", title: "Performance Optimization — Measure, Scale, Cache & Offload", tail: "measure first, then scale, cache and offload.", priority: "⭐" }
         ]
       }
     ]

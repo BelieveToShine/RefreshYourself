@@ -156,3 +156,15 @@ next free Advanced slot from disk (Advanced 4).
 | # | Tier | Pri | Title | Interview question | Scope (one concept) | Cross-link |
 |---|---|---|---|---|---|---|
 | Advanced 4 | Advanced | ⭐ | Refactoring a Method Flagged in Code Review | "Review time, found as need to refactor the method. How, or what are the best practices for this?" | Extract-method over rewrite, single-responsibility smell check, safety net of tests before refactoring | Advanced 3 (Refactoring a Tightly Coupled Service), Intermediate 14 (Law of Demeter), Basic 4 (SRP) |
+
+---
+
+## Addendum 2026-10-13 — Performance deep-dive page (performance-coverage audit)
+
+1 new page, added after a full-site audit found OOP had no page addressing the performance cost of
+abstraction/design patterns. **Status: written, verified, and wired** (track total now 28 = 27 + 1;
+Advanced 4 -> 5).
+
+| # | Tier | Pri | Title | Interview question | Scope (one concept) | Cross-link |
+|---|---|---|---|---|---|---|
+| Advanced 5 | Advanced | ⭐ | The Performance Cost of Abstraction | "Does using design patterns and abstraction cost you performance — and when does that actually matter?" | Virtual dispatch cost, boxing through abstraction, decorator/wrapper chain allocation, over-abstraction cost, and profiling before optimizing | csharp/basic/2 (Boxing & Unboxing), csharp/advanced/13 (C# Performance Checklist), intermediate/13 (Decorator Pattern), basic/6 (DRY, KISS & YAGNI) |

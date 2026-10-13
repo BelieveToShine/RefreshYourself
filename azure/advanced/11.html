@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What performance improvements would you make to a slow application running on Azure?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Azure Performance Tuning — Azure Advanced — RefreshYourself">
+<meta property="og:description" content="What performance improvements would you make to a slow application running on Azure?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Azure Performance Tuning — Azure Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="azure/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0f2fe;--crumb-ink:#0078D4;">☁️ Azure</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#7c3aed;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Performance Tuning</span>
+  </nav>
+</div>
+
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Azure · Advanced · Should Know</div>
+    <h1>Your app is slow on Azure — <span class="hl hl-adv">what do you check, and in what order?</span></h1>
+    <p class="interview-q">What performance improvements would you make to a slow application running on Azure?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-grid cols-3">
+        <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+          <div class="wc-head">📊 Measure First</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Scaling up, adding a cache, or moving to a bigger SKU is a guess if you don't actually know whether the slow part is a database call, an external dependency, CPU, or memory — and guessing wrong wastes both time and money.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Application Insights and Azure Monitor show the real end-to-end breakdown — which dependency call is slow, which endpoint is the problem, and whether it's CPU, memory, or something downstream — before you spend effort fixing the wrong thing.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Measure with Application Insights/Azure Monitor before you touch anything else.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#d97706; --why-bg:#fef3c7">
+          <div class="wc-head">⚙️ Right-Size &amp; Autoscale</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A fixed App Service plan, VM size, or AKS node pool sized by guesswork either sits over-provisioned most of the time, or falls over the moment real traffic exceeds what was guessed.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Match the plan/VM/node pool size to the load you actually measured, then add autoscale rules tied to real metrics like CPU or queue length so capacity tracks real demand instead of sitting at a fixed number.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Size for the load you measured, then let autoscale rules handle the rest.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#0f766e; --why-bg:#ccfbf1">
+          <div class="wc-head">⚡ Cache Above the Database</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Read-heavy, rarely-changing data hitting the database on every request keeps re-running the same expensive query for the same answer, over and over.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Azure Cache for Redis sits in front of the database and serves that same answer from memory, removing the repeat load entirely for anything cacheable.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Redis in front of read-heavy data → the database stops seeing the repeat traffic.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#16a34a; --why-bg:#dcfce7">
+          <div class="wc-head">🌍 Push Content to the Edge</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A user far from the app's primary region pays for that physical distance on every request, even for content that never actually changes.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Azure CDN or Azure Front Door caches static and cacheable content at edge locations closer to users, so distant users stop paying the full round-trip to the primary region.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Far-from-region latency → serve it from the edge instead.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#6d28d9; --why-bg:#ede9fe">
+          <div class="wc-head">🗄️ Database-Level Tuning</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>The app's own code can be fine and the app still feels slow if the database tier is undersized for the real workload, or queries are missing the indexes they need.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Right-size the service tier/compute to the actual workload, add read replicas or geo-replication to offload read traffic, and apply the same indexing/query fundamentals as any SQL database.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">A slow database isn't always the app's fault — check tier size, replicas, and indexes too.</span></div>
+        </div>
+        <div class="why-card" style="--why-color:#be185d; --why-bg:#fce7f3">
+          <div class="wc-head">📬 Decouple With a Queue</div>
+          <div class="wc-ps">
+            <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A traffic spike that has to be processed synchronously forces the backend to scale instantly to match it, which is expensive and still risks falling behind.</span></div>
+            <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Service Bus or Storage Queues absorb the spike and let backend processing catch up asynchronously, so the system doesn't need to scale synchronously to match every burst.</span></div>
+          </div>
+          <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">A queue turns "scale instantly or fall behind" into "catch up when ready."</span></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">📊 <b>Measure</b> <span class="rarrow">→</span> App Insights/Monitor finds the real bottleneck</p>
+      <p class="rrow">⚙️ <b>Right-size &amp; autoscale</b> <span class="rarrow">→</span> match compute to real load</p>
+      <p class="rrow">⚡ <b>Cache</b> <span class="rarrow">→</span> Redis removes repeat database load</p>
+      <p class="rrow">🌍 <b>Edge</b> <span class="rarrow">→</span> CDN/Front Door cuts latency for distant users</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> profile first — whichever lever actually matches the measured bottleneck is the right one, not whichever is easiest to reach for.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 680 240" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shAzP11" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arAzP11" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <g filter="url(#shAzP11)"><rect x="190" y="18" width="300" height="44" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="340" y="45" text-anchor="middle" font-size="15" font-weight="700" fill="#92400e">🐌 Slow app on Azure</text>
+
+      <path d="M340,62 V84" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="4 3">
+        <animate attributeName="stroke-dashoffset" values="7;0" dur="1s" repeatCount="indefinite"/>
+      </path>
+      <path d="M100,84 H580" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M100,84 V110" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arAzP11)"/>
+      <path d="M260,84 V110" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arAzP11)"/>
+      <path d="M420,84 V110" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arAzP11)"/>
+      <path d="M580,84 V110" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arAzP11)"/>
+
+      <g filter="url(#shAzP11)"><rect x="25" y="110" width="150" height="58" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <g filter="url(#shAzP11)"><rect x="185" y="110" width="150" height="58" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <g filter="url(#shAzP11)"><rect x="345" y="110" width="150" height="58" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <g filter="url(#shAzP11)"><rect x="505" y="110" width="150" height="58" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+
+      <circle cx="27" cy="112" r="8" fill="#3b82f6"/><text x="27" y="115" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">1</text>
+      <circle cx="187" cy="112" r="8" fill="#3b82f6"/><text x="187" y="115" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">2</text>
+      <circle cx="347" cy="112" r="8" fill="#3b82f6"/><text x="347" y="115" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">3</text>
+      <circle cx="507" cy="112" r="8" fill="#3b82f6"/><text x="507" y="115" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">4</text>
+
+      <text x="100" y="144" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">☐ Measure</text>
+      <text x="100" y="162" text-anchor="middle" font-size="10.5" fill="#5b6472">App Insights</text>
+
+      <text x="260" y="144" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">☐ Right-size</text>
+      <text x="260" y="162" text-anchor="middle" font-size="10.5" fill="#5b6472">+ autoscale</text>
+
+      <text x="420" y="144" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">☐ Cache</text>
+      <text x="420" y="162" text-anchor="middle" font-size="10.5" fill="#5b6472">Redis</text>
+
+      <text x="580" y="144" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">☐ Edge/CDN</text>
+      <text x="580" y="162" text-anchor="middle" font-size="10.5" fill="#5b6472">Front Door</text>
+
+      <text x="340" y="204" text-anchor="middle" font-size="11" fill="#5b6472">🔍 Database tuning, queues &amp; Functions cold starts covered below</text>
+    </svg>
+    <figcaption>The top 4 levers, in priority order — database tuning and decoupling with a queue
+    are covered in the keypoints and explanation below.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Scaling up or out without measuring first is the common mistake.</b> If
+    the real bottleneck is a slow dependency call or a missing index, throwing more compute at
+    it doesn't fix anything — it just costs more while the app is still slow.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Say Application Insights points at the database — what's the actual
+    fix?"</b> Right-size the tier to the real workload, add read replicas for read-heavy traffic,
+    and apply standard indexing/query tuning — the same database fundamentals as any SQL
+    database, not an Azure-specific trick.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd start with Application Insights and Azure Monitor to find the
+    actual bottleneck, then right-size and autoscale compute to match real load, add Azure Cache
+    for Redis in front of the database, and use a CDN or Front Door for users far from the
+    primary region — database tuning and a queue come in for data-heavy or bursty-traffic
+    cases specifically."</p>
+    <ul>
+      <li>Application Insights/Azure Monitor → use <span class="hl hl-blue">first, always</span> — find the real bottleneck before changing anything.</li>
+      <li>Right-size &amp; autoscale → use when <span class="hl hl-blue">compute is the bottleneck</span> or load varies over time.</li>
+      <li>Azure Cache for Redis → use when <span class="hl hl-blue">the same read-heavy data</span> is hit repeatedly.</li>
+      <li>CDN/Front Door → use when <span class="hl hl-blue">users far from the primary region</span> feel the latency.</li>
+      <li>Database tuning (tier, replicas, indexes) → use when <span class="hl hl-hot">the database itself</span> is the measured bottleneck.</li>
+      <li>Service Bus/queue → use when <span class="hl hl-hot">bursty traffic</span> needs to be absorbed instead of scaled synchronously.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Measuring first</b> is what turns "make it faster" from a guess into a plan.
+      Application Insights and Azure Monitor show exactly where time is actually going — a slow
+      dependency call, a specific slow endpoint, or real CPU/memory pressure — so the next step
+      targets the real bottleneck instead of whichever fix sounds most obvious.</p>
+
+      <p>Once the bottleneck is known, the fix is usually one of: <b>compute</b> (right-size the
+      plan/VM/node pool, then autoscale against real metrics instead of a fixed size),
+      <b>caching</b> (Azure Cache for Redis removes repeat load from the database for anything
+      read-heavy and rarely changing), <b>the edge</b> (Azure CDN or Azure Front Door serves
+      cacheable content closer to distant users), or <b>the database itself</b> (the right tier,
+      read replicas/geo-replication for read traffic, and ordinary indexing/query tuning — the
+      same fundamentals that apply to any SQL database).</p>
+
+      <p>A traffic spike is a different shape of problem than steady slowness: instead of scaling
+      synchronously to match every burst, a <b>queue</b> (Service Bus or Storage Queues) absorbs
+      the spike and lets backend processing catch up asynchronously. And for <b>Azure Functions</b>
+      specifically, cold starts on the Consumption plan can matter for latency-sensitive
+      scenarios — a Premium or Flex Consumption plan trades extra cost for pre-warmed instances,
+      but it's a narrower, Functions-specific case next to the levers above.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th>Lever</th><th>What it targets</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><th>Measure</th><td>unknown bottleneck</td><td>Application Insights / Azure Monitor</td></tr>
+          <tr><th>Compute</th><td>under/over-provisioned plan, VM, or node pool</td><td>right-size + autoscale on real metrics</td></tr>
+          <tr><th>Cache</th><td>repeat reads of the same data</td><td>Azure Cache for Redis</td></tr>
+          <tr><th>Edge</th><td>latency for distant users</td><td>Azure CDN / Azure Front Door</td></tr>
+          <tr><th>Database</th><td>undersized tier, missing indexes, read-heavy load</td><td>right tier, read replicas, indexing</td></tr>
+          <tr><th>Queue</th><td>bursty, spiky traffic</td><td>Service Bus / Storage Queues</td></tr>
+          <tr><th>Functions cold start</th><td>latency-sensitive Consumption-plan calls</td><td>Premium / Flex Consumption plan</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> cached = <span class="kw">await</span> cache.GetStringAsync(key);   <span class="cx-ok">// ✅ try Redis first</span>
+<span class="kw">if</span> (cached != <span class="kw">null</span>)
+    <span class="kw">return</span> JsonSerializer.Deserialize&lt;Product&gt;(cached);
+
+<span class="kw">var</span> product = <span class="kw">await</span> db.Products.FindAsync(id);  <span class="cx-err">// ❌ only on a cache miss</span>
+<span class="kw">await</span> cache.SetStringAsync(key, JsonSerializer.Serialize(product),
+    <span class="kw">new</span> DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(<span class="num">10</span>) });
+<span class="kw">return</span> product;</code></pre>
+      </div>
+      <p class="cx-note">Cache-aside with Redis: read from the cache first, only hit the database on a miss, and refill the cache with a short expiry.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> CLI</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>az monitor autoscale create <span class="cx-cmt">\</span>
+  --resource-group myRG --resource myAppServicePlan <span class="cx-cmt">\</span>
+  --resource-type Microsoft.Web/serverfarms <span class="cx-cmt">\</span>
+  --min-count <span class="num">2</span> --max-count <span class="num">10</span> --count <span class="num">2</span>   <span class="cx-ok">// ✅ ties capacity to real demand</span>
+
+az monitor autoscale rule create <span class="cx-cmt">\</span>
+  --resource-group myRG --autoscale-name myAppServicePlan <span class="cx-cmt">\</span>
+  --condition <span class="str">"CpuPercentage > 70 avg 10m"</span> --scale out <span class="num">1</span></code></pre>
+      </div>
+      <p class="cx-note">An autoscale rule tied to a real metric (here, average CPU) instead of leaving the plan at a fixed, guessed size.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> An App Service instance is maxed out on CPU during a traffic spike</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1Azp11" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto"><path d="M0,0 L5.5,2.5 L0,5 Z" fill="#1d4ed8"/></marker></defs>
+              <rect x="8" y="13" width="204" height="40" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="110" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📈 CPU maxed, spike hits</text>
+              <path d="M212,33 H266" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#arUc1Azp11)"/>
+              <rect x="270" y="13" width="204" height="40" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="372" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">📊 Check App Insights first</text>
+            </svg>
+          </div>
+          <p class="uc-what">Before just scaling the plan up, check Application Insights for the
+          actual cause — a dependency call waiting on a slow database, or genuine CPU-bound work.
+          If it's the database, scaling the App Service plan alone won't fix it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Maxed-out CPU still needs a diagnosis before a bigger plan is the answer.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> Users far from the primary region report slow page loads</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2Azp11" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto"><path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/></marker></defs>
+              <rect x="8" y="13" width="204" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="110" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🌍 Distant user, slow load</text>
+              <path d="M212,33 H266" fill="none" stroke="#16a34a" stroke-width="1.6" marker-end="url(#arUc2Azp11)"/>
+              <rect x="270" y="13" width="204" height="40" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="372" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🚀 Served from the edge</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is a distance problem, not a compute problem — scaling the app
+          up won't shorten the physical round trip. Azure CDN or Azure Front Door caches the
+          cacheable content at an edge location close to that user instead.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Distance problem → edge/CDN fix, not a bigger App Service plan.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#6d28d9">
+          <div class="uc-sit"><span class="uc-flag">3</span> The database's CPU is pegged and queries feel slow even though the app server has headroom</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3Azp11" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto"><path d="M0,0 L5.5,2.5 L0,5 Z" fill="#6d28d9"/></marker></defs>
+              <rect x="8" y="13" width="204" height="40" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="110" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#5b21b6">🗄️ Database CPU pegged</text>
+              <path d="M212,33 H266" fill="none" stroke="#6d28d9" stroke-width="1.6" marker-end="url(#arUc3Azp11)"/>
+              <rect x="270" y="13" width="204" height="40" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+              <text x="372" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#5b21b6">🔎 Tier, replicas, indexes</text>
+            </svg>
+          </div>
+          <p class="uc-what">The app server having headroom rules out compute as the bottleneck —
+          the database itself is the lever here. Check the service tier against the real
+          workload, consider a read replica for read-heavy traffic, and look for missing indexes
+          on the queries actually running.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">App server headroom + slow queries → look at the database, not the app.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world scenario <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A checkout endpoint slows down during a flash sale.</b> Application Insights shows
+      most of the time is inside a dependency call to the database, not app-server CPU — so the
+      first fix isn't a bigger App Service plan, it's the database: right-size the tier for the
+      new load and confirm the hot queries are actually indexed.</p>
+
+      <p>Separately, the product-catalog pages being read far more than they're written are moved
+      behind Azure Cache for Redis, which takes that repeat read traffic off the database
+      entirely. And because the order-placement burst itself is spiky rather than sustained, order
+      processing is handed to a Service Bus queue — orders are accepted immediately and processed
+      as capacity allows, instead of needing the checkout path to scale synchronously to match
+      the sale's peak.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="10.html">← A Real Secret Was Committed to GitHub</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Azure Advanced</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Azure · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

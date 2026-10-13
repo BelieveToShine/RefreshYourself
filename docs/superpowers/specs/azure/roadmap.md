@@ -211,3 +211,15 @@ Numbers are the next free Advanced slots from disk.
 |---|---|---|---|---|---|---|
 | Advanced 9 | Advanced | ⭐ | Detecting and Handling Duplicate Messages | "What is a Topic and subscription in GCP — any limit for a subscription? How do you detect/handle duplicate messages?" | At-least-once delivery means duplicates are expected; idempotency keys / message-id dedup at the consumer, not relying on the broker to guarantee exactly-once | intermediate/5 (Queues vs. Topics/Subscriptions), intermediate/6 (Service Bus vs. Event Grid vs. Event Hubs) |
 | Advanced 10 | Advanced | 🔥 | A Real Secret Was Committed to GitHub | "Config changes on local, with a real password, committed on GitHub — what do you do? What measures do you take?" | A committed secret must be rotated, not just deleted from history — remove from the repo, revoke/rotate the credential at its source, and move it into Key Vault/Managed Identity going forward | basic/7 (Key Vault), basic/8 (Managed Identity), intermediate/13 (Secrets Management as a Practice) |
+
+---
+
+## Addendum 2026-10-13 — Performance deep-dive page (performance-coverage audit)
+
+1 new page, added after a full-site audit found Azure's only performance coverage was breadth-only
+(advanced/1, Well-Architected Framework names Performance Efficiency as one of six pillars, no
+deep dive). **Status: written, verified, and wired** (track total now 52 = 51 + 1; Advanced 10 -> 11).
+
+| # | Tier | Pri | Title | Interview question | Scope (one concept) | Cross-link |
+|---|---|---|---|---|---|---|
+| Advanced 11 | Advanced | ⭐ | Azure Performance Tuning | "What performance improvements would you make to a slow Azure application?" | A deep-dive, diagram-backed checklist covering measuring first (App Insights), right-sizing/autoscale, caching with Redis, CDN/edge, database-level tuning, and decoupling with a queue | basic/13 (App Insights), intermediate/7, 15, 16, 8, basic/15, intermediate/20 |

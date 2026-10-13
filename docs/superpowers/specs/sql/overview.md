@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 52 pages written (39 earlier + 11 gap pages added 2026-10-07 + 2 scenario-bank pages added 2026-10-13)
+## Status — Phases 1–7 complete, all 53 pages written (39 earlier + 11 gap pages added 2026-10-07 + 2 scenario-bank pages added 2026-10-13 + 1 performance deep-dive page added 2026-10-13)
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): raw questions, grouped by concept
   across 8 subsections, kept tightly to the user's own original SQL section of the interview-prep
