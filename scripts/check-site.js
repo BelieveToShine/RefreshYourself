@@ -6,8 +6,12 @@
    sections, and that every local href/src resolves. Also compares page counts to the docs. */
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const ROOT = path.resolve(__dirname, "..");
-const TRACKS = ["csharp","linq","oops","dotnet","webapi","efcore","sql","azure","aws","react","angular","python","ai","dsa","javascript","htmlcss","java","vuejs","nextjs"];
+const TRACKS = ["csharp","linq","oops","dotnet","webapi","efcore","sql","azure","aws","react","angular","python","ai","dsa","javascript","htmlcss","java","vuejs","nextjs","patterns"];
 const TIERS = ["basic","intermediate","advanced"];
+// A track can use its own tier-folder names instead of basic/intermediate/advanced when the
+// axis it's organizing by genuinely isn't difficulty/depth — see docs/rules/content-structure.md.
+// "patterns" categorizes by GoF pattern family (Creational/Structural/Behavioral), not tier.
+const TRACK_TIERS = { patterns: ["creational", "structural", "behavioral"] };
 const errors = [], warns = [];
 const err = (m) => errors.push(m), warn = (m) => warns.push(m);
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -29,7 +33,7 @@ for (const t of TRACKS) {
   if (!exists(`${t}/roadmap.html`)) err(`${t}: missing roadmap.html`);
   if (!rootIndex.includes(`${t}/index.html`)) err(`root index.html has no tile for ${t}`);
   const roadmap = exists(`${t}/roadmap.html`) ? read(`${t}/roadmap.html`) : "";
-  for (const tier of TIERS) {
+  for (const tier of (TRACK_TIERS[t] || TIERS)) {
     const dir = path.join(ROOT, t, tier);
     if (!fs.existsSync(dir)) { err(`${t}/${tier}: folder missing`); continue; }
     const pages = fs.readdirSync(dir).filter((f) => /^\d+\.html$/.test(f)).sort((a, b) => parseInt(a) - parseInt(b));
@@ -89,7 +93,7 @@ for (const e of SEARCH) if (!exists(e.path)) err(`search-index.js: dead path ${e
 
 // docs: page counts mentioned in overview vs reality
 const overview = read("docs/refreshyourself-overview.md");
-const labels = { csharp: "C#", linq: "LINQ", oops: "OOP", dotnet: ".NET / ASP.NET Core", webapi: "Web API", efcore: "EF Core", sql: "SQL", azure: "Azure", aws: "AWS", react: "React", angular: "Angular", python: "Python", ai: "AI", dsa: "DSA", javascript: "JavaScript", htmlcss: "HTML & CSS", java: "Java", vuejs: "Vue.js", nextjs: "Next.js" };
+const labels = { csharp: "C#", linq: "LINQ", oops: "OOP", dotnet: ".NET / ASP.NET Core", webapi: "Web API", efcore: "EF Core", sql: "SQL", azure: "Azure", aws: "AWS", react: "React", angular: "Angular", python: "Python", ai: "AI", dsa: "DSA", javascript: "JavaScript", htmlcss: "HTML & CSS", java: "Java", vuejs: "Vue.js", nextjs: "Next.js", patterns: "Design Patterns" };
 for (const t of TRACKS) {
   const at = overview.indexOf("**" + labels[t] + "** — **all 7 phases complete, ");
   const m = at < 0 ? null : overview.slice(at).match(/complete, (\d+)\/(\d+) pages/);

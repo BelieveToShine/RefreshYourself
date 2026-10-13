@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What is the Iterator pattern, and what does yield return actually compile to in C#?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Iterator Pattern — Design Patterns Behavioral — RefreshYourself">
+<meta property="og:description" content="What is the Iterator pattern, and what does yield return actually compile to in C#?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Iterator Pattern — Design Patterns Behavioral — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="patterns/behavioral">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#f5f5f4;--crumb-ink:#44403c;">🏗️ Design Patterns</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#fce7f3;--crumb-ink:#9d174d;">Behavioral</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Iterator</span>
+  </nav>
+</div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fce7f3; --eyebrow-ink:#9d174d;">🧠 Design Patterns · Behavioral · Deep Dive</div>
+    <h1><code>foreach</code> — what is <span class="hl hl-blue">really</span> happening under the hood?</h1>
+    <p class="interview-q">"What is the Iterator pattern, and what does <code>yield return</code> actually compile to in C#?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔁 Iterator</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Looping code that reaches into a collection's internal array, list, or tree directly breaks the moment that internal structure changes, and duplicates traversal logic across every caller.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Iterator gives a collection one small interface — <code>MoveNext()</code> and <code>Current</code> — so any caller can walk its elements one at a time without ever seeing how they're actually stored; <code>foreach</code> and <code>yield return</code> in C# are this exact pattern built into the language.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Iterator = walk the elements one at a time, without exposing how they're stored.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Iterator = <b>"IEnumerable/IEnumerator, baked straight into foreach."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>foreach</code></b> → compiles to GetEnumerator() once, then MoveNext()/Current in a loop</span>
+      <span class="tc-line"><b><code>yield return</code></b> → compiler builds a hidden state machine implementing IEnumerator&lt;T&gt;</span>
+      <span class="tc-line"><b><code>MoveNext()</code></b> → resumes right after the last yield, not a one-shot call</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 330" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shIt" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arItBlue" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+        <marker id="arItGreen" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">ITERATOR — WHAT foreach ACTUALLY TALKS TO</text>
+
+      <g filter="url(#shIt)"><rect x="192" y="24" width="256" height="52" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="46" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">🔁 foreach loop</text>
+      <text x="320" y="63" text-anchor="middle" font-size="10.5" fill="#5b6472">Client — drives MoveNext()/Current</text>
+
+      <g filter="url(#shIt)"><rect x="60" y="140" width="220" height="56" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="170" y="164" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">📚 IEnumerable&lt;T&gt;</text>
+      <text x="170" y="181" text-anchor="middle" font-size="10.5" fill="#5b6472">Aggregate — GetEnumerator()</text>
+
+      <g filter="url(#shIt)"><rect x="360" y="140" width="220" height="56" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="470" y="164" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🧭 IEnumerator&lt;T&gt;</text>
+      <text x="470" y="181" text-anchor="middle" font-size="10.5" fill="#5b6472">Iterator — MoveNext()/Current</text>
+
+      <g filter="url(#shIt)"><rect x="60" y="250" width="220" height="56" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="170" y="274" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🔢 EvenNumbers</text>
+      <text x="170" y="291" text-anchor="middle" font-size="10.5" fill="#5b6472">ConcreteAggregate</text>
+
+      <g filter="url(#shIt)"><rect x="360" y="250" width="220" height="56" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="470" y="274" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">⚙️ yield state machine</text>
+      <text x="470" y="291" text-anchor="middle" font-size="10.5" fill="#5b6472">ConcreteIterator (compiler-made)</text>
+
+      <path d="M250,76 V100 H170 V140" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arItBlue)"/>
+      <rect x="185" y="111" width="100" height="18" rx="9" fill="#ffffff" stroke="#3b82f6" stroke-width="1.1"/>
+      <text x="235" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1d4ed8">GetEnumerator()</text>
+
+      <path d="M390,76 V112 H470 V140" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arItBlue)"/>
+      <rect x="355" y="117" width="110" height="18" rx="9" fill="#ffffff" stroke="#3b82f6" stroke-width="1.1"/>
+      <text x="410" y="130" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1d4ed8">MoveNext()/Current</text>
+
+      <path d="M170,250 V196" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arItBlue)"/>
+      <rect x="190" y="215" width="80" height="18" rx="9" fill="#ffffff" stroke="#3b82f6" stroke-width="1.1"/>
+      <text x="230" y="228" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1d4ed8">implements</text>
+
+      <path d="M470,250 V196" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arItBlue)"/>
+      <rect x="485" y="215" width="80" height="18" rx="9" fill="#ffffff" stroke="#3b82f6" stroke-width="1.1"/>
+      <text x="525" y="228" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1d4ed8">implements</text>
+
+      <path d="M280,278 H360" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arItGreen)"/>
+      <rect x="285" y="247" width="70" height="16" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.1"/>
+      <text x="320" y="259" text-anchor="middle" font-size="9" font-weight="600" fill="#166534">creates</text>
+    </svg>
+    <figcaption>foreach only ever talks to IEnumerable&lt;T&gt;/IEnumerator&lt;T&gt; — it never sees EvenNumbers or the compiler-generated state machine directly.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b><code>yield return</code> is not "just a shortcut for building a list and returning it."</b> It's lazy — each value is produced only when <code>MoveNext()</code> is actually called, which is why it can iterate an infinite sequence without ever materializing one.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What does <code>yield return</code> actually compile to?"</b> The compiler generates a hidden class implementing <code>IEnumerator&lt;T&gt;</code> as a state machine; each <code>MoveNext()</code> call resumes execution right after the previous <code>yield return</code> instead of running the method from the top.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Iterator gives a collection a way to expose its elements one at a time without revealing how they're stored. In C#, IEnumerable&lt;T&gt; and IEnumerator&lt;T&gt; are this pattern built into the language — foreach compiles to calling GetEnumerator() once, then MoveNext() and reading Current in a loop. yield return lets me implement IEnumerator&lt;T&gt; without hand-writing that state machine; the compiler generates one, and each MoveNext() call resumes right after the last yield return."</p>
+    <ul>
+      <li><code>IEnumerable&lt;T&gt;</code> → <span class="hl hl-blue">the Aggregate — GetEnumerator() hands back an iterator</span>.</li>
+      <li><code>IEnumerator&lt;T&gt;</code> → <span class="hl hl-inter">the Iterator — MoveNext()/Current, GoF's HasNext()/Next() by another name</span>.</li>
+      <li><code>foreach</code> → <span class="hl hl-basic">sugar for GetEnumerator() once, then MoveNext()/Current in a loop</span>.</li>
+      <li><code>yield return</code> → <span class="hl hl-hot">compiler-generated state machine, lazy — not a list built up front</span>.</li>
+      <li>Why Deep Dive → <span class="hl hl-teal">rarely asked as "name this pattern," often asked as "what does yield compile to"</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>GoF's <span class="hl hl-blue">Iterator</span> is an interface with <code>HasNext()</code>/<code>Next()</code>; .NET's shape of the same idea is <code>IEnumerator&lt;T&gt;</code>'s <code>MoveNext()</code>/<code>Current</code>. The <b>Aggregate</b> that hands one back is <code>IEnumerable&lt;T&gt;</code>'s <code>GetEnumerator()</code>. <code>foreach</code> is literally syntactic sugar over those two interfaces: it calls <code>GetEnumerator()</code> once, then repeatedly calls <code>MoveNext()</code> and reads <code>Current</code> until <code>MoveNext()</code> returns false.</p>
+
+      <p><code>yield return</code> is what makes implementing <code>IEnumerator&lt;T&gt;</code> painless — <span class="hl hl-hot">the C# compiler generates a hidden class implementing it for you</span>, a real state machine, not a loop that builds a list up front. Each call to <code>MoveNext()</code> resumes execution right after the previous <code>yield return</code> rather than re-running the method from the start, which is exactly why a <code>yield return</code> method can produce an infinite sequence lazily — nothing downstream of the next unread value is ever computed.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th>GoF term</th><th>.NET equivalent</th><th>Method(s)</th></tr></thead>
+        <tbody>
+          <tr><td>Iterator</td><td><code>IEnumerator&lt;T&gt;</code></td><td><code>MoveNext()</code>, <code>Current</code></td></tr>
+          <tr><td>ConcreteIterator</td><td>compiler-generated state machine</td><td>built from your <code>yield return</code></td></tr>
+          <tr><td>Aggregate</td><td><code>IEnumerable&lt;T&gt;</code></td><td><code>GetEnumerator()</code></td></tr>
+          <tr><td>ConcreteAggregate</td><td>your collection class</td><td>implements <code>IEnumerable&lt;T&gt;</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">class</span> <span class="ty">EvenNumbers</span> : <span class="ty">IEnumerable</span>&lt;<span class="kw">int</span>&gt;
+{
+    <span class="kw">private</span> <span class="kw">readonly</span> <span class="kw">int</span> _max;
+    <span class="kw">public</span> <span class="ty">EvenNumbers</span>(<span class="kw">int</span> max) =&gt; _max = max;
+
+    <span class="kw">public</span> <span class="ty">IEnumerator</span>&lt;<span class="kw">int</span>&gt; GetEnumerator()
+    {
+        <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt;= _max; i += <span class="num">2</span>)
+            <span class="kw">yield</span> <span class="kw">return</span> i;         <span class="cx-ok">// ✅ compiler builds the state machine from this</span>
+    }
+
+    <span class="ty">IEnumerator</span> <span class="ty">IEnumerable</span>.GetEnumerator() =&gt; GetEnumerator();</code></pre>
+      </div>
+      <p class="cx-note">ConcreteAggregate — one <code>yield return</code> loop is all it takes; no hand-written <code>IEnumerator&lt;int&gt;</code> class.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">foreach</span> (<span class="kw">var</span> n <span class="kw">in</span> <span class="kw">new</span> <span class="ty">EvenNumbers</span>(<span class="num">10</span>))
+{
+    Console.WriteLine(n);
+}
+
+<span class="cx-cmt">// what the compiler actually generates for the loop above:</span>
+<span class="kw">var</span> e = <span class="kw">new</span> <span class="ty">EvenNumbers</span>(<span class="num">10</span>).GetEnumerator();   <span class="cx-cmt">// GetEnumerator() called ONCE</span>
+<span class="kw">while</span> (e.MoveNext())                             <span class="cx-cmt">// resumes after the last yield, each call</span>
+{
+    <span class="kw">var</span> n = e.Current;
+    Console.WriteLine(n);
+}</code></pre>
+      </div>
+      <p class="cx-note">This is literally what <code>foreach</code> compiles to — the sugar, not a different mechanism underneath.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A TV remote's channel-up button.</b> Pressing it moves to the next channel one at a time, without needing to know how the channel list is actually stored. A playlist's "next song" button works the same way.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="5.html">← Template Method</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Design Patterns Behavioral</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Design Patterns · Behavioral
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

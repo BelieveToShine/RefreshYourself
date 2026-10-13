@@ -18,6 +18,20 @@ Locked decisions from the working session that set this project up. Don't re-der
 /<track>/advanced/index.html     ← same pattern
 ```
 
+**One deliberate exception: `patterns/` (Design Patterns) uses `creational/`, `structural/`,
+`behavioral/` instead of `basic/`, `intermediate/`, `advanced/`.** Locked with the user
+2026-10-13: that track categorizes by GoF pattern family, not by question depth/difficulty, so
+forcing it into Basic/Intermediate/Advanced would misrepresent what the three groups actually
+are — a pattern isn't "more advanced" than another, it's a different family. Everything else
+about the three-folder-per-track shape still applies (each gets its own `index.html` tier index,
+each topic page is numbered within its folder, the pager still walks Creational → Structural →
+Behavioral in that fixed order exactly like Basic → Intermediate → Advanced does elsewhere). The
+tier-color system in [visual-style.md](visual-style.md) and the page/pager tooling in
+`scripts/check-site.js` / `scripts/fix-pagers.js` both read a per-track tier-name override
+(`TRACK_TIERS`) rather than assuming the fixed three names — look there before assuming a tier
+must be named Basic/Intermediate/Advanced. Don't add a second such exception casually; this one
+exists because the category axis itself is genuinely not depth.
+
 - `<track>` is a short lowercase slug: `csharp`, `oops`, `dotnet`, `sql`, `react`, `dsa`, etc.
 - **The tier index lists the full roadmap first — written and not-yet-written topics together**
   (see the workflow note in [content-writing.md](content-writing.md)). A topic's number is its

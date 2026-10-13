@@ -8,9 +8,11 @@
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const ROOT = path.resolve(__dirname, "..");
 const FIX = process.argv.includes("--fix");
-const TRACKS = ["csharp","oops","dotnet","webapi","efcore","sql","azure","aws","react","angular","python","ai","dsa","javascript","htmlcss"];
+const TRACKS = ["csharp","oops","dotnet","webapi","efcore","sql","azure","aws","react","angular","python","ai","dsa","javascript","htmlcss","patterns"];
 const TIERS = ["basic", "intermediate", "advanced"];
-const LABEL = { basic: "Basic", intermediate: "Intermediate", advanced: "Advanced" };
+const LABEL = { basic: "Basic", intermediate: "Intermediate", advanced: "Advanced", creational: "Creational", structural: "Structural", behavioral: "Behavioral" };
+// see check-site.js — a track can use its own tier-folder names instead of basic/intermediate/advanced.
+const TRACK_TIERS = { patterns: ["creational", "structural", "behavioral"] };
 const ctx = { window: {} }; vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(ROOT, "assets/nav-index.js"), "utf8"), ctx);
 const NAV = ctx.window.NAV_INDEX;
@@ -25,7 +27,7 @@ function titleOf(track, tier, n) {
 let problems = 0, fixed = 0;
 for (const t of TRACKS) {
   const order = [];
-  for (const tier of TIERS) {
+  for (const tier of (TRACK_TIERS[t] || TIERS)) {
     const dir = path.join(ROOT, t, tier);
     if (!fs.existsSync(dir)) continue;
     fs.readdirSync(dir).filter((f) => /^\d+\.html$/.test(f)).map((f) => parseInt(f)).sort((a, b) => a - b)

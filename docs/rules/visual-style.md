@@ -57,6 +57,16 @@ inherited `--tile-color` — fixed by giving `.ttier` its own `.basic`/`.inter`/
 classes instead. The point of fixed tier colour is that "Basic" reads as Basic at a glance no
 matter which track's page you're on.
 
+## `patterns/` tier colour is its own fixed triplet, not green/amber/purple (added 2026-10-13)
+
+The one exception to "tier colour is fixed" above — see
+[content-structure.md](content-structure.md) for why. `patterns/` uses `.ttier.creational`
+(`#155e75` ink / `#cffafe` bg), `.ttier.structural` (`#3730a3` / `#e0e7ff`), `.ttier.behavioral`
+(`#9d174d` / `#fce7f3`) instead of `.ttier.basic`/`.inter`/`.adv`, everywhere a tier shows up for
+that track (home tile, tier-bulletins, breadcrumb, eyebrow, sidebar). The track's own home-tile
+brand colour is a fourth, separate value (`#44403c`, stone) — distinct from all three category
+colours, same as every other track's brand colour is distinct from its tier colours.
+
 ## Scenario Bank rose accent is fixed, like tier colour (added 2026-10-13)
 
 `#9f1239` ink / `#ffe4e6` background is the one reserved colour pair for anything that means

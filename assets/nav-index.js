@@ -2034,5 +2034,57 @@ window.NAV_INDEX = {
         ]
       }
     ]
+  },
+  "patterns/creational": {
+    track: "Design Patterns",
+    trackIcon: "🏗️",
+    tier: "Creational",
+    groups: [
+      {
+        label: "Patterns 1–3",
+        hot: 2,
+        items: [
+          { n: 1, file: "1.html", short: "Singleton", title: "Singleton — a class that builds itself, exactly once", tail: "one instance, one global access point, and why it's distrusted.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Factory Method", title: "Factory Method — let subclasses decide, not a scattered new", tail: "defer instantiation to a subclass, not an if/switch.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Builder", title: "Builder — assemble it step by step, not through a 10-parameter constructor", tail: "fluent step-by-step construction of a complex object.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "patterns/structural": {
+    track: "Design Patterns",
+    trackIcon: "🏗️",
+    tier: "Structural",
+    groups: [
+      {
+        label: "Patterns 1–4",
+        hot: 2,
+        items: [
+          { n: 1, file: "1.html", short: "Adapter", title: "Adapter — same job, a different-shaped interface", tail: "convert one interface into the one a caller expects.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Decorator", title: "Decorator — stack behavior, without a new subclass per combo", tail: "wrap an object to add behavior at runtime, stackably.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "Facade", title: "Facade — one simple door in front of a messy subsystem", tail: "one simplified entry point in front of a complex subsystem.", priority: "⭐" },
+          { n: 4, file: "4.html", short: "Proxy", title: "Proxy — a stand-in that controls access, not a bigger version of the real thing", tail: "a stand-in that controls access to the real object.", priority: "⭐" }
+        ]
+      }
+    ]
+  },
+  "patterns/behavioral": {
+    track: "Design Patterns",
+    trackIcon: "🏗️",
+    tier: "Behavioral",
+    groups: [
+      {
+        label: "Patterns 1–6",
+        hot: 2,
+        items: [
+          { n: 1, file: "1.html", short: "Observer", title: "Observer — one Subject changes, every Observer finds out", tail: "one-to-many notification without knowing concrete observer types.", priority: "🔥" },
+          { n: 2, file: "2.html", short: "Strategy", title: "Strategy — swap the whole algorithm, not one more branch", tail: "interchangeable algorithms behind one common interface.", priority: "🔥" },
+          { n: 3, file: "3.html", short: "State", title: "State — the object's own behavior changes, no giant switch required", tail: "behavior changes with internal state, modeled as classes.", priority: "⭐" },
+          { n: 4, file: "4.html", short: "Command", title: "Command — the request itself becomes an object", tail: "wrap a request as an object so it can be queued, logged, or undone.", priority: "⭐" },
+          { n: 5, file: "5.html", short: "Template Method", title: "Template Method — the skeleton stays fixed, only the steps change", tail: "fix the algorithm's skeleton, let subclasses override a step.", priority: "⭐" },
+          { n: 6, file: "6.html", short: "Iterator", title: "foreach — what is really happening under the hood?", tail: "traverse a collection without exposing its internal structure.", priority: "🧠" }
+        ]
+      }
+    ]
   }
 };

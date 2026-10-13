@@ -126,6 +126,19 @@ all through all 7 phases:**
   user's instruction (design/scenario questions, not "what is polymorphism" from zero). Every
   diagram passed the mandatory automated verification script before this track was marked done —
   see [`specs/oops/overview.md`](superpowers/specs/oops/overview.md).
+- **Design Patterns** — **all 7 phases complete, 13/13 pages written** (2026-10-13): a new
+  standalone track, separate from OOP, covering the classic Gang-of-Four catalog — curated down
+  to the 13 patterns that actually recur in real interviews (not all 23), grouped by
+  **Creational (3) / Structural (4) / Behavioral (6)** — the one deliberate exception to this
+  site's Basic/Intermediate/Advanced tier split, since a pattern's family isn't a difficulty level
+  (see [`rules/content-structure.md`](rules/content-structure.md)). Each page explains one pattern
+  from a pure-pattern angle (structure, participants, a worked C# example, a real-world tie-in);
+  OOP's own six existing pattern-adjacent pages (Singleton, Observer, Decorator, Strategy,
+  Factory vs. DI, Adapter vs. Facade) are left exactly where they are, written from an
+  OOP-design-principle angle, and cross-link to/from their matching page here rather than being
+  duplicated or migrated. Every diagram (UML-style structure diagrams, not this site's usual
+  flow/sequence style) passed the mandatory automated verification script, run independently
+  against every page. See [`specs/patterns/overview.md`](superpowers/specs/patterns/overview.md).
 - **.NET / ASP.NET Core** — **all 7 phases complete, 42/42 pages written** (2026-09-16; +2 more
   on 2026-09-18 after the user reported Unit Testing had no coverage; +4 Scenario Bank pages
   2026-10-13):
