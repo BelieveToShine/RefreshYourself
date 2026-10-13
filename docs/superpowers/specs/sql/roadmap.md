@@ -183,6 +183,8 @@ category, not tier — the site-wide convention). Numbering below is the tier-fo
 | 6.3 | Pagination & OFFSET | Intermediate | ⭐ | intermediate/9.html |
 | 7.1 | Normalization vs. Denormalization | Intermediate | 🔥 | intermediate/5.html |
 | 8.1 | Performance Degraded Over Time | Advanced | 🔥 | advanced/4.html |
+| 5.5 | Maintaining Financial Data History — Triggers? | Advanced | 🔥 | advanced/11.html |
+| 5.6 | A Query Goes Into Deadlock | Advanced | 🔥 | advanced/12.html |
 
 **Gap-hunt additions (12) — Phases 3–7 of their own, see the taxonomy's gap-hunt log:**
 
@@ -254,3 +256,16 @@ Rows ordered hot-first by number within each tier.
 - **Self/FULL/CROSS joins** merged into one page (RIGHT/FULL already named briefly in basic/3, which stays untouched).
 - No candidate was dropped outright.
 - Own gap-hunt additions: **Stored Procedure vs. Function**, **Constraints**. Considered and rejected: PIVOT/STRING_AGG/COALESCE (syntax trivia, covered by CASE + NULL pages), cursors (anti-pattern, a mention suffices), `NOLOCK` (a follow-up on the isolation-levels page), date/time functions (tutorial-level).
+
+---
+
+## Addendum 2026-10-13 — Scenario Bank pages (client interview-prep document)
+
+2 new pages from a client's real interview-prep question list, approved for implementation
+2026-10-13. **Status: written, verified, and wired** (track total now 52 = 50 + 2; Advanced 10 -> 12).
+Numbers are the next free Advanced slots from disk.
+
+| # | Tier | Pri | Title | Interview question | Scope (one concept) | Cross-link |
+|---|---|---|---|---|---|---|
+| Advanced 11 | Advanced | 🔥 | Maintaining Financial Data History — Triggers? | "Financial data — I want to maintain the history of the data. Can we use a trigger?" | Whether a trigger is the right tool for an audit trail vs. temporal tables / application-level history, and the trade-offs of each | basic/16 (TRUNCATE/DELETE/DROP), intermediate/16 (Triggers) |
+| Advanced 12 | Advanced | 🔥 | A Query Goes Into Deadlock | "A written query goes into deadlock — how will you identify this?" | Identifying a deadlock vs. plain blocking, reading the deadlock graph, and the lock-ordering/isolation-level fixes | advanced/2 (Deadlock vs. Blocking), advanced/5 (Locking) |

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Your API is live and users report latency and random exceptions — how do you actually track this down?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Diagnosing Latency and Exceptions in a Deployed API — Web API Advanced — RefreshYourself">
+<meta property="og:description" content="Your API is live and users report latency and random exceptions — how do you actually track this down?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Diagnosing Latency and Exceptions in a Deployed API — Web API Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Diagnosing Latency and Exceptions in a Deployed API</span>
+  </nav>
+</div>
+
+<div class="wrap" style="margin:10px 0 0;"><a class="crumb" href="../../scenarios/index.html" style="--crumb-bg:#ffe4e6;--crumb-ink:#9f1239;">🎯 Also in the Scenario Bank</a></div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Web API · Advanced · Must Know</div>
+    <h1>Latency and exceptions in prod — <span class="hl hl-hot">guess</span>, or <span class="hl hl-blue">read the evidence</span> first?</h1>
+    <p class="interview-q">"Your API is live and users report latency and random exceptions — how do you actually track this down?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🩺 Triage Order</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Jumping straight to a fix — restarting the app, adding more servers — before reading a single exception or metric destroys the evidence that would have shown the real cause, and the same failure just comes back later.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Work a fixed triage order: read the actual logs/APM traces first, correlate with load, check for resource exhaustion, then check downstream dependencies — each step narrows it down before anything gets changed.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Read the evidence before you touch anything — restarting treats the symptom, not the cause.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Diagnosing prod latency = <b>"logs first, then load, then resources, then downstream."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>Logs/APM</code></b> → real stack traces + timing</span>
+      <span class="tc-line"><b><code>Load</code></b> → only under traffic, or constant?</span>
+      <span class="tc-line"><b><code>Resources</code></b> → thread pool, DB pool, GC pauses</span>
+      <span class="tc-line"><b><code>Downstream</code></b> → a slow dependency cascading</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 390" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh11" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar11Slate" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="ar11Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">LATENCY + EXCEPTIONS — TRIAGE ORDER, TOP TO BOTTOM</text>
+
+      <g filter="url(#sh11)"><rect x="140" y="34" width="360" height="50" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="320" y="54" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">🩺 Symptom reported</text>
+      <text x="320" y="70" text-anchor="middle" font-size="10.5" fill="#5b6472">latency + random exceptions in prod</text>
+
+      <path d="M320,84 V104" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar11Slate)"/>
+
+      <g filter="url(#sh11)"><rect x="160" y="104" width="320" height="50" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="124" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">📊 Check logs / APM</text>
+      <text x="320" y="140" text-anchor="middle" font-size="10.5" fill="#5b6472">real stack traces + timing, not a guess</text>
+
+      <path d="M320,154 V174" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar11Slate)"/>
+
+      <g filter="url(#sh11)"><rect x="180" y="174" width="280" height="50" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="194" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">📈 Correlate with load</text>
+      <text x="320" y="210" text-anchor="middle" font-size="10.5" fill="#5b6472">only under traffic, or constant?</text>
+
+      <path d="M320,224 V244" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar11Slate)"/>
+
+      <g filter="url(#sh11)"><rect x="200" y="244" width="240" height="50" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="320" y="264" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">🧵 Resource exhaustion?</text>
+      <text x="320" y="280" text-anchor="middle" font-size="10.5" fill="#5b6472">thread pool, DB pool, GC pauses</text>
+
+      <path d="M320,294 V314" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#ar11Green)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="1.4s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#sh11)"><rect x="220" y="314" width="200" height="50" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="334" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">🔗 Downstream deps</text>
+      <text x="320" y="350" text-anchor="middle" font-size="10.5" fill="#5b6472">cascading timeouts → root cause</text>
+    </svg>
+    <figcaption>Each stage narrows the search — the green arrow is the moment a cascading downstream call usually turns up as the answer.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Restarting the app or adding servers is not a diagnosis.</b> It can make symptoms disappear for a while, but it also destroys the exact evidence — in-flight stack traces, thread pool state — that would have shown the actual cause.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's a common root cause of 'latency under load but fine when idle'?"</b> Thread
+    pool starvation from sync-over-async code (<code>.Result</code>/<code>.Wait()</code> on a
+    <code>Task</code>) — fine at low concurrency, catastrophic once enough requests pile up waiting
+    for the same limited thread pool.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd work a fixed order, not a guess: pull the actual exception stack
+    traces and timing from logs/APM first, check whether it's correlated with load or happening
+    constantly, then look for resource exhaustion — thread pool starvation from sync-over-async
+    code, a maxed-out DB connection pool, or GC pressure from memory — and finally check whether a
+    slow downstream dependency is cascading into my own latency. Each step narrows it down before
+    I change anything."</p>
+    <ul>
+      <li>First move → <span class="hl hl-blue">read logs/APM for the real stack traces and timing</span>, never guess.</li>
+      <li>Load correlation → <span class="hl hl-teal">only under traffic, or constant?</span> — changes where you look next.</li>
+      <li>Resource exhaustion → <span class="hl hl-hot">thread pool starvation, DB pool exhaustion, GC pauses</span>.</li>
+      <li>Downstream deps → <span class="hl hl-inter">a slow call to another service cascades into your own latency</span>.</li>
+      <li>Sync-over-async → <span class="hl hl-basic"><code>.Result</code>/<code>.Wait()</code> starves the thread pool under load</span>, fine when idle.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>The first move is always <span class="hl hl-blue">reading the actual evidence</span> — an
+      APM tool (Application Insights, or equivalent) or structured logs, pulled for the failing
+      requests specifically. The exception's real stack trace and the request's timing breakdown
+      tell you more in thirty seconds than ten minutes of guessing. Only after that does it make
+      sense to <span class="hl hl-teal">correlate with load</span>: does latency track the traffic
+      graph (a capacity problem), or is it happening even when the system is quiet (a code-level or
+      dependency problem that load just makes more visible)?</p>
+
+      <p>If it's load-shaped, the next place to look is <span class="hl hl-hot">resource
+      exhaustion</span>. <b>Sync-over-async</b> code — calling <code>.Result</code> or
+      <code>.Wait()</code> on a <code>Task</code> instead of <code>await</code>-ing it — blocks a
+      thread pool thread for the whole call instead of releasing it, and the thread pool is a
+      shared, limited resource across the whole process. At low concurrency there are enough
+      threads to go around; once enough requests pile up waiting on the same limited pool, new
+      requests queue for a thread before they even start, and latency climbs sharply with
+      concurrency instead of linearly. The same shape shows up with a maxed-out database connection
+      pool (requests queue for a connection) or memory pressure forcing longer/more frequent GC
+      pauses. If none of that explains it, the last stop is a <span class="hl hl-inter">downstream
+      dependency</span> — a slow database query or a third-party API call that your own request is
+      waiting on, which makes the slowness look like it's yours.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th>Pattern in the data</th><th>Points toward</th></tr></thead>
+        <tbody>
+          <tr><td>Latency tracks the traffic graph closely</td><td>a real capacity/resource limit — check thread pool, DB pool, memory first</td></tr>
+          <tr><td>Latency is bad even at low/no traffic</td><td>a code-level issue or an always-slow dependency, not a scaling problem</td></tr>
+          <tr><td>Latency climbs sharply, not linearly, with concurrency</td><td>thread pool starvation from sync-over-async code</td></tr>
+          <tr><td>One specific call is always the slow part in the trace</td><td>a downstream dependency cascading into your own request</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">// ❌ sync-over-async — blocks a thread pool thread for the whole call</span>
+<span class="kw">public</span> <span class="ty">Customer</span> GetCustomer(<span class="kw">int</span> id)
+{
+    <span class="kw">return</span> _db.Customers.FindAsync(id).Result; <span class="cx-err">// thread waits, can't serve anything else</span>
+}
+
+<span class="cx-cmt">// ✅ fully async — the thread is freed while the call is in flight</span>
+<span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="ty">Customer</span>&gt; GetCustomerAsync(<span class="kw">int</span> id)
+{
+    <span class="kw">return</span> <span class="kw">await</span> _db.Customers.FindAsync(id); <span class="cx-ok">// ✅ thread returns to the pool while waiting</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">At low traffic both versions feel the same; under load, the first one
+      starves the thread pool while the second scales because threads aren't held hostage waiting.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Users report the API getting slow and occasionally erroring, but only during the
+      afternoon rush.</b> The APM trace shows request latency climbing sharply, not linearly, past a
+      certain concurrency — a clear sign of a shared, limited resource queuing up requests, not a
+      genuinely slow operation. Grepping the codebase for <code>.Result</code> turns up a
+      controller action that blocks on a downstream call instead of awaiting it — exactly the
+      pattern that's fine at low concurrency and collapses once enough requests pile up waiting for
+      the same thread pool.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="10.html">← Cancellation, Timeouts &amp; Client Disconnects</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="12.html">Handling a Burst of Concurrent Requests →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

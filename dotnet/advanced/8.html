@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="You need a new service that sends email or SMS notifications, driven by configuration in a database, and it has to scale — how do you design it?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Designing a Scalable Notification Service — .NET Advanced — RefreshYourself">
+<meta property="og:description" content="You need a new service that sends email or SMS notifications, driven by configuration in a database, and it has to scale — how do you design it?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Designing a Scalable Notification Service — .NET Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dotnet/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#7c3aed;">🧱 .NET / ASP.NET Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Designing a Scalable Notification Service</span>
+  </nav>
+</div>
+
+<div class="wrap" style="margin:10px 0 0;"><a class="crumb" href="../../scenarios/index.html" style="--crumb-bg:#ffe4e6;--crumb-ink:#9f1239;">🎯 Also in the Scenario Bank</a></div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ .NET · Advanced · Should Know</div>
+    <h1><span class="hl hl-hot">Don't block</span> the order on the <span class="hl hl-basic">notification</span> — decouple with a queue</h1>
+    <p class="interview-q">"You need a new service that sends email or SMS notifications, driven by configuration in a database, and it has to scale — how do you design it?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">📨 Notification Service</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Sending the notification synchronously, inline, from the same request that triggered it means a slow or down email/SMS provider directly slows down or breaks that triggering action — like placing an order — which has nothing to do with notifications.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Publish the event to a queue and let a separate worker pool consume it, look up the user's configured channel, and send. Scale by adding more workers; a provider outage never blocks the trigger.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Decouple the trigger from the send with a queue.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Step 1 <span class="rarrow">→</span> trigger <b>publishes an event</b> to a queue</p>
+      <p class="rrow">Step 2 <span class="rarrow">→</span> worker pool <b>consumes</b>, looks up channel in the DB</p>
+      <p class="rrow">Step 3 <span class="rarrow">→</span> <b>sends</b> via email or SMS provider</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> <b>decouple</b> the trigger from the send —
+    a slow provider never blocks the order.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shP8a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arP8a" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arP8b" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.3">DECOUPLE THE EVENT FROM THE SEND</text>
+
+      <g filter="url(#shP8a)"><rect x="37" y="40" width="100" height="50" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="87" y="69" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">📦 Order shipped</text>
+
+      <path d="M137,65 H157" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP8a)"/>
+
+      <g filter="url(#shP8a)"><rect x="157" y="40" width="90" height="50" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="202" y="69" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">📨 Queue</text>
+
+      <path d="M247,65 H267" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP8a)"/>
+
+      <g filter="url(#shP8a)"><rect x="267" y="40" width="110" height="50" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="322" y="63" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">⚙️ Worker pool</text>
+      <text x="322" y="79" text-anchor="middle" font-size="9" fill="#5b6472">add workers to scale</text>
+
+      <path d="M377,65 H397" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arP8a)"/>
+
+      <g filter="url(#shP8a)"><rect x="397" y="40" width="110" height="50" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8"/></g>
+      <text x="452" y="63" text-anchor="middle" font-size="10.5" font-weight="700" fill="#6d28d9">🗄️ Channel lookup</text>
+      <text x="452" y="79" text-anchor="middle" font-size="9" fill="#5b6472">email or SMS? (DB)</text>
+
+      <path d="M452,90 V130" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M407,130 H547" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+      <path d="M407,130 V160" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arP8b)"/>
+      <path d="M547,130 V160" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arP8b)"/>
+
+      <g filter="url(#shP8a)"><rect x="352" y="160" width="110" height="50" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="407" y="189" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">📧 Email provider</text>
+
+      <g filter="url(#shP8a)"><rect x="492" y="160" width="110" height="50" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="547" y="189" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">📱 SMS provider</text>
+    </svg>
+    <figcaption>The trigger only publishes to a queue — a slow or down email/SMS provider can never block whatever caused the notification.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Sending the notification synchronously from the same request that triggered
+    it.</b> A slow or down email/SMS provider now directly slows down or breaks the triggering
+    action — like placing an order — that has nothing to do with notifications.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How do you avoid sending the same notification twice if the worker retries
+    after a transient failure?"</b> Track which notification — by a unique ID tied to the
+    triggering event — has already been sent before sending it again. It's the same idempotency
+    principle used anywhere a message might be redelivered.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd decouple 'something happened' from 'send the notification' with a
+    queue. The triggering event publishes a message, a separate worker consumes it, looks up the
+    user's configured channel from the database, and calls the right provider. This scales by
+    adding more worker instances, and a slow or down provider never blocks whatever triggered the
+    notification in the first place. I'd also track sent notifications by a unique ID so a retry
+    after a transient failure doesn't send it twice."</p>
+    <ul>
+      <li>Decouple <span class="hl hl-blue">→ trigger publishes an event to a queue</span>, it never sends directly.</li>
+      <li>Worker pool <span class="hl hl-basic">→ consumes the queue</span>, scales by adding more instances.</li>
+      <li>Channel lookup <span class="hl hl-inter">→ email vs. SMS preference comes from the DB</span>, per user.</li>
+      <li>Isolation <span class="hl hl-hot">→ a slow or down provider never blocks the trigger</span>.</li>
+      <li>Idempotency <span class="hl hl-teal">→ track sent notifications by ID</span> so a retry doesn't double-send.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>If the code that places an order also directly calls the email provider, the order's own
+      success now depends on an email service it has nothing to do with. A slow provider makes
+      checkout slow; a <span class="hl hl-hot">down</span> provider can make checkout fail
+      entirely.</p>
+
+      <p>The fix is to <span class="hl hl-blue">decouple</span> the two: the triggering code just
+      publishes a small message ("order 123 shipped") to a queue and moves on immediately. A
+      separate <span class="hl hl-basic">worker pool</span> consumes that queue, looks up the
+      user's configured channel and preferences in the database, and calls the email or SMS
+      provider. Because the workers are separate processes consuming the same queue, scaling is
+      just adding more worker instances — no change to the code that triggers the notification.</p>
+
+      <p>Messaging systems can redeliver a message after a timeout even if it was actually
+      processed, so the worker needs to be <span class="hl hl-teal">idempotent</span>: before
+      sending, check whether a notification for that same triggering event's ID has already been
+      recorded as sent, and skip it if so. That turns an occasional duplicate delivery from the
+      queue into a no-op instead of a duplicate email or text message.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err">// ❌ the order's own request now waits on the email provider</span>
+<span class="kw">await</span> _db.SaveOrderAsync(order);
+<span class="kw">await</span> _emailProvider.SendAsync(order.CustomerEmail, <span class="str">"Order shipped"</span>);
+
+<span class="cx-ok">// ✅ publish and move on — the order never waits on notifications</span>
+<span class="kw">await</span> _db.SaveOrderAsync(order);
+<span class="kw">await</span> _queue.PublishAsync(<span class="kw">new</span> OrderShippedEvent(order.Id));</code></pre>
+      </div>
+      <p class="cx-note">The triggering request's success no longer depends on an email or SMS
+      provider being up.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">public async</span> <span class="ty">Task</span> HandleAsync(<span class="ty">OrderShippedEvent</span> evt)
+{
+    <span class="cx-cmt">// idempotency: skip if this exact event was already handled</span>
+    <span class="kw">if</span> (<span class="kw">await</span> _sent.ExistsAsync(evt.Id)) <span class="kw">return</span>;
+
+    <span class="kw">var</span> prefs = <span class="kw">await</span> _db.GetNotificationPrefsAsync(evt.UserId);
+    <span class="kw">if</span> (prefs.Channel == <span class="ty">NotificationChannel</span>.Sms)
+        <span class="kw">await</span> _sms.SendAsync(prefs.PhoneNumber, <span class="str">"Your order shipped!"</span>);
+    <span class="kw">else</span>
+        <span class="kw">await</span> _email.SendAsync(prefs.Email, <span class="str">"Order shipped"</span>);
+
+    <span class="kw">await</span> _sent.RecordAsync(evt.Id);         <span class="cx-ok">// ✅ mark it sent</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">A redelivered message hits the <code>ExistsAsync</code> check and becomes
+      a no-op instead of a duplicate text or email.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> An order confirmation needs to go out right after checkout</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc81" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">CHECKOUT NEVER WAITS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🛒 checkout</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc81)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">📨 queue → worker</text>
+            </svg>
+          </div>
+          <p class="uc-what">Checkout publishes "order placed" and returns immediately. The
+          confirmation email goes out moments later from the worker — checkout never waits on it.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">The trigger publishes and moves on — it never waits for the send.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">2</span> A marketing blast needs to reach a very large number of users at once</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc82" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">SCALE BY ADDING WORKERS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">📨 one big queue</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc82)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">⚙️⚙️⚙️ more workers</text>
+            </svg>
+          </div>
+          <p class="uc-what">The queue absorbs the burst. Adding more worker instances drains it
+          faster, with no change to whatever triggered the notifications.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A burst → add workers, not a change to the trigger.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> The SMS provider has an outage during a busy sales period</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc83" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">NO QUEUE = CHECKOUT BREAKS TOO</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">📱 SMS provider down</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" stroke-dasharray="5 4" marker-end="url(#arUc83)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🛒 checkout fails too</text>
+            </svg>
+          </div>
+          <p class="uc-what">Without a queue between them, an SMS outage would make checkout itself
+          fail — exactly the coupling a queue exists to prevent. With a queue, the messages just wait.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A provider outage should queue up messages, not break the trigger.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>An online store needs to text or email customers when their order ships.</b> The shipping
+      service publishes an "order shipped" event to a queue the moment it updates the order, and
+      returns immediately. A small worker pool consumes that queue, checks each customer's saved
+      preference for email or SMS, and sends through the matching provider — so a slow SMS gateway
+      during a big sale never slows down the part of the system that actually ships orders.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="7.html">← Designing Real-Time Order Status Updates</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to .NET Advanced</a>
+    <div class="side next"></div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · .NET / ASP.NET Core · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

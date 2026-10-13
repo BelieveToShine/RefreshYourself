@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Your API caches data in-memory, but a restart wipes it and every request floods the database again — how do you fix this?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="In-Memory Caching Loses Data on Restart — .NET Advanced — RefreshYourself">
+<meta property="og:description" content="Your API caches data in-memory, but a restart wipes it and every request floods the database again — how do you fix this?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>In-Memory Caching Loses Data on Restart — .NET Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="dotnet/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#7c3aed;">🧱 .NET / ASP.NET Core</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">In-Memory Caching Loses Data on Restart</span>
+  </nav>
+</div>
+
+<div class="wrap" style="margin:10px 0 0;"><a class="crumb" href="../../scenarios/index.html" style="--crumb-bg:#ffe4e6;--crumb-ink:#9f1239;">🎯 Also in the Scenario Bank</a></div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 .NET · Advanced · Must Know</div>
+    <h1><code>IMemoryCache</code> <span class="hl hl-hot">forgets everything</span> on restart — <span class="hl hl-basic">Redis</span> doesn't</h1>
+    <p class="interview-q">"Your API caches data in-memory, but a restart wipes it and every request floods the database again — how do you fix this?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#b91c1c; --why-bg:#fee2e2">
+        <div class="wc-head">🗄️ Caching Across Restarts</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span><code>IMemoryCache</code> lives inside the process's own RAM — a restart, a redeploy, or scaling out to multiple instances all wipe it or leave every instance with its own disconnected cache.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Move to a distributed cache like Redis via <code>IDistributedCache</code> — it lives outside the process, survives restarts, and is shared by every instance behind the load balancer.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">In-process cache dies with the process; a distributed cache outlives it.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow"><code>IMemoryCache</code> <span class="rarrow">→</span> <b>process RAM</b>, wiped on restart</p>
+      <p class="rrow"><code>IDistributedCache</code> <span class="rarrow">→</span> <b>outside the process</b> (Redis), survives restart</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> more than one instance running? <b><code>IMemoryCache</code></b>
+    goes <b>inconsistent</b>, not just restart-unsafe.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shP6a" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arP6a" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#3b82f6"/>
+        </marker>
+      </defs>
+
+      <text x="160" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b" letter-spacing="0.3">❌ IMemoryCache — in-process RAM</text>
+      <text x="480" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#166534" letter-spacing="0.3">✅ IDistributedCache → Redis</text>
+
+      <path d="M320,42 V258" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+      <g filter="url(#shP6a)"><rect x="40" y="56" width="240" height="140" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="160" y="78" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">🖥️ App Process</text>
+
+      <g filter="url(#shP6a)"><rect x="70" y="96" width="180" height="44" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/></g>
+      <text x="160" y="114" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🗄️ IMemoryCache</text>
+      <text x="160" y="130" text-anchor="middle" font-size="9.5" fill="#5b6472">in-process RAM</text>
+
+      <g filter="url(#shP6a)"><rect x="90" y="154" width="140" height="28" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/></g>
+      <text x="160" y="172" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">💥 wiped on restart</text>
+
+      <text x="160" y="250" text-anchor="middle" font-size="10" fill="#5b6472">📌 separate per instance, lost on restart</text>
+
+      <g filter="url(#shP6a)"><rect x="350" y="56" width="110" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="405" y="83" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">🧱 App 1</text>
+
+      <g filter="url(#shP6a)"><rect x="490" y="56" width="110" height="46" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/></g>
+      <text x="545" y="83" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">🧱 App 2</text>
+
+      <path d="M405,102 V170" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arP6a)"/>
+      <path d="M545,102 V170" fill="none" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arP6a)"/>
+
+      <g filter="url(#shP6a)"><rect x="380" y="170" width="190" height="60" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="475" y="192" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">🗄️ Redis</text>
+      <text x="475" y="210" text-anchor="middle" font-size="9.5" fill="#5b6472">shared across instances</text>
+
+      <text x="480" y="250" text-anchor="middle" font-size="10" fill="#5b6472">📌 restart-safe, shared by every instance</text>
+    </svg>
+    <figcaption>Left: each instance's own RAM cache, wiped on restart. Right: one Redis cache outside every process, shared and restart-safe.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Assuming "cache" always means <code>IMemoryCache</code>.</b> The moment there's
+    more than one instance, in-memory caching silently becomes <b>inconsistent</b> — instance A's
+    cache doesn't know about instance B's writes — not just restart-unsafe.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Does moving to Redis fully solve the restart problem?"</b> It solves data
+    loss, but you still need a cache-warming or lazy-load strategy — Redis itself can be restarted
+    or flushed too. The real fix is treating the cache as disposable and rebuildable, never as the
+    source of truth.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"<code>IMemoryCache</code> lives inside the process's own RAM, so a
+    restart, a redeploy, or scaling out to multiple instances wipes it or splits it into separate,
+    inconsistent caches. I'd move it to a distributed cache like Redis through
+    <code>IDistributedCache</code>, which lives outside the process and is shared by every
+    instance — and I'd still treat the cache as disposable and rebuildable, never as the source of
+    truth."</p>
+    <ul>
+      <li><code>IMemoryCache</code> <span class="hl hl-hot">→ process RAM, wiped by restart or redeploy</span>.</li>
+      <li>Multiple instances <span class="hl hl-inter">→ each gets its own separate cache</span> — inconsistent, not just restart-unsafe.</li>
+      <li>Fix <span class="hl hl-basic">→ <code>IDistributedCache</code> (Redis)</span> outside the process, shared by every instance.</li>
+      <li>Still disposable <span class="hl hl-teal">→ Redis can restart or flush too</span> — rebuild it, never rely on it as the source of truth.</li>
+      <li>Pattern <span class="hl hl-adv">→ cache-aside</span>: read cache, miss → read DB → write cache.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><code>IMemoryCache</code> stores everything in the <span class="hl hl-hot">process's own
+      RAM</span>. That's fast — no network hop — but it means the cache's lifetime is tied exactly
+      to the process's lifetime. A restart, a new deployment, or an autoscaler spinning up a second
+      instance all either wipe it or give that instance a brand-new, empty cache of its own.</p>
+
+      <p><code>IDistributedCache</code> is an abstraction over a cache that lives
+      <span class="hl hl-basic">outside every instance</span> — in practice, almost always Redis in
+      .NET. Every instance talks to the same Redis, so a write from instance A is immediately
+      visible to instance B, and a restart of any one instance doesn't touch the cached data at
+      all.</p>
+
+      <p>Redis can still restart or be flushed, so the cache is never the <b>source of truth</b> —
+      the usual pattern is <b>cache-aside</b>: read the cache, and on a miss read the real database
+      and write the result back into the cache before returning it. That way a cold or flushed cache
+      self-heals instead of causing an error.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th><code>IMemoryCache</code></th><th><code>IDistributedCache</code> (Redis)</th></tr></thead>
+        <tbody>
+          <tr><th>Lives where</th><td>inside the app's process (RAM)</td><td>outside the process, a separate server</td></tr>
+          <tr><th>Survives restart?</th><td>❌ no</td><td>✅ yes</td></tr>
+          <tr><th>Shared across instances?</th><td>❌ no — one cache per instance</td><td>✅ yes — one cache for all instances</td></tr>
+          <tr><th>Speed</th><td>fastest — no network hop</td><td>fast, but one network round trip</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-err">// ❌ IMemoryCache — gone the moment this process restarts</span>
+<span class="kw">public class</span> PriceService(<span class="ty">IMemoryCache</span> cache)
+{
+    <span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="kw">decimal</span>&gt; GetPriceAsync(<span class="kw">int</span> id)
+        =&gt; <span class="kw">await</span> cache.GetOrCreateAsync($<span class="str">"price:{id}"</span>, _ =&gt; _db.GetPriceAsync(id));
+}</code></pre>
+      </div>
+      <p class="cx-note">Fine with one instance that never restarts — but that's rarely how a real
+      deployment behaves.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-ok">// ✅ IDistributedCache (Redis) — outside the process, shared by every instance</span>
+builder.Services.AddStackExchangeRedisCache(o =&gt;
+    o.Configuration = builder.Configuration[<span class="str">"Redis:ConnectionString"</span>]);
+
+<span class="kw">public class</span> PriceService(<span class="ty">IDistributedCache</span> cache)
+{
+    <span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="kw">decimal</span>&gt; GetPriceAsync(<span class="kw">int</span> id)
+    {
+        <span class="kw">var</span> cached = <span class="kw">await</span> cache.GetStringAsync($<span class="str">"price:{id}"</span>);
+        <span class="kw">if</span> (cached <span class="kw">is not</span> <span class="kw">null</span>) <span class="kw">return</span> <span class="kw">decimal</span>.Parse(cached);
+
+        <span class="kw">var</span> price = <span class="kw">await</span> _db.GetPriceAsync(id);          <span class="cx-cmt">// cache-aside: miss → read DB</span>
+        <span class="kw">await</span> cache.SetStringAsync($<span class="str">"price:{id}"</span>, price.ToString());
+        <span class="kw">return</span> price;
+    }
+}</code></pre>
+      </div>
+      <p class="cx-note">A restart doesn't touch Redis, and every instance reads the <b>same</b>
+      cached value.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> A single instance that rarely restarts, caching cheap-to-rebuild data</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc61" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">ONE INSTANCE — FINE AS IS</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🧱 1 instance</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arUc61)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">🗄️ IMemoryCache OK</text>
+            </svg>
+          </div>
+          <p class="uc-what">With exactly one instance, there's no consistency problem — a restart
+          just means the next request rebuilds the cache. <code>IMemoryCache</code> is a reasonable
+          choice here.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">One instance + cheap-to-rebuild data → IMemoryCache is fine.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b91c1c">
+          <div class="uc-sit"><span class="uc-flag">2</span> The app gets scaled to 3 instances behind a load balancer</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc62" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b91c1c"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">3 CACHES, NOT 1</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">🧱🧱🧱 3 instances</text>
+              <path d="M190,43 H290" stroke="#b91c1c" stroke-width="1.6" fill="none" stroke-dasharray="5 4" marker-end="url(#arUc62)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">⚠️ 3 separate caches</text>
+            </svg>
+          </div>
+          <p class="uc-what">Each instance now has its own <code>IMemoryCache</code>. Users can see
+          different, stale answers depending on which instance the load balancer sends them to.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Scaling out turns IMemoryCache inconsistent, not just restart-unsafe.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">3</span> Rate-limit counters or session data need to be seen by every instance</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc63" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">ONE SHARED COUNTER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🧱 any instance</text>
+              <path d="M190,43 H290" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc63)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">🗄️ Redis, one counter</text>
+            </svg>
+          </div>
+          <p class="uc-what">A rate limit or session has to be correct no matter which instance
+          handles the request. Only a shared store like Redis gives every instance the same number.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Needs to be correct across instances → it belongs in Redis, not IMemoryCache.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A pricing API caches product prices in <code>IMemoryCache</code> and runs fine with one
+      instance.</b> Ops then scales it to four instances behind a load balancer, and support starts
+      getting reports of different prices for the same product. Switching to
+      <code>IDistributedCache</code> backed by Redis, with a cache-aside read on a miss, fixes it
+      immediately — one price, one cache, visible to every instance.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="5.html">← Migrating a Monolith to Microservices</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to .NET Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="7.html">Designing Real-Time Order Status Updates →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · .NET / ASP.NET Core · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

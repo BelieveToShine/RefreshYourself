@@ -111,6 +111,10 @@ Numbering below is the tier-folder page number (`dotnet/<tier>/<n>.html`):
 | 7.1 | Global Exception Handling | Intermediate | intermediate/15.html |
 | 8.1 | Kestrel & Reverse Proxies | Advanced | advanced/1.html |
 | 8.2 | The Generic Host & Application Lifetime | Intermediate | intermediate/16.html |
+| 10.1 | Migrating a Monolith to Microservices — Approach | Advanced | advanced/5.html |
+| 10.2 | In-Memory Caching Loses Data on Restart | Advanced | advanced/6.html |
+| 10.3 | Designing Real-Time Order Status Updates | Advanced | advanced/7.html |
+| 10.4 | Designing a Scalable Notification Service | Advanced | advanced/8.html |
 
 ## Track-specific decisions and boundaries
 
@@ -192,3 +196,19 @@ folders and, as with the post-launch Testing addition, get a row in the matching
 - **Added:** Minimal APIs, IHttpClientFactory, BackgroundService patterns, Health Checks, Options validation, Identity/OAuth2/OIDC, LTS vs STS & .NET Standard; own hunt: HttpContext/`IHttpContextAccessor`, SignalR.
 - **Dropped:** IExceptionHandler/ProblemDetails — dotnet/intermediate/15 already covers global handling and names RFC 7807; the dedicated ProblemDetails page belongs to the Web API track (webapi/intermediate/16). CORS as a .NET page — webapi/basic/3 owns it. Serilog/log-sink setup as its own page — folded into basic/8. Output caching / rate limiting — webapi intermediate/11 and basic/5 own them.
 - **Open check before Phase 7:** exact LTS/STS support windows must be verified against Microsoft's current policy (accuracy.md).
+
+---
+
+## Addendum 2026-10-13 — Scenario Bank pages (client interview-prep document)
+
+4 new pages from a client's real interview-prep question list, approved for implementation
+2026-10-13. **Status: written, verified, and wired** (track total now 42 = 38 + 4; Advanced 4 -> 8).
+Numbers are the next free Advanced slots from disk. `dotnet/roadmap.html` gets a 10th
+concept-category section ("10. Production Scenarios").
+
+| # | Tier | Pri | Title | Interview question | Scope (one concept) | Cross-link |
+|---|---|---|---|---|---|---|
+| Advanced 5 | Advanced | 🔥 | Migrating a Monolith to Microservices — Approach | "What's your approach to convert a monolith to microservices?" | Strangler-fig migration one seam at a time vs. a risky rewrite; identifying bounded contexts first | webapi/advanced/15 (one downstream fails), sql/advanced/8 (partitioning) |
+| Advanced 6 | Advanced | 🔥 | In-Memory Caching Loses Data on Restart | "How to implement caching in .NET Core? Where is data stored — in-memory RAM gets deleted on restart" | `IMemoryCache` is per-process/volatile; a distributed cache (Redis) survives restarts and scales across instances | intermediate/2 (DI container), webapi/advanced/8 (Polly/resilience) |
+| Advanced 7 | Advanced | ⭐ | Designing Real-Time Order Status Updates | "Consider Swiggy/Zomato — how do order status updates reach your mobile?" | Push (SignalR/WebSockets) vs. poll; socket lifecycle — when to open and when to close | intermediate/25 (SignalR vs. WebSockets vs. SSE) |
+| Advanced 8 | Advanced | ⭐ | Designing a Scalable Notification Service | "New service for notification — either email or SMS — it should be scalable, then deploy it" | Decouple the triggering action from delivery with a queue/worker so a slow notification provider never blocks the caller | advanced/6 (caching), webapi/advanced/16 (zero-loss architecture) |

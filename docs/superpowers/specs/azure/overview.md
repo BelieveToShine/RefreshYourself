@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 49 pages written (44 original + 5 gap pages added 2026-10-07)
+## Status — Phases 1–7 complete, all 51 pages written (44 original + 5 gap pages added 2026-10-07 + 2 scenario-bank pages added 2026-10-13)
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): built from the user's own later,
   simplified Azure section of the interview-prep plan (12 concept groups), deliberately kept
@@ -185,3 +185,5 @@ overflow — found and fixed, not glossed over). Expect a review/feedback pass o
 through it, same as every other completed track.
 
 > **2026-10-06 gap-hunt — written and wired 2026-10-07:** 5 new pages (44 -> 49): Intermediate 20 Azure Functions — Triggers, Bindings & Hosting Plans, 21 Azure SQL High Availability — Geo-Replication, Failover Groups & Elastic Pools, 22 Storage Redundancy & Access Tiers, 23 Entra Conditional Access, MFA & External Identities; Advanced 8 AKS Architecture — Node Pools, Networking, Ingress & Autoscaling - see the "Addendum 2026-10-06" in [`roadmap.md`](roadmap.md). Counts: Basic 18, Intermediate 23, Advanced 8.
+
+> **2026-10-13 — Scenario Bank addition:** 2 new pages from a client interview-prep document (49 -> 51). Advanced 9 Detecting and Handling Duplicate Messages, 10 A Real Secret Was Committed to GitHub. Counts: Basic 18, Intermediate 23, Advanced 10.

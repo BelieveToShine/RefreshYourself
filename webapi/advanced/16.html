@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="10,000 requests arrive in 3 minutes and you can't afford to lose a single one — what's the architecture?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Zero-Loss Architecture Under High Throughput — Web API Advanced — RefreshYourself">
+<meta property="og:description" content="10,000 requests arrive in 3 minutes and you can't afford to lose a single one — what's the architecture?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Zero-Loss Architecture Under High Throughput — Web API Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Zero-Loss Architecture Under High Throughput</span>
+  </nav>
+</div>
+
+<div class="wrap" style="margin:10px 0 0;"><a class="crumb" href="../../scenarios/index.html" style="--crumb-bg:#ffe4e6;--crumb-ink:#9f1239;">🎯 Also in the Scenario Bank</a></div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Web API · Advanced · Must Know</div>
+    <h1>Can't lose a single request — do you <span class="hl hl-hot">process it inline</span>, or <span class="hl hl-basic">durably queue</span> it?</h1>
+    <p class="interview-q">"10,000 requests arrive in 3 minutes and you can't afford to lose a single one — what's the architecture?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🧯 Zero-Loss Under Throughput</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Processing a request fully, inline, before responding means anything that crashes or times out mid-processing during a burst is lost — with no durable record it ever arrived.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Accept and durably persist the request first — a message queue, not an in-memory one — acknowledge immediately, then let a pool of workers process it at a sustainable pace, acking only after success.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Persist first, process after — the queue absorbs the burst so nothing has to be dropped.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Zero-loss at scale = <b>"durable queue absorbs the burst, workers drain it at their own pace."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b>
+      <span class="tc-line"><b><code>Accept</code></b> → persist durably, acknowledge fast</span>
+      <span class="tc-line"><b><code>Queue</code></b> → absorbs the burst, survives a crash</span>
+      <span class="tc-line"><b><code>Workers</code></b> → scale independently, ack only after success</span>
+    </p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh16" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar16Slate" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+        <marker id="ar16Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">10,000 REQUESTS — ABSORB, DON'T BLOCK</text>
+
+      <g filter="url(#sh16)"><rect x="10" y="88" width="120" height="64" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="70" y="112" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">⚡ 10,000</text>
+      <text x="70" y="128" text-anchor="middle" font-size="10.5" fill="#5b6472">in 3 minutes</text>
+
+      <path d="M130,120 H158" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar16Slate)"/>
+
+      <g filter="url(#sh16)"><rect x="158" y="80" width="160" height="80" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="238" y="104" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🗂️ Durable queue</text>
+      <text x="238" y="120" text-anchor="middle" font-size="10.5" fill="#5b6472">persists, absorbs burst</text>
+      <text x="238" y="136" text-anchor="middle" font-size="10.5" fill="#5b6472">ack returned instantly</text>
+
+      <path d="M318,120 H346" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar16Slate)"/>
+
+      <g filter="url(#sh16)"><rect x="346" y="80" width="160" height="80" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="426" y="104" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">👷 Worker pool</text>
+      <text x="426" y="120" text-anchor="middle" font-size="10.5" fill="#5b6472">drains at a sustainable</text>
+      <text x="426" y="136" text-anchor="middle" font-size="10.5" fill="#5b6472">pace, scales on its own</text>
+
+      <path d="M506,120 H534" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#ar16Green)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="1.3s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#sh16)"><rect x="534" y="88" width="96" height="64" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="582" y="112" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ Acked</text>
+      <text x="582" y="128" text-anchor="middle" font-size="9.5" fill="#5b6472">after success</text>
+
+      <text x="320" y="200" text-anchor="middle" font-size="11" fill="#5b6472">A worker that crashes mid-message never acks — the message becomes visible again for another worker.</text>
+    </svg>
+    <figcaption>The queue is what takes the burst, not the workers — producers and consumers scale independently.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Processing the request fully before responding is not "zero loss."</b> Under
+    a burst, requests pile up waiting for a thread, and anything that times out or crashes
+    mid-processing is lost with no durable record it ever arrived.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What guarantees a worker crash mid-processing doesn't lose a
+    message?"</b> The queue's own acknowledgment model — a worker only removes/acks a message
+    after it's fully processed; if it crashes first, the un-acked message becomes visible again
+    for another worker to pick up.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I wouldn't process the request inline with the HTTP call if 'can't lose
+    any' is the real requirement. I'd accept the request, durably persist it as fast as possible —
+    a real message queue like Azure Service Bus or Kafka, not an in-memory one that dies with the
+    process — and return an acknowledgment. A separate pool of workers consumes the queue at
+    whatever pace they can sustain, so the burst is absorbed by the queue instead of overwhelming
+    the processing layer, and I can scale producers and consumers independently."</p>
+    <ul>
+      <li>Accept, then persist → <span class="hl hl-blue">durably, before doing any real work</span>, not after.</li>
+      <li>Durable queue → <span class="hl hl-basic">survives a crash</span>, unlike an in-memory queue.</li>
+      <li>Workers drain independently → <span class="hl hl-inter">scale consumers separately from producers</span>.</li>
+      <li>Ack only after success → <span class="hl hl-hot">a crash mid-processing re-surfaces the message</span>, nothing vanishes.</li>
+      <li>The queue absorbs the burst → <span class="hl hl-teal">not the processing layer</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>"Zero loss" is a durability requirement, and durability has to happen <span class="hl
+      hl-blue">before</span> any real work, not after. The fix is to split the request into two
+      phases: <b>accept and persist</b> — write the request to a durable message queue (Azure
+      Service Bus, Kafka, or equivalent — specifically not an in-memory queue, which disappears the
+      moment the process restarts or crashes) and return an acknowledgment as fast as possible —
+      and <b>process</b>, handled by a separate pool of workers that pull from the queue at
+      whatever pace they can sustain. Because the queue itself durably holds everything that
+      hasn't been processed yet, a burst of 10,000 requests in three minutes is absorbed by the
+      queue's own buffer instead of overwhelming whatever does the real processing.</p>
+
+      <p>The number of workers can scale <span class="hl hl-inter">independently</span> of the
+      number of producers — more consumers during a known burst, fewer the rest of the time — which
+      is the whole point of decoupling the two. The piece that actually delivers the "zero loss"
+      guarantee is the queue's <span class="hl hl-hot">acknowledgment model</span>: a worker that
+      pulls a message doesn't permanently remove it until it finishes processing successfully and
+      explicitly acks it. If that worker crashes mid-processing, the un-acked message becomes
+      visible again (often after a short visibility timeout) for another worker to pick up — so a
+      crash loses time, not the message itself.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Process inline with the request</th><th>Accept, queue, process async</th></tr></thead>
+        <tbody>
+          <tr><th>Response time</th><td>as slow as the real processing</td><td>fast — an immediate acknowledgment</td></tr>
+          <tr><th>Burst of 10,000</th><td>requests pile up waiting for a thread</td><td>absorbed by the queue's own buffer</td></tr>
+          <tr><th>Crash mid-work</th><td>that request's work is gone, with no record</td><td>message isn't acked, re-processed by another worker</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>[<span class="ty">HttpPost</span>]
+<span class="kw">public</span> <span class="kw">async</span> <span class="ty">Task</span>&lt;<span class="ty">IActionResult</span>&gt; Submit(<span class="ty">OrderRequest</span> req, <span class="ty">CancellationToken</span> ct)
+{
+    <span class="kw">await</span> _queue.SendAsync(req, ct); <span class="cx-ok">// ✅ durably persisted before responding</span>
+    <span class="kw">return</span> Accepted();         <span class="cx-cmt">// 202 — caller knows it's received, not yet processed</span>
+}
+
+<span class="cx-cmt">// a worker, running separately, scaled independently of the API:</span>
+<span class="kw">await</span> <span class="kw">foreach</span> (<span class="kw">var</span> msg <span class="kw">in</span> _queue.ReceiveMessagesAsync(ct))
+{
+    <span class="kw">await</span> ProcessAsync(msg, ct);
+    <span class="kw">await</span> msg.CompleteAsync(); <span class="cx-ok">// ✅ ack only now — a crash before this re-surfaces the message</span>
+}</code></pre>
+      </div>
+      <p class="cx-note">The API's job ends at "durably received." The worker's ack is the only
+      thing that ever removes a message for good.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A flash sale drives 10,000 order submissions in a three-minute window.</b> Accepting
+      each order, writing it to a durable queue, and responding "received" immediately means the
+      API never falls behind — and even if a worker crashes halfway through fulfilling an order, the
+      un-acked message reappears for another worker to finish, so no order submitted during the
+      rush is ever silently dropped.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="15.html">← One Downstream API Fails Among Several</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="17.html">Designing Per-Endpoint Rate Limiting →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

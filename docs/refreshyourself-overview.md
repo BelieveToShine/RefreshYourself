@@ -119,15 +119,16 @@ all through all 7 phases:**
   duplicated. Every diagram passed the mandatory automated verification script, run
   independently against every single page. See
   [`specs/linq/overview.md`](superpowers/specs/linq/overview.md).
-- **OOP** — **all 7 phases complete, 26/26 pages written** (2026-09-16):
+- **OOP** — **all 7 phases complete, 27/27 pages written** (2026-09-16; +1 Scenario Bank page 2026-10-13):
   [`question-taxonomy.md`](superpowers/specs/oops/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/oops/roadmap.md) → 15 tiered/prioritized pages, live on the
   site and on [`oops/roadmap.html`](../oops/roadmap.html). Deliberately scenario-heavy per the
   user's instruction (design/scenario questions, not "what is polymorphism" from zero). Every
   diagram passed the mandatory automated verification script before this track was marked done —
   see [`specs/oops/overview.md`](superpowers/specs/oops/overview.md).
-- **.NET / ASP.NET Core** — **all 7 phases complete, 38/38 pages written** (2026-09-16; +2 more
-  on 2026-09-18 after the user reported Unit Testing had no coverage):
+- **.NET / ASP.NET Core** — **all 7 phases complete, 42/42 pages written** (2026-09-16; +2 more
+  on 2026-09-18 after the user reported Unit Testing had no coverage; +4 Scenario Bank pages
+  2026-10-13):
   [`question-taxonomy.md`](superpowers/specs/dotnet/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/dotnet/roadmap.md) → 25 tiered/prioritized pages, live on the
   site and on [`dotnet/roadmap.html`](../dotnet/roadmap.html). MVC included as a grouped
@@ -135,7 +136,8 @@ all through all 7 phases:**
   never-written ".NET Framework" slot — different technology, same folder slug (`dotnet/`). Every
   diagram passed the mandatory automated verification script. See
   [`specs/dotnet/overview.md`](superpowers/specs/dotnet/overview.md).
-- **Web API** — **all 7 phases complete, 36/36 pages written** (2026-09-16):
+- **Web API** — **all 7 phases complete, 44/44 pages written** (2026-09-16; +8 Scenario Bank
+  pages 2026-10-13):
   [`question-taxonomy.md`](superpowers/specs/webapi/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/webapi/roadmap.md) → 25 tiered/prioritized pages, live on the
   site and on [`webapi/roadmap.html`](../webapi/roadmap.html). Deliberately scoped away from
@@ -150,8 +152,8 @@ all through all 7 phases:**
   layer — LINQ translation, tracking, loading, migrations — leaving raw SQL/database-engine
   internals to the `sql/` track. Every diagram passed the mandatory automated verification
   script. See [`specs/efcore/overview.md`](superpowers/specs/efcore/overview.md).
-- **SQL** — **all 7 phases complete, 50/50 pages written** (2026-09-17; 27 original + 12 added
-  from a post-Phase-7 active [gap-hunt](rules/gap-hunting.md)):
+- **SQL** — **all 7 phases complete, 52/52 pages written** (2026-09-17; 27 original + 12 added
+  from a post-Phase-7 active [gap-hunt](rules/gap-hunting.md); +2 Scenario Bank pages 2026-10-13):
   [`question-taxonomy.md`](superpowers/specs/sql/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/sql/roadmap.md) → 39 tiered/prioritized pages, live on the
   site and on [`sql/roadmap.html`](../sql/roadmap.html). Owns raw SQL/database-engine internals
@@ -159,7 +161,8 @@ all through all 7 phases:**
   layer to `efcore/`. Every diagram passed the mandatory automated verification script,
   including a full independent re-sweep of the 12 gap-hunt additions. See
   [`specs/sql/overview.md`](superpowers/specs/sql/overview.md).
-- **Azure** — **all 7 phases complete, 49/49 pages written** (2026-09-17):
+- **Azure** — **all 7 phases complete, 51/51 pages written** (2026-09-17; +2 Scenario Bank pages
+  2026-10-13):
   [`question-taxonomy.md`](superpowers/specs/azure/question-taxonomy.md) →
   [`roadmap.md`](superpowers/specs/azure/roadmap.md) → 44 tiered/prioritized pages, live on the
   site and on [`azure/roadmap.html`](../azure/roadmap.html). Deliberately simplified/

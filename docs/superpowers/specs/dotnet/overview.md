@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 38 pages written (25 earlier + 13 split/gap pages added 2026-10-07)
+## Status — Phases 1–7 complete, all 42 pages written (25 earlier + 13 split/gap pages added 2026-10-07 + 4 scenario-bank pages added 2026-10-13)
 
 **Post-launch addition (2026-09-18):** the user reported that unit testing had no coverage
 anywhere in this track. Confirmed as a genuine gap — no "Testing" group existed in the original
@@ -119,3 +119,5 @@ None — this is the first pass through the full 7-phase pipeline for this track
 verified in one sitting. Expect a review/feedback pass once the user goes through it.
 
 - **2026-10-06 addendum — written and wired 2026-10-07:** 13 new pages (3 basic, 8 intermediate, 2 advanced; 25 -> 38) from splitting basic/5 and advanced/2 plus a gap hunt - see the Addendum in [roadmap.md](roadmap.md). Basic 7 HTTPS Redirection & HSTS and 8 Logging — ILogger, Levels & Providers (both split out of basic/5), 9 LTS vs. STS & .NET Standard; Intermediate 18 MVC vs. Web API vs. Razor Pages (split out of advanced/2), 19 Minimal APIs, 20 IHttpClientFactory, 21 BackgroundService Patterns, 22 Health Checks, 23 Options Pattern Validation, 24 HttpContext & IHttpContextAccessor, 25 SignalR vs. WebSockets vs. SSE; Advanced 3 Slow MVC App Under Load — Triage (split out of advanced/2), 4 Identity, OAuth2 & OpenID Connect. Retitles: basic/5 is now "Filters — Hooks Around an Action" (CORS dropped, owned by webapi/basic/3; HTTPS and logging moved out); advanced/2 is now "Model Binding Internals". Counts: Basic 9, Intermediate 25, Advanced 4.
+
+- **2026-10-13 — Scenario Bank addition:** 4 new pages from a client interview-prep document (38 -> 42). Advanced 5 Migrating a Monolith to Microservices — Approach, 6 In-Memory Caching Loses Data on Restart, 7 Designing Real-Time Order Status Updates, 8 Designing a Scalable Notification Service. Counts: Basic 9, Intermediate 25, Advanced 8.

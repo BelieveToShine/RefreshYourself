@@ -6,8 +6,8 @@ editing any page — details live in the linked files, read the relevant one for
 
 ## What this project is
 
-A set of "tracks" — as of 2026-10-11 **all 19 tracks are through all 7 phases, 916 pages written** (541 original + 108 gap pages added 2026-10-07 + 59 LINQ pages added 2026-10-10 + 88 Java pages added 2026-10-10 + 62 Vue.js pages added 2026-10-11 + 58 Next.js pages added 2026-10-11):
-C# (60), LINQ (59), OOP (26), .NET/ASP.NET Core (38), Web API (36), EF Core (35), SQL (50), Azure (49), AWS
+A set of "tracks" — as of 2026-10-13 **all 19 tracks are through all 7 phases, 933 pages written** (541 original + 108 gap pages added 2026-10-07 + 59 LINQ pages added 2026-10-10 + 88 Java pages added 2026-10-10 + 62 Vue.js pages added 2026-10-11 + 58 Next.js pages added 2026-10-11 + 17 Scenario Bank pages added 2026-10-13):
+C# (60), LINQ (59), OOP (27), .NET/ASP.NET Core (42), Web API (44), EF Core (35), SQL (52), Azure (51), AWS
 (49), React (47), Angular (46), Python (47), AI (52), DSA (33), JavaScript (42), HTML & CSS (39), Java (88),
 Vue.js (62), Next.js (58).
 Per-track detail: [`docs/superpowers/specs/README.md`](docs/superpowers/specs/README.md). More

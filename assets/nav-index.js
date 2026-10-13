@@ -202,7 +202,8 @@ window.NAV_INDEX = {
         items: [
           { n: 1, file: "1.html", short: "SOLID as a Whole",         title: "SOLID as a Whole",                tail: "applying all five to one real service.", priority: "⭐" },
           { n: 2, file: "2.html", short: "Composition over Inheritance", title: "Why Prefer Composition Over Inheritance", tail: "the fragile base class problem.", priority: "⭐" },
-          { n: 3, file: "3.html", short: "Refactoring a Coupled Service", title: "Refactoring a Tightly Coupled Service", tail: "one method, three hidden dependencies.", priority: "🧠" }
+          { n: 3, file: "3.html", short: "Refactoring a Coupled Service", title: "Refactoring a Tightly Coupled Service", tail: "one method, three hidden dependencies.", priority: "🧠" },
+          { n: 4, file: "4.html", short: "Code Review Refactor", title: "Refactoring a Method Flagged in Code Review", tail: "extract, don't rewrite.", priority: "⭐" }
         ]
       }
     ]
@@ -291,6 +292,16 @@ window.NAV_INDEX = {
           { n: 3, file: "3.html", short: "Slow App Triage", title: "Slow MVC App Under Load — Triage", tail: "Measure first, find the hot path, fix one thing", priority: "⭐" },
           { n: 4, file: "4.html", short: "Identity, OAuth2, OIDC", title: "Identity, OAuth2 & OpenID Connect", tail: "OAuth2 = what, OIDC = who, Identity = local users", priority: "🔥" }
         ]
+      },
+      {
+        label: "Questions 5–8",
+        hot: 2,
+        items: [
+          { n: 5, file: "5.html", short: "Monolith to Microservices", title: "Migrating a Monolith to Microservices — Approach", tail: "strangle it one seam at a time.", priority: "🔥" },
+          { n: 6, file: "6.html", short: "In-Memory Cache Loses Data", title: "In-Memory Caching Loses Data on Restart", tail: "IMemoryCache forgets everything — Redis doesn't.", priority: "🔥" },
+          { n: 7, file: "7.html", short: "Real-Time Order Status", title: "Designing Real-Time Order Status Updates", tail: "stop asking, start listening.", priority: "⭐" },
+          { n: 8, file: "8.html", short: "Scalable Notification Service", title: "Designing a Scalable Notification Service", tail: "decouple with a queue.", priority: "⭐" }
+        ]
       }
     ]
   },
@@ -374,6 +385,20 @@ window.NAV_INDEX = {
           { n: 8, file: "8.html", short: "Polly & Resilience", title: "Resilience in .NET — Polly & Http.Resilience", tail: "Retry, breaker and timeout on outgoing HttpClient calls", priority: "⭐" },
           { n: 9, file: "9.html", short: "Webhooks", title: "Webhooks", tail: "Sign, retry and dedupe callbacks to the client", priority: "⭐" },
           { n: 10, file: "10.html", short: "Cancellation", title: "Cancellation, Timeouts & Client Disconnects", tail: "RequestAborted, CancellationToken and server timeouts", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 11–18",
+        hot: 5,
+        items: [
+          { n: 11, file: "11.html", short: "Latency & Exceptions Triage", title: "Diagnosing Latency and Exceptions in a Deployed API", tail: "guess, or read the evidence first?", priority: "🔥" },
+          { n: 12, file: "12.html", short: "Concurrent Request Burst", title: "Handling a Burst of Concurrent Requests", tail: "is async alone enough?", priority: "⭐" },
+          { n: 13, file: "13.html", short: "Backward-Compatible API", title: "Designing a Backward-Compatible API", tail: "additive, or does it break someone?", priority: "⭐" },
+          { n: 14, file: "14.html", short: "JWT vs. OAuth", title: "Choosing Between JWT and OAuth for a New API", tail: "are they even competing options?", priority: "🔥" },
+          { n: 15, file: "15.html", short: "Downstream API Fails", title: "One Downstream API Fails Among Several", tail: "does the whole response go down with it?", priority: "🔥" },
+          { n: 16, file: "16.html", short: "Zero-Loss Architecture", title: "Zero-Loss Architecture Under High Throughput", tail: "process inline, or durably queue it?", priority: "🔥" },
+          { n: 17, file: "17.html", short: "Per-Endpoint Rate Limiting", title: "Designing Per-Endpoint Rate Limiting", tail: "fair, or just lazy?", priority: "⭐" },
+          { n: 18, file: "18.html", short: "Prod Troubleshooting Method", title: "General Production Troubleshooting Approach", tail: "do you have a repeatable method?", priority: "⭐" }
         ]
       }
     ]
@@ -565,6 +590,14 @@ window.NAV_INDEX = {
           { n: 8, file: "8.html", short: "Table Partitioning", title: "Table Partitioning", tail: "partition elimination and when it actually pays off.", priority: "🧠" },
           { n: 9, file: "9.html", short: "Parameter Sniffing", title: "Parameter Sniffing", tail: "Plan cached for the first value, slow for the next", priority: "🔥" },
           { n: 10, file: "10.html", short: "SQL Injection", title: "Dynamic SQL & SQL Injection", tail: "Keep input as data with sp_executesql parameters", priority: "🔥" }
+        ]
+      },
+      {
+        label: "Questions 11–12",
+        hot: 2,
+        items: [
+          { n: 11, file: "11.html", short: "History via Triggers", title: "Maintaining Financial Data History — Triggers?", tail: "whether a trigger is really the right tool.", priority: "🔥" },
+          { n: 12, file: "12.html", short: "Query Deadlock", title: "A Query Goes Into Deadlock", tail: "how will you identify it?", priority: "🔥" }
         ]
       }
     ]
@@ -870,6 +903,14 @@ window.NAV_INDEX = {
           { n: 6, file: "6.html", short: "Landing Zones & Governance", title: "Landing Zones", tail: "& Governance.", priority: "⭐" },
           { n: 7, file: "7.html", short: "Requirements-First", title: "Requirements-First Architecture", tail: "the questions before the design.", priority: "🧠" },
           { n: 8, file: "8.html", short: "AKS Architecture", title: "AKS Architecture — Node Pools, Networking, Ingress & Autoscaling", tail: "Node pools, networking, ingress and autoscaling in AKS", priority: "⭐" }
+        ]
+      },
+      {
+        label: "Questions 9–10",
+        hot: 1,
+        items: [
+          { n: 9, file: "9.html", short: "Duplicate Messages", title: "Detecting and Handling Duplicate Messages", tail: "the same message, twice — does your code even notice?", priority: "⭐" },
+          { n: 10, file: "10.html", short: "Secret Committed to GitHub", title: "A Real Secret Was Committed to GitHub", tail: "deleted the line — but is the secret still there?", priority: "🔥" }
         ]
       }
     ]

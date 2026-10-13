@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 36 pages written (25 earlier + 11 split/gap pages added 2026-10-07)
+## Status — Phases 1–7 complete, all 44 pages written (25 earlier + 11 split/gap pages added 2026-10-07 + 8 scenario-bank pages added 2026-10-13)
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): raw questions, grouped by
   concept across 7 subsections, deliberately scoped away from general ASP.NET Core pipeline
@@ -96,3 +96,5 @@ None — this is the first pass through the full 7-phase pipeline for this track
 verified in one sitting. Expect a review/feedback pass once the user goes through it.
 
 - **2026-10-06 addendum — written and wired 2026-10-07:** 11 new pages (7 intermediate, 4 advanced; 25 -> 36) from splitting intermediate/12 plus a gap hunt - see the Addendum in [roadmap.md](roadmap.md). Intermediate 15 API Security Beyond Authentication (split out of intermediate/12), 16 ProblemDetails (RFC 9457), 17 Content Negotiation & Formatters, 18 ETag & If-Match — Optimistic Concurrency, 19 Richardson Maturity Model & HATEOAS, 20 Token Storage — HttpOnly Cookie vs. localStorage, 21 gRPC vs. REST; Advanced 7 API Gateway & BFF, 8 Resilience in .NET — Polly & Http.Resilience, 9 Webhooks, 10 Cancellation, Timeouts & Client Disconnects. Retitle: intermediate/12 is now "Async APIs — 202 Accepted & Polling". Counts: Basic 5, Intermediate 21, Advanced 10.
+
+- **2026-10-13 — Scenario Bank addition:** 8 new pages from a client interview-prep document (36 -> 44). Advanced 11 Diagnosing Latency and Exceptions in a Deployed API, 12 Handling a Burst of Concurrent Requests, 13 Designing a Backward-Compatible API, 14 Choosing Between JWT and OAuth for a New API, 15 One Downstream API Fails Among Several, 16 Zero-Loss Architecture Under High Throughput, 17 Designing Per-Endpoint Rate Limiting, 18 General Production Troubleshooting Approach. Counts: Basic 5, Intermediate 21, Advanced 18.

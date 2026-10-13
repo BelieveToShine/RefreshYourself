@@ -91,6 +91,7 @@ below is the tier-folder page number (`oops/<tier>/<n>.html`):
 | 5.2 | Factory vs. Dependency Injection | Intermediate | intermediate/7.html |
 | 6.1 | Coupling vs. Cohesion | Intermediate | intermediate/8.html |
 | 6.2 | Refactoring a Tightly Coupled Service | Advanced | advanced/3.html |
+| 6.3 | Refactoring a Method Flagged in Code Review | Advanced | advanced/4.html |
 
 ## Track-specific decisions and boundaries
 
@@ -143,3 +144,15 @@ three existing Advanced pages are already architecture-depth.
   override is already on Basic 3, so no separate page.
 - Considered and rejected: Abstract Factory/Builder (niche; add only if asked), "Tell, Don't Ask"
   as its own page (folded into Law of Demeter), UML class-diagram basics (tutorial-level).
+
+---
+
+## Addendum 2026-10-13 — Scenario Bank page (client interview-prep document)
+
+1 new page from a client's real interview-prep question list, approved for implementation
+2026-10-13. **Status: written, verified, and wired** (track total now 27 = 26 + 1). Number is the
+next free Advanced slot from disk (Advanced 4).
+
+| # | Tier | Pri | Title | Interview question | Scope (one concept) | Cross-link |
+|---|---|---|---|---|---|---|
+| Advanced 4 | Advanced | ⭐ | Refactoring a Method Flagged in Code Review | "Review time, found as need to refactor the method. How, or what are the best practices for this?" | Extract-method over rewrite, single-responsibility smell check, safety net of tests before refactoring | Advanced 3 (Refactoring a Tightly Coupled Service), Intermediate 14 (Law of Demeter), Basic 4 (SRP) |

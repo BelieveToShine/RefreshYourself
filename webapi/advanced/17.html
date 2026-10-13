@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="You need different rate limits for different endpoints on the same API — where and how do you implement that?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Designing Per-Endpoint Rate Limiting — Web API Advanced — RefreshYourself">
+<meta property="og:description" content="You need different rate limits for different endpoints on the same API — where and how do you implement that?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Designing Per-Endpoint Rate Limiting — Web API Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Designing Per-Endpoint Rate Limiting</span>
+  </nav>
+</div>
+
+<div class="wrap" style="margin:10px 0 0;"><a class="crumb" href="../../scenarios/index.html" style="--crumb-bg:#ffe4e6;--crumb-ink:#9f1239;">🎯 Also in the Scenario Bank</a></div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Web API · Advanced · Should Know</div>
+    <h1>One rate limit for every endpoint — <span class="hl hl-hot">fair</span>, or just <span class="hl hl-blue">lazy</span>?</h1>
+    <p class="interview-q">"You need different rate limits for different endpoints on the same API — where and how do you implement that?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🚦 Per-Endpoint Rate Limiting</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>One global rate limit either starves a cheap, frequently-called endpoint or lets an expensive endpoint (a report generator, a bulk export) get hammered just as hard as the cheap one.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Give each endpoint its own policy — cheap endpoints get a high limit, expensive ones get a low one — enforced either in app-layer middleware for fine-grained control, or at a gateway for a centralized, pre-request layer.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Different endpoints cost different amounts — the limit should match the cost, not be one-size-fits-all.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">App middleware <span class="rarrow">→</span> <b>fine-grained</b>, per-endpoint, sees auth context</p>
+      <p class="rrow">API gateway <span class="rarrow">→</span> <b>centralized</b>, protects before the app even sees it</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> Cheap endpoint → <b><code>high limit</code></b>.
+    Expensive endpoint → <b><code>low limit</code></b>. Same API, different cost.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh17" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar17Slate" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">ONE API, THREE ENDPOINTS, THREE POLICIES</text>
+
+      <g filter="url(#sh17)"><rect x="255" y="28" width="130" height="40" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="53" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">🔌 Your API</text>
+
+      <path d="M320,68 V80 H100 V96" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar17Slate)"/>
+      <path d="M320,68 V96" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar17Slate)"/>
+      <path d="M320,68 V80 H540 V96" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar17Slate)"/>
+
+      <g filter="url(#sh17)"><rect x="20" y="96" width="160" height="66" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="100" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">📖 GET /items</text>
+      <text x="100" y="136" text-anchor="middle" font-size="10" fill="#5b6472">cheap read</text>
+      <text x="100" y="150" text-anchor="middle" font-size="10" fill="#5b6472">limit: 1000/min</text>
+
+      <g filter="url(#sh17)"><rect x="240" y="96" width="160" height="66" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="320" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">✍️ POST /orders</text>
+      <text x="320" y="136" text-anchor="middle" font-size="10" fill="#5b6472">moderate cost</text>
+      <text x="320" y="150" text-anchor="middle" font-size="10" fill="#5b6472">limit: 60/min</text>
+
+      <g filter="url(#sh17)"><rect x="460" y="96" width="160" height="66" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="540" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">📊 POST /reports</text>
+      <text x="540" y="136" text-anchor="middle" font-size="10" fill="#5b6472">expensive</text>
+      <text x="540" y="150" text-anchor="middle" font-size="10" fill="#5b6472">limit: 5/min</text>
+
+      <text x="320" y="184" text-anchor="middle" font-size="11" font-weight="700" fill="#475569" letter-spacing="0.3">WHERE DOES THE POLICY GET ENFORCED?</text>
+
+      <g filter="url(#sh17)"><rect x="110" y="194" width="190" height="56" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/></g>
+      <text x="205" y="216" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">🏗️ App middleware</text>
+      <text x="205" y="232" text-anchor="middle" font-size="10" fill="#5b6472">fine-grained, sees auth</text>
+
+      <g filter="url(#sh17)"><rect x="340" y="194" width="190" height="56" rx="12" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.8"/></g>
+      <text x="435" y="216" text-anchor="middle" font-size="12" font-weight="700" fill="#4c1d95">🚪 API gateway</text>
+      <text x="435" y="232" text-anchor="middle" font-size="10" fill="#5b6472">centralized, pre-app</text>
+    </svg>
+    <figcaption>Each endpoint's limit matches its own cost — a cheap read gets room to breathe, an expensive report doesn't get hammered.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>One global rate limit for the whole API is not "simpler, so it's
+    fine."</b> It either starves a cheap, frequently-called endpoint or lets an expensive one get
+    hammered just as hard as the cheap one.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"How would you rate-limit per-user instead of per-IP?"</b> Key the
+    rate-limit counter on the authenticated user/API-key identity instead of the client's IP — IP
+    limiting breaks down for users behind a shared NAT/corporate proxy, and doesn't stop one
+    authenticated user from spreading requests across multiple IPs.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd give each endpoint its own policy instead of one global limit — a
+    cheap read endpoint gets a high limit, an expensive report-generation endpoint gets a low one.
+    That can live in the application layer, using ASP.NET Core's rate-limiting middleware
+    configured per route, which gives fine-grained control and access to the authenticated user
+    for per-user limits. Or it can live at the infrastructure layer — an API gateway like Azure API
+    Management — which centralizes the policy and protects the app before a request even arrives,
+    at the cost of being coarser-grained and another moving piece."</p>
+    <ul>
+      <li>Per-endpoint policy → <span class="hl hl-blue">match the limit to that endpoint's actual cost</span>, not one global number.</li>
+      <li>App-layer middleware → <span class="hl hl-basic">fine-grained, sees auth context for per-user limits</span>.</li>
+      <li>API gateway → <span class="hl hl-inter">centralized, protects the app before the request even arrives</span>.</li>
+      <li>Per-user vs. per-IP → <span class="hl hl-hot">key on identity, not IP, once users are authenticated</span>.</li>
+      <li>Never → <span class="hl hl-teal">one uniform limit across endpoints with very different costs</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Per-endpoint rate limiting can be implemented at two different layers, and the choice is
+      about where the policy should live, not which one is "correct." <span class="hl
+      hl-basic">Application-layer</span> middleware — ASP.NET Core's built-in rate limiter,
+      configuring a different policy per route or endpoint group — runs inside the app itself, so
+      it has full access to request context: the authenticated user, their role, their API key.
+      That makes it the natural place for <b>per-user</b> limits, not just per-IP ones.
+      <span class="hl hl-inter">Infrastructure-layer</span> enforcement — an API gateway or load
+      balancer in front of the app, like Azure API Management — centralizes the policy outside any
+      one app's code and can reject excess traffic before it ever reaches the backend, which is
+      valuable when the goal is protecting the app's own capacity, not just fairness between
+      callers. The tradeoff is that a gateway is coarser-grained and one more moving piece to
+      configure and keep in sync with the app's actual routes.</p>
+
+      <p>Whichever layer enforces it, the policy itself should be sized to each endpoint's real
+      <span class="hl hl-blue">cost</span> — a cheap, frequently-polled read endpoint can sustain a
+      high limit; an expensive report-generation or bulk-export endpoint needs a much lower one,
+      because a handful of concurrent calls to it can do as much damage as thousands of calls to
+      a cheap one. And whatever the limit is keyed on, keying by <b>authenticated identity</b>
+      rather than IP address handles two real cases IP-based limiting misses: many legitimate users
+      sharing one IP behind a NAT/corporate proxy (who shouldn't be throttled together), and one
+      abusive user spreading requests across multiple IPs (who should still be caught).</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>App-layer middleware</th><th>API gateway</th></tr></thead>
+        <tbody>
+          <tr><th>Granularity</th><td>fine — full route/user context</td><td>coarser — configured centrally</td></tr>
+          <tr><th>Sees auth context?</th><td>yes, naturally</td><td>only if it decodes the token itself</td></tr>
+          <tr><th>Protects the app before it's hit?</th><td>no — the app already received the request</td><td>yes — rejected before reaching the backend</td></tr>
+          <tr><th>Extra moving piece?</th><td>no — it's already in the app</td><td>yes — a separate component to configure</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code>builder.Services.AddRateLimiter(options =&gt;
+{
+    options.AddFixedWindowLimiter(<span class="str">"reports"</span>, o =&gt; { o.PermitLimit = <span class="num">5</span>; o.Window = TimeSpan.FromMinutes(<span class="num">1</span>); }); <span class="cx-cmt">// expensive</span>
+    options.AddFixedWindowLimiter(<span class="str">"reads"</span>, o =&gt; { o.PermitLimit = <span class="num">1000</span>; o.Window = TimeSpan.FromMinutes(<span class="num">1</span>); }); <span class="cx-ok">// ✅ cheap</span>
+});
+
+app.MapPost(<span class="str">"/reports"</span>, GenerateReport).RequireRateLimiting(<span class="str">"reports"</span>);
+app.MapGet(<span class="str">"/items"</span>, GetItems).RequireRateLimiting(<span class="str">"reads"</span>); <span class="cx-ok">// ✅ each route gets its own policy</span></code></pre>
+      </div>
+      <p class="cx-note">Each endpoint opts into the policy sized for its own cost — nothing
+      forces every route to share the same number.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A dashboard polls <code>GET /items</code> every few seconds for thousands of users,
+      while a handful of admins occasionally trigger <code>POST /reports</code>, which runs an
+      expensive aggregation query.</b> A single global limit sized for the report endpoint would
+      make the dashboard feel broken; sized for the dashboard, five concurrent report requests
+      could tie up the database. Giving each endpoint its own policy lets the dashboard poll freely
+      while the report endpoint stays protected.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="16.html">← Zero-Loss Architecture Under High Throughput</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="18.html">General Production Troubleshooting Approach →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

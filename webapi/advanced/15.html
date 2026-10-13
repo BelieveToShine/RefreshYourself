@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Your API calls three other services to build one response, and one of them is failing — what do you do?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="One Downstream API Fails Among Several — Web API Advanced — RefreshYourself">
+<meta property="og:description" content="Your API calls three other services to build one response, and one of them is failing — what do you do?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>One Downstream API Fails Among Several — Web API Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="webapi/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#fee2e2;--crumb-ink:#b91c1c;">🔌 Web API</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">One Downstream API Fails Among Several</span>
+  </nav>
+</div>
+
+<div class="wrap" style="margin:10px 0 0;"><a class="crumb" href="../../scenarios/index.html" style="--crumb-bg:#ffe4e6;--crumb-ink:#9f1239;">🎯 Also in the Scenario Bank</a></div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 Web API · Advanced · Must Know</div>
+    <h1>One of three calls just failed — does the <span class="hl hl-hot">whole response</span> go down with it?</h1>
+    <p class="interview-q">"Your API calls three other services to build one response, and one of them is failing — what do you do?"</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🧩 Partial Downstream Failure</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>Letting one failing dependency's exception propagate takes down the entire response, even when the other calls succeeded and the failing one wasn't essential to answering the request.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Decide essential vs. supplementary up front — fail fast for essential calls, degrade gracefully for supplementary ones — and wrap every call in a timeout and a circuit breaker either way.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Essential → fail fast. Supplementary → degrade, don't fail the whole request.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <div class="rgrid">
+      <p class="rrow">Essential call fails <span class="rarrow">→</span> <b>fail fast</b>, clear error</p>
+      <p class="rrow">Supplementary call fails <span class="rarrow">→</span> <b>degrade</b>, return the rest</p>
+    </div>
+    <p class="rthink"><b class="tc-label">Think:</b> One bad call shouldn't sink a response the
+    other two calls already earned — unless it genuinely <b><code>had to be there</code></b>.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 310" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh15" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar15Green" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="ar15Red" markerWidth="9" markerHeight="9" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+      </defs>
+
+      <text x="320" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.4">ONE REQUEST, THREE DOWNSTREAM CALLS, ONE FAILS</text>
+
+      <g filter="url(#sh15)"><rect x="255" y="30" width="130" height="46" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="320" y="58" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">📥 One request</text>
+
+      <path d="M320,76 V90 H120 V104" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ar15Green)"/>
+      <path d="M320,76 V104" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ar15Green)"/>
+      <path d="M320,76 V90 H520 V104" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#ar15Red)">
+        <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="1.3s" repeatCount="indefinite"/>
+      </path>
+
+      <g filter="url(#sh15)"><rect x="40" y="104" width="160" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="120" y="128" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ Service A</text>
+      <text x="120" y="144" text-anchor="middle" font-size="10" fill="#5b6472">succeeds</text>
+
+      <g filter="url(#sh15)"><rect x="240" y="104" width="160" height="50" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="320" y="128" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">✅ Service B</text>
+      <text x="320" y="144" text-anchor="middle" font-size="10" fill="#5b6472">succeeds</text>
+
+      <g filter="url(#sh15)"><rect x="440" y="104" width="160" height="50" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="520" y="128" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🐛 Service C</text>
+      <text x="520" y="144" text-anchor="middle" font-size="10" fill="#5b6472">fails</text>
+
+      <path d="M520,154 V180" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#ar15Red)"/>
+
+      <g filter="url(#sh15)"><rect x="330" y="180" width="200" height="60" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/></g>
+      <text x="430" y="204" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🚫 If C was essential</text>
+      <text x="430" y="220" text-anchor="middle" font-size="10" fill="#5b6472">fail fast, clear error</text>
+
+      <g filter="url(#sh15)"><rect x="90" y="180" width="220" height="60" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="200" y="204" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🟢 If C was supplementary</text>
+      <text x="200" y="220" text-anchor="middle" font-size="10" fill="#5b6472">return A + B, degrade that field</text>
+    </svg>
+    <figcaption>The same failed call leads to two different, deliberate outcomes depending on whether it was essential.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Letting one failing call take down the whole response is an all-or-nothing
+    mistake.</b> If the other two downstream calls succeeded and the failing one wasn't essential,
+    a partial response was the better answer, not a 500.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What does a circuit breaker add beyond a timeout?"</b> A timeout limits how
+    long you wait on one call; a circuit breaker remembers a dependency has been failing and stops
+    calling it for a cooldown window entirely — protecting both your own app from wasted waiting
+    and the struggling downstream service from a retry pile-up making its recovery harder.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"It depends on whether that call is essential or supplementary. If I
+    can't produce a meaningful response without it, I fail fast with a clear error. If it's a
+    nice-to-have enrichment, I degrade gracefully — return the response with that piece missing or
+    defaulted. Either way, I wrap the call in a timeout so one slow dependency can't hang the whole
+    request, and a circuit breaker so repeated failures stop retrying a service that's clearly
+    down."</p>
+    <ul>
+      <li>Essential call fails → <span class="hl hl-hot">fail fast with a clear error</span>, don't hang.</li>
+      <li>Supplementary call fails → <span class="hl hl-basic">degrade gracefully</span> — return the rest, omit or default that field.</li>
+      <li>Every downstream call → <span class="hl hl-blue">gets its own timeout</span>, so one slow call can't hang everything.</li>
+      <li>Circuit breaker → <span class="hl hl-inter">stops retrying a dependency that's clearly down</span>, protects both sides.</li>
+      <li>Never → <span class="hl hl-teal">let one failure silently sink two successful calls</span>.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>The right response to a failing downstream call depends entirely on <span class="hl
+      hl-blue">what that call was for</span>. An <b>essential</b> dependency is one the response
+      genuinely can't be correct without — pricing data for a checkout, inventory for an order.
+      For that, <span class="hl hl-hot">fail fast</span>: return a clear error immediately rather
+      than letting the request hang or returning something silently wrong. A <b>supplementary</b>
+      dependency is an enrichment the response is still meaningful without — a "recommended for
+      you" panel, a non-critical metadata field. For that, <span class="hl hl-basic">degrade
+      gracefully</span>: catch that specific failure, omit or default the affected field, and
+      return the rest of the response that the other calls already built successfully.</p>
+
+      <p>Independent of that decision, every downstream call should carry its own <b>timeout</b>
+      (so a slow dependency doesn't hang the whole request indefinitely) and ideally a
+      <b>circuit breaker</b> (via a library like Polly — see <a href="8.html">Resilience in .NET</a>)
+      so that once a dependency has clearly started failing, calls stop being sent to it for a
+      cooldown window instead of piling up retries against an already-struggling service. The
+      combination — essential/supplementary judgment, timeout, circuit breaker — is what turns "one
+      dependency is down" from a full outage into a contained, partial degradation.</p>
+
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Essential dependency fails</th><th>Supplementary dependency fails</th></tr></thead>
+        <tbody>
+          <tr><th>Response</th><td>fail the whole request, clearly</td><td>return the rest, degrade that one piece</td></tr>
+          <tr><th>Why</th><td>the response would be wrong or meaningless without it</td><td>the response is still useful without it</td></tr>
+          <tr><th>Still needs</th><td>a timeout + circuit breaker</td><td>a timeout + circuit breaker</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> pricing = <span class="kw">await</span> _pricing.GetPriceAsync(id, ct); <span class="cx-err">// essential — no try/catch, let it fail fast</span>
+
+<span class="ty">Recommendation</span>[] recs = [];
+<span class="kw">try</span>
+{
+    recs = <span class="kw">await</span> _recommendations.GetForAsync(id, ct); <span class="cx-ok">// ✅ supplementary — caught on its own</span>
+}
+<span class="kw">catch</span> (<span class="ty">Exception</span> ex)
+{
+    _logger.LogWarning(ex, <span class="str">"Recommendations unavailable, degrading"</span>);
+}
+
+<span class="kw">return</span> Ok(<span class="kw">new</span> { pricing, recommendations = recs }); <span class="cx-cmt">// recs can be empty, pricing can't</span></code></pre>
+      </div>
+      <p class="cx-note">The essential call has nothing catching it — a failure there should
+      surface. The supplementary call is caught and defaulted so it can never take the response
+      down with it.</p>
+
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A product page calls pricing, inventory, and a "customers also viewed" service.</b>
+      The recommendations service times out. Pricing and inventory both succeeded. Treating the
+      recommendations failure as supplementary — logging it and returning the page without that
+      panel — keeps the page usable; treating it the same as a pricing failure and returning a 500
+      would take down a perfectly sellable page over a feature nobody would have missed.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="14.html">← Choosing Between JWT and OAuth for a New API</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Web API Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="16.html">Zero-Loss Architecture Under High Throughput →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Web API · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

@@ -104,6 +104,14 @@ category, not tier — the site-wide convention). Numbering below is the tier-fo
 | 6.2 | Sorting & Filtering Conventions | Intermediate | intermediate/14.html |
 | 7.1 | Traffic Spike Scenario | Advanced | advanced/5.html |
 | 7.2 | 500-Errors-in-Production Scenario | Advanced | advanced/6.html |
+| 7.3 | Diagnosing Latency and Exceptions in a Deployed API | Advanced | advanced/11.html |
+| 7.4 | Handling a Burst of Concurrent Requests | Advanced | advanced/12.html |
+| 7.5 | Designing a Backward-Compatible API | Advanced | advanced/13.html |
+| 7.6 | Choosing Between JWT and OAuth for a New API | Advanced | advanced/14.html |
+| 7.7 | One Downstream API Fails Among Several | Advanced | advanced/15.html |
+| 7.8 | Zero-Loss Architecture Under High Throughput | Advanced | advanced/16.html |
+| 7.9 | Designing Per-Endpoint Rate Limiting | Advanced | advanced/17.html |
+| 7.10 | General Production Troubleshooting Approach | Advanced | advanced/18.html |
 
 ## Track-specific decisions and boundaries
 
@@ -154,3 +162,23 @@ Pipeline mechanics stay in the `dotnet/` track — cross-link, never re-teach.
 
 - **Added:** ProblemDetails, content negotiation, ETag/If-Match, Richardson/HATEOAS, token storage, gRPC vs REST, API gateway/BFF, Polly/Http.Resilience; own hunt: webhooks, cancellation/client disconnects.
 - **Dropped:** Minimal APIs vs controllers — dotnet/intermediate/19 owns it (it carries the vs-controllers section); this track only cross-links. File upload/streaming — advanced/4 already covers `IFormFile`, multipart and streaming. JSON Patch as its own page — PUT vs PATCH sits on intermediate/1 and JSON Patch is rarely the literal question (rejected as niche). 409/404-vs-403 as a standalone page — 409/403 are on intermediate/2; the info-leakage point is folded into intermediate/15.
+
+---
+
+## Addendum 2026-10-13 — Scenario Bank pages (client interview-prep document)
+
+8 new pages from a client's real interview-prep question list, approved for implementation
+2026-10-13. **Status: written, verified, and wired** (track total now 44 = 36 + 8; Advanced 10 -> 18).
+Numbers are the next free Advanced slots from disk. All 8 get rows in concept category 7
+(Scenarios) on `webapi/roadmap.html`.
+
+| # | Tier | Pri | Title | Interview question | Scope (one concept) | Cross-link |
+|---|---|---|---|---|---|---|
+| Advanced 11 | Advanced | 🔥 | Diagnosing Latency and Exceptions in a Deployed API | "Deployed API, now lots of issues — latency, exceptions — how to troubleshoot/fix this?" | Evidence-first triage: logs/traces/APM before guessing; narrow from symptom to hot path | advanced/6 (500-errors scenario), dotnet/advanced/3 (slow app triage) |
+| Advanced 12 | Advanced | ⭐ | Handling a Burst of Concurrent Requests | "1,000 requests at the same time — how do you handle this in an API?" | Async alone doesn't bound concurrency; thread-pool limits, queueing, backpressure | advanced/5 (traffic spike), dotnet/intermediate/20 (IHttpClientFactory) |
+| Advanced 13 | Advanced | ⭐ | Designing a Backward-Compatible API | "Design an API that should be backward compatible — what's the strategy?" | Additive-only changes vs. a breaking change; versioning as the escape hatch | basic/4 (versioning), intermediate/10 (backward compatibility) |
+| Advanced 14 | Advanced | 🔥 | Choosing Between JWT and OAuth for a New API | "JWT token vs. OAuth — when to use what? (scenario)" | Not competing — JWT is a token format, OAuth is a delegation protocol; when each decision actually applies | intermediate/9 (JWT & refresh tokens), dotnet/advanced/4 (OAuth2/OIDC) |
+| Advanced 15 | Advanced | 🔥 | One Downstream API Fails Among Several | "One API calls multiple downstream APIs — if one fails, what do you do?" | Partial failure handling — fallback, graceful degradation, or fail the whole request, and how to decide which | advanced/2 (retry vs. resilience), advanced/8 (Polly & Http.Resilience) |
+| Advanced 16 | Advanced | 🔥 | Zero-Loss Architecture Under High Throughput | "10,000 requests in 3 minutes — how do I handle this without missing or losing any request? What should the architecture be?" | Durable queue/broker absorbing bursts vs. processing inline; what "zero loss" actually requires | advanced/9 (webhooks), dotnet/advanced/8 (scalable notifications) |
+| Advanced 17 | Advanced | ⭐ | Designing Per-Endpoint Rate Limiting | "Apply rate limiting for my controller — how do I give different limits to different endpoints? C# side or load balancer?" | Partitioned rate-limiter policies per endpoint vs. a blanket limit; app-level vs. gateway/load-balancer enforcement | basic/5 (rate limiting), advanced/7 (API Gateway & BFF) |
+| Advanced 18 | Advanced | ⭐ | General Production Troubleshooting Approach | "How do you troubleshoot a production issue, generally?" | A repeatable method (reproduce → narrow → evidence → fix → verify), not a one-off checklist; ties the earlier scenario pages together | advanced/11 (latency/exceptions), advanced/6 (500-errors scenario) |

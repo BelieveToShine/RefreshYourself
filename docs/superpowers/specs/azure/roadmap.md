@@ -148,6 +148,8 @@ final position, not the taxonomy's original group order.
 | 5 | Cost Optimization Levers | ⭐ | §10 [gap-hunt] |
 | 6 | Landing Zones & Governance | ⭐ | §10 [gap-hunt] |
 | 7 | Requirements-First Architecture Questions | 🧠 | §10 |
+| 9 | Detecting and Handling Duplicate Messages | ⭐ | Scenario Bank addendum 2026-10-13 |
+| 10 | A Real Secret Was Committed to GitHub | 🔥 | Scenario Bank addendum 2026-10-13 |
 
 ## Track-specific decisions and boundaries
 
@@ -196,3 +198,16 @@ Active gap-hunt (see [`gap-hunting.md`](../../../rules/gap-hunting.md)) against 
 - **API Management deep-dive** — `basic/17` already covers policies, throttling, auth and versioning at interview depth; a second page would repeat it.
 - **Event Grid vs. Event Hubs vs. Service Bus, Durable Functions, Cosmos consistency, Front Door/App Gateway, Private Endpoint, Redis** — already pages (intermediate/6, 12, 18, 8; basic/14; intermediate/16).
 - **Defender for Cloud / Sentinel / Azure Firewall**, **Data Factory / Synapse / Fabric**, **ExpressRoute/VPN** — security- or data-specialist depth; unchanged exclusions.
+
+---
+
+## Addendum 2026-10-13 — Scenario Bank pages (client interview-prep document)
+
+2 new pages from a client's real interview-prep question list, approved for implementation
+2026-10-13. **Status: written, verified, and wired** (track total now 51 = 49 + 2; Advanced 8 -> 10).
+Numbers are the next free Advanced slots from disk.
+
+| # | Tier | Pri | Title | Interview question | Scope (one concept) | Cross-link |
+|---|---|---|---|---|---|---|
+| Advanced 9 | Advanced | ⭐ | Detecting and Handling Duplicate Messages | "What is a Topic and subscription in GCP — any limit for a subscription? How do you detect/handle duplicate messages?" | At-least-once delivery means duplicates are expected; idempotency keys / message-id dedup at the consumer, not relying on the broker to guarantee exactly-once | intermediate/5 (Queues vs. Topics/Subscriptions), intermediate/6 (Service Bus vs. Event Grid vs. Event Hubs) |
+| Advanced 10 | Advanced | 🔥 | A Real Secret Was Committed to GitHub | "Config changes on local, with a real password, committed on GitHub — what do you do? What measures do you take?" | A committed secret must be rotated, not just deleted from history — remove from the repo, revoke/rotate the credential at its source, and move it into Key Vault/Managed Identity going forward | basic/7 (Key Vault), basic/8 (Managed Identity), intermediate/13 (Secrets Management as a Practice) |

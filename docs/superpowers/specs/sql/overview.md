@@ -4,7 +4,7 @@
 [`docs/superpowers/specs/README.md`](../README.md) for what this file is and the process for
 keeping it in sync with the live pages.
 
-## Status — Phases 1–7 complete, all 50 pages written (39 earlier + 11 gap pages added 2026-10-07)
+## Status — Phases 1–7 complete, all 52 pages written (39 earlier + 11 gap pages added 2026-10-07 + 2 scenario-bank pages added 2026-10-13)
 
 - **Phase 1** — [`question-taxonomy.md`](question-taxonomy.md): raw questions, grouped by concept
   across 8 subsections, kept tightly to the user's own original SQL section of the interview-prep
@@ -133,3 +133,5 @@ through it, same as every other completed track.
 ## Addendum 2026-10-06 — gap pages (written 2026-10-07)
 
 11 new gap pages (Basic 16–18, Intermediate 17–22, Advanced 9–10) were written and wired on 2026-10-07 (39 -> 50) — see the "Addendum 2026-10-06" section of [`roadmap.md`](roadmap.md). Basic 16 TRUNCATE vs. DELETE vs. DROP, 17 CASE WHEN, 18 Constraints: UNIQUE, CHECK, DEFAULT & NOT NULL; Intermediate 17 Self, FULL & CROSS Joins, 18 Nth Highest & Top-N per Group, 19 Finding & Deleting Duplicates, 20 Set Operators: EXCEPT & INTERSECT, 21 MERGE & Upsert, 22 Stored Procedure vs. Function; Advanced 9 Parameter Sniffing, 10 Dynamic SQL & SQL Injection. Counts: Basic 18, Intermediate 22, Advanced 10. The original 39 pages are unchanged.
+
+**2026-10-13 — Scenario Bank addition:** 2 new pages from a client interview-prep document (50 -> 52). Advanced 11 Maintaining Financial Data History — Triggers?, 12 A Query Goes Into Deadlock. Counts: Basic 18, Intermediate 22, Advanced 12.

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Your message consumer occasionally processes the same message twice — how do you prevent that from causing real problems?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="Detecting and Handling Duplicate Messages — Azure Advanced — RefreshYourself">
+<meta property="og:description" content="Your message consumer occasionally processes the same message twice — how do you prevent that from causing real problems?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Detecting and Handling Duplicate Messages — Azure Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="azure/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e0f2fe;--crumb-ink:#0078D4;">☁️ Azure</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">Handling Duplicate Messages</span>
+  </nav>
+</div>
+
+<div class="wrap" style="margin:10px 0 0;"><a class="crumb" href="../../scenarios/index.html" style="--crumb-bg:#ffe4e6;--crumb-ink:#9f1239;">🎯 Also in the Scenario Bank</a></div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#f1f5f9; --eyebrow-ink:#475569;">⭐ Azure · Advanced · Should Know</div>
+    <h1>The <span class="hl hl-hot">same message</span>, twice — does your code even notice?</h1>
+    <p class="interview-q">Your message consumer occasionally processes the same message twice — how do you prevent that from causing real problems?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#1d4ed8; --why-bg:#dbeafe">
+        <div class="wc-head">🔁 Duplicate Delivery</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A consumer can crash — or just run past the lock's visibility timeout — after doing the real work but before acknowledging the message, so the broker redelivers it; if processing isn't safe to run twice, a customer can get charged twice or an order can ship twice.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>Make the processing itself idempotent — track a unique message/business ID and check whether it's already been handled before acting, so a duplicate delivery produces the exact same end result as the first one.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">At-least-once delivery is normal — idempotent processing is the fix, not fighting the redelivery.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">At-least-once delivery = <b>"it will arrive — maybe more than once."</b></p>
+    <p class="rthink">Think: <b><code>Idempotent</code></b> processing checks before it acts, so twice feels exactly like once.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="shAz9" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="arAmberAz9" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#d97706"/>
+        </marker>
+        <marker id="arGreenAz9" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+        <marker id="arSlateAz9" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#64748b"/>
+        </marker>
+      </defs>
+
+      <text x="340" y="14" text-anchor="middle" font-size="11" font-weight="700" fill="#475569" letter-spacing="0.3">AT-LEAST-ONCE DELIVERY — SAME MESSAGE, TWICE</text>
+
+      <!-- row 1: first delivery -->
+      <g filter="url(#shAz9)"><rect x="20" y="36" width="190" height="54" rx="14" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.8"/></g>
+      <text x="115" y="58" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">📨 Delivery #1</text>
+      <text x="115" y="76" text-anchor="middle" font-size="10" fill="#1e3a8a">Order #4521</text>
+
+      <path d="M210,63 H240" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arAmberAz9)"/>
+
+      <g filter="url(#shAz9)"><rect x="240" y="36" width="190" height="54" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="335" y="58" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">ID 4521 seen before?</text>
+      <text x="335" y="76" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">NO</text>
+
+      <path d="M430,63 H460" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arGreenAz9)"/>
+
+      <g filter="url(#shAz9)"><rect x="460" y="36" width="200" height="54" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="560" y="58" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">✅ Process order</text>
+      <text x="560" y="76" text-anchor="middle" font-size="10" fill="#166534">+ record ID 4521</text>
+
+      <!-- elbow connector showing why delivery #2's check comes back YES -->
+      <path d="M560,90 V130 H335 V150" fill="none" stroke="#64748b" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#arSlateAz9)"/>
+      <text x="447" y="120" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">already recorded</text>
+
+      <!-- row 2: redelivery -->
+      <g filter="url(#shAz9)"><rect x="20" y="150" width="190" height="54" rx="14" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.8" stroke-dasharray="5 3"/></g>
+      <text x="115" y="172" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">📨 Delivery #2</text>
+      <text x="115" y="190" text-anchor="middle" font-size="8.5" fill="#1e3a8a">redelivered · Order #4521</text>
+
+      <path d="M210,177 H240" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arAmberAz9)"/>
+
+      <g filter="url(#shAz9)"><rect x="240" y="150" width="190" height="54" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/></g>
+      <text x="335" y="172" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">ID 4521 seen before?</text>
+      <text x="335" y="190" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">YES</text>
+
+      <path d="M430,177 H460" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arGreenAz9)"/>
+
+      <g filter="url(#shAz9)"><rect x="460" y="150" width="200" height="54" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/></g>
+      <text x="560" y="172" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">⏭️ Skip reprocessing</text>
+      <text x="560" y="190" text-anchor="middle" font-size="8.5" fill="#166534">just re-ack the message</text>
+
+      <text x="340" y="250" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing="0.2" fill="#475569">SAME END RESULT EITHER WAY — ORDER MARKED PAID EXACTLY ONCE</text>
+    </svg>
+    <figcaption>Delivery #1 processes the order and records its ID. Delivery #2 is the exact
+    same message, redelivered — the ID check sees it's already handled and just re-acks it.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>Exactly-once delivery isn't something to chase at the queue level.</b>
+    Service Bus — like most message queues — guarantees at-least-once delivery, not
+    exactly-once; a redelivery after a timeout or a crash before the ack is normal, expected
+    behavior, not a bug to "fix" in the transport.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"What's a simple, concrete idempotency mechanism?"</b> Store processed
+    message IDs (with a TTL) in a fast lookup — a database unique constraint or a cache — and
+    check it before acting; if the ID's already there, skip reprocessing and just
+    re-acknowledge the message.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"Most queues, Service Bus included, guarantee at-least-once delivery,
+    not exactly-once, so an occasional duplicate is expected. The real fix is making processing
+    idempotent — track a unique message ID and check before acting, so processing it twice has
+    the same effect as processing it once."</p>
+    <ul>
+      <li><span class="hl hl-hot">At-least-once</span>, not exactly-once — redelivery after a crash or timeout is normal, expected behavior.</li>
+      <li><span class="hl hl-blue">Idempotent processing</span> → check a unique ID before acting, instead of trying to eliminate duplicates at the transport layer.</li>
+      <li>A dedicated message/business ID with a TTL in a <span class="hl hl-basic">database unique constraint or cache</span> → the simplest real mechanism.</li>
+      <li>Exactly-once across a distributed system is a <span class="hl hl-inter">famously hard, often impractical guarantee</span> — idempotency sidesteps it instead of chasing it.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Most message queues, <b>Azure Service Bus included</b>, promise <b>at-least-once
+      delivery</b>: once a message is sent, it will eventually be delivered, but it might be
+      delivered more than once. A redelivery happens when a consumer picks up a message, starts
+      working, and then either crashes before acknowledging it or takes longer than the lock's
+      visibility timeout — the broker assumes the delivery failed and hands the same message out
+      again. This is normal, expected behavior, not a defect in the queue.</p>
+      <p>The fix isn't trying to stop the redelivery — it's making the <b>processing itself
+      idempotent</b>: give every message a unique ID (an order ID, a payment ID) and check,
+      before acting, whether that ID has already been handled. If it has, skip the work and just
+      acknowledge the message; if it hasn't, process it and record the ID. Done this way,
+      processing the same message once or twice produces the exact same end result.</p>
+      <p>Azure Service Bus also offers a built-in <b>duplicate-detection window</b>
+      (<code>RequiresDuplicateDetection</code>) that filters resends of the same
+      <code>MessageId</code> within a configurable time window — useful for sender-side retries,
+      but it's not a substitute for your own idempotency check, since it only covers that one
+      queue for that one window, not every way a duplicate can reach your consumer.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> C#</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="kw">var</span> alreadyHandled = <span class="kw">await</span> db.ProcessedMessages
+    .AnyAsync(m =&gt; m.MessageId == message.MessageId); <span class="cx-cmt">// check first</span>
+
+<span class="kw">if</span> (alreadyHandled)
+{
+    <span class="kw">await</span> receiver.CompleteMessageAsync(message); <span class="cx-ok">// ✅ just re-ack, don't redo the work</span>
+    <span class="kw">return</span>;
+}
+
+<span class="kw">await</span> MarkOrderPaidAsync(orderId);                  <span class="cx-cmt">// do the real work</span>
+db.ProcessedMessages.Add(<span class="kw">new</span>(message.MessageId));   <span class="cx-cmt">// record the ID</span>
+<span class="kw">await</span> db.SaveChangesAsync();
+<span class="kw">await</span> receiver.CompleteMessageAsync(message);</code></pre>
+      </div>
+      <p class="cx-note">The unique constraint on <code>MessageId</code> is what makes this safe
+      even if two redeliveries somehow land at the same time — one insert wins, the other fails
+      and is treated as "already handled."</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#1d4ed8">
+          <div class="uc-sit"><span class="uc-flag">1</span> The consumer finishes the real work, then crashes before it can acknowledge</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc1Az9" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#1d4ed8"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a" letter-spacing=".03em">CRASH BEFORE ACK</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">✅ Work done</text>
+              <path d="M210,43 H270" stroke="#1d4ed8" stroke-width="1.6" fill="none" marker-end="url(#arUc1Az9)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">💥 Crash → redelivered</text>
+            </svg>
+          </div>
+          <p class="uc-what">The broker never saw the acknowledgment, so it assumes delivery
+          failed and sends the same message out again — even though the work actually finished.
+          This is the single most common way a "duplicate" shows up in practice.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">No ack ≠ no work done — it just means the broker couldn't tell.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Processing runs past the lock's visibility timeout while the consumer is still alive</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc2Az9" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">LOCK TIMEOUT</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">⏱️ Still processing</text>
+              <path d="M210,43 H270" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arUc2Az9)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">🔁 Sent to another receiver</text>
+            </svg>
+          </div>
+          <p class="uc-what">The broker gives up on the lock and hands the message to a second
+          receiver while the first one is still working — so both can genuinely run at the same
+          time. A simple in-memory "already seen" flag isn't enough here; the check needs to be
+          atomic (a database unique constraint), since two checks can race each other.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Two receivers can run at once — make the check atomic, not just present.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#0f766e">
+          <div class="uc-sit"><span class="uc-flag">3</span> You turn on Service Bus's built-in duplicate detection</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arUc3Az9" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#0f766e"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing=".03em">DUPLICATE DETECTION WINDOW</text>
+              <rect x="20" y="24" width="190" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="115" y="47" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f766e">📨 Same MessageId resent</text>
+              <path d="M210,43 H270" stroke="#0f766e" stroke-width="1.6" fill="none" marker-end="url(#arUc3Az9)"/>
+              <rect x="270" y="24" width="190" height="38" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+              <text x="365" y="47" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">🚫 Filtered in-window</text>
+            </svg>
+          </div>
+          <p class="uc-what"><code>RequiresDuplicateDetection</code> filters a resend of the
+          same <code>MessageId</code> within a configurable time window — a real, built-in
+          feature. It doesn't cover a redelivery outside that window, a different queue, or any
+          duplicate your own consumer-side check wasn't already expecting — it's a helpful extra,
+          not a replacement for idempotent processing.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">A sender-side, time-boxed filter — not a substitute for your own idempotency check.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>A payment consumer charges the card, then crashes before it can ack.</b> Service Bus
+      redelivers the message a few seconds later. Without an idempotency check, the customer
+      gets charged twice; with one — checking "has this payment ID already been marked paid?"
+      before charging — the second delivery sees it's already done and just skips straight to
+      acknowledging it.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="8.html">← AKS Architecture — Node Pools, Networking, Ingress &amp; Autoscaling</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to Azure Advanced</a>
+    <div class="side next">
+      <span class="label">Next</span>
+      <a href="10.html">A Real Secret Was Committed to GitHub →</a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · Azure · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

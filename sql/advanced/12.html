@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A query that used to run fine is now deadlocking — how do you find out why, and what's the actual fix?">
+<meta name="theme-color" content="#6d5be0">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RefreshYourself">
+<meta property="og:title" content="A Query Goes Into Deadlock — SQL Advanced — RefreshYourself">
+<meta property="og:description" content="A query that used to run fine is now deadlocking — how do you find out why, and what's the actual fix?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Crect%20width%3D'24'%20height%3D'24'%20rx%3D'6'%20fill%3D'%236d5be0'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'white'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M5%2012a7%207%200%200%201%2011.5-5.3'%2F%3E%3Cpath%20d%3D'M16.5%203.5v3.2h-3.2'%2F%3E%3Cpath%20d%3D'M19%2012a7%207%200%200%201-11.5%205.3'%2F%3E%3Cpath%20d%3D'M7.5%2020.5v-3.2h3.2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>A Query Goes Into Deadlock — SQL Advanced — RefreshYourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Poppins:wght@600;700;800&amp;family=Lexend:wght@400;500;600;700&amp;family=Fira+Code:wght@500&amp;display=swap">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-root="../../" data-tier-key="sql/advanced">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar wrap">
+    <a class="brand" href="../../index.html">
+      <img class="brand-mark" src="../../assets/images/brand-mark.svg" alt="" width="24" height="24">
+      Refresh<span class="dot">Yourself</span>
+    </a>
+    <div class="gsearch">
+      <span class="gicon" aria-hidden="true">🔎</span>
+      <input type="text" placeholder="Search any topic… (C#, SQL, React…)" autocomplete="off" aria-label="Search topics">
+      <span class="gkey" aria-hidden="true">/</span>
+      <div class="gsearch-results" role="listbox"></div>
+    </div>
+  </div>
+</header>
+
+<div class="crumbbar">
+  <nav class="crumbs wrap">
+    <a class="crumb" href="../../index.html" style="--crumb-bg:#f1f5f9;--crumb-ink:#475569;">🏠 Home</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="../index.html" style="--crumb-bg:#e2e8f0;--crumb-ink:#334155;">🗃️ SQL</a>
+    <span class="sep">›</span>
+    <a class="crumb" href="index.html" style="--crumb-bg:#ede9fe;--crumb-ink:#6d28d9;">Advanced</a>
+    <span class="sep">›</span>
+    <span class="crumb current">A Query Goes Into Deadlock</span>
+  </nav>
+</div>
+
+<div class="wrap" style="margin:10px 0 0;"><a class="crumb" href="../../scenarios/index.html" style="--crumb-bg:#ffe4e6;--crumb-ink:#9f1239;">🎯 Also in the Scenario Bank</a></div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow" style="--eyebrow-bg:#fee2e2; --eyebrow-ink:#b91c1c;">🔥 SQL · Advanced · Must Know</div>
+    <h1>A Query Goes Into <span class="hl hl-hot">Deadlock</span></h1>
+    <p class="interview-q">A query that used to run fine is now deadlocking — how do you find out
+    why, and what's the actual fix?</p>
+  </section>
+
+  <details class="topic-hook toggle">
+    <summary>Why it matters <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="why-card" style="--why-color:#dc2626; --why-bg:#fee2e2">
+        <div class="wc-head">🔒 Diagnosing a Deadlock</div>
+        <div class="wc-ps">
+          <div class="wc-row problem"><span class="wc-tag">❗ Problem</span><span>A query that
+          starts deadlocking under load can look like random bad luck, which tempts a
+          guess-and-restart response — or worse, a schema change that doesn't actually address
+          what's causing it.</span></div>
+          <div class="wc-row solution"><span class="wc-tag">✅ Solution</span><span>The engine's
+          own deadlock graph shows exactly which two transactions were holding locks the other
+          one needed, and in what order — the real fix is a consistent lock order, short
+          transactions, and the right indexes, not changing the schema.</span></div>
+        </div>
+        <div class="wc-recall"><span class="wcr-tag">Recall</span><span class="wcr-text">Deadlock = two transactions, each holding what the other one wants.</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="recall">
+    <div class="rhead">🔥 Easy interview recall</div>
+    <p class="rline">Deadlock = <b>"two transactions, each holding what the other one
+    wants."</b></p>
+    <p class="rthink"><b class="tc-label">Think:</b> check the
+    <b><code>deadlock graph</code></b> first, then fix the <b><code>lock order</code></b> — not
+    the schema.</p>
+  </div>
+
+  <div class="viz-label">🧠 Visual Mental Model <span class="viz-sub">— understand it in 5 seconds</span></div>
+  <figure class="diagram-card">
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" class="topic-diagram">
+      <defs>
+        <filter id="sh12" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.15"/>
+        </filter>
+        <marker id="ar12R" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="ar12L" markerWidth="8" markerHeight="8" refX="2.5" refY="2.5" orient="auto">
+          <path d="M5.5,0 L0,2.5 L5.5,5 Z" fill="#dc2626"/>
+        </marker>
+        <marker id="ar12Green" markerWidth="8" markerHeight="8" refX="5.5" refY="2.5" orient="auto">
+          <path d="M0,0 L5.5,2.5 L0,5 Z" fill="#16a34a"/>
+        </marker>
+      </defs>
+
+      <path d="M320,20 V260" fill="none" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="5 5"/>
+
+      <text x="160" y="32" text-anchor="middle" font-size="13.5" font-weight="700" fill="#991b1b">❌ DEADLOCK — circular wait</text>
+
+      <g filter="url(#sh12)"><rect x="30" y="100" width="110" height="70" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/></g>
+      <text x="85" y="120" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🔒 Txn A</text>
+      <text x="85" y="135" text-anchor="middle" font-size="9.5" fill="#5b6472">holds: Table1</text>
+      <text x="85" y="150" text-anchor="middle" font-size="9.5" font-weight="600" fill="#991b1b">wants: Table2</text>
+
+      <g filter="url(#sh12)"><rect x="170" y="100" width="110" height="70" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/></g>
+      <text x="225" y="120" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">🔒 Txn B</text>
+      <text x="225" y="135" text-anchor="middle" font-size="9.5" fill="#5b6472">holds: Table2</text>
+      <text x="225" y="150" text-anchor="middle" font-size="9.5" font-weight="600" fill="#991b1b">wants: Table1</text>
+
+      <text x="155" y="108" text-anchor="middle" font-size="8.5" font-weight="700" fill="#dc2626">waits →</text>
+      <path d="M140,115 H170" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#ar12R)">
+        <animate attributeName="stroke-dashoffset" from="14" to="0" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+
+      <text x="155" y="166" text-anchor="middle" font-size="8.5" font-weight="700" fill="#dc2626">← waits</text>
+      <path d="M170,155 H140" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#ar12L)">
+        <animate attributeName="stroke-dashoffset" from="0" to="14" dur="1.2s" repeatCount="indefinite"/>
+      </path>
+
+      <rect x="55" y="195" width="210" height="30" rx="15" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="160" y="214" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">🔒 Neither can proceed</text>
+
+      <text x="480" y="32" text-anchor="middle" font-size="13.5" font-weight="700" fill="#166534">✅ FIX: same lock order</text>
+
+      <g filter="url(#sh12)"><rect x="370" y="70" width="220" height="56" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/></g>
+      <text x="480" y="92" text-anchor="middle" font-size="12.5" font-weight="700" fill="#475569">🔒 Fixed Lock Order</text>
+      <text x="480" y="108" text-anchor="middle" font-size="9.5" fill="#5b6472">Table1 → Table2, every time</text>
+
+      <path d="M480,126 V154" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ar12Green)"/>
+
+      <g filter="url(#sh12)"><rect x="370" y="154" width="220" height="56" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/></g>
+      <text x="480" y="176" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">✅ No Cycle</text>
+      <text x="480" y="192" text-anchor="middle" font-size="9.5" fill="#5b6472">both wait in the same order, never crossed</text>
+
+      <rect x="400" y="230" width="160" height="30" rx="15" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+      <text x="480" y="249" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">✅ Always resolves</text>
+    </svg>
+    <figcaption>Txn A and Txn B each hold what the other wants — a circular wait, neither can
+    proceed. Forcing every transaction to acquire the same two resources in the same fixed order
+    breaks the cycle before it can form.</figcaption>
+  </figure>
+
+  <div class="trap">
+    <div class="thead">⚠️ Common Trap</div>
+    <p class="tline"><b>"Deadlocks mean the schema needs denormalizing."</b> Usually not — the
+    real levers are lock <b>order</b> and transaction <b>scope</b>; normalization vs.
+    denormalization affects query complexity and join cost, not lock-ordering deadlocks
+    directly.</p>
+  </div>
+
+  <div class="followup">
+    <div class="fhead">🔄 Likely Follow-up</div>
+    <p class="ftline"><b>"Why do shorter transactions reduce deadlock risk?"</b> A lock is held
+    for the transaction's full duration — the longer it's held, the larger the window for
+    another transaction to need the same resource and collide. Keeping transactions short
+    shrinks that window.</p>
+  </div>
+
+  <div class="keypoints">
+    <h2>🎯 Say this in the interview <span class="sub">— the exact lines to land</span></h2>
+    <p class="kp-primary">"I'd pull the deadlock graph first — SQL Server's deadlock trace or
+    Extended Events, or InnoDB's status output in MySQL — to see exactly which two transactions
+    were holding locks the other needed, and in what order. The usual root cause is two
+    transactions acquiring the same resources in different orders; the fix is a consistent lock
+    order, short transactions, and the right indexes — not denormalizing the schema."</p>
+    <ul>
+      <li><span class="hl hl-blue">Diagnose first</span> → the deadlock graph/trace shows the
+      actual lock order each transaction took.</li>
+      <li><span class="hl hl-hot">Root cause</span> → two transactions acquiring the same
+      resources in a different order.</li>
+      <li><span class="hl hl-basic">Fix: lock order</span> → make every transaction acquire
+      resources in the same sequence.</li>
+      <li><span class="hl hl-inter">Fix: short transactions</span> → shrinks the window a lock is
+      held, lowering collision odds.</li>
+      <li><span class="hl hl-adv">Fix: right indexes</span> → a missing index can force a scan
+      that locks far more rows than necessary.</li>
+    </ul>
+  </div>
+
+  <details class="explain toggle">
+    <summary>📖 Explanation <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p>Diagnose before fixing anything. The database engine already recorded exactly what
+      happened: SQL Server's deadlock trace/Extended Events, or MySQL's InnoDB status output,
+      show which two transactions were each holding a lock the other one needed, and the order
+      each one acquired its locks in. The overwhelmingly common root cause is the same two
+      resources, locked in a <b>different order</b> by two transactions running at the same
+      time — transaction A locks table1 then table2, transaction B locks table2 then table1, and
+      if their timing lines up, each ends up waiting on the other.</p>
+      <p>The fix follows directly from the cause: make every transaction that touches both
+      resources acquire them in the <b>same</b> order, so the cycle can't form. Keeping
+      transactions short reduces the odds further, since a lock is held for the whole transaction
+      and a shorter transaction means a smaller window for a collision. A missing index can make
+      this worse too — a full table scan locks far more rows than a precise index seek would,
+      raising the odds that two transactions touch the same row at the same time.</p>
+    </div>
+  </details>
+
+  <details class="codebox toggle">
+    <summary>💻 See the code <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- Transaction A</span>
+<span class="kw">BEGIN TRAN</span>;
+<span class="kw">UPDATE</span> Accounts <span class="kw">SET</span> Balance = Balance - 100 <span class="kw">WHERE</span> AccountId = 1; <span class="cx-cmt">-- locks Accounts first</span>
+<span class="kw">UPDATE</span> Orders   <span class="kw">SET</span> Status = 'Paid'          <span class="kw">WHERE</span> OrderId = 55;   <span class="cx-cmt">-- then locks Orders</span>
+<span class="kw">COMMIT</span>;
+
+<span class="cx-cmt">-- Transaction B, running at the same time</span>
+<span class="kw">BEGIN TRAN</span>;
+<span class="kw">UPDATE</span> Orders   <span class="kw">SET</span> Status = 'Paid'          <span class="kw">WHERE</span> OrderId = 55;   <span class="cx-cmt">-- locks Orders first</span>
+<span class="kw">UPDATE</span> Accounts <span class="kw">SET</span> Balance = Balance - 100 <span class="kw">WHERE</span> AccountId = 1; <span class="cx-err">-- ❌ wants Accounts, deadlock</span>
+<span class="kw">COMMIT</span>;</code></pre>
+      </div>
+      <p class="cx-note">Same two tables, opposite order — this is the classic deadlock shape.</p>
+
+      <div class="code-card">
+        <div class="cc-head">
+          <span class="cc-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><polyline points="16 3 21 8 16 13"/></svg> SQL</span>
+          <button class="cc-copy" type="button" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <pre><code><span class="cx-cmt">-- Fixed: both transactions now lock in the SAME order</span>
+<span class="kw">BEGIN TRAN</span>;
+<span class="kw">UPDATE</span> Accounts <span class="kw">SET</span> Balance = Balance - 100 <span class="kw">WHERE</span> AccountId = 1; <span class="cx-ok">-- ✅ Accounts first, always</span>
+<span class="kw">UPDATE</span> Orders   <span class="kw">SET</span> Status = 'Paid'          <span class="kw">WHERE</span> OrderId = 55;
+<span class="kw">COMMIT</span>;</code></pre>
+      </div>
+      <p class="cx-note">Enforcing one fixed order across every transaction that touches both
+      tables breaks the cycle — no schema change required.</p>
+
+    </div>
+  </details>
+
+  <details class="usecase toggle">
+    <summary>🧭 Use Cases — recognize these when they happen to you <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <div class="uc-scenarios">
+
+        <div class="uc-scenario" style="--uc-color:#16a34a">
+          <div class="uc-sit"><span class="uc-flag">1</span> Two nightly batch jobs update the same two tables, and they deadlock a few times a week</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arSqlUc12a" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#16a34a"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534" letter-spacing=".03em">TWO BATCH JOBS, SAME TABLES</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🌙 Job A: T1 → T2</text>
+              <path d="M190,43 H290" stroke="#16a34a" stroke-width="1.6" fill="none" marker-end="url(#arSqlUc12a)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">🌙 Job B: T2 → T1</text>
+            </svg>
+          </div>
+          <p class="uc-what">This is the <b>#1 scenario</b> you'll actually run into — two
+          recurring jobs each touching the same two tables, in opposite order. Fix the order in
+          both jobs and the deadlocks stop entirely.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Same two tables, opposite order, recurring → fix the order in both.</span></div>
+        </div>
+
+        <div class="uc-scenario" style="--uc-color:#b45309">
+          <div class="uc-sit"><span class="uc-flag">2</span> Deadlocks started right after a new feature shipped that touches multiple tables per request</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arSqlUc12b" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#b45309"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e" letter-spacing=".03em">NEW CODE, NEW LOCK ORDER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🆕 New request path</text>
+              <path d="M190,43 H290" stroke="#b45309" stroke-width="1.6" fill="none" marker-end="url(#arSqlUc12b)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">🔀 Clashes with old order</text>
+            </svg>
+          </div>
+          <p class="uc-what">A new code path that touches the same tables as existing code, but in
+          a different order, is a very common way for deadlocks to suddenly appear — check the
+          new feature's lock order against the existing one first.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Deadlocks started after a deploy → check the new code's lock order.</span></div>
+        </div>
+
+        <div class="uc-scenario uc-trap" style="--uc-color:#dc2626">
+          <div class="uc-sit"><span class="uc-flag">3</span> Someone on the team suggests "let's just denormalize to fix the deadlocks"</div>
+          <div class="uc-mini">
+            <svg viewBox="0 0 480 66" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="arSqlUc12c" markerWidth="7" markerHeight="7" refX="4.5" refY="2" orient="auto"><path d="M0,0 L4.5,2 L0,4 Z" fill="#dc2626"/></marker></defs>
+              <text x="240" y="13" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b" letter-spacing=".03em">WRONG LEVER</text>
+              <rect x="20" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="105" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">🧱 Denormalize schema</text>
+              <path d="M190,43 H290" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arSqlUc12c)"/>
+              <rect x="290" y="24" width="170" height="38" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+              <text x="375" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">❌ Deadlocks remain</text>
+            </svg>
+          </div>
+          <p class="uc-what">Denormalizing changes join cost and query complexity, not lock
+          ordering — it doesn't touch the actual cause, so the same deadlock pattern comes right
+          back under load.</p>
+          <div class="uc-remember"><span class="uc-rtag">Remember</span><span class="uc-rtext">Denormalizing doesn't fix deadlocks → fix lock order and transaction scope instead.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="realworld toggle">
+    <summary>🌍 Real-world example <span class="chev">▾</span></summary>
+    <div class="toggle-body">
+      <p><b>Scenario:</b> nightly batch jobs updating the Accounts and Orders tables start
+      deadlocking under load. Pulling the deadlock graph shows job A locking Accounts then
+      Orders, while job B locks Orders then Accounts — the classic crossed order. Rewriting both
+      jobs to always touch Accounts first, then Orders, eliminates the deadlocks without
+      touching the schema.</p>
+    </div>
+  </details>
+
+  <div class="pager">
+    <div class="side prev">
+      <span class="label">Prev</span>
+      <a href="11.html">← Maintaining Financial Data History — Triggers?</a>
+    </div>
+    <a class="to-index" href="index.html">↑ Back to SQL Advanced</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  RefreshYourself · SQL · Advanced
+</footer>
+
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/nav-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>
