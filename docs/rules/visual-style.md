@@ -164,3 +164,16 @@ The header logo is the external file `assets/images/brand-mark.svg`, referenced 
 - the badge is 44px (icon 28px) with an invisible `::before{ inset:-6px }` extra hit area (≈56px target).
 
 **Rule:** any absolutely-positioned corner control inside a tile/card that also contains a stretched link must have an explicit `z-index` above that link. Verify with `document.elementFromPoint` at the centre, edges and just outside the control (all 15 tiles were checked this way) — a screenshot can't show it.
+
+## Long tier-pill labels wrapping on the homepage tile grid (fixed 2026-10-14)
+
+`.tile-grid` columns go as narrow as 230px (`repeat(auto-fit, minmax(230px, 1fr))`). Basic/
+Intermediate/Advanced fit three-to-a-line at that width with the default `.ttier` sizing, but
+Design Patterns' own tier words (Creational/Structural/Behavioral) are longer and wrapped the
+third pill to its own line. Fixed with a scoped override —
+`.tile-tiers:has(.ttier.creational){ gap:4px }` plus smaller font-size/padding/letter-spacing on
+`.ttier` inside that same row — rather than touching the shared `.ttier` rule everyone else uses.
+Verified by actually rendering the tile at the grid's real narrowest column width (found by
+sweeping viewport widths around the 3-to-2-column breakpoint, ~236px), not assumed from the CSS.
+If a future track ever needs its own long tier-pill words, follow the same pattern: a `:has()`
+selector scoped to that tile's own tier class, never a global `.ttier` size change.
