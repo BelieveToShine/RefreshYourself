@@ -552,3 +552,123 @@ function esc(s) {
     });
   }
 })();
+
+/* "My List" — a personal, localStorage-only save list. Same data source as the visited-tracking
+   IIFE above (window.NAV_INDEX, keyed by data-tier-key), so this needs no new per-page markup
+   either: one toggle button on a topic page's own hero, and one small toggle icon on every
+   .topic-row (tier index) / .tn-item (tier-nav sidebar) row, everywhere that data is available.
+   See docs/rules/my-list.md for the full spec (storage shape, every call site, mylist.html). */
+(function () {
+  var KEY = "ry-mylist";
+  var tierKey = document.body.getAttribute("data-tier-key");
+  var root = document.body.getAttribute("data-root") || "";
+  if (!tierKey || !window.NAV_INDEX || !window.NAV_INDEX[tierKey]) return;
+  var data = window.NAV_INDEX[tierKey];
+
+  function readList() {
+    try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { return {}; }
+  }
+  function writeList(list) {
+    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {}
+  }
+  function stripExt(file) { return file.replace(/\.html$/, ""); }
+
+  // One lookup, by file (no extension), across every group in this tier.
+  var itemsByFile = {};
+  data.groups.forEach(function (g) {
+    g.items.forEach(function (it) { itemsByFile[stripExt(it.file)] = it; });
+  });
+
+  function entryFor(file) {
+    var it = itemsByFile[file];
+    if (!it) return null;
+    return {
+      path: tierKey + "/" + file + ".html",
+      title: it.title,
+      tail: it.tail,
+      track: data.track,
+      trackIcon: data.trackIcon,
+      tier: data.tier,
+      priority: it.priority || "",
+      addedAt: Date.now()
+    };
+  }
+
+  function mylistKey(file) { return tierKey + "/" + file; }
+
+  function toggle(file) {
+    var list = readList();
+    var k = mylistKey(file);
+    if (list[k]) {
+      delete list[k];
+    } else {
+      var entry = entryFor(file);
+      if (!entry) return null;
+      list[k] = entry;
+    }
+    writeList(list);
+    return !!list[k];
+  }
+
+  // ---- small toggle icon on every .topic-row / .tn-item row ----
+  var list = readList();
+  document.querySelectorAll(".topic-row, .tn-item").forEach(function (li) {
+    var a = li.querySelector("a[href]");
+    var href = a && a.getAttribute("href");
+    if (!href || href.indexOf("/") > -1 || href.indexOf(":") > -1) return;
+    var file = stripExt(href);
+    if (!itemsByFile[file]) return;
+    var saved = !!list[mylistKey(file)];
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ml-rowbtn" + (saved ? " saved" : "");
+    btn.setAttribute("aria-label", saved ? "Remove from My List" : "Add to My List");
+    btn.title = saved ? "Remove from My List" : "Add to My List";
+    btn.textContent = saved ? "★" : "☆";
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var nowSaved = toggle(file);
+      btn.classList.toggle("saved", nowSaved);
+      btn.textContent = nowSaved ? "★" : "☆";
+      btn.title = nowSaved ? "Remove from My List" : "Add to My List";
+      btn.setAttribute("aria-label", btn.title);
+    });
+    // .topic-row (tier index) ends with a .badge — insert before it so flex layout reserves
+    // room naturally. .tn-item (sidebar) has no such sibling — append and let CSS position it
+    // in the padding gutter :has() reserves on that row's <a> (see style.css).
+    var badge = li.querySelector(".badge");
+    if (badge) li.insertBefore(btn, badge);
+    else li.appendChild(btn);
+  });
+
+  // ---- one prominent toggle button on a topic page's own hero ----
+  var hero = document.querySelector(".hero");
+  if (document.querySelector(".pager") && hero) {
+    var currentFile = stripExt(location.pathname.split("/").pop() || "");
+    if (itemsByFile[currentFile]) {
+      var heroSaved = !!list[mylistKey(currentFile)];
+      var heroBtn = document.createElement("button");
+      heroBtn.type = "button";
+      function heroLabel(s) { return s ? "✓ In My List — remove" : "⭐ Add to My List"; }
+      heroBtn.className = "ml-herobtn" + (heroSaved ? " saved" : "");
+      heroBtn.textContent = heroLabel(heroSaved);
+      heroBtn.addEventListener("click", function () {
+        var nowSaved = toggle(currentFile);
+        heroBtn.classList.toggle("saved", nowSaved);
+        heroBtn.textContent = heroLabel(nowSaved);
+      });
+      hero.appendChild(heroBtn);
+    }
+  }
+})();
+
+/* My List tile's live "N saved" count on the homepage — index.html only (the tile links to
+   mylist.html either way; this just keeps the number honest without a page reload). */
+(function () {
+  var countEl = document.querySelector(".mylist-count");
+  if (!countEl) return;
+  var n = 0;
+  try { n = Object.keys(JSON.parse(localStorage.getItem("ry-mylist") || "{}")).length; } catch (e) {}
+  countEl.textContent = n === 1 ? "1 saved" : n + " saved";
+})();

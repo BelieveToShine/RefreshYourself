@@ -233,3 +233,12 @@ the dev-server quirk above can't affect it either way.
 pages and that tier's `index.html` (see "Adding this to a new tier" above), and the visited-mark
 IIFE reads it the same way everywhere. If you ever hand-write a new index.html instead of copying
 an existing one, don't forget the attribute.
+
+## "My List" also paints an icon onto this sidebar (added 2026-10-14)
+
+A ☆/★ toggle icon on every `.tn-item` (and every tier-index `.topic-row`) is a separate feature,
+"My List" — full spec in [`my-list.md`](my-list.md). It reads the exact same `window.NAV_INDEX`
+data this sidebar already loads, absolutely positioned in a right-side gutter reserved on that
+row's own link so it never collides with `.tn-dot`. Don't confuse it with the visited-tracking ✓
+above — both live in the same `assets/site.js`, in separate IIFEs, reading separate
+`localStorage` keys.

@@ -193,3 +193,10 @@ used:
 `node scripts/build-quickstart.js` whenever a track's 🔥 Must Know set changes in
 `assets/nav-index.js` — never hand-edit it, the whole point is that it can't drift from the real
 per-tier data.
+
+## "My List" homepage tile + mylist.html (added 2026-10-14)
+
+Full spec in [`my-list.md`](my-list.md). Visually it's a normal homepage tile (reuses `.tile`/
+`.tile-tiers`) plus a handful of new, feature-specific classes (`.ml-herobtn`, `.ml-rowbtn`,
+`.mylist-remove`, `.mylist-empty`, `.ttier.mylist`) that don't belong anywhere else on the site —
+don't reuse them for an unrelated save/toggle control, give that its own class instead.

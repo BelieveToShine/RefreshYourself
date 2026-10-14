@@ -104,6 +104,7 @@ Full action → rule lookup table: [`docs/rules/README.md`](docs/rules/README.md
 - **Link hover / chips / pills:** [`docs/rules/link-hover.md`](docs/rules/link-hover.md) · **Back button:** [`docs/rules/back-navigation.md`](docs/rules/back-navigation.md) · **Tier sidebar:** [`docs/rules/tier-navigation.md`](docs/rules/tier-navigation.md)
 - **Gap-hunting (Phase 2):** [`docs/rules/gap-hunting.md`](docs/rules/gap-hunting.md) · **Retrofitting Why/Use Cases:** [`docs/rules/retrofit-why-usecases.md`](docs/rules/retrofit-why-usecases.md)
 - **Cross-track "Scenario Bank" (`scenarios/index.html`), adding a scenario question to it:** [`docs/rules/scenario-bank.md`](docs/rules/scenario-bank.md)
+- **"My List" personal save-list (`mylist.html`, localStorage):** [`docs/rules/my-list.md`](docs/rules/my-list.md)
 - **Reporting commits in chat (name branch + hash):** [`docs/rules/reporting.md`](docs/rules/reporting.md)
 
 ## Quick reminders
