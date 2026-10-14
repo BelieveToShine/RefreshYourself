@@ -23,6 +23,7 @@ Start with [`../CLAUDE.md`](../CLAUDE.md), then:
 - [`rules/interview-depth-and-priority.md`](rules/interview-depth-and-priority.md) — tier = question type, priority = interview likelihood.
 - [`rules/reporting.md`](rules/reporting.md) — chat reports of commits/pushes name branch + hash.
 - [`rules/scenario-bank.md`](rules/scenario-bank.md) — the cross-track `scenarios/index.html` Scenario Bank, and how a page earns a spot in it.
+- [`rules/my-list.md`](rules/my-list.md) — the personal "My List" save-list feature (`mylist.html`, localStorage shape, every call site).
 
 **Writing a page**
 - [`rules/content-structure.md`](rules/content-structure.md) — folders, file names, `data-root`, index page vs. topic page.

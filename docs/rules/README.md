@@ -32,6 +32,7 @@ override default behavior — read the relevant one before doing the thing, not 
 | Run Phase 7 (writing pages) on a track — subagent dispatch, safety, verification, site wiring | [build-process.md](build-process.md) |
 | Report anything as "committed" or "pushed" in chat | [reporting.md](reporting.md) — name the branch and commit hash, not just "done" |
 | Add a scenario question to `scenarios/index.html`, or write a new dedicated "Scenario:"-style page | [scenario-bank.md](scenario-bank.md) |
+| Touch the "My List" save-list feature (`mylist.html`, `assets/mylist.js`, the `ml-`/`mylist-` bits in `site.js`/`style.css`) | [my-list.md](my-list.md) |
 
 For the whole-project picture (what this site is, the full topic catalog, what's written vs.
 planned) read [`docs/refreshyourself-overview.md`](../refreshyourself-overview.md) first — before

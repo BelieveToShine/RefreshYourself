@@ -5,6 +5,7 @@ window.SEARCH_INDEX = [
   { title: "Home", track: "", tier: "", path: "index.html", keywords: "home all tracks csharp oops dotnet sql react dsa" },
   { title: "Scenario Bank", track: "", tier: "", path: "scenarios/index.html", keywords: "scenario bank production incident diagnose design cross track all scenarios java linq react angular vue next webapi aws azure sql csharp oop dotnet python javascript html css dsa" },
   { title: "Quick Start — Must Know Questions", track: "", tier: "", path: "quickstart.html", keywords: "quick start interview tomorrow must know hot fast path cross track all tracks" },
+  { title: "My List — Saved Questions", track: "", tier: "", path: "mylist.html", keywords: "my list saved starred bookmark favorites shortlist local storage cross track" },
   { title: "C# — track home", track: "C#", tier: "", path: "csharp/index.html", keywords: "csharp c# dotnet language overview" },
   { title: "C# Basic — topic list", track: "C#", tier: "Basic", path: "csharp/basic/index.html", keywords: "csharp basic list interview questions roadmap" },
   { title: "Value Types vs. Reference Types", track: "C#", tier: "Basic", path: "csharp/basic/1.html", keywords: "value type reference type stack heap copy pointer struct class boxing csharp" },
