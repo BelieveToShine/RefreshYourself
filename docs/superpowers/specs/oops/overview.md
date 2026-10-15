@@ -13,9 +13,9 @@ for what this file is and the process for keeping it in sync with the live pages
   merges needed), tiered by **interview depth**, and given an interview-priority tag.
 - **Phase 7 — all 15 pages written**, using the same template as C#'s Phase 7 (❓ Interview
   Question line → 🔥 Recall → 🧠 Visual → ⚠️ Trap → 🔄 Follow-up → 🎯 Say-this → 📖 Explanation →
-  💻 Code → 🌍 Real-world/Scenario — see [content-writing.md](../../rules/content-writing.md)).
+  💻 Code → 🌍 Real-world/Scenario — see [content-writing.md](../../../rules/content-writing.md)).
   Every page's diagram was run through the mandatory automated verification script (see
-  [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
+  [diagram-style.md](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
   before this track was considered done — the process that C#'s Phase 7 only added after the
   fact, applied here from the start.
 

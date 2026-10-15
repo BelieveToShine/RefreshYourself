@@ -37,7 +37,7 @@ either the ASCII tree or the detailed breakdown actually covers it — checked d
 the full 37-group list before concluding this, not assumed from the summary table alone. This is
 a genuine interview topic for a JavaScript track independent of any specific framework (Jest/
 Vitest basics, mocking, testing async code) — real gap, not manufactured, added as group 26,
-Testing Fundamentals, per [`gap-hunting.md`](../../rules/gap-hunting.md)'s standard for what
+Testing Fundamentals, per [`gap-hunting.md`](../../../rules/gap-hunting.md)'s standard for what
 counts as a real finding vs. padding.
 
 **No other dedupe found.** All 37 of the user's numbered groups are distinct concepts with no

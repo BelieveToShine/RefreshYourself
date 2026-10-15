@@ -15,15 +15,15 @@ The site is moving from "topic tutorial" to "interview question bank" (locked wi
   🧠 Deep Dive, independent of tier).
 - **Phase 7 — all 35 new pages written** (2026-09-16), using the new template (❓ Interview
   Question line → 🔥 Recall → 🧠 Visual → ⚠️ Trap → 🔄 Follow-up → 🎯 Say-this → 📖 Explanation →
-  💻 Code → 🌍 Real-world/Scenario — see [content-writing.md](../../rules/content-writing.md)).
+  💻 Code → 🌍 Real-world/Scenario — see [content-writing.md](../../../rules/content-writing.md)).
   The tables below mirror `roadmap.md` exactly and are also live on the site's tier-index pages
-  and [`roadmap.html`](../../../csharp/roadmap.html).
+  and [`roadmap.html`](../../../../csharp/roadmap.html).
 
 **The 14 *original* C# Basic pages were frozen exactly as originally built (2026-09-16) until
-the 2026-09-24 retrofit** (see [`rules/retrofit-why-usecases.md`](../../rules/retrofit-why-usecases.md))
+the 2026-09-24 retrofit** (see [`rules/retrofit-why-usecases.md`](../../../rules/retrofit-why-usecases.md))
 added the site-wide Problem/Solution why-cards + Use Cases panel to them, by explicit user
 approval, matching all other C# pages and every other track. The left tier-navigation sidebar
-(see [`rules/tier-navigation.md`](../../rules/tier-navigation.md)) was left untouched by that
+(see [`rules/tier-navigation.md`](../../../rules/tier-navigation.md)) was left untouched by that
 retrofit. All 18 Basic pages, plus Intermediate and Advanced, now share the same
 why-it-matters/Use-Cases structure. *(Update 2026-10-07: C# Basic 1–14 were migrated to the new template — the “frozen” status no longer applies.)*
 
@@ -130,7 +130,7 @@ rehearsed a version of, not just recalled the definition of.
   separated from *when* to design with one); `IDisposable`/`using`'s "basics" half moved from
   implicitly-Advanced (as part of the old dispose-pattern topic) to Intermediate, tagged 🔥.
 - Icon is 🎵 (a real emoji, not a hand-drawn logo) — see
-  [visual-style.md](../../rules/visual-style.md) for why C#'s icon went through several
+  [visual-style.md](../../../rules/visual-style.md) for why C#'s icon went through several
   iterations before landing there.
 
 ## Known gaps
@@ -138,13 +138,13 @@ rehearsed a version of, not just recalled the definition of.
 - **The 35 new pages (Basic 15–18, all of Intermediate, all of Advanced) haven't been through
   the user's page-by-page review** the way the original Basic 14 were, across many rounds of
   diagram/wording feedback. They were built by parallel subagents against the now-formalized
-  template ([content-writing.md](../../rules/content-writing.md)) and the exact Q&A content in
+  template ([content-writing.md](../../../rules/content-writing.md)) and the exact Q&A content in
   `roadmap.md`. Expect a round of feedback once the user reviews, the same way Basic's original 14
   went through several rounds before settling.
 - **2026-09-16 — full automated diagram-verification sweep completed** after the user reported a
   disconnected-arrow/text-overlap defect on `csharp/basic/15.html`. Every one of the 35 new pages'
   diagrams was run through the geometric check in
-  [`rules/diagram-style.md`](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
+  [`rules/diagram-style.md`](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
   against the actually-rendered page — not sampled. 5 genuine defects were found and fixed:
   `basic/15.html` (disconnected drop-arrows + a text overflow), `intermediate/3.html` (a connector
   landing in empty space between two boxes), `intermediate/8.html` (two fork/merge connectors
@@ -158,7 +158,7 @@ rehearsed a version of, not just recalled the definition of.
   underlying rule already existed ("connector must be visibly longer than its own marker"), but
   the verification script above didn't check for it yet — a rule with no automated check behind
   it is as skippable as no rule. Extended the script with a marker-reach check (see
-  [`rules/diagram-style.md`](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)),
+  [`rules/diagram-style.md`](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)),
   fixed the 4 distorted fork arrows on this page, and re-ran the extended check against all 35
   pages, not just this one. All 35 pages pass with zero remaining findings as of this sweep.
 - The tier/priority calls in `roadmap.md` are a first pass through the full taxonomy — now

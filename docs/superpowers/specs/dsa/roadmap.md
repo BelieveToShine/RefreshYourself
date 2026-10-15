@@ -12,7 +12,7 @@ leaf = one page).
 
 ## Phase 4 — Tiering (by interview-question type, not difficulty)
 
-Per [`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md): tier is
+Per [`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md): tier is
 about the *shape* of the question — recall/definition is Basic, practical usage/comparison/
 troubleshooting is Intermediate, internals/performance/trade-offs/architecture/scenarios is
 Advanced — never how hard the underlying topic sounds.

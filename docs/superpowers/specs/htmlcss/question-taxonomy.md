@@ -16,7 +16,7 @@ fragmented roadmaps"* — a real HTML/CSS interview treats layout, rendering, an
 one connected surface, not two separate quizzes), internally divided into HTML, CSS
 Fundamentals, Layout, Styling & UI, and Advanced/Production sub-areas, targeting roughly 30
 concept groups for a 3-16+ year audience. Per
-[`accuracy.md`](../../rules/accuracy.md), no sub-bullet, code example, or claim beyond what's
+[`accuracy.md`](../../../rules/accuracy.md), no sub-bullet, code example, or claim beyond what's
 listed here (or the two gap-hunt additions below, both well-established textbook CSS/browser
 knowledge) gets invented independently when the actual pages are written.
 

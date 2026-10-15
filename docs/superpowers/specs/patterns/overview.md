@@ -13,10 +13,10 @@ keeping it in sync with the live pages.
   logged in the taxonomy doc — no gap found that changed the curated 13.
 - **Phases 3–6** — [`roadmap.md`](roadmap.md): one pattern per page (13 pages), tiered by GoF
   family (Creational/Structural/Behavioral — the one deliberate exception to this site's usual
-  Basic/Intermediate/Advanced split, see [`content-structure.md`](../../rules/content-structure.md)),
+  Basic/Intermediate/Advanced split, see [`content-structure.md`](../../../rules/content-structure.md)),
   prioritized 🔥/⭐/🧠 independent of family, final table in `roadmap.md`.
 - **Phase 7** — all 13 pages live on the site and on
-  [`patterns/roadmap.html`](../../../patterns/roadmap.html). Every diagram passed the mandatory
+  [`patterns/roadmap.html`](../../../../patterns/roadmap.html). Every diagram passed the mandatory
   automated verification script, run independently against every single page.
 
 ## Scope and relationship to the OOP track

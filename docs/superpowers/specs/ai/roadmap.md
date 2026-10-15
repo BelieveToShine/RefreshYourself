@@ -12,7 +12,7 @@ box), matching the granularity the source material itself used.
 
 ## Phase 4 — Tiering (by interview-question type, not difficulty)
 
-Per [`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md): tier is
+Per [`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md): tier is
 about the *shape* of the question — a recall/definition question is Basic, a comparison/applied
 question is Intermediate, a judgment/tradeoff/architecture question is Advanced — not about how
 hard the underlying topic sounds.

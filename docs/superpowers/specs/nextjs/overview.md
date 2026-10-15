@@ -6,22 +6,22 @@
 (19 concept groups) → [`roadmap.md`](roadmap.md) (tier/priority/final 58-page table) → 58
 tiered/prioritized pages (Basic 15 / Intermediate 21 / Advanced 22, the last 6 of which are a
 labeled "Next.js Scenarios" sub-block), live on the site and on
-[`nextjs/roadmap.html`](../../../nextjs/roadmap.html). Every page's diagram was independently
+[`nextjs/roadmap.html`](../../../../nextjs/roadmap.html). Every page's diagram was independently
 re-verified with the mandatory automated script — all 58 confirmed `issueCount: 0`; the sweep
 itself found and fixed 3 genuine pager-text mismatches (Basic+Intermediate) and 2 stale "coming
 soon" pager placeholders (Advanced) before re-verifying clean. Fully wired into the shared site
 files: `assets/nav-index.js`, `assets/search-index.js`, the three tier index pages,
-[`nextjs/roadmap.html`](../../../nextjs/roadmap.html), `nextjs/index.html`'s tier cards, and the
+[`nextjs/roadmap.html`](../../../../nextjs/roadmap.html), `nextjs/index.html`'s tier cards, and the
 root `index.html` tile (no longer "Coming soon").
 
 ## The full roadmap, tier by tier
 
-Live on each tier's own index page: [`nextjs/basic/index.html`](../../../nextjs/basic/index.html)
-(15, all written), [`nextjs/intermediate/index.html`](../../../nextjs/intermediate/index.html)
-(21, all written), [`nextjs/advanced/index.html`](../../../nextjs/advanced/index.html) (22, all
+Live on each tier's own index page: [`nextjs/basic/index.html`](../../../../nextjs/basic/index.html)
+(15, all written), [`nextjs/intermediate/index.html`](../../../../nextjs/intermediate/index.html)
+(21, all written), [`nextjs/advanced/index.html`](../../../../nextjs/advanced/index.html) (22, all
 written — the last 6 are the "Next.js Scenarios" sub-block). See
-[`roadmap.md`](roadmap.md#phase-6-final-roadmap) for the complete numbered table (topic, priority,
-page path) for all 58 pages, and [`nextjs/roadmap.html`](../../../nextjs/roadmap.html) for the
+[`roadmap.md`](roadmap.md#phase-6--final-roadmap) for the complete numbered table (topic, priority,
+page path) for all 58 pages, and [`nextjs/roadmap.html`](../../../../nextjs/roadmap.html) for the
 same 58 pages grouped by concept cluster instead of by tier. Not duplicated here; this file points
 to the one source of truth rather than risking drift between two copies of the same table.
 

@@ -1,6 +1,6 @@
 # AI — Question Taxonomy (Phase 1 + Phase 2 gap-hunt)
 
-Source: [`docs/topics/AI-Interview-Topics.md`](../../topics/AI-Interview-Topics.md) — a real
+Source: [`docs/topics/AI-Interview-Topics.md`](../../../topics/AI-Interview-Topics.md) — a real
 GenAI/LLM-engineering interview topic map (Parts A–E: topic map, architect focus, question bank,
 learning roadmap, usage notes) prepared for a ~15-year engineer targeting a senior GenAI/AI-architect
 role. Every group below traces back to a specific line in that source — nothing here was invented.

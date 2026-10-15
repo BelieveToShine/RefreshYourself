@@ -4,7 +4,7 @@
 Kept tightly to the user's original SQL section of the interview-prep plan — organized around
 interview questions, not a SQL tutorial, per the user's own explicit instruction for this track.
 **`[new]` marks the 12 questions added by a Phase 2 gap-hunt** (see
-[`gap-hunting.md`](../../rules/gap-hunting.md) and this file's own "Gap-hunt log" at the bottom)
+[`gap-hunting.md`](../../../rules/gap-hunting.md) and this file's own "Gap-hunt log" at the bottom)
 — this track had already gone through all 7 phases and was fully written (27 pages) before that
 hunt happened; those 12 additions are now going through Phases 3–7 of their own.
 
@@ -124,7 +124,7 @@ above, regrouped by concept — 28 questions, none altered or dropped.
 
 ## Gap-hunt log (Phase 2, run after this track was already fully built)
 
-Per [`gap-hunting.md`](../../rules/gap-hunting.md): this track's original Phase 2 was a re-read
+Per [`gap-hunting.md`](../../../rules/gap-hunting.md): this track's original Phase 2 was a re-read
 of the source list for internal consistency, not an active check against outside SQL knowledge
 for what the source list never mentioned at all. Run properly, once, after the fact — this is
 what should happen *during* Phase 2 on every track from here on, not a one-off correction.

@@ -18,11 +18,11 @@ keeping it in sync with the live pages.
 - **Phase 7 — all 27 pages written**, using the same template as every other completed track's
   Phase 7 (❓ Interview Question line → 🔥 Recall → 🧠 Visual → ⚠️ Trap → 🔄 Follow-up → 🎯
   Say-this → 📖 Explanation → 💻 Code → 🌍 Real-world/Scenario — see
-  [content-writing.md](../../rules/content-writing.md)). Every page's diagram(s) — including the
+  [content-writing.md](../../../rules/content-writing.md)). Every page's diagram(s) — including the
   two pages with two diagrams each — passed the mandatory automated verification script (see
-  [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
+  [diagram-style.md](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
   with `issueCount: 0`, run independently by the orchestrating session against every single page
-  before this track was considered done, per [build-process.md](../../rules/build-process.md).
+  before this track was considered done, per [build-process.md](../../../rules/build-process.md).
 - **Gap-hunt addendum (post Phase 7)** — an active gap-hunt against outside domain knowledge, per
   [gap-hunting.md](../../../rules/gap-hunting.md), surfaced 12 real gaps not present anywhere in
   the original source list. All 12 were added, taken through Phases 3–7 as their own mini-pass
@@ -113,7 +113,7 @@ questions that turned out to be the same investigation framed two ways (see
   matching forward-links since `efcore/` is already complete.
 - **Concurrency mechanics (Isolation Levels, Deadlock vs. Blocking, Locking) are Advanced, not
   Intermediate** — despite being commonly-used vocabulary, per
-  [interview-depth-and-priority.md](../../rules/interview-depth-and-priority.md)'s explicit
+  [interview-depth-and-priority.md](../../../rules/interview-depth-and-priority.md)'s explicit
   concurrency tag. ACID itself stays Basic — it's pure definitional recall with no concurrency
   mechanics in the question.
 - **Code examples are plain SQL**, T-SQL-flavored where a dialect choice is unavoidable (`TOP`,

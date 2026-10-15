@@ -10,21 +10,21 @@ keeping it in sync with the live pages.
   concept sections, through two independent adversarial passes (most recently commit `4831f58`).
 - **Phases 2–6** — [`roadmap.md`](roadmap.md): reviewed, deduped, grouped into 41 final pages
   (8 Basic, 15 Intermediate, 18 Advanced), tiered by **interview depth** (question *type*, not
-  difficulty — see [interview-depth-and-priority.md](../../rules/interview-depth-and-priority.md)),
+  difficulty — see [interview-depth-and-priority.md](../../../rules/interview-depth-and-priority.md)),
   and given an interview-priority tag. This orchestrating session read both documents as final
   and did not re-derive them, per the user's explicit instruction.
 - **Phase 7 — all 41 pages written**, using the same template as every other completed track's
   Phase 7 (❓ Interview Question line → 🔥 Recall → 🧠 Visual → ⚠️ Trap → 🔄 Follow-up → 🎯
   Say-this → 📖 Explanation → 💻 Code → 🌍 Real-world/Scenario — see
-  [content-writing.md](../../rules/content-writing.md)), by dedicated subagents referencing
+  [content-writing.md](../../../rules/content-writing.md)), by dedicated subagents referencing
   `csharp/basic/15.html`, `csharp/intermediate/8.html`, and `csharp/advanced/3.html` as structural
   templates. Every page's diagram(s) passed the mandatory automated verification script (see
-  [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
+  [diagram-style.md](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
   with `issueCount: 0`, run independently by the orchestrating session against every single page
   (not sampled) before this track was considered done, per
-  [build-process.md](../../rules/build-process.md).
+  [build-process.md](../../../rules/build-process.md).
 - **Gap-hunt addendum (post Phase 7)** — a second active gap-hunt against outside domain
-  knowledge, per [gap-hunting.md](../../rules/gap-hunting.md), surfaced 2 real gaps not present
+  knowledge, per [gap-hunting.md](../../../rules/gap-hunting.md), surfaced 2 real gaps not present
   anywhere across the taxonomy's already-twice-adversarially-passed 337 questions:
   `forwardRef`/`useImperativeHandle` and React 18's automatic batching/`flushSync`. Both were
   added, taken through Phases 3–7 as their own mini-pass (grouped as new taxonomy sections §36
@@ -116,7 +116,7 @@ re-review.
   "code shows the substance, not a tutorial" rule.
 - **Reconciliation & Fiber and Concurrent Rendering are tagged 🧠 Deep Dive, not 🔥 Must Know**,
   despite being conceptually central to modern React — per
-  [interview-depth-and-priority.md](../../rules/interview-depth-and-priority.md), priority tracks
+  [interview-depth-and-priority.md](../../../rules/interview-depth-and-priority.md), priority tracks
   how often an interviewer actually leads with a question, not how conceptually important the
   topic is; most interviews probe *usage* of concurrent features (Suspense, transitions) before
   asking about Fiber internals directly.

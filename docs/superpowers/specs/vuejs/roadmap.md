@@ -7,7 +7,7 @@ Phases 2–6: review, page grouping, tier, priority, and the final roadmap — s
 ## Phase 2 — Review (merges, exclusions, gap-hunt)
 
 Checked every taxonomy group against outside Vue 3 knowledge, not just re-read against itself
-(per [`gap-hunting.md`](../../rules/gap-hunting.md)). Finding: the 24 groups already cover the
+(per [`gap-hunting.md`](../../../rules/gap-hunting.md)). Finding: the 24 groups already cover the
 real shape of a Vue interview — fundamentals/directives/reactivity primitives (Basic), router/
 state-management/composables/built-in components (Intermediate), and internals/performance/SSR/
 scenarios (Advanced) — no group needed merging or splitting.
@@ -198,7 +198,7 @@ number (`vuejs/<tier>/<n>.html`).
   - Every version-specific claim (Composition API, `<script setup>`, Teleport, Fragments,
     reactivity rewrite) states Vue 3 vs. Vue 2 explicitly per the Phase 2 table above.
 - **Icon 💚** (Vue's own real-world branding motif — the green-heart "I ❤ Vue" mark — a plain
-  emoji, per [`visual-style.md`](../../rules/visual-style.md)'s "no hand-drawn logos" rule), track
+  emoji, per [`visual-style.md`](../../../rules/visual-style.md)'s "no hand-drawn logos" rule), track
   color Vue's own official brand green `#42b883` — distinct from every track color already in
   use (closest neighbors, OOP's `#16a34a` and EF Core's `#0f766e`, are a true green and a teal
   respectively; `#42b883` is a visibly lighter, mintier green between them, chosen for

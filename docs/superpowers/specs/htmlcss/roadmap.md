@@ -49,7 +49,7 @@ internals; CSS Performance owns performance internals; Overflow & Stacking owns 
 depth; Modern CSS Layout owns subgrid; CSS Fundamentals & Cascade/Specificity own cascade
 mechanics; Cross-Browser Compatibility owns rendering quirks) — folding the depth into that
 page's Explanation section is exactly what this site's "no separate Architect tier" rule (see
-[`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)) already
+[`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md)) already
 prescribes: Advanced already covers this depth, it doesn't need its own page per item.
 
 ## Phase 4 — Tier (by question type, not difficulty)

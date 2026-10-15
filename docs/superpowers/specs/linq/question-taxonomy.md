@@ -13,7 +13,7 @@ The entire raw list below is the user's own proposed roadmap, handed over alread
 concept-group taxonomy shape (matching
 [`csharp/question-taxonomy.md`](../csharp/question-taxonomy.md)'s reference format) and run a
 light gap-hunt against outside LINQ/EF Core knowledge — see
-[`gap-hunting.md`](../../rules/gap-hunting.md). Additions beyond the user's own list are marked
+[`gap-hunting.md`](../../../rules/gap-hunting.md). Additions beyond the user's own list are marked
 **[new]**. Nothing from the user's list was dropped at this phase — exclusions/merges are a Phase
 2–3 decision and live in `roadmap.md`, not here.
 

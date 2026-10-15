@@ -21,7 +21,7 @@ deliberately kept separate, same layered-depth pattern other tracks use across t
   relationship SQL's Locking/Deadlock-vs-Blocking pages have.
 
 **Active gap-hunt against outside domain knowledge** (per
-[`gap-hunting.md`](../../rules/gap-hunting.md)): 8 real gaps found and added — `enum`, the
+[`gap-hunting.md`](../../../rules/gap-hunting.md)): 8 real gaps found and added — `enum`, the
 `collections` module, the walrus operator and structural pattern matching, positional-only/
 keyword-only parameters, exception chaining, `itertools`, `pathlib` vs. `os.path`, `__slots__`,
 and free-threaded CPython (PEP 703) — full reasoning and the "considered and excluded" list are
@@ -34,7 +34,7 @@ Methods) sits in Advanced per the source, but individual questions like "`__str_
 `__repr__`" could read as Intermediate-depth comparison content on their own. Kept in Advanced —
 the group's actual framing ("how do these integrate custom objects with Python syntax") is a
 mechanism/internals question (why does `for x in obj` call `__iter__`, why does `len(obj)` call
-`__len__`), consistent with [interview-depth-and-priority.md](../../rules/interview-depth-and-priority.md)'s
+`__len__`), consistent with [interview-depth-and-priority.md](../../../rules/interview-depth-and-priority.md)'s
 Advanced definition, and it sits naturally alongside Object Model/MRO/Descriptors/Metaclasses —
 the same internals cluster — rather than beside Intermediate's practical/comparison pages.
 

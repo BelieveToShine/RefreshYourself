@@ -402,7 +402,7 @@ This is where the roadmap becomes useful for 10–16+ years / architect candidat
 
 ## Gap-hunt log
 
-Per [`gap-hunting.md`](../../rules/gap-hunting.md): the source document is already unusually
+Per [`gap-hunting.md`](../../../rules/gap-hunting.md): the source document is already unusually
 thorough for a senior/architect audience — it explicitly names version-sensitivity as a concern
 (GIL behavior) and asks for a distinct "predict the output" question type wherever behavior
 matters more than definition. That made this a moderate hunt, closer to SQL's (12 additions)

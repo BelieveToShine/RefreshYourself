@@ -6,22 +6,22 @@
 (24 concept groups) → [`roadmap.md`](roadmap.md) (tier/priority/final 62-page table) → 62
 tiered/prioritized pages (Basic 18 / Intermediate 22 / Advanced 22, the last 6 of which are a
 labeled "Vue.js Scenarios" sub-block), live on the site and on
-[`vuejs/roadmap.html`](../../../vuejs/roadmap.html). Every page's diagram was independently
+[`vuejs/roadmap.html`](../../../../vuejs/roadmap.html). Every page's diagram was independently
 re-verified with the mandatory automated script — all 62 confirmed `issueCount: 0`; the sweep
 itself found and fixed 9 genuine pager-text mismatches (Basic+Intermediate) and 1 text-overflow
 diagram defect (Advanced) before re-verifying clean. Fully wired into the shared site files:
 `assets/nav-index.js`, `assets/search-index.js`, the three tier index pages,
-[`vuejs/roadmap.html`](../../../vuejs/roadmap.html), `vuejs/index.html`'s tier cards, and the root
+[`vuejs/roadmap.html`](../../../../vuejs/roadmap.html), `vuejs/index.html`'s tier cards, and the root
 `index.html` tile (no longer "Coming soon").
 
 ## The full roadmap, tier by tier
 
-Live on each tier's own index page: [`vuejs/basic/index.html`](../../../vuejs/basic/index.html)
-(18, all written), [`vuejs/intermediate/index.html`](../../../vuejs/intermediate/index.html) (22,
-all written), [`vuejs/advanced/index.html`](../../../vuejs/advanced/index.html) (22, all
+Live on each tier's own index page: [`vuejs/basic/index.html`](../../../../vuejs/basic/index.html)
+(18, all written), [`vuejs/intermediate/index.html`](../../../../vuejs/intermediate/index.html) (22,
+all written), [`vuejs/advanced/index.html`](../../../../vuejs/advanced/index.html) (22, all
 written — the last 6 are the "Vue.js Scenarios" sub-block). See
-[`roadmap.md`](roadmap.md#phase-6-final-roadmap) for the complete numbered table (topic, priority,
-page path) for all 62 pages, and [`vuejs/roadmap.html`](../../../vuejs/roadmap.html) for the same
+[`roadmap.md`](roadmap.md#phase-6--final-roadmap) for the complete numbered table (topic, priority,
+page path) for all 62 pages, and [`vuejs/roadmap.html`](../../../../vuejs/roadmap.html) for the same
 62 pages grouped by concept cluster instead of by tier. Not duplicated here; this file points to
 the one source of truth rather than risking drift between two copies of the same table.
 

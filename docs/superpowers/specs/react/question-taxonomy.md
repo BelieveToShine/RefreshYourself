@@ -3,7 +3,7 @@
 **Phase 1 of the 7-phase pipeline** (see [`docs/superpowers/specs/README.md`](../README.md)).
 No tier lock-in, no priority, no page grouping yet. **[new]** marks anything added beyond the
 user's own detailed source outline for this track. **§36–37 mark 2 further questions added by a
-third gap-hunt pass** (see [`gap-hunting.md`](../../rules/gap-hunting.md) and this file's own
+third gap-hunt pass** (see [`gap-hunting.md`](../../../rules/gap-hunting.md) and this file's own
 "Gap-hunt log" at the bottom) — this track had already gone through all 7 phases and was fully
 written (41 pages) before that hunt happened; those 2 additions are now going through Phases 3–7
 of their own.
@@ -22,7 +22,7 @@ Because of that, this file keeps the user's own Basic → Intermediate → Advan
 top-level structure instead of the usual flat concept-group list — that grouping is a strong,
 already-considered hypothesis, not something to re-derive from nothing. **It is still only a
 hypothesis, not a locked Phase 4 tier assignment**: Phase 4 will re-check every subsection
-against [`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)'s actual
+against [`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md)'s actual
 rule (question *type*, not where it happened to sit in the source outline) before treating the
 grouping as final. In practice every subsection here already lands where that rule would put it
 anyway (fundamentals/terminology → Basic, practical/comparison/troubleshooting → Intermediate,
@@ -707,7 +707,7 @@ are real and worth *a* question, not a whole page's worth of independent visual 
 
 ## Gap-hunt log (Phase 2, run after this track was already fully built)
 
-Per [`gap-hunting.md`](../../rules/gap-hunting.md): re-running the active gap-hunt method against
+Per [`gap-hunting.md`](../../../rules/gap-hunting.md): re-running the active gap-hunt method against
 outside React knowledge — not another re-read of this file's own two already-adversarial-passed
 337 questions — specifically checking the candidate list the user handed over for this pass:
 reconciliation/fiber internals, keys pitfalls beyond `props.key`, refs (`forwardRef`,

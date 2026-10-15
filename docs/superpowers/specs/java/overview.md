@@ -18,24 +18,24 @@ for what this file is and the process for keeping it in sync with the live pages
   which are the labeled "Java Scenarios" sub-block), using the same template as every other
   completed track's Phase 7 (❓ Interview Question line → 🔥 Recall → 🧠 Visual → ⚠️ Trap → 🔄
   Follow-up → 🎯 Say-this → 📖 Explanation → 💻 Code → optional 🧭 Use Cases — see
-  [content-writing.md](../../rules/content-writing.md)). Every page's diagram was run through the
+  [content-writing.md](../../../rules/content-writing.md)). Every page's diagram was run through the
   mandatory automated verification script (see
-  [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
+  [diagram-style.md](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
   and independently re-verified — all 88 confirmed `issueCount: 0`, zero genuine diagram defects
   (two unrelated pager-link bugs were found and fixed separately). Fully wired into the shared
   site files: `assets/nav-index.js`, `assets/search-index.js`, the three tier index pages,
-  [`java/roadmap.html`](../../../java/roadmap.html), `java/index.html`'s tier cards, and the root
+  [`java/roadmap.html`](../../../../java/roadmap.html), `java/index.html`'s tier cards, and the root
   `index.html` tile (no longer "Coming soon").
 
 ## The full roadmap, tier by tier
 
 Live on each tier's own index page:
-[`java/basic/index.html`](../../../java/basic/index.html) (24, all written),
-[`java/intermediate/index.html`](../../../java/intermediate/index.html) (28, all written),
-[`java/advanced/index.html`](../../../java/advanced/index.html) (36, all written — the last 10
+[`java/basic/index.html`](../../../../java/basic/index.html) (24, all written),
+[`java/intermediate/index.html`](../../../../java/intermediate/index.html) (28, all written),
+[`java/advanced/index.html`](../../../../java/advanced/index.html) (36, all written — the last 10
 are the "Java Scenarios" sub-block). See [`roadmap.md`](roadmap.md)'s Phase 6 tables for the
 full numbered list with the Phase 2 reasoning behind each page's scope, and
-[`java/roadmap.html`](../../../java/roadmap.html) for the same 88 pages grouped by 17 concept
+[`java/roadmap.html`](../../../../java/roadmap.html) for the same 88 pages grouped by 17 concept
 clusters instead of by tier.
 
 ## Where the roadmap came from

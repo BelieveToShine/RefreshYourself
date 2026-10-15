@@ -40,7 +40,7 @@ keeping it in sync with the live pages.
   Visibility, Transitions & Animations, CSS Performance) cross-references it instead of re-teaching
   it — the same "one page owns the depth, others link back" pattern used across this whole site.
   **Diagram verification, with the actual evidence:** every subagent ran the mandatory script from
-  [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
+  [diagram-style.md](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
   against its own rendered page and reported `issueCount: 0` before finishing — several caught and
   self-fixed real defects before their own report (a text-overflow inside a diagram box on
   `intermediate/12.html`; a spacing/crowding issue on `intermediate/5.html`'s named-grid-areas
@@ -139,7 +139,7 @@ some other tracks' Phase 1 taxonomies were. This session's own Phase 2 review fo
 two real gaps (Colors/Backgrounds/Gradients, Accessibility in Practice — see Status above).
 Nothing else was invented independently of that plan or well-established, textbook-standard HTML/
 CSS/browser knowledge — see [`question-taxonomy.md`](question-taxonomy.md) for the full
-group-by-group provenance and [accuracy.md](../../rules/accuracy.md).
+group-by-group provenance and [accuracy.md](../../../rules/accuracy.md).
 
 ## Track-specific decisions and boundaries
 

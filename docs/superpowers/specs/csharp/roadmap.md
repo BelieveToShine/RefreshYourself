@@ -14,7 +14,7 @@ page ends with a scenario question — recall alone doesn't build interview conf
 "I've already thought through a version of this" does. Where a concept is relevant at
 architect depth, that shows up as an **Architecture** question inside the Advanced page for that
 concept — never a separate tier. See
-[`rules/interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md) for the
+[`rules/interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md) for the
 full audience/tier/priority definition this roadmap follows (updated 2026-09-16 from the
 narrower "3+ year developer" framing this track was first drafted under — no content below
 needed re-tiering as a result, since Advanced already meant internals/performance/concurrency;
@@ -435,7 +435,7 @@ plausible follow-up, not just the textbook definition.
 ### 2026-09-16 update — broader audience, architecture questions added
 
 The audience/tier/priority definition was refined (see
-[`rules/interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)): the
+[`rules/interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md)): the
 site targets 3+ years **through** senior/lead/architect/principal, not capped near the low end,
 and Advanced explicitly includes architecture/trade-off questions with no separate "Architect"
 tier. This didn't change any tier or priority assignment above — Advanced already meant
@@ -458,7 +458,7 @@ question, and forcing one on, say, `Span<T>`/`Memory<T>` or Unsafe code would ha
 
 ## Addendum 2026-10-06 — gap pages (Phases 2–6)
 
-Result of an active gap-hunt ([`rules/gap-hunting.md`](../../rules/gap-hunting.md)) seeded by
+Result of an active gap-hunt ([`rules/gap-hunting.md`](../../../rules/gap-hunting.md)) seeded by
 `docs/review-2026-10-06.md` §5. **Status: all pages in this addendum were written and wired on 2026-10-07.** Numbers are the next
 free number in each tier from the real files on disk (Basic 18, Intermediate 18, Advanced 13 live)
 and are permanent from now on (never renumber). Hot-first is a teaching-order/badge rule, so 🔥

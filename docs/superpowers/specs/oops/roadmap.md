@@ -22,7 +22,7 @@ specifically because it's a different kind of question (a single big scenario ap
 not a recap of the same content.
 
 ## Phase 4 — Tier (by question type, not difficulty — see
-[`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md))
+[`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md))
 
 | Tier | Count | Pages |
 |---|---|---|
@@ -70,7 +70,7 @@ actual code sample to fix.
 ## Phase 6 — Final roadmap
 
 The site's `oops/roadmap.html` groups by the same 6 concept categories as the Phase 1 taxonomy
-(not by tier — see [`rules/diagram-style.md`](../../rules/diagram-style.md) sibling decision on
+(not by tier — see [`rules/diagram-style.md`](../../../rules/diagram-style.md) sibling decision on
 C#'s roadmap for why concept-category grouping was adopted site-wide for roadmap pages). Numbering
 below is the tier-folder page number (`oops/<tier>/<n>.html`):
 
@@ -112,7 +112,7 @@ None among the original 15 pages (all written). The 11 gap pages found afterward
 
 ## Addendum 2026-10-06 — gap pages (Phases 2–6)
 
-Active gap-hunt ([`rules/gap-hunting.md`](../../rules/gap-hunting.md)) seeded by
+Active gap-hunt ([`rules/gap-hunting.md`](../../../rules/gap-hunting.md)) seeded by
 `docs/review-2026-10-06.md` §5. The Phase 2 line above ("No gaps found") reflected a re-read of the
 source list only; real interviews reliably ask the patterns/principles below. **Status: all pages in this
 addendum were written and wired on 2026-10-07** (track total now 26 = 15 original + 11 gap pages). Numbers are the next free in each tier from disk (Basic 4, Intermediate 8,

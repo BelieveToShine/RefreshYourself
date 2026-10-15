@@ -23,7 +23,7 @@ database-specific material" / "don't force every page...").
 2. **Moved "Query Syntax vs. Method Syntax: When to Use Each" (user's item 18) out of Basic and
    into Intermediate**, keeping it as its own page rather than merging it into item 1 ("What Is
    LINQ?"). Per
-   [`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md), "what is it"
+   [`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md), "what is it"
    (item 1) is Basic by definition; "which should I actually reach for, and why" (item 18) is a
    practical-usage/comparison question — Intermediate by the same rule, not Basic just because the
    underlying syntax is simple.
@@ -245,7 +245,7 @@ category, not tier — the site-wide convention). Numbering below is the tier-fo
 - **Comparison pages that have a genuine input→output visual (zero/one/many-match counts, a
   small before/after table) use that instead of a diagram** — per the user's own explicit
   recommendation and this site's existing rule that a diagram is only added where it clarifies
-  something a table/example can't (see [`diagram-style.md`](../../rules/diagram-style.md)).
+  something a table/example can't (see [`diagram-style.md`](../../../rules/diagram-style.md)).
   `First`/`FirstOrDefault`/`Single`/`SingleOrDefault` (Basic #4) and `Select`/`SelectMany`
   (Basic #2) are the two pages this applies to most directly, per the user's own worked
   examples — both get a small input/output table rather than a forced diagram.

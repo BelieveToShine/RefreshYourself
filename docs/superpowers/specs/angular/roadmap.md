@@ -11,7 +11,7 @@ Done directly inside [`question-taxonomy.md`](question-taxonomy.md) rather than 
 see that file's own "Coverage note for Phase 1" and "Gap-hunt log" sections for the full
 reasoning. Summary: nothing from the source was dropped; a handful of currency details were
 verified against Angular's current docs (`[new]`); an active gap-hunt against outside Angular
-knowledge (per [gap-hunting.md](../../rules/gap-hunting.md)) added 7 real gaps (`[gap-hunt]`) —
+knowledge (per [gap-hunting.md](../../../rules/gap-hunting.md)) added 7 real gaps (`[gap-hunt]`) —
 content projection, `@HostBinding`/`@HostListener`, `@ViewChild`/`@ContentChild` timing,
 `NgOptimizedImage`, `ng update`/breaking-change strategy, the `resource()` API family, and a new
 standalone Accessibility section — folded into existing groups except Accessibility and the
@@ -43,7 +43,7 @@ Everything else is one taxonomy group → one page.
 ## Phase 4 — Tier (by question type, not difficulty)
 
 The source's own Basic/Intermediate/Advanced grouping is kept as-is — every group already lands
-where [interview-depth-and-priority.md](../../rules/interview-depth-and-priority.md)'s actual
+where [interview-depth-and-priority.md](../../../rules/interview-depth-and-priority.md)'s actual
 rule (question type) would put it: Basic groups are pure "what is X" recall, Intermediate groups
 are practical usage/comparison/troubleshooting, Advanced groups are internals/architecture/
 scenario. The new Accessibility group is tiered Intermediate (practical/comparison/scenario

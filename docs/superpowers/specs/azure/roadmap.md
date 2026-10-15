@@ -17,13 +17,13 @@ post-gap-hunt taxonomy: 12 concept groups, 45 individual questions.
 **Near 1:1, one taxonomy question → one page**, the same granularity SQL and Angular used —
 Azure's questions are already written at "one distinct interview question" scope, so splitting or
 merging further would either pad a page with two unrelated questions (against
-[content-writing.md](../../rules/content-writing.md)'s "one topic, one page" rule) or fragment
+[content-writing.md](../../../rules/content-writing.md)'s "one topic, one page" rule) or fragment
 one real question into two thin pages. §1 Azure Fundamentals' two bullets stay as two separate
 pages despite sharing a group — the Core concept bullet ("subscription/resource group/region")
 is genuinely Basic-depth, while the Understanding bullet ("what a resource group actually
 groups — lifecycle, not just naming") is a distinct practical follow-up, landing Intermediate —
 the same "one concept, multiple tiers/pages" pattern
-[interview-depth-and-priority.md](../../rules/interview-depth-and-priority.md)'s own DI example
+[interview-depth-and-priority.md](../../../rules/interview-depth-and-priority.md)'s own DI example
 describes, not a merge. **One deliberate merge did happen:** §10 Architecture & Cost's original
 "what are cost considerations" Core concept bullet folds into the gap-hunt "cost optimization
 levers" Scenario bullet as one Advanced page — the original bullet was too generic to stand on
@@ -33,7 +33,7 @@ pages.
 
 ## Phase 4 — tier (question type, not difficulty)
 
-Per [interview-depth-and-priority.md](../../rules/interview-depth-and-priority.md): Basic = core
+Per [interview-depth-and-priority.md](../../../rules/interview-depth-and-priority.md): Basic = core
 knowledge/terminology ("what is X"), Intermediate = practical usage/comparison/troubleshooting,
 Advanced = internals/architecture/trade-off/complex scenario. A few non-obvious calls:
 

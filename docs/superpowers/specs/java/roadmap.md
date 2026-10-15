@@ -57,7 +57,7 @@ ordinary language topics."
 ## Phase 4 — Tier (by question type, not difficulty)
 
 The user's own proposal already assigns tier correctly per this site's own definition
-([`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)) — Basic =
+([`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md)) — Basic =
 "fast recall, language semantics," Intermediate = "choosing the right API and understanding
 behavior," Advanced = "internals, trade-offs and production troubleshooting." No topic needed
 re-tiering.
@@ -89,7 +89,7 @@ used verbatim. Priority for the 78 core comparison/concept topics was assigned f
 against the same definition every other track uses: 🔥 = an interviewer can reasonably expect
 this to come up; ⭐ = a strong differentiator or common follow-up; 🧠 = internals/edge cases/niche
 depth. (Note: the user's own write-up used 🔎 for the deep-dive tier; this site's fixed priority
-emoji is **🧠**, per [`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)
+emoji is **🧠**, per [`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md)
 — kept consistent with every other track rather than introducing a second deep-dive glyph.)
 
 | Priority | Basic | Intermediate | Advanced (core) |
@@ -227,7 +227,7 @@ page number (`java/<tier>/<n>.html`).
   not a fourth tier, not a separate top-level site section. This satisfies the user's own request
   to "give them their own section rather than treating them as ordinary language topics."
 - **Comparison pages that have a genuine input→output or decision-tree shape use that instead of
-  a generic three-box diagram** — per [`diagram-style.md`](../../rules/diagram-style.md)'s own
+  a generic three-box diagram** — per [`diagram-style.md`](../../../rules/diagram-style.md)'s own
   rule, chosen per-page at Phase 7 write time, not forced into one template shape across 88 pages.
 - **Technical-accuracy commitments locked in before Phase 7 starts** (restated here so a future
   session enforcing `accuracy.md` on this track doesn't have to re-derive them):
@@ -251,7 +251,7 @@ page number (`java/<tier>/<n>.html`).
     table above — never left unqualified as if it always existed.
 - **Code examples are Java**, matching every other track's "code examples match the track's own
   language" convention (C# for C#/LINQ/.NET/EF Core/Web API, SQL for SQL, etc.).
-- Icon ☕ (a real emoji, per [`visual-style.md`](../../rules/visual-style.md)'s "plain emoji only"
+- Icon ☕ (a real emoji, per [`visual-style.md`](../../../rules/visual-style.md)'s "plain emoji only"
   rule — thematically exact for Java/coffee), track color a deep coffee-brown (`#78350f` ink on
   `#fffbeb` bg) — distinct from every track color already in use (closest neighbors are the
   existing ambers, both meaningfully lighter/more orange than this deep brown).

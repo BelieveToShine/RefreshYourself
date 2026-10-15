@@ -707,7 +707,7 @@ Kept deliberately small, but not omitted — AWS explicitly treats it as one of 
 
 ## Gap-hunt log
 
-Per [`gap-hunting.md`](../../rules/gap-hunting.md): the source document is unusually thorough
+Per [`gap-hunting.md`](../../../rules/gap-hunting.md): the source document is unusually thorough
 already — it explicitly cites current (2026) interview material and AWS's own Well-Architected
 guidance, and self-audits its own scope (six pillars woven through Advanced rather than isolated,
 explicit "don't cover 200+ services" instruction). That made this a smaller hunt than SQL's (12

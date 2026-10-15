@@ -14,7 +14,7 @@ session did not independently verify each individual claim against outside sourc
 DSA's or Azure's own gap-hunts did, because the user had already done that cross-check pass
 themselves and asked this session to build from it directly ("I checked current interview-prep
 material and recent developer discussions before shaping this"). Per
-[`accuracy.md`](../../rules/accuracy.md), no sub-bullet, code example, or claim beyond what's
+[`accuracy.md`](../../../rules/accuracy.md), no sub-bullet, code example, or claim beyond what's
 listed here gets invented independently when the actual pages are written — anything a page
 needs beyond this list (a code snippet, a specific browser behavior) has to be well-established,
 textbook-standard JavaScript/browser knowledge, same bar as every other track this session built.

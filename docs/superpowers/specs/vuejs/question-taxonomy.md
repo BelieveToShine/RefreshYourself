@@ -4,7 +4,7 @@
 No tier lock-in, no priority, no page grouping yet. This track's own groupings below already sit
 in Basic/Intermediate/Advanced order (same convention as `react/question-taxonomy.md`) since the
 natural concept clusters already land where
-[`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)'s question-type
+[`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md)'s question-type
 rule would put them anyway — Phase 4 still re-checks this rather than taking it on faith.
 
 Every bullet is tagged by question type, same vocabulary as every other track: **Core concept**

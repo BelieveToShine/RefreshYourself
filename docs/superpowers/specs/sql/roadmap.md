@@ -43,7 +43,7 @@ reference belongs on that side, not this one.
 
 ## Phase 2 addendum — gap-hunt, run after Phase 7 had already completed
 
-Per [`gap-hunting.md`](../../rules/gap-hunting.md): the original Phase 2 above was a re-read of
+Per [`gap-hunting.md`](../../../rules/gap-hunting.md): the original Phase 2 above was a re-read of
 the source list for internal consistency, not an active check against outside SQL knowledge —
 it never had a step that could catch a topic the source list simply never mentioned. A proper
 gap-hunt, run once this was written down as a rule, found **12 real, commonly-asked SQL
@@ -105,7 +105,7 @@ Bold entries are the 12 gap-hunt additions. Tier reasoning for them:
 Reasoning for the less-obvious calls:
 
 - **Concurrency mechanics (Isolation Levels, Deadlock vs. Blocking, Locking) are all Advanced,
-  not Intermediate** — [`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)
+  not Intermediate** — [`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md)
   names concurrency explicitly as Advanced-tier territory regardless of how often the terms get
   used day-to-day. **ACID stays Basic** even though it sits in the same taxonomy group, because it's
   pure definitional recall ("what does each letter guarantee") with no concurrency mechanics in
@@ -218,7 +218,7 @@ New totals at that point: **Basic 15, Intermediate 16, Advanced 8 — 39 pages**
   explanation stays conceptual. Called out per-page only where a dialect difference would
   actually mislead (e.g. `LIMIT` vs. `OFFSET/FETCH`).
 - Icon is 🗃️, track color slate (`#334155` ink on `#e2e8f0` bg) — a new, previously-unused pick
-  per [build-process.md](../../rules/build-process.md)'s reserved-colors list (🗄️ teal is already
+  per [build-process.md](../../../rules/build-process.md)'s reserved-colors list (🗄️ teal is already
   EF Core's).
 
 ## Known gaps
@@ -228,7 +228,7 @@ the next and only remaining Phase 7 work for this track.
 
 ## Addendum 2026-10-06 — gap pages (Phases 2–6)
 
-Source: [`review-2026-10-06.md`](../../../review-2026-10-06.md) §5 candidate list, checked against the
+Source: [`review-2026-10-06.md`](../../../archive/review-2026-10-06.md) §5 candidate list, checked against the
 39 live pages (grep of `sql/*`) per [`gap-hunting.md`](../../../rules/gap-hunting.md). Existing pages are
 **not edited**; each gap takes the next free number in its tier (numbering is permanent — recounted
 from disk: Basic 15, Intermediate 16, Advanced 8 before this addendum). T-SQL flavour throughout.

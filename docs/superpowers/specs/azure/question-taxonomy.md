@@ -171,7 +171,7 @@ Intermediate/Advanced depth on top of the concepts above.
 
 ## Gap-hunt log (Phase 2)
 
-Per [gap-hunting.md](../../rules/gap-hunting.md): the question asked for every candidate below was
+Per [gap-hunting.md](../../../rules/gap-hunting.md): the question asked for every candidate below was
 "if I opened a genuinely thorough, senior-level Azure interview-prep reference, would this be in
 it, and is it already covered above under a different name?" — not a re-read of the 11 groups for
 internal consistency.
@@ -182,7 +182,7 @@ internal consistency.
 |---|---|---|
 | Microsoft Entra ID (Azure AD) fundamentals — app registration, OAuth2/OIDC | §4 Identity & Secrets | Completely absent from the Phase 1 taxonomy despite being foundational identity knowledge every Azure interview eventually touches; was in the old frozen roadmap and got dropped in the Phase 1 simplification, but its total absence (not just a lighter treatment) is a real gap. |
 | RBAC — roles, scope, least privilege | §4 Identity & Secrets | Same as above — extremely commonly asked ("how do you control who can do what on a resource"), and Key Vault's own access-pattern question (below) depends on the reader already knowing what RBAC is. |
-| Managed Identity vs. Service Principal | §4 Identity & Secrets | The taxonomy already asks "what is Managed Identity" but never asks the comparison question an interviewer actually reaches for once they hear "Managed Identity" — a Comparison layer per [interview-depth-and-priority.md](../../rules/interview-depth-and-priority.md) that was simply missing. |
+| Managed Identity vs. Service Principal | §4 Identity & Secrets | The taxonomy already asks "what is Managed Identity" but never asks the comparison question an interviewer actually reaches for once they hear "Managed Identity" — a Comparison layer per [interview-depth-and-priority.md](../../../rules/interview-depth-and-priority.md) that was simply missing. |
 | Key Vault access patterns (RBAC vs. access policies, Managed Identity integration) | §4 Identity & Secrets | The existing Key Vault bullet asks "what belongs in it," never "how does something actually reach it without a stored credential" — the practical mechanics question a real interview follows up with. |
 | Containers on Azure — ACI vs. Container Apps vs. AKS | §2 Compute | §2 only covered App Service and Functions; containers are one of the most commonly asked "which compute option, when" questions in a current Azure interview and had zero presence. |
 | Durable Functions orchestration patterns | §2 Compute | A distinct, commonly-asked Intermediate-depth question beyond "what is a Function" — orchestrator/activity/entity patterns solve a real state-management problem plain Functions can't. |

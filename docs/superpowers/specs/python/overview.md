@@ -40,7 +40,7 @@ keeping it in sync with the live pages.
   `intermediate/5.html`, `advanced/8.html`, `advanced/10.html`.
   **Diagram verification, with the actual evidence, not just an aggregate claim:** every
   subagent ran the mandatory script from
-  [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
+  [diagram-style.md](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
   against its own page and reported `issueCount: 0` before finishing — several subagents caught
   and self-fixed real defects before their own report (a text-overflow on `basic/1.html`'s
   compile-time/run-time zone diagram; short arrow segments on `intermediate/2.html` and

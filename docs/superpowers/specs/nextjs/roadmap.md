@@ -22,7 +22,7 @@ engine), or between `linq/` (the language feature) and `csharp/` (the language).
 sources, not recalled from memory alone**, per this site's own accuracy rule — this table is the
 single most important part of this track's Phase 2, since Next.js's own caching/rendering
 defaults changed meaningfully between major versions and a stale claim here would be exactly the
-kind of error [`accuracy.md`](../../rules/accuracy.md) exists to prevent:
+kind of error [`accuracy.md`](../../../rules/accuracy.md) exists to prevent:
 
 | Fact | Detail |
 |---|---|
@@ -189,7 +189,7 @@ number (`nextjs/<tier>/<n>.html`).
   - Server Actions are described as real HTTP endpoints under the hood (POST requests to an
     action ID) — never implied to be a safely-hidden, un-callable server-only function.
 - **Icon ⏭️** (the "next" media-control emoji — a direct, plain-emoji pun on the framework's own
-  name, per [`visual-style.md`](../../rules/visual-style.md)'s "no hand-drawn logos" rule), track
+  name, per [`visual-style.md`](../../../rules/visual-style.md)'s "no hand-drawn logos" rule), track
   color a near-black `#171717` — Next.js's own real brand identity is black-and-white
   minimalism, and this is genuinely distinct from every saturated-hue track color already in use
   (the closest existing neighbor, SQL's slate `#334155`, is a lighter blue-gray, not a true

@@ -29,12 +29,12 @@ for what this file is and the process for keeping it in sync with the live pages
   several pages per subagent) to keep each page's content brief accuracy-checked individually.
   Every content brief was grounded in `AI-Interview-Topics.md` or well-established GenAI-
   engineering practice, with an explicit "don't invent specifics" instruction per
-  [accuracy.md](../../rules/accuracy.md) — no fabricated tool names, version numbers, benchmark
+  [accuracy.md](../../../rules/accuracy.md) — no fabricated tool names, version numbers, benchmark
   figures, or legal-clause-level claims (Responsible AI's EU AI Act mention stays at
   "know it exists and roughly why it matters," not detailed legal advice).
   **Diagram verification, with the actual evidence, not just an aggregate claim:** every
   subagent ran the mandatory script from
-  [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
+  [diagram-style.md](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
   against its own page and reported `issueCount: 0` before finishing — several caught and
   self-fixed real defects before their own report (a text-overflow in `ai/intermediate/15.html`'s
   `IChatClient` box; a text-overflow in `ai/advanced/12.html`'s "pulls when free" label pill).
@@ -143,12 +143,12 @@ Sourced directly from `docs/topics/AI-Interview-Topics.md` — a real GenAI/LLM 
 interview topic map provided by the user from another experienced session. Every row above
 traces back to that source file or to a Phase 2 gap-hunt finding folded into an existing page
 (see [`question-taxonomy.md`](question-taxonomy.md)'s Gap-hunt log) — nothing was invented. See
-[accuracy.md](../../rules/accuracy.md).
+[accuracy.md](../../../rules/accuracy.md).
 
 ## Track-specific decisions and boundaries
 
 - Icon 🤖 (plain emoji, no brand logo) — consistent with the site-wide rule in
-  [visual-style.md](../../rules/visual-style.md).
+  [visual-style.md](../../../rules/visual-style.md).
 - Tile/tier accent color `#c026d3` (magenta/fuchsia) — distinct from every other track's color,
   used consistently across all 48 pages, the three tier index pages, the root tile, and
   `ai/roadmap.html`.

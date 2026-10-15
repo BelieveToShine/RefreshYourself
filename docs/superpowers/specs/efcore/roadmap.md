@@ -73,7 +73,7 @@ Reasoning for the less-obvious calls:
   which is a step past pure definitional recall.
 - **"Optimistic Concurrency & Row Versioning" is Advanced** — concurrency questions are named
   explicitly as Advanced-tier territory in
-  [`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md), regardless of
+  [`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md), regardless of
   how "basic" a row-version column looks in code.
 - **"Compiled Queries" and "Query Splitting" are Advanced** — both are performance-tuning
   techniques reached for only after a real measured problem, not day-to-day usage.
@@ -141,7 +141,7 @@ None among the original 21 pages (all written); the 14 gap pages found afterward
 
 ## Addendum 2026-10-06 — gap pages (Phases 2–6)
 
-Source: [`review-2026-10-06.md`](../../../review-2026-10-06.md) §5 candidate list, checked against the
+Source: [`review-2026-10-06.md`](../../../archive/review-2026-10-06.md) §5 candidate list, checked against the
 21 live pages (grep of `efcore/*`) per [`gap-hunting.md`](../../../rules/gap-hunting.md). Existing pages are
 **not edited**; each gap gets a new page taking the next free number in its tier (numbering is
 permanent — recounted from disk: Basic 7, Intermediate 8, Advanced 6 before this addendum). Tier =

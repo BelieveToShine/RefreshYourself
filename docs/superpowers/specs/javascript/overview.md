@@ -41,7 +41,7 @@ keeping it in sync with the live pages.
   include at least one 'What happens?', 'Predict the output', 'Compare these two', or 'How would
   you solve this in production?' question."*
   **Diagram verification, with the actual evidence:** every subagent ran the mandatory script
-  from [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
+  from [diagram-style.md](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
   against its own page and reported `issueCount: 0` before finishing — several caught and
   self-fixed real defects before their own report (an HTML `<code>` tag invalidly nested inside
   an SVG `<text>` element on 3 separate pages, breaking everything after it in the SVG; a
@@ -150,7 +150,7 @@ review found and folded in one real gap (Testing Fundamentals) and reconciled tw
 overview-tree-vs-detailed-breakdown mismatches (see Status above). Nothing else was invented
 independently of that exchange or well-established, textbook-standard JavaScript/browser
 knowledge — see [`question-taxonomy.md`](question-taxonomy.md) for the full group-by-group
-provenance and [accuracy.md](../../rules/accuracy.md).
+provenance and [accuracy.md](../../../rules/accuracy.md).
 
 ## Track-specific decisions and boundaries
 

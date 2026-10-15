@@ -112,6 +112,6 @@ Hand-wiring each page into five places is slow and error-prone. For a batch:
 `node scripts/check-site.js` validates, across every track: every written page is in
 `search-index.js`, `nav-index.js`, its tier index and `roadmap.html`; `data-root`/`data-tier-key`
 are right; each page has a diagram and the core sections; every local `href`/`src` resolves;
-every page carries the head/a11y boilerplate; Prev/Next pagers link the right neighbours (`fix-pagers.js`); `docs/status.md` is current and the counts in `track-history.md` / `specs/README.md` match disk; every rule file is indexed. It does
+every page carries the head/a11y boilerplate; Prev/Next pagers link the right neighbours (`fix-pagers.js`); `docs/status.md` is current and the counts in `track-history.md` / `specs/README.md` match disk; every rule file is indexed; every relative link (and `#anchor`) in `CLAUDE.md` and `docs/**/*.md` resolves; the homepage hero stats match. It does
 **not** replace the mandatory live-browser diagram verification in
 [`diagram-style.md`](diagram-style.md) — that needs a rendered page.

@@ -16,7 +16,7 @@ keeping it in sync with the live pages.
   CloudFront & Content Delivery — full reasoning in `question-taxonomy.md`'s Gap-hunt log),
   grouped into 44 final pages, tiered by **interview depth** (the source's own
   Basic/Intermediate/Advanced grouping held up against
-  [interview-depth-and-priority.md](../../rules/interview-depth-and-priority.md)'s actual rule
+  [interview-depth-and-priority.md](../../../rules/interview-depth-and-priority.md)'s actual rule
   with no changes needed), and given an interview-priority tag (two groups had a dual priority
   hint in the source and needed an explicit single-value resolution — see `roadmap.md`'s Phase 5
   section for both). This phase's own work also produced a "Phase 6 addendum" mapping all 44
@@ -29,12 +29,12 @@ keeping it in sync with the live pages.
 - **Phase 7 — all 44 pages written**, using the same template as every other completed track's
   Phase 7 (❓ Interview Question line → 🔥 Recall → 🧠 Visual → ⚠️ Trap → 🔄 Follow-up → 🎯
   Say-this → 📖 Explanation → 💻 Code → 🌍 Real-world/Scenario — see
-  [content-writing.md](../../rules/content-writing.md)), by dispatched subagents referencing
+  [content-writing.md](../../../rules/content-writing.md)), by dispatched subagents referencing
   `azure/basic/1.html` / `azure/intermediate/1.html` / `azure/advanced/1.html` as structural
   templates — the closest track at the same scale (44 pages) with the right commit cadence.
   **Diagram verification, with the actual evidence, not just an aggregate claim:** every
   subagent ran the mandatory script from
-  [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
+  [diagram-style.md](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
   against its own page and reported `issueCount: 0` before finishing — several subagents caught
   and self-fixed real defects before their own report (a rect overlap + text overflow on
   `basic/5.html`'s Block-Public-Access diagram; a short dashed-connector-vs-marker-reach finding

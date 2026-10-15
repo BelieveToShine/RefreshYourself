@@ -12,7 +12,7 @@ keeping it in sync with the live pages.
   troubleshooting scenarios, per the user's own instruction. The old, more service-encyclopedic
   three-tier roadmap (0 topics ever written against it) is fully superseded.
 - **Phase 2 gap-hunt** — an active hunt against outside Azure domain knowledge (per
-  [gap-hunting.md](../../rules/gap-hunting.md)), not a re-read of the 11 original groups. Added
+  [gap-hunting.md](../../../rules/gap-hunting.md)), not a re-read of the 11 original groups. Added
   16 real gaps — Microsoft Entra ID fundamentals, RBAC, Managed Identity vs. Service Principal,
   Key Vault access patterns, containers (ACI/Container Apps/AKS), Durable Functions, Cosmos DB
   (partitioning + consistency levels), Service Bus vs. Event Grid vs. Event Hubs, Azure Monitor
@@ -36,11 +36,11 @@ keeping it in sync with the live pages.
 - **Phase 7 — all 44 pages written**, using the same template as every other completed track's
   Phase 7 (❓ Interview Question line → 🔥 Recall → 🧠 Visual → ⚠️ Trap → 🔄 Follow-up → 🎯
   Say-this → 📖 Explanation → 💻 Code → 🌍 Real-world/Scenario — see
-  [content-writing.md](../../rules/content-writing.md)), by dispatched subagents referencing
+  [content-writing.md](../../../rules/content-writing.md)), by dispatched subagents referencing
   `sql/basic/1.html` / `sql/intermediate/1.html` / `sql/advanced/1.html` as structural templates.
   **Diagram verification, with the actual evidence, not just an aggregate claim:** every
   subagent ran the mandatory script from
-  [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
+  [diagram-style.md](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
   against its own page and reported `issueCount: 0` before finishing. The orchestrating session
   then ran its own **independent full sweep, one page at a time, all 44 pages** — this is where
   a real defect actually showed up despite every subagent's own clean self-report:

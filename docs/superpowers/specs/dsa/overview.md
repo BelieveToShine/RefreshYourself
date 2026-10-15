@@ -36,7 +36,7 @@ for what this file is and the process for keeping it in sync with the live pages
   concept, decision, pattern, comparison, or problem-solving technique."*
   **Diagram verification, with the actual evidence, not just an aggregate claim:** every subagent
   ran the mandatory script from
-  [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
+  [diagram-style.md](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification)
   against its own page and reported `issueCount: 0` before finishing — several caught and
   self-fixed real defects before their own report (a label overlapping a bracket stroke in
   `intermediate/5.html`'s recursion-tree diagram; a motion-token briefly obscuring a node label in
@@ -136,7 +136,7 @@ found 2 more real gaps (reservoir sampling, Bloom filters), both folded into the
 Large-Dataset Problems page. Nothing was invented independently of that exchange or
 well-established, textbook-standard CS/algorithms knowledge — see
 [`question-taxonomy.md`](question-taxonomy.md) for the full group-by-group provenance and
-[accuracy.md](../../rules/accuracy.md).
+[accuracy.md](../../../rules/accuracy.md).
 
 ## Track-specific decisions and boundaries
 

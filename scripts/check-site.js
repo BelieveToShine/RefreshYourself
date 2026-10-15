@@ -121,6 +121,24 @@ for (const f of fs.readdirSync(path.join(ROOT, "docs/rules")).filter((f) => f.en
 for (const t of TRACKS) for (const f of ["overview.md", "roadmap.md", "question-taxonomy.md"])
   if (!exists(`docs/superpowers/specs/${t}/${f}`)) err(`missing docs/superpowers/specs/${t}/${f}`);
 
+// every relative link in the markdown docs must resolve (file, and #anchor when it points at a .md heading)
+{
+  const slug = (h) => h.trim().toLowerCase().replace(/[`*_]/g, "").replace(/[^\p{L}\p{N}_\- ]/gu, "").replace(/ /g, "-");
+  const anchorCache = {};
+  const anchorsOf = (abs) => anchorCache[abs] || (anchorCache[abs] = new Set(fs.readFileSync(abs, "utf8").split("\n").map((l) => l.match(/^#{1,6}\s+(.*)/)).filter(Boolean).map((m) => slug(m[1]))));
+  const mdFiles = ["CLAUDE.md"];
+  (function walkMd(d) { for (const f of fs.readdirSync(path.join(ROOT, d))) { const rel = d + "/" + f, st = fs.statSync(path.join(ROOT, rel)); if (st.isDirectory()) walkMd(rel); else if (f.endsWith(".md")) mdFiles.push(rel); } })("docs");
+  for (const f of mdFiles) {
+    const text = read(f).replace(/```[\s\S]*?```/g, "");
+    for (const m of text.matchAll(/\]\(([^)\s]+)\)/g)) {
+      const u = m[1]; if (/^(https?:|mailto:)/.test(u)) continue;
+      const [p, frag] = u.split("#"), abs = p ? path.resolve(ROOT, path.dirname(f), p) : path.join(ROOT, f);
+      if (!fs.existsSync(abs)) err(`${f}: broken link ${u}`);
+      else if (frag && abs.endsWith(".md") && !anchorsOf(abs).has(frag)) err(`${f}: broken anchor ${u}`);
+    }
+  }
+}
+
 // pagers must link the neighbouring pages (node scripts/fix-pagers.js --fix repairs them)
 { const pr = require("child_process").spawnSync(process.execPath, [path.join(__dirname, "fix-pagers.js")], { encoding: "utf8" }); if (pr.status !== 0) pr.stdout.split(String.fromCharCode(10)).filter((l) => l.includes(": prev") || l.includes(": next") || l.includes("unexpected")).forEach((l) => err("pager: " + l + " — run node scripts/fix-pagers.js --fix")); }
 

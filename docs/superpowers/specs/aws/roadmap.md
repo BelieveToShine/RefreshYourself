@@ -19,7 +19,7 @@ deliberately kept separate, same pattern as other tracks' layered-depth topics:
   Transit Gateway, PrivateLink, hybrid connectivity. Kept separate and cross-linked, not merged.
 
 **Active gap-hunt against outside domain knowledge** (per
-[`gap-hunting.md`](../../rules/gap-hunting.md)): the source document is unusually thorough
+[`gap-hunting.md`](../../../rules/gap-hunting.md)): the source document is unusually thorough
 already — it explicitly cites 2026 interview material and AWS's current Well-Architected
 guidance, and self-audits its own scope. Six real, narrow gaps were found and added (Bastion/
 Session Manager, ACM+HTTPS, a whole new CloudFront group, Cognito, EFS, RDS Proxy + a Step
@@ -39,7 +39,7 @@ a single group is clearly two distinct pages' worth of content, which none of th
 ## Phase 4 — Tier (by question type, not difficulty)
 
 The source's own Basic/Intermediate/Advanced grouping is kept as-is — every group already lands
-where [interview-depth-and-priority.md](../../rules/interview-depth-and-priority.md)'s actual
+where [interview-depth-and-priority.md](../../../rules/interview-depth-and-priority.md)'s actual
 rule (question type, not difficulty or seniority) would put it: Basic groups are "what is X"
 core-knowledge recall, Intermediate groups are practical usage/comparison/troubleshooting,
 Advanced groups are internals/architecture/scenario/trade-off. The new CloudFront group is tiered

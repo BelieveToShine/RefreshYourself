@@ -59,7 +59,7 @@ Reasoning for the less-obvious calls:
   sources layer) rather than deep internals/performance/concurrency content — that's genuinely
   what ASP.NET Core interview prep at this depth looks like, and the depth rule's Intermediate
   bucket ("practical usage, implementation, comparisons, troubleshooting") is exactly where that
-  content sits. Per [`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md),
+  content sits. Per [`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md),
   Advanced questions aren't invented just to round out a tier distribution.
 - **"Kestrel & Reverse Proxies" is Advanced** — "why shouldn't Kestrel be exposed directly to the
   internet" is a production-architecture/trade-off question, not a practical how-to.

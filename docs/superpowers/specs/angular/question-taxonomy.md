@@ -6,16 +6,16 @@ already Basic/Intermediate/Advanced-organized outline for this track (36 content
 as the top-level structure below, same treatment React's own source outline got, since it's a
 strong, already-considered hypothesis, not something to re-derive from nothing. Phase 4 will
 re-check every group against
-[`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)'s actual rule
+[`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md)'s actual rule
 (question *type*, not where it happened to sit in the source) before treating the grouping as
 final — in practice every group here already lands where that rule would put it anyway.
 
 **`[new]`** marks anything added or updated beyond the literal source wording during this initial
 authoring pass (mostly currency fixes — verifying an API detail against current Angular docs
-before asserting it, per [accuracy.md](../../rules/accuracy.md)) — this is a **separate,
+before asserting it, per [accuracy.md](../../../rules/accuracy.md)) — this is a **separate,
 smaller set** from the active gap-hunt additions, which are logged and tagged **`[gap-hunt]`**
 in this file's own "Gap-hunt log" section at the bottom, per
-[gap-hunting.md](../../rules/gap-hunting.md).
+[gap-hunting.md](../../../rules/gap-hunting.md).
 
 Every bullet is tagged by question type using this site's standard vocabulary: **Core concept**
 ("what is it"), **Comparison** ("X vs. Y"), **Understanding** (mechanism/why, including
@@ -622,12 +622,12 @@ from the source was dropped. A handful of bullets were tightened for phrasing co
 the rest of the site (never changing what's actually being asked). Several currency details were
 verified against Angular's own current documentation before being written in (Signal Forms'
 stable status, `provideZonelessChangeDetection()`'s exact name and default status, and the
-Angular v22 `OnPush`-by-default change), tagged `[new]`, per [accuracy.md](../../rules/accuracy.md) —
+Angular v22 `OnPush`-by-default change), tagged `[new]`, per [accuracy.md](../../../rules/accuracy.md) —
 none of these change what the source was already asking, they update *how current* the answer is.
 
 ## Gap-hunt log (Phase 2)
 
-Per [gap-hunting.md](../../rules/gap-hunting.md): before treating this taxonomy as complete,
+Per [gap-hunting.md](../../../rules/gap-hunting.md): before treating this taxonomy as complete,
 actively asked what a thorough senior/staff-level Angular interview reference would cover that
 the source outline — despite explicitly self-auditing for both modern and enterprise Angular —
 doesn't mention anywhere. The source is unusually thorough already (36 groups, explicit

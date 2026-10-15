@@ -17,23 +17,23 @@ for what this file is and the process for keeping it in sync with the live pages
   which are the labeled "LINQ Scenarios" sub-block), using the same template as every other
   completed track's Phase 7 (❓ Interview Question line → 🔥 Recall → 🧠 Visual → ⚠️ Trap → 🔄
   Follow-up → 🎯 Say-this → 📖 Explanation → 💻 Code → optional 🧭 Use Cases — see
-  [content-writing.md](../../rules/content-writing.md)). Every page's diagram was run through the
+  [content-writing.md](../../../rules/content-writing.md)). Every page's diagram was run through the
   mandatory automated verification script (see
-  [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
+  [diagram-style.md](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
   and independently re-verified — all 59 confirmed `issueCount: 0`, zero genuine defects. Fully
   wired into the shared site files: `assets/nav-index.js`, `assets/search-index.js`, the three
-  tier index pages, [`linq/roadmap.html`](../../../linq/roadmap.html), `linq/index.html`'s tier
+  tier index pages, [`linq/roadmap.html`](../../../../linq/roadmap.html), `linq/index.html`'s tier
   cards, and the root `index.html` tile (no longer "Coming soon").
 
 ## The full roadmap, tier by tier
 
 Live on each tier's own index page:
-[`linq/basic/index.html`](../../../linq/basic/index.html) (14, all written),
-[`linq/intermediate/index.html`](../../../linq/intermediate/index.html) (17, all written),
-[`linq/advanced/index.html`](../../../linq/advanced/index.html) (28, all written — the last 11
+[`linq/basic/index.html`](../../../../linq/basic/index.html) (14, all written),
+[`linq/intermediate/index.html`](../../../../linq/intermediate/index.html) (17, all written),
+[`linq/advanced/index.html`](../../../../linq/advanced/index.html) (28, all written — the last 11
 are the "LINQ Scenarios" sub-block). See [`roadmap.md`](roadmap.md)'s Phase 6 tables for the
 full numbered list with the Phase 2 merge/exclusion reasoning behind each page's scope, and
-[`linq/roadmap.html`](../../../linq/roadmap.html) for the same 59 pages grouped by concept
+[`linq/roadmap.html`](../../../../linq/roadmap.html) for the same 59 pages grouped by concept
 cluster instead of by tier.
 
 ## Where the roadmap came from

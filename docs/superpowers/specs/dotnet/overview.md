@@ -29,9 +29,9 @@ diagrams verified `issueCount: 0` against the live rendered page. Full rationale
 - **Phase 7 — all 23 pages written**, using the same template as C#'s and OOP's Phase 7 (❓
   Interview Question line → 🔥 Recall → 🧠 Visual → ⚠️ Trap → 🔄 Follow-up → 🎯 Say-this → 📖
   Explanation → 💻 Code → 🌍 Real-world/Scenario — see
-  [content-writing.md](../../rules/content-writing.md)). Every page's diagram was run through the
+  [content-writing.md](../../../rules/content-writing.md)). Every page's diagram was run through the
   mandatory automated verification script (see
-  [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
+  [diagram-style.md](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
   before this track was considered done.
 
 ## Basic (9 topics) — 9 written
@@ -104,7 +104,7 @@ coverage note. No topics invented beyond the source list.
 - **This track skews heavily Intermediate (16 of 23 pages at Phase 7; 25 of 38 after the 2026-10-07 additions)** — deliberately not rebalanced to
   force a more even tier spread. The source material is practical framework-usage knowledge
   (DI lifetimes, middleware, config, MVC wiring), which is genuinely Intermediate-depth content
-  per [`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md); only two
+  per [`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md); only two
   pages (Kestrel/reverse-proxy architecture, model-binding internals) reach Advanced-depth
   content in the given source.
 - **"Filters, CORS, HTTPS & Logging" (Basic; since 2026-10-07 retitled "Filters — Hooks Around an Action") does NOT cover global exception handling** — that

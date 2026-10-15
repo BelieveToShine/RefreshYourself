@@ -12,9 +12,9 @@ keeping it in sync with the live pages.
   Comparison/Understanding/Scenario format. A few currency details (Signal Forms' stable status,
   `provideZonelessChangeDetection()`'s default status, Angular v22's `OnPush`-by-default change)
   were verified against Angular's own current documentation before being written in, per
-  [accuracy.md](../../rules/accuracy.md).
+  [accuracy.md](../../../rules/accuracy.md).
 - **Phase 2 gap-hunt** — done in the same initial pass (per
-  [gap-hunting.md](../../rules/gap-hunting.md)): actively checked against outside Angular
+  [gap-hunting.md](../../../rules/gap-hunting.md)): actively checked against outside Angular
   knowledge rather than re-reading the source. Added 7 real gaps — content projection,
   `@HostBinding`/`@HostListener`, `@ViewChild`/`@ContentChild` timing, `NgOptimizedImage`,
   `ng update` strategy, the `resource()`/`httpResource()`/`rxResource()` API family, and a new
@@ -30,10 +30,10 @@ keeping it in sync with the live pages.
 - **Phase 7 — all 43 pages written**, using the same template as every other completed track's
   Phase 7 (❓ Interview Question line → 🔥 Recall → 🧠 Visual → ⚠️ Trap → 🔄 Follow-up → 🎯
   Say-this → 📖 Explanation → 💻 Code → 🌍 Real-world/Scenario — see
-  [content-writing.md](../../rules/content-writing.md)), by dispatched subagents referencing
+  [content-writing.md](../../../rules/content-writing.md)), by dispatched subagents referencing
   `csharp/basic/15.html` / `csharp/intermediate/8.html` / `csharp/advanced/3.html` as structural
   templates. Every page's diagram passed the mandatory automated verification script (see
-  [diagram-style.md](../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
+  [diagram-style.md](../../../rules/diagram-style.md#mandatory-automated-verification--hand-computed-coordinates-are-not-verification))
   with `issueCount: 0`, run independently by the orchestrating session against every single page
   before this track was considered done. Every one of the 43 pages carries exactly one
   `svg.topic-diagram` (no page in this track needed a second diagram). **Re-confirmed 2026-09-17

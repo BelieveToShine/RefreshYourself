@@ -74,7 +74,7 @@ even after Phase 1's additions.
 
 The source outline's own Basic/Intermediate/Advanced placement is kept as-is for every section —
 it was checked against
-[`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)'s actual rule
+[`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md)'s actual rule
 (core knowledge → practical/comparison/troubleshooting → internals/performance/architecture/
 scenario) during Phase 1 and already matches it; nothing needed to move tiers.
 
@@ -92,7 +92,7 @@ copied blindly.
 
 **One deliberate override, flagged rather than silently applied**: the source hinted "🧠 Deep
 Dive" for React Architecture. Per
-[`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)'s own explicit
+[`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md)'s own explicit
 warning against conflating priority with how deep an answer goes, "how would you structure a
 large React app" is asked routinely at senior level — that's a 🔥 likelihood question with a
 🧠-deep answer, not a 🧠-priority question. Tagged 🔥 here for the Structure page; the "Beyond
@@ -166,7 +166,7 @@ section, not tier — the site-wide convention). Numbering below is the tier-fol
 New totals at that point: **Basic 8, Intermediate 17, Advanced 18 — 43 pages** (now 47 after the 2026-10-07 gap pages: Intermediate 21).
 
 Both tiered Intermediate, not Basic or Advanced: each is a practical-usage/comparison question
-(the exact shape [`interview-depth-and-priority.md`](../../rules/interview-depth-and-priority.md)
+(the exact shape [`interview-depth-and-priority.md`](../../../rules/interview-depth-and-priority.md)
 defines as Intermediate) that assumes the corresponding Basic-tier fundamental already landed —
 `forwardRef`/`useImperativeHandle` assumes `useRef` itself (§10, Intermediate) is already
 understood, and automatic batching assumes the base "what is batching" concept (§4, Basic) is
