@@ -18,8 +18,8 @@ Phase 1 taxonomy; AI/DSA untouched" long after all 15 tracks were fully written.
 
 | Layer | What it does | Set up |
 |---|---|---|
-| `scripts/check-site.js` | Verifies site wiring + docs counts + rule-file indexing (see [`site-architecture.md`](site-architecture.md#machine-checked-consistency)). | none — run any time |
-| `scripts/pre-commit-check.js` | Reads the **staged** files. Blocks the commit if: `check-site.js` has errors; a topic page was added/removed/renamed without the track's `overview.md`/`roadmap.md`, `docs/refreshyourself-overview.md`, `search-index.js`, `roadmap.html`; `site.js` / `nav-index.js` / `style.css` changed without any matching rule file staged; a new rule file isn't indexed in `docs/rules/README.md`, `docs/README.md`, `CLAUDE.md`; a new track spec isn't in the specs index. | git hook (below) |
+| `scripts/check-site.js` | Verifies site wiring + docs counts (`docs/status.md` must be freshly generated) + rule-file indexing (see [`site-architecture.md`](site-architecture.md#machine-checked-consistency)). | none — run any time |
+| `scripts/pre-commit-check.js` | Reads the **staged** files. Blocks the commit if: `check-site.js` has errors; a topic page was added/removed/renamed without the track's `overview.md`/`roadmap.md`, `docs/track-history.md`, `docs/status.md`, `search-index.js`, `roadmap.html`; `site.js` / `nav-index.js` / `style.css` changed without any matching rule file staged; a new rule file isn't indexed in `docs/rules/README.md` (the single index) and `docs/README.md`; a new track spec isn't in the specs index. | git hook (below) |
 | `scripts/hooks/pre-commit` | Git hook that runs the above for **every** committer. | once per clone: `node scripts/install-hooks.js` (sets `core.hooksPath`) |
 | `.claude/settings.json` → `scripts/claude-commit-guard.js` | Claude Code `PreToolUse` hook: runs the same check whenever a Claude session issues a `git commit`, so a session can't skip it. | automatic (project settings) |
 

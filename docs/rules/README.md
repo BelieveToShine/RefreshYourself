@@ -4,6 +4,37 @@
 below gets judged through: this site is a visual interview-recall system, not a documentation
 site, and that changes how every other rule here should be applied.
 
+## Non-negotiables (the checklist `CLAUDE.md` points here for)
+
+These were the "Quick reminders" in `CLAUDE.md`; they live here so `CLAUDE.md` can stay short.
+Each links to the rule file that owns the detail.
+
+1. **Never write a technical claim you're not confident is true** — no invented specifics to sound
+   authoritative. [accuracy.md](accuracy.md) outranks every other content rule.
+2. **Teach in priority order** — most-asked (🔥) topics as early as dependencies allow, every row
+   carries its 🔥/⭐/🧠 badge, numbering is permanent
+   ([content-writing.md](content-writing.md#ordering-priority-badge--teaching-order-amended-2026-10-06)).
+3. **List the full roadmap on the tier index before writing pages** — planned-but-unwritten rows
+   are muted, unlinked, tagged 📝. Numbering is permanent from the moment a topic is listed.
+4. **Every topic page has at least one diagram**, inline in that page's own HTML (never a separate
+   `.svg`), next to the part of the explanation it supports ([diagram-style.md](diagram-style.md)).
+5. **Very simple words, genuinely short** — 2–3 tight paragraphs; "Why it matters" is 2–3 bullets
+   (single concept) or a Problem→Solution why-grid (comparing several named things), never a
+   flowing paragraph; one real-world example, one breath long
+   ([why-it-matters.md](why-it-matters.md)).
+6. **New inline label+text patterns (badge, tag) must render with a visible gap** — measure the
+   pixel gap in a live browser; two bare adjacent inline elements with no whitespace in the HTML
+   render with zero gap whatever the CSS `gap`/`margin` says
+   ([why-it-matters.md](why-it-matters.md#markup-discipline-the-tag-and-its-text-are-always-two-separate-dedicated-spans)).
+7. **Grid column count is decided by rendering at real content length**, never a fixed default or
+   `auto-fit` guesswork (it can orphan a trailing card)
+   ([why-it-matters.md](why-it-matters.md#column-count-is-a-judgment-call-not-a-fixed-default)).
+8. **Every new page needs an entry in `assets/search-index.js`** (and the rest of the wiring
+   listed in [site-architecture.md](site-architecture.md)).
+9. **Never commit, push or open a PR without being asked that turn.**
+10. **Plain HTML/CSS/JS only** — no framework, no build step; one shared stylesheet
+    (`assets/style.css`) and one shared script (`assets/site.js`).
+
 Standing rules for this repo, split by the action you're about to take. Rules are mandatory and
 override default behavior — read the relevant one before doing the thing, not after.
 
@@ -34,6 +65,5 @@ override default behavior — read the relevant one before doing the thing, not 
 | Add a scenario question to `scenarios/index.html`, or write a new dedicated "Scenario:"-style page | [scenario-bank.md](scenario-bank.md) |
 | Touch the "My List" save-list feature (`mylist.html`, `assets/mylist.js`, the `ml-`/`mylist-` bits in `site.js`/`style.css`) | [my-list.md](my-list.md) |
 
-For the whole-project picture (what this site is, the full topic catalog, what's written vs.
-planned) read [`docs/refreshyourself-overview.md`](../refreshyourself-overview.md) first — before
-any of the rule files above.
+For the whole-project picture read [`docs/refreshyourself-overview.md`](../refreshyourself-overview.md)
+first; current page counts are in [`docs/status.md`](../status.md).

@@ -3,7 +3,7 @@
 **Read this if you've never touched this repo.** Every other rule file says *how to write* one
 thing; this one says *where everything is, how the pieces connect, and what has to change
 together.* If you only read three files, read: `CLAUDE.md` → this file →
-[`../refreshyourself-overview.md`](../refreshyourself-overview.md).
+[`../refreshyourself-overview.md`](../refreshyourself-overview.md) (counts: [`../status.md`](../status.md)).
 
 ## What it is, technically
 
@@ -70,7 +70,7 @@ This table is also what `scripts/pre-commit-check.js` enforces. Details/why:
 
 | Change | Must also touch |
 |---|---|
-| **Add a topic page** | the page itself · `assets/search-index.js` entry · `assets/nav-index.js` entry (if the tier has a sidebar) · tier `index.html` row (un-mute the 📝 row) + counts · track `index.html` "N / N written" · `<track>/roadmap.html` row + counts · root `index.html` tile text if it quotes a count · `docs/superpowers/specs/<track>/overview.md` + `roadmap.md` (status, count) · `docs/refreshyourself-overview.md` (track line + count) · `docs/superpowers/specs/README.md` · `CLAUDE.md` status line if it changes |
+| **Add a topic page** | the page itself · `assets/search-index.js` entry · `assets/nav-index.js` entry (if the tier has a sidebar) · tier `index.html` row (un-mute the 📝 row) + counts · track `index.html` "N / N written" · `<track>/roadmap.html` row + counts · root `index.html` tile text if it quotes a count · `docs/superpowers/specs/<track>/overview.md` + `roadmap.md` (status, count) · `docs/track-history.md` (entry headline count) · `node scripts/gen-status.js` (regenerates `docs/status.md`) · `docs/superpowers/specs/README.md` row count |
 | **Remove / rename / renumber a page** | everything above, in reverse — numbering is permanent, so avoid; if unavoidable, fix every inbound link (`check-site.js` finds broken ones) |
 | **Retitle a page** | page `<title>` + `h1` · search-index `title` · nav-index `title`/`short` · tier index row · roadmap row · crumb text |
 | **Change a page's tier or 🔥/⭐/🧠 priority** | nav-index `priority` · tier index badge · roadmap row · spec `roadmap.md` · eyebrow badge on the page |
@@ -106,6 +106,6 @@ Hand-wiring each page into five places is slow and error-prone. For a batch:
 `node scripts/check-site.js` validates, across all 15 tracks: every written page is in
 `search-index.js`, `nav-index.js`, its tier index and `roadmap.html`; `data-root`/`data-tier-key`
 are right; each page has a diagram and the core sections; every local `href`/`src` resolves;
-every page carries the head/a11y boilerplate; Prev/Next pagers link the right neighbours (`fix-pagers.js`); page counts in `refreshyourself-overview.md` match disk; every rule file is indexed. It does
+every page carries the head/a11y boilerplate; Prev/Next pagers link the right neighbours (`fix-pagers.js`); `docs/status.md` is current and the counts in `track-history.md` / `specs/README.md` match disk; every rule file is indexed. It does
 **not** replace the mandatory live-browser diagram verification in
 [`diagram-style.md`](diagram-style.md) — that needs a rendered page.

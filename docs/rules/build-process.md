@@ -41,7 +41,7 @@ targets:
   individual topic-page entries get added as pages are written, in the same pass as the page).
 - `docs/superpowers/specs/<track>/overview.md` and a new row in
   `docs/superpowers/specs/README.md`'s table.
-- `docs/refreshyourself-overview.md`'s per-track bullet and the top status line.
+- `docs/track-history.md`'s per-track entry (its `all 7 phases complete, N/N pages` headline is machine-checked) and a regenerated `docs/status.md` (`node scripts/gen-status.js`).
 
 ## Dispatching page-writing subagents
 
@@ -185,7 +185,7 @@ Two tracks can be built at the same time by two different sessions **as long as 
 own git clone or worktree** (never the same working directory at the same time) — each track's
 own folder (`sql/`, `azure/`, etc.) never overlaps, but every track's Phase 7 finishes by editing
 the same handful of shared files: `assets/nav-index.js`, `assets/search-index.js`, root
-`index.html`, `docs/refreshyourself-overview.md`, and `docs/superpowers/specs/README.md`.
+`index.html`, `docs/status.md`, `docs/track-history.md`, and `docs/superpowers/specs/README.md`.
 Editing those concurrently in one shared directory risks one session's in-progress edit silently
 clobbering the other's. Each session should `git pull` immediately before touching any of those
 shared files and again immediately before its final commit, and expect (and calmly resolve) a

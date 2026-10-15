@@ -120,4 +120,4 @@ exists because the category axis itself is genuinely not depth.
 1. Add the tile to `/index.html`.
 2. Create `/<track>/index.html` with all three tier cards (stub the tiers not built yet).
 3. Create `/<track>/basic/index.html` (even if empty for now, list it as "coming soon").
-4. Add the track to [`docs/superpowers/specs/README.md`](../superpowers/specs/README.md) (index table) and [`docs/refreshyourself-overview.md`](../refreshyourself-overview.md) (status line). See [`site-architecture.md`](site-architecture.md) for the full change → files map.
+4. Add the track to [`docs/superpowers/specs/README.md`](../superpowers/specs/README.md) (index table) and [`docs/track-history.md`](../track-history.md) (new entry), then run `node scripts/gen-status.js` and add the track to `scripts/gen-status.js` + `scripts/check-site.js`. See [`site-architecture.md`](site-architecture.md) for the full change → files map.

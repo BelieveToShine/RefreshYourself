@@ -11,7 +11,7 @@ planned, and why, without re-deriving any of it from the live pages.
 Locked with the user on 2026-09-15 (audience/depth definition refined 2026-09-16): RefreshYourself
 is moving from a topic-tutorial site to an **interview question bank for experienced
 professionals — roughly 3+ years through senior, lead, architect, and principal** — across a new
-track pipeline. **As of 2026-10-13, 20 tracks have completed all 7 phases (952 pages written)** —
+track pipeline. **Every track has completed all 7 phases (current counts: [`status.md`](../../status.md))** —
 see
 [`../../refreshyourself-overview.md`](../../refreshyourself-overview.md). Every track, including any new one, goes through 7 phases **before** any page gets built:
 
