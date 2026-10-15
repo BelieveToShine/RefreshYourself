@@ -135,7 +135,8 @@ pixel gap, don't just eyeball a screenshot).
 Python (47 pages) and DSA (33 pages) were the only tracks with **no** Use Cases panels (every other track
 had 58–93%), which the user spotted as an inconsistency. All 80 pages now have one (2–4 scenarios each,
 251 in total; red `.uc-trap` only where the page has a genuine Common Trap), so **every track now has
-Use Cases on essentially every page**. The "optional, only when 3+ distinct scenarios" guidance above still
+Use Cases on essentially every page**. (Design Patterns, which was the last gap at 0/13, got its 13 panels on
+2026-10-15 — 3–4 scenarios each, red `.uc-trap` only where the page has a genuine trap.) The "optional, only when 3+ distinct scenarios" guidance above still
 applies to genuinely thin topics, but the default for a new page is now: include the panel.
 
 `node scripts/check-site.js` now (a) **errors** on any panel that has fewer than 2 scenarios, a scenario with

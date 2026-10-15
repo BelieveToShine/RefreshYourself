@@ -7,8 +7,7 @@ when it lands, in the same commit.
 
 ## Open
 
-- **Design Patterns Use Cases panels** — in progress 2026-10-15 (0/13 → see `check-site.js` warning
-  for the live number; delete this line when the warning is gone).
+Nothing open right now — `check-site.js` reports 0 errors and 0 warnings. Add items here as you find them.
 
 ## Standing practice (not a task)
 
