@@ -1,5 +1,12 @@
 # The Master Product Principle
 
+> **TL;DR** — The site is a *visual interview-recall system*, not documentation: optimise every
+> page for **scan → see → recall → speak** (5–30 s on a phone before an interview). When any rule
+> seems to conflict with this one, this one wins. Each section owns one job and nothing repeats
+> another section's fact. Before calling a page done, run the quality checklist at the bottom
+> (5-second / 30-second / 2-minute / interview / mobile / accuracy / noise / diagram-integrity tests).
+> *Applies to: everything.*
+
 **Read this before any other rule file — it's the lens every other rule gets judged through.**
 Added after a second external design review confirmed and sharpened the direction the site was
 already heading in.

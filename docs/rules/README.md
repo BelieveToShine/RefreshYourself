@@ -18,10 +18,10 @@ Each links to the rule file that owns the detail.
    are muted, unlinked, tagged 📝. Numbering is permanent from the moment a topic is listed.
 4. **Every topic page has at least one diagram**, inline in that page's own HTML (never a separate
    `.svg`), next to the part of the explanation it supports ([diagram-style.md](diagram-style.md)).
-5. **Very simple words, genuinely short** — 2–3 tight paragraphs; "Why it matters" is 2–3 bullets
-   (single concept) or a Problem→Solution why-grid (comparing several named things), never a
-   flowing paragraph; one real-world example, one breath long
-   ([why-it-matters.md](why-it-matters.md)).
+5. **Very simple words, genuinely short** — 2–3 tight paragraphs; "Why it matters" is always
+   Problem → Solution card(s) — one card for a single concept, a why-grid for several named
+   sub-concepts — never a flowing paragraph or plain bullets (`check-site.js` enforces it); one
+   real-world example, one breath long ([why-it-matters.md](why-it-matters.md)).
 6. **New inline label+text patterns (badge, tag) must render with a visible gap** — measure the
    pixel gap in a live browser; two bare adjacent inline elements with no whitespace in the HTML
    render with zero gap whatever the CSS `gap`/`margin` says
@@ -52,7 +52,7 @@ override default behavior — read the relevant one before doing the thing, not 
 | Write or edit the "Say this in the interview" box | [keypoints.md](keypoints.md) |
 | Write or edit the "🔥 Easy interview recall" box | [interview-recall.md](interview-recall.md) |
 | Write or edit the "⚠️ Common Trap" box | [common-trap.md](common-trap.md) |
-| Write or edit the "Why it matters" box (plain bullets or the Problem→Solution why-grid) | [why-it-matters.md](why-it-matters.md) |
+| Write or edit the "Why it matters" box (Problem→Solution card, or a why-grid of several) | [why-it-matters.md](why-it-matters.md) |
 | Write or edit the "🧭 Use Cases" panel | [use-cases.md](use-cases.md) |
 | Retrofit an already-shipped page's "Why it matters"/"Use Cases" (not writing a new page) | [retrofit-why-usecases.md](retrofit-why-usecases.md) |
 | Add a new page, or touch `assets/site.js` / the search index | [search.md](search.md) |

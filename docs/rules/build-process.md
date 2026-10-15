@@ -1,11 +1,19 @@
 # Rule: How a track's Phase 7 actually gets executed (multi-agent build process)
 
+> **TL;DR** — Phases 2–6 are the orchestrating session's own work (no delegation). Phase 7 is run
+> with self-contained subagent prompts (rule docs to read, a reference page per tier, exact
+> content/metadata, one writer per ≤6 pages). Never kill processes/servers you didn't start. Every
+> diagram is verified twice — by the writer and, independently, by you on **every** page. Finish
+> with the site-wiring checklist (nav/search index, tier index, roadmap, root tile, spec docs,
+> `gen-status.js`). Only commit/push when asked.
+> *Applies to: building a track's pages in bulk (Phase 7).*
+
 **Read this before running Phase 7 on any track**, alongside
 [`specs/README.md`](../superpowers/specs/README.md) for what the 7 phases mean and
 [`diagram-style.md`](diagram-style.md) for the mandatory verification script itself. This file
 is the operational half — *how* a session actually drives Phase 7 to completion using parallel
 subagents, safely, on a machine other sessions may also be using. Every track from OOP onward
-(all 14 tracks after C#) was built this exact way; a track built any other way
+(every track after C#) was built this exact way; a track built any other way
 is not following the established process, even if the output looks similar.
 
 ## Before Phase 7: Phases 2–6 are the orchestrating session's own work, not delegated

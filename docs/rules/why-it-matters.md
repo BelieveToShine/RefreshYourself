@@ -1,5 +1,12 @@
 # Rule: The "Why it matters" Box
 
+> **TL;DR** — Every "Why it matters" box is **Problem → Solution card(s)**: one `.why-card`
+> (no `.why-grid` wrapper) for a single concept, a `.why-grid` of cards when comparing several named
+> sub-concepts. No plain bullets, no flowing paragraph. Each card ends with a one-line Recall. Pick
+> the grid's column count by rendering it at real content length. The tag and its text are two
+> separate spans. `check-site.js` enforces the card format.
+> *Applies to: writing or editing the "Why it matters" box.*
+
 Locked 2026-09-24, after direct feedback on the Web API CORS page (`webapi/basic/3.html`) that
 the section wasn't earning its name: it read as a definition plus a bolded "Why?" aside, not an
 actual answer to *why does this topic exist, what problem does it solve.* The fix isn't more

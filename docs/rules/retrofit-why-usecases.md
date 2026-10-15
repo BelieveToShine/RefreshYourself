@@ -35,8 +35,8 @@ Explanation and `.cmp-table` first. Your job is to take concepts the page has *a
 established as real and technically accurate, and give them the Problem→Solution /
 Situation→Remember treatment — not to research or invent new distinctions the page didn't already
 make. If you genuinely can't find a clean multi-concept list on the page, that's a signal this
-page should stay Shape A (plain bullets) for Why it matters and/or skip the Use Cases panel
-entirely — see the decision rule in each linked file. Per [accuracy.md](accuracy.md): every
+page should get a single Problem→Solution card for Why it matters (plain bullets no longer
+exist) and/or skip the Use Cases panel entirely — see the decision rule in each linked file. Per [accuracy.md](accuracy.md): every
 Problem/Solution sentence and every Use-Case "what happens" sentence must be something you're
 actually confident is true, at the same bar as the rest of the page.
 

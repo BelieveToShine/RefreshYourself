@@ -1,5 +1,13 @@
 # Rule: Writing a Topic Page
 
+> **TL;DR** — List the whole tier roadmap on the tier index first (unwritten rows muted, 📝);
+> number permanently. Order within a tier = most-asked (🔥) first, as dependencies allow, every row
+> badged. Very simple words, 2–3 tight paragraphs. Page order is fixed: hero (hook title + quoted
+> interview question) → Why it matters (toggle) → 🔥 Recall → 🧠 Diagram → ⚠️ Trap → 🔄 Follow-up →
+> 🎯 Say-this → 📖 Explanation / 💻 Code / 🧭 Use Cases / 🌍 Real-world (all toggles). The first
+> five are always visible. A copy-paste skeleton is in [`../guides/topic-page-template.md`](../guides/topic-page-template.md).
+> *Applies to: writing or editing any topic page or tier index.*
+
 ## Workflow: list the full topic roadmap first, implement pages one at a time
 
 For any tier, **write out the full set of topic titles before building a single page.** The tier
@@ -127,10 +135,10 @@ In this exact order:
    this line only if the H1 already *is* essentially the literal question verbatim (rare — most
    hook titles are punchier than the literal phrasing on purpose).
 4. **"Why it matters" — collapsed toggle, closed by default.** `<details class="topic-hook
-   toggle">` with a `<summary>` (not a plain label — the summary IS the clickable toggle). Full
-   rules for both shapes (plain bullets for a single-concept topic vs. the Problem → Solution
-   why-grid for a topic differentiating multiple named sub-concepts) live in their own dedicated
-   file: [why-it-matters.md](why-it-matters.md) — read it before writing or editing this box,
+   toggle">` with a `<summary>` (not a plain label — the summary IS the clickable toggle). Always
+   Problem → Solution card(s) — one card for a single-concept topic, a why-grid for a topic
+   differentiating multiple named sub-concepts; there is no plain-bullets shape any more. Full rules:
+   [why-it-matters.md](why-it-matters.md) — read it before writing or editing this box,
    including its rule on picking the why-grid's column count deliberately rather than defaulting
    to one layout every time.
 5. **"🔥 Easy interview recall" — always visible, never a toggle.** `<div class="recall">` sitting

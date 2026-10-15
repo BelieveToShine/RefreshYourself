@@ -1,5 +1,13 @@
 # Rule: Typography & Highlighting
 
+> **TL;DR** — Fonts come from `<link>` tags added by `scripts/add-head-meta.js`. Colour key terms
+> with `.hl` spans (sparingly; colour by meaning, matching the diagram). Tier colours are fixed —
+> Basic green, Intermediate amber, Advanced purple (Design Patterns has its own triplet; Scenario
+> Bank is rose). Always icon + visible name. Logos are plain emoji except the one brand mark and
+> roadmap icon. Anything absolutely positioned inside a link-stretched tile needs an explicit
+> `z-index`. Later sections cover homepage-only components and My List.
+> *Applies to: fonts, colours, highlights, badges, icons, homepage tiles.*
+
 Locked decisions from the working session. The site has to feel inviting, not like plain
 documentation — this is what makes that happen.
 

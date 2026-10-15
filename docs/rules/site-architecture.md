@@ -1,5 +1,11 @@
 # Rule: How the site is put together (the map a new session needs)
 
+> **TL;DR** — Static HTML/CSS/JS, no build step, deployed on every push to `main`. Search and nav
+> data are plain `<script src>` files (works from `file://`). Every page is wired into several
+> places; the **"I changed X — what else must change?"** table below is the checklist and is what
+> `scripts/pre-commit-check.js` enforces. `node scripts/check-site.js` is the safety net.
+> *Applies to: anything that adds, renames or removes a page, track, rule or asset.*
+
 **Read this if you've never touched this repo.** Every other rule file says *how to write* one
 thing; this one says *where everything is, how the pieces connect, and what has to change
 together.* If you only read three files, read: `CLAUDE.md` → this file →
@@ -44,7 +50,7 @@ Tracks (folder slug → name): `csharp` C#, `oops` OOP, `dotnet` .NET/ASP.NET Co
 ## Anatomy of a topic page (section order, top to bottom)
 
 `topbar` (brand + search) → `crumbbar` (colour pills) → hero (eyebrow badge, `h1`, `.interview-q`) →
-`details.topic-hook` **Why it matters** (plain bullets or `.why-grid` Problem→Solution cards) →
+`details.topic-hook` **Why it matters** (Problem→Solution `.why-card`, or a `.why-grid` of several) →
 `.recall` 🔥 Easy interview recall → `.viz-label` + `figure.diagram-card` (inline SVG
 `.topic-diagram`) → `.trap` ⚠️ Common Trap → `.followup` 🔄 → `.keypoints` 🎯 Say this →
 `details.explain` 📖 → `details.codebox` 💻 → optional `details.usecase` 🧭 Use Cases → prev/next.
@@ -70,7 +76,7 @@ This table is also what `scripts/pre-commit-check.js` enforces. Details/why:
 
 | Change | Must also touch |
 |---|---|
-| **Add a topic page** | the page itself · `assets/search-index.js` entry · `assets/nav-index.js` entry (if the tier has a sidebar) · tier `index.html` row (un-mute the 📝 row) + counts · track `index.html` "N / N written" · `<track>/roadmap.html` row + counts · root `index.html` tile text if it quotes a count · `docs/superpowers/specs/<track>/overview.md` + `roadmap.md` (status, count) · `docs/track-history.md` (entry headline count) · `node scripts/gen-status.js` (regenerates `docs/status.md`) · `docs/superpowers/specs/README.md` row count |
+| **Add a topic page** | the page itself · `assets/search-index.js` entry · `assets/nav-index.js` entry (if the tier has a sidebar) · tier `index.html` row (un-mute the 📝 row) + counts · track `index.html` "N / N written" · `<track>/roadmap.html` row + counts · root `index.html` tile text and hero stats ("N pages · N tracks" — `check-site.js` verifies them) if they quote a count · `docs/superpowers/specs/<track>/overview.md` + `roadmap.md` (status, count) · `docs/track-history.md` (entry headline count) · `node scripts/gen-status.js` (regenerates `docs/status.md`) · `docs/superpowers/specs/README.md` row count |
 | **Remove / rename / renumber a page** | everything above, in reverse — numbering is permanent, so avoid; if unavoidable, fix every inbound link (`check-site.js` finds broken ones) |
 | **Retitle a page** | page `<title>` + `h1` · search-index `title` · nav-index `title`/`short` · tier index row · roadmap row · crumb text |
 | **Change a page's tier or 🔥/⭐/🧠 priority** | nav-index `priority` · tier index badge · roadmap row · spec `roadmap.md` · eyebrow badge on the page |

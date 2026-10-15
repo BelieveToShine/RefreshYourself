@@ -108,6 +108,9 @@ for (const t of TRACKS) {
 const claude = read("CLAUDE.md");
 if (/AI\/DSA are untouched|Azure has a Phase 1/.test(claude)) err("CLAUDE.md status line is stale (still says Azure Phase 1 / AI,DSA untouched)");
 { const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  const hp = rootIndex.match(/class="hstat"><b>(\d+)<\/b> pages/), ht = rootIndex.match(/class="hstat"><b>(\d+)<\/b> tracks/);
+  if (hp && parseInt(hp[1]) !== total) err(`root index.html hero says ${hp[1]} pages; disk has ${total}`);
+  if (ht && parseInt(ht[1]) !== TRACKS.length) err(`root index.html hero says ${ht[1]} tracks; TRACKS has ${TRACKS.length}`);
   for (const f of ["CLAUDE.md", "docs/superpowers/specs/README.md"]) for (const m of read(f).matchAll(/\b(\d{3,4}) (?:topic )?pages written/g)) if (parseInt(m[1]) !== total) err(`${f} says ${m[1]} pages written; disk has ${total} — link to docs/status.md instead of repeating the number`); }
 
 // every rule file must be indexed in docs/rules/README.md (the one index; CLAUDE.md and docs/README.md link to it)

@@ -1,5 +1,11 @@
 # Rule: Folder & Page Structure
 
+> **TL;DR** — `/<track>/<tier>/<n>.html`, tiers `basic|intermediate|advanced` (Design Patterns:
+> `creational|structural|behavioral`). Tier index shows the *full* roadmap (grouped in tens);
+> topic pages are numbered to match and never renumbered. `data-root` is the relative path back to
+> the repo root. Index pages list topics; topic pages teach one.
+> *Applies to: adding or restructuring a page, folder, tier index or track.*
+
 Locked decisions from the working session that set this project up. Don't re-derive them.
 
 ## Folder layout

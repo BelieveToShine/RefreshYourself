@@ -1,5 +1,12 @@
 # Rule: The "🧭 Use Cases" Panel
 
+> **TL;DR** — The 🧭 Use Cases panel is optional: only for a topic with 3+ genuinely different
+> real-world situations. A collapsed `<details class="usecase toggle">` placed after the code box
+> and before Real-world; each scenario is Situation → mini-diagram → What happens → Remember with
+> its own accent colour on a solid background. If present it must be complete — `check-site.js`
+> validates it.
+> *Applies to: writing or editing the Use Cases panel.*
+
 Added on the CORS page rework (locked 2026-09-24): a topic that has several genuinely distinct
 real-world situations — not just one analogy — deserves a place to walk through each situation
 separately, before the single Real-world/Scenario example at the bottom. This is optional, not

@@ -1,5 +1,13 @@
 # Rule: Topic Diagrams
 
+> **TL;DR** — One hand-authored **inline** `<svg class="topic-diagram">` per page (never a separate
+> file) that shows a *relationship*, not the paragraph redrawn. Small, crisp, no overlap, arrowheads
+> end where the path ends, whole diagram centred, animation only where it earns its keep. **A page
+> is not done until the automated check has run on the live render with `issueCount: 0`** —
+> `node scripts/verify-diagrams.js --only <path>` is the runnable form of the script in the
+> "Mandatory automated verification" section; "verified by computing coordinates" is not a pass.
+> *Applies to: drawing or editing any diagram.*
+
 How to draw the diagram(s) on a topic page. Same visual language as the LeadHunter architecture
 diagrams (hand-authored SVG, colour-coded zones, drawn icons, orthogonal connectors) — scoped
 down to one small concept instead of a whole system. This is the "🧠 Visual Mental Model" step

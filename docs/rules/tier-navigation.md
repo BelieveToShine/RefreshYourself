@@ -1,5 +1,13 @@
 # Rule: Tier Side Navigation (topic-to-topic left menu)
 
+> **TL;DR** — The left topic sidebar is built entirely by `assets/site.js` from
+> `assets/nav-index.js` — **no sidebar markup on any page**. To wire a tier: add its entry to
+> `nav-index.js` and put `data-tier-key="<track>/<tier>"` + the `nav-index.js` script tag on each
+> topic page; never touch `site.js`/`style.css` for a new tier. Rail above 960 px, "☰ Topics in this
+> tier" toggle below. The same data feeds the 🎯 Scenario Bank group, visited-page tracking and
+> My List icons.
+> *Applies to: `assets/nav-index.js`, sidebar behaviour, adding a tier.*
+
 Shipped feature (not a prototype) — live on every tier of every track (every topic page that
 carries `data-tier-key`; `assets/nav-index.js` has an entry per tier). Read this fully
 before wiring it up for a new tier (e.g. Azure Basic) — it explains three real bugs that were
