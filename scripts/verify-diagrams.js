@@ -12,7 +12,7 @@
 
    Usage:
      node scripts/verify-diagrams.js                  # every diagram-bearing page on the site
-     node scripts/verify-diagrams.js --only linq/      # only pages whose path contains this substring
+     node scripts/verify-diagrams.js --only linq/      # only pages whose path contains this substring (comma-separate several)
      node scripts/verify-diagrams.js --port 47777      # use a specific port instead of a random high one
 
    Keep this script's checkDiagram()/helpers byte-for-byte in sync with the canonical copy in
@@ -39,7 +39,7 @@ function findHtmlPages(dir, out) {
     if (st.isDirectory()) { findHtmlPages(full, out); continue; }
     if (!f.endsWith(".html")) continue;
     const rel = path.relative(ROOT, full);
-    if (only && !rel.includes(only)) continue;
+    if (only && !only.split(",").some((o) => rel.includes(o))) continue;
     const content = fs.readFileSync(full, "utf8");
     if (content.includes('class="topic-diagram"')) out.push(rel);
   }
@@ -83,6 +83,11 @@ async function main() {
   const browser = await chromium.launch({ executablePath: fs.existsSync("/opt/pw-browsers/chromium") ? "/opt/pw-browsers/chromium" : undefined });
   const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
 
+  // findings a human has looked at and accepted as deliberate designs (scripts/diagram-accepted-findings.json)
+  let accepted = [];
+  try { accepted = JSON.parse(fs.readFileSync(path.join(__dirname, "diagram-accepted-findings.json"), "utf8")); } catch (e) {}
+  let suppressed = 0;
+  const isAccepted = (rel, issue) => accepted.some((a) => a.page === rel && issue.startsWith(a.type));
   let totalIssues = 0;
   const failures = [];
   for (const rel of pages) {
@@ -91,7 +96,9 @@ async function main() {
       await page.goto(url, { waitUntil: "networkidle", timeout: 20000 });
       const result = await page.evaluate(CHECK_SCRIPT);
       if (!Array.isArray(result)) { failures.push({ rel, issues: ["no svg.topic-diagram found despite grep match"] }); totalIssues++; continue; }
-      const pageIssues = result.flatMap((r) => r.issues);
+      const allIssues = result.flatMap((r) => r.issues);
+      const pageIssues = allIssues.filter((i) => !isAccepted(rel, i));
+      suppressed += allIssues.length - pageIssues.length;
       if (pageIssues.length) { failures.push({ rel, issues: pageIssues }); totalIssues += pageIssues.length; }
     } catch (e) {
       failures.push({ rel, issues: ["LOAD ERROR: " + e.message] });
@@ -109,6 +116,7 @@ async function main() {
       f.issues.forEach((i) => console.log("  - " + i));
     }
   }
+  if (suppressed) console.log(`\n(${suppressed} accepted finding(s) suppressed — see scripts/diagram-accepted-findings.json)`);
   console.log(`\n${pages.length} pages checked, ${failures.length} with findings, ${totalIssues} total issue(s).`);
   process.exit(totalIssues ? 1 : 0);
 }

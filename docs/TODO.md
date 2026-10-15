@@ -7,7 +7,7 @@ when it lands, in the same commit.
 
 ## Open
 
-Nothing open right now — `check-site.js` reports 0 errors and 0 warnings. Add items here as you find them.
+Nothing open right now — `check-site.js` reports 0 errors and 0 warnings, and a full `node scripts/verify-diagrams.js` sweep is clean apart from the findings listed in `scripts/diagram-accepted-findings.json`. Add items here as you find them.
 
 ## Standing practice (not a task)
 

@@ -441,6 +441,19 @@ positives), plus a full re-sweep of every page on the site, not just the two rep
 this incident produced, so "re-run against every page" is a single command going forward instead
 of a one-off script improvised per incident.
 
+## Accepted findings (added 2026-10-15)
+
+`node scripts/verify-diagrams.js` checks both the main `svg.topic-diagram` and every Use Cases
+`.uc-mini svg`. A finding that a human has **looked at in a rendered screenshot and judged a
+deliberate design** (a stacked-card illustration, a timeline axis with no end boxes, an arrow that
+points at a ❌ glyph, a branching connector whose arrowheads touch the children, overlapping subnets
+on a page *about* overlap) goes in `scripts/diagram-accepted-findings.json` as
+`{page, type, reason}`; the script then suppresses findings of that type on that page and prints
+how many it suppressed. **Never add an entry for a real defect** — text spilling out of its box or
+colliding with an arrow is fixed in the SVG (shorten the text or widen the box). The 2026-10-15
+sweep found 11 genuine text overflows in mini-diagrams (fixed) and 20 accepted designs (listed).
+`--only` accepts several comma-separated substrings.
+
 ## Animation — check every diagram for a place it earns its keep
 
 **Don't treat animation as optional polish — actively look for where it would make a "Visual
