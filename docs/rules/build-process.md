@@ -81,10 +81,13 @@ track's icon):
 | Intermediate | `#fef3c7` / `#92400e` |
 | Advanced | `#ede9fe` / `#6d28d9` |
 
-Track colors already in use — pick something new, don't reuse: C# 🎵 `#3b82f6`, OOP 🧩
-`#16a34a`, .NET 🧱 `#7c3aed`, Web API 🔌 `#b91c1c`, EF Core 🗄️ `#0f766e`. SQL and Azure need a
-new pick each (e.g. a slate/blue for SQL, Azure's own `#0078D4` is already reserved for it on the
-root tile).
+Track colors already in use — pick something new, don't reuse (read from the track crumb pill,
+the second `--crumb-ink` on each track's first topic page, 2026-10-15): C# `#1d4ed8`, LINQ `#4f46e5`,
+OOP `#15803d`, .NET `#7c3aed`, Web API `#b91c1c`, EF Core `#0f766e`, SQL `#334155`, Azure `#0078D4`,
+AWS `#c2410c`, React `#0891b2`, Angular `#dd0031`, Python `#306998`, AI `#c026d3`, DSA `#92400e`,
+JavaScript `#854d0e`, HTML & CSS `#be185d`, Java `#78350f`, Vue.js `#42b883`, Next.js `#171717`,
+Design Patterns `#44403c`. If this list and the pages ever disagree, the pages win — re-list with
+`for t in */; do grep -o -- '--crumb-ink:#[0-9a-fA-F]*' $t*/1.html | sed -n 2p; done`.
 
 ## Safety: this machine runs other sessions too
 

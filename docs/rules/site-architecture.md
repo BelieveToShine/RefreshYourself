@@ -74,10 +74,10 @@ This table is also what `scripts/pre-commit-check.js` enforces. Details/why:
 | **Remove / rename / renumber a page** | everything above, in reverse — numbering is permanent, so avoid; if unavoidable, fix every inbound link (`check-site.js` finds broken ones) |
 | **Retitle a page** | page `<title>` + `h1` · search-index `title` · nav-index `title`/`short` · tier index row · roadmap row · crumb text |
 | **Change a page's tier or 🔥/⭐/🧠 priority** | nav-index `priority` · tier index badge · roadmap row · spec `roadmap.md` · eyebrow badge on the page |
-| **Start a new track** | Phase 1–6 spec folder first (`overview.md`, `question-taxonomy.md`, `roadmap.md`) · specs README table · overview.md · root tile + `roadmap.html` + search `iconFor()` in `site.js` · `scripts/check-site.js` `TRACKS` list · `CLAUDE.md` track list |
+| **Start a new track** | Phase 1–6 spec folder first (`overview.md`, `question-taxonomy.md`, `roadmap.md`) · specs README table · `docs/track-history.md` entry · root tile + `roadmap.html` + search `iconFor()` in `site.js` · `TRACKS`/`labels` in `scripts/check-site.js` and `GROUPS` in `scripts/gen-status.js`, then `node scripts/gen-status.js` |
 | **Edit `assets/site.js`** | the behaviour rule: `search.md` / `tier-navigation.md` / `back-navigation.md` / `link-hover.md` |
 | **Edit `assets/style.css`** | the matching component rule (`visual-style.md`, `why-it-matters.md`, `use-cases.md`, `keypoints.md`, `interview-recall.md`, `common-trap.md`, `diagram-style.md`, `link-hover.md`) |
-| **Add / rename a rule file** | `docs/rules/README.md` table · `docs/README.md` · `CLAUDE.md` quick list |
+| **Add / rename a rule file** | the `docs/rules/README.md` table (the single index — `check-site.js` errors if the file isn't listed there) · a TL;DR at the top of the new file |
 | **New convention decided in chat** | write it into the right rule file the same turn — never leave it only in chat |
 
 ## Branches and history
@@ -103,7 +103,7 @@ Hand-wiring each page into five places is slow and error-prone. For a batch:
 
 ## Machine-checked consistency
 
-`node scripts/check-site.js` validates, across all 15 tracks: every written page is in
+`node scripts/check-site.js` validates, across every track: every written page is in
 `search-index.js`, `nav-index.js`, its tier index and `roadmap.html`; `data-root`/`data-tier-key`
 are right; each page has a diagram and the core sections; every local `href`/`src` resolves;
 every page carries the head/a11y boilerplate; Prev/Next pagers link the right neighbours (`fix-pagers.js`); `docs/status.md` is current and the counts in `track-history.md` / `specs/README.md` match disk; every rule file is indexed. It does

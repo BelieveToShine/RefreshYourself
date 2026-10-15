@@ -30,7 +30,7 @@ if (staged.has("assets/site.js")) needAny("assets/site.js changed → the matchi
 if (staged.has("assets/nav-index.js")) needAny("assets/nav-index.js changed → check tier-navigation rule is still accurate", ["docs/rules/tier-navigation.md", "docs/superpowers/specs/README.md"].concat(structural.length ? [] : []));
 if (staged.has("assets/style.css")) needAny("assets/style.css changed → the matching visual rule must be updated (or note why no rule changes)", ["docs/rules/visual-style.md", "docs/rules/link-hover.md", "docs/rules/why-it-matters.md", "docs/rules/use-cases.md", "docs/rules/keypoints.md", "docs/rules/diagram-style.md", "docs/rules/interview-recall.md", "docs/rules/common-trap.md"]);
 for (const c of changes.filter((c) => c.s === "A" && /^docs\/rules\/[^/]+\.md$/.test(c.f) && c.f !== "docs/rules/README.md"))
-  need(`new rule file ${c.f} → must be indexed`, "docs/rules/README.md", "docs/README.md");
+  need(`new rule file ${c.f} → must be indexed`, "docs/rules/README.md");
 for (const c of changes.filter((c) => c.s === "A" && /^docs\/superpowers\/specs\/[^/]+\/overview\.md$/.test(c.f)))
   need(`new track spec ${c.f} → must be in the specs index`, "docs/superpowers/specs/README.md", "docs/track-history.md");
 

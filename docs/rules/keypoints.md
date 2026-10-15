@@ -9,8 +9,11 @@ is the complete, standalone rule for what goes in it — read this before writin
 - Heading reads **"🎯 Say this in the interview,"** not a generic "Key Points" label — it's a cue
   for what to say out loud, not a study summary to re-read.
 - **3–6 bullets max**, styled as small chip-cards, not a plain sentence list.
-- **Each bullet is a line you'd actually say out loud in the interview** — 5-12 words, a fragment
-  or a short claim, not a full explanatory sentence with subordinate clauses. Compress; never
+- **Each bullet is a line you'd actually say out loud in the interview** — aim for **about 8–20
+  words (target ≈ 14)**: a fragment or a short claim, not a full explanatory sentence with
+  subordinate clauses. *(Relaxed 2026-10-15 from "5–12 words": measured across all 952 pages, the
+  median supporting bullet is 14 words and 93% are ≤ 20, so the old limit was broken by ~60% of
+  shipped bullets. The primary spoken answer above them runs 30–70 words, median ≈ 50 — one breath.)* Compress; never
   just repeat the Explanation section in slightly different words.
 
 ## Lead with one primary spoken answer, then the supporting bullets
