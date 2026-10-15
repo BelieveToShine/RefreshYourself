@@ -72,7 +72,8 @@ for (const t of TRACKS) {
         else if (!why.includes("wc-row problem") || !why.includes("wc-row solution") || !why.includes("wcr-tag"))
           err(`${rel}: "Why it matters" must be Problem, Solution and Recall cards (docs/rules/why-it-matters.md)`);
       }
-      for (const [name, re] of [["interview-q", /class="interview-q"/], ["recall", /class="recall"/], ["keypoints", /class="keypoints"/], ["explanation", /class="explain/], ["code", /class="codebox/]])
+      // the 💻 code box is intentionally not checked: it is optional (docs/rules/content-writing.md) — most AWS/Azure concept pages have no honest code to show
+      for (const [name, re] of [["interview-q", /class="interview-q"/], ["recall", /class="recall"/], ["keypoints", /class="keypoints"/], ["explanation", /class="explain/]])
         if (!re.test(html)) warn(`${rel}: missing section ${name}`);
       const linkScan = html.split("<pre").map((s, i) => (i ? s.slice(s.indexOf("</pre>") + 6) : s)).join(" ").split("<text").map((s, i) => (i ? s.slice(s.indexOf("</text>") + 7) : s)).join(" ").replace(/<code>(?:[^<]|<(?!\/code>))*<\/code>/g, " "); // ignore sample markup in code blocks / diagram text / inline <code> snippets (e.g. Vue's `:href="url"` binding syntax)
       for (const m of linkScan.matchAll(/(?:href|src)="([^"#:]+?)(?:#[^"]*)?"/g)) {
@@ -120,6 +121,15 @@ for (const f of fs.readdirSync(path.join(ROOT, "docs/rules")).filter((f) => f.en
 }
 for (const t of TRACKS) for (const f of ["overview.md", "roadmap.md", "question-taxonomy.md"])
   if (!exists(`docs/superpowers/specs/${t}/${f}`)) err(`missing docs/superpowers/specs/${t}/${f}`);
+
+// the page counts quoted in each roadmap.html (meta/og description + hero text) must match the files on disk
+for (const t of TRACKS) {
+  if (!exists(`${t}/roadmap.html`)) continue;
+  const html = read(`${t}/roadmap.html`), hero = (html.match(/<h1[\s\S]*?<\/section>/) || [""])[0];
+  const quoted = [...html.matchAll(/(?:name="description"|property="og:description") content="(\d+) (?:pages|questions)/g), ...hero.matchAll(/\b(\d+) (?:pages|questions)\b/g)];
+  if (!/<details class="roadmap-tier[^>]*\bopen\b/.test(html)) err(`${t}/roadmap.html: no concept group is open by default (policy: the first group is open)`);
+  for (const m of quoted) if (parseInt(m[1]) !== counts[t]) err(`${t}/roadmap.html quotes ${m[1]} pages/questions; disk has ${counts[t]}`);
+}
 
 // every relative link in the markdown docs must resolve (file, and #anchor when it points at a .md heading)
 {

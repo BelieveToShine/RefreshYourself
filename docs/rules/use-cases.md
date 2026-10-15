@@ -141,6 +141,7 @@ applies to genuinely thin topics, but the default for a new page is now: include
 `node scripts/check-site.js` now (a) **errors** on any panel that has fewer than 2 scenarios, a scenario with
 no `.uc-mini` diagram, no own `--uc-color`, or a Remember line without separate `.uc-rtag`/`.uc-rtext` spans,
 and (b) **warns** when a track has Use Cases on fewer than half its pages. The live overlap script from
-[`diagram-style.md`](diagram-style.md) must also be run on the `.uc-mini` diagrams — select
-`svg.topic-diagram, .uc-mini svg`; the 2026-10-07 sweep covered 251 mini-diagrams + 139 main diagrams on the
+[`diagram-style.md`](diagram-style.md) must also be run on the `.uc-mini` diagrams — as of 2026-10-15
+`node scripts/verify-diagrams.js` selects `svg.topic-diagram, .uc-mini svg` itself (before that it only
+checked the main diagrams); the 2026-10-07 sweep covered 251 mini-diagrams + 139 main diagrams on the
 80 pages with zero real findings.

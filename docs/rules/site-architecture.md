@@ -32,7 +32,7 @@ Node is used only for **maintenance scripts** in `scripts/` (below), never by th
 | `<track>/index.html` | Track home: hero + 3 `tier-bulletin` cards with "N / N written" counts. |
 | `<track>/<basic\|intermediate\|advanced>/index.html` | Tier index: `<details class="qgroup">` blocks (groups of 10) of `topic-row` list items. Planned-but-unwritten rows are muted, unlinked, tagged 📝. |
 | `<track>/<tier>/N.html` | One topic page. Numbering is permanent. Template: [`content-writing.md`](content-writing.md). |
-| `<track>/roadmap.html` | Whole-track plan, all tiers on one page. Two layouts exist: grouped by **tier** (csharp, oops, dotnet, webapi, efcore, sql, azure, ai, react, angular, dsa) vs. grouped by **cross-tier concept cluster** (aws, python, htmlcss, javascript). Pick per the track's `overview.md`. |
+| `<track>/roadmap.html` | Whole-track plan, all tiers on one page. **One layout policy (settled 2026-10-15):** grouped by **concept** (called "concept groups" in the hero/meta text — never "clusters"), not by tier; Design Patterns is grouped by pattern family (Creational/Structural/Behavioral). The **first group is rendered `open`**, the rest collapsed. Every row links to its page; the page count quoted in the meta/og description and hero must equal the files on disk (`check-site.js` verifies). Tier-specific browsing is the tier `index.html`, linked from the hero. |
 | `assets/style.css` | The one shared stylesheet. |
 | `assets/site.js` | The one shared script: global search box, code-copy button, prev/next link text, tier sidebar renderer, back-button click-tagging. |
 | `assets/search-index.js` | `window.SEARCH_INDEX` — one entry per written page + each tier/track index. [`search.md`](search.md) |
