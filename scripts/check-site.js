@@ -91,24 +91,29 @@ for (const e of SEARCH) if (!exists(e.path)) err(`search-index.js: dead path ${e
 // every html page must carry the head/a11y boilerplate (run: node scripts/add-head-meta.js)
 (function walk(d){for(const f of fs.readdirSync(path.join(ROOT,d))){if(f===".git"||f==="node_modules")continue;const rel=d?d+"/"+f:f;const st=fs.statSync(path.join(ROOT,rel));if(st.isDirectory()){walk(rel);continue;}if(!f.endsWith(".html"))continue;const h=read(rel);const miss=[];if(!h.includes("name=\"description\""))miss.push("meta description");if(!h.includes("rel=\"icon\""))miss.push("favicon");if(!h.includes("fonts.googleapis.com"))miss.push("font links");if(!h.includes("class=\"skip-link\""))miss.push("skip link");if(h.includes("<svg class=\"brand-mark\""))miss.push("brand logo as <img>");if(miss.length)err(rel+": missing "+miss.join(", ")+" — run node scripts/add-head-meta.js");}})("");
 
-// docs: page counts mentioned in overview vs reality
-const overview = read("docs/refreshyourself-overview.md");
+// docs: docs/status.md must be current (generated), and page counts quoted in the per-track
+// build log / specs index must match the files on disk
+{ const g = require("child_process").spawnSync(process.execPath, [path.join(__dirname, "gen-status.js"), "--check"], { encoding: "utf8" }); if (g.status !== 0) err("docs/status.md is stale — run: node scripts/gen-status.js"); }
+const overview = read("docs/track-history.md");
+const specsIndex = read("docs/superpowers/specs/README.md");
 const labels = { csharp: "C#", linq: "LINQ", oops: "OOP", dotnet: ".NET / ASP.NET Core", webapi: "Web API", efcore: "EF Core", sql: "SQL", azure: "Azure", aws: "AWS", react: "React", angular: "Angular", python: "Python", ai: "AI", dsa: "DSA", javascript: "JavaScript", htmlcss: "HTML & CSS", java: "Java", vuejs: "Vue.js", nextjs: "Next.js", patterns: "Design Patterns" };
 for (const t of TRACKS) {
   const at = overview.indexOf("**" + labels[t] + "** — **all 7 phases complete, ");
   const m = at < 0 ? null : overview.slice(at).match(/complete, (\d+)\/(\d+) pages/);
-  if (!m) warn(`overview.md: no "all 7 phases complete, N/N pages" line for ${t}`);
-  else if (parseInt(m[1]) !== counts[t]) err(`overview.md says ${t} has ${m[1]} pages; disk has ${counts[t]}`);
+  if (!m) warn(`track-history.md: no "all 7 phases complete, N/N pages" line for ${t}`);
+  else if (parseInt(m[1]) !== counts[t]) err(`track-history.md says ${t} has ${m[1]} pages; disk has ${counts[t]}`);
+  const sm = specsIndex.match(new RegExp("\\| \\[" + t + "/\\][^\\n]*?All 7 phases complete — (\\d+)/\\d+ pages"));
+  if (sm && parseInt(sm[1]) !== counts[t]) err(`specs/README.md says ${t} has ${sm[1]} pages; disk has ${counts[t]}`);
 }
 const claude = read("CLAUDE.md");
 if (/AI\/DSA are untouched|Azure has a Phase 1/.test(claude)) err("CLAUDE.md status line is stale (still says Azure Phase 1 / AI,DSA untouched)");
+{ const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  for (const f of ["CLAUDE.md", "docs/superpowers/specs/README.md"]) for (const m of read(f).matchAll(/\b(\d{3,4}) (?:topic )?pages written/g)) if (parseInt(m[1]) !== total) err(`${f} says ${m[1]} pages written; disk has ${total} — link to docs/status.md instead of repeating the number`); }
 
-// every rule file must be indexed in docs/rules/README.md and docs/README.md
-const rulesReadme = read("docs/rules/README.md"), docsReadme = read("docs/README.md");
+// every rule file must be indexed in docs/rules/README.md (the one index; CLAUDE.md and docs/README.md link to it)
+const rulesReadme = read("docs/rules/README.md");
 for (const f of fs.readdirSync(path.join(ROOT, "docs/rules")).filter((f) => f.endsWith(".md") && f !== "README.md")) {
   if (!rulesReadme.includes(f)) err(`docs/rules/README.md does not list ${f}`);
-  if (!docsReadme.includes(f)) warn(`docs/README.md does not list rules/${f}`);
-  if (!claude.includes(f)) warn(`CLAUDE.md does not list rules/${f}`);
 }
 for (const t of TRACKS) for (const f of ["overview.md", "roadmap.md", "question-taxonomy.md"])
   if (!exists(`docs/superpowers/specs/${t}/${f}`)) err(`missing docs/superpowers/specs/${t}/${f}`);

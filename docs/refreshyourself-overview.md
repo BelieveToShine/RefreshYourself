@@ -1,345 +1,79 @@
-# RefreshYourself — Read This First
+# RefreshYourself — Overview (read this second, after `CLAUDE.md`)
 
-Read this before working on any content. This file is the whole-project picture: what the site
-is and where everything lives. It does **not** hold the topic catalogs — those live in
-[`docs/superpowers/specs/`](superpowers/specs/README.md), one folder per track, so each track's
-roadmap can grow and get maintained on its own instead of one page getting unwieldy.
+The whole-project picture in one screen: what the site is, who it's for, how a page is shaped, and
+where everything lives. It deliberately holds **no page counts and no per-track history** — those
+live in one place each, so they can't drift:
+
+- Current counts per track → [`status.md`](status.md) (generated from the files on disk)
+- Why each track exists and what was added when → [`track-history.md`](track-history.md)
+- Per-track topic catalog (taxonomy, roadmap, tiers, priorities) →
+  [`superpowers/specs/README.md`](superpowers/specs/README.md), one folder per track
 
 ## What this is
 
 A quick-refresh **interview question bank** (not a tutorial site) for **experienced
-professionals — roughly 3+ years through senior, lead, architect, and principal** — locked with
-the user on 2026-09-15, audience/depth definition refined 2026-09-16, superseding the earlier
-"topic tutorial" framing. Never write as if the reader is a beginner; never cap depth to a
-junior/mid-level interview. Two groups of tracks:
+professionals — roughly 3+ years through senior, lead, architect and principal**. Never write as
+if the reader is a beginner; never cap depth at a junior/mid-level interview. It is built for a
+fast brush-up before an interview, not for deep study. Plain HTML/CSS/JS, no build step, hosted
+on GitHub Pages.
 
-- **Core backend interview path**, in this order: C# → LINQ → OOP → .NET/ASP.NET Core (MVC lives
-  inside this one, as a grouped subsection, not its own track) → Web API → EF Core → SQL → Azure →
-  AWS. **LINQ — all 7 phases complete, 59/59 pages written** (added 2026-10-10): a
-  separate top-level category per the user's own explicit request, scoped to LINQ-the-language-
-  feature (operators, execution model, providers, SQL translation mechanics) rather than EF
-  Core's own machinery or raw SQL internals, which stay in their existing tracks and get
-  cross-linked instead of duplicated. Sourced from the user's own detailed proposed roadmap (54
-  topics + a 10-item "LINQ Scenarios" sub-block, plus one later addendum). See
-  [`specs/linq/overview.md`](superpowers/specs/linq/overview.md).
-- **Frontend group** (homepage section added 2026-09-18, per the user's own restructuring
-  request): HTML & CSS → JavaScript → React → Angular. Kept as separate tracks rather than one
-  "Frontend" track or folded into React, per the user's own rule: *"Keep a technology as a
-  separate top-level track when it has enough independent interview depth and its own distinct
-  mental model. Combine technologies when interviewers naturally evaluate them together and
-  separating them would create small, fragmented roadmaps."*
-  **JavaScript — all 7 phases complete, 38/38 pages written** (2026-09-18): earns its own track
-  (closures, the event loop, prototypes, async — genuine Basic→Advanced depth on its own); the
-  user personally checked current interview-prep material before sharing a 37-group structure
-  directly, plus this track's own Phase 2 gap-hunt (1 addition, Testing Fundamentals). See
-  [`specs/javascript/overview.md`](superpowers/specs/javascript/overview.md). **HTML & CSS — all
-  7 phases complete, 34/34 pages written** (2026-09-18): kept as one combined track rather than
-  split, since a real frontend interview asks about layout/rendering/accessibility as one
-  connected topic, not two small, fragmented roadmaps; the user shared a 32-group structure
-  directly, plus this track's own Phase 2 gap-hunt (2 additions, Colors/Backgrounds/Gradients and
-  Accessibility in Practice). Governing content rule: every page connects back to "what does the
-  browser actually do" (HTML→DOM, CSS→CSSOM, →Render Tree→Layout→Paint→Composite) instead of
-  reading as a tag/property list. See
-  [`specs/htmlcss/overview.md`](superpowers/specs/htmlcss/overview.md). React and Angular already
-  existed as separate tracks and simply moved into this new section on the homepage — no content
-  changed. **Vue.js and Next.js** (roadmap added 2026-10-11, all 7 phases complete 2026-10-11):
-  two more separate tracks in this section, following the same "separate top-level track, not
-  folded into an existing one" rule — Vue.js is a distinct UI framework with its own mental model
-  (Composition API/reactivity), and Next.js is a distinct framework layer on top of React (the
-  same relationship LINQ has to C#). **Vue.js — all 7 phases complete, 62/62 pages written.
-  Next.js — all 7 phases complete, 58/58 pages written.** See
-  [`specs/vuejs/overview.md`](superpowers/specs/vuejs/overview.md) and
-  [`specs/nextjs/overview.md`](superpowers/specs/nextjs/overview.md).
-- **Other tracks**, not part of the ordered path: Python, DSA, AI, and Java (all 7 phases
-  complete, see below).
+## The tracks
 
-**`scenarios/index.html` — the "Scenario Bank"** (added 2026-10-13): not a 20th track and not
-part of the 7-phase pipeline — a single cross-track index page that lists every dedicated
-"Scenario:"-style applied question already written anywhere on the site (58 pages across 17
-tracks as of this pass), grouped by the track each one belongs to. Every row links to the real
-page in its own track; nothing is duplicated. See
-[`rules/scenario-bank.md`](rules/scenario-bank.md) for the convention — how a page earns a spot
-here, and the two small steps (one roadmap-style row, one back-link pill on the page itself) that
-keep a scenario page reachable both from its own track and from this index. EF Core and AI have
-no scenario page yet, logged there as a known gap, not an oversight.
+Twenty tracks in three homepage groups (the exact list and counts are in [`status.md`](status.md)):
 
-Every track goes through 7 phases before any page is built — see
-[`specs/README.md`](superpowers/specs/README.md) for the full pipeline, and
-[`rules/interview-depth-and-priority.md`](rules/interview-depth-and-priority.md) for the full
-definition of the two independent axes: Basic/Intermediate/Advanced mean **the type of question**
-(core knowledge → practical usage/comparison/troubleshooting → internals/performance/
-concurrency/security/scalability/trade-offs/architecture/scenarios) — never difficulty, and
-never a year-of-experience cutoff. There's deliberately **no separate "Architect" tier** —
-architecture-depth questions live inside Advanced. Every page also gets an independent priority
-tag (🔥 Must Know / ⭐ Should Know / 🧠 Deep Dive, Phase 5) that means **interview likelihood,
-never seniority** — an architect can still need a 🔥 Basic refresher, and a 3-year developer can
-run into a 🧠 Deep Dive question.
+- **Core backend path**, in order: C# → LINQ → OOP → Design Patterns → .NET/ASP.NET Core (MVC is
+  a subsection of this track, not its own) → Web API → EF Core → SQL → Azure → AWS.
+- **Frontend**: HTML & CSS → JavaScript → React → Angular → Vue.js → Next.js. Rule for when a
+  technology gets its own track: *keep it separate when it has enough independent interview depth
+  and its own distinct mental model; combine technologies only when interviewers naturally
+  evaluate them together and splitting would make small, fragmented roadmaps.*
+- **Other tracks**: Python, Java, DSA, AI.
 
-[content-writing.md](rules/content-writing.md) now documents two templates: the **old** one,
-which is exactly what's live on C#'s original 14 Basic pages — **frozen**, not touched by this
-rebuild until a deliberate later migration pass — and the **new** one (❓ Interview Question →
-🔥 Recall → 🧠 Visual → ⚠️ Trap → 🔄 Follow-up → 🎯 Say-this → 📖 Explanation → 💻 Code → 🌍
-Real-world/Scenario), which C# has already used to write its other 35 pages (Basic 15–18, all
-of Intermediate, all of Advanced) — the reference example for every other track's eventual
-Phase 7. *(Update 2026-10-07: C# Basic 1–14 were migrated to the new template — the “frozen” status no longer applies.)*
+Every track follows the same **7-phase pipeline** before any page is built (taxonomy → review &
+gap-hunt → group into pages → tier → priority → roadmap → build + verify) — defined in
+[`superpowers/specs/README.md`](superpowers/specs/README.md) and executed per
+[`rules/build-process.md`](rules/build-process.md).
+
+## The two independent axes on every page
+
+- **Tier — Basic / Intermediate / Advanced** = the *type of question* (core knowledge →
+  practical usage, comparison, troubleshooting → internals, performance, concurrency, security,
+  trade-offs, architecture, scenarios). Never difficulty, never a years-of-experience cutoff.
+  There is deliberately **no "Architect" tier** — architecture-depth questions live in Advanced.
+  Exception: Design Patterns is tiered Creational / Structural / Behavioral.
+- **Priority — 🔥 Must Know / ⭐ Should Know / 🧠 Deep Dive** = interview *likelihood*, never
+  seniority.
+
+Full definition: [`rules/interview-depth-and-priority.md`](rules/interview-depth-and-priority.md).
+
+## What a topic page contains
+
+❓ Interview question → 🔥 Recall → 🧠 Visual (inline SVG diagram) → ⚠️ Trap → 🔄 Follow-up →
+🎯 Say-this → 📖 Explanation → 💻 Code → 🌍 Real-world / Scenario. The exact template is in
+[`rules/content-writing.md`](rules/content-writing.md); every page, including C# Basic 1–14
+(migrated 2026-10-07), uses it.
+
+## The Scenario Bank
+
+`scenarios/index.html` is not a track and not part of the pipeline: one cross-track index of every
+dedicated "Scenario:"-style applied-question page, grouped by the track it lives in. Rows link to
+the real pages — nothing is duplicated. Convention (one roadmap-style row + one back-link pill per
+scenario page, known gaps) in [`rules/scenario-bank.md`](rules/scenario-bank.md).
 
 ## Where things live
 
 | Question | Answer |
 |---|---|
-| What's built vs. planned, per track? | [`docs/superpowers/specs/README.md`](superpowers/specs/README.md) → each track's `overview.md` |
-| How do I write/structure a page? | [`docs/rules/README.md`](rules/README.md) — the full action → rule table |
-| What's the current build order? | The status line at the top of each track's `overview.md` under `specs/` |
+| How many pages does each track have right now? | [`status.md`](status.md) |
+| What's in a track — taxonomy, roadmap, tiers, priorities? | [`superpowers/specs/<track>/`](superpowers/specs/README.md) |
+| Why does a track look the way it does? | [`track-history.md`](track-history.md) |
+| How do I write / structure / wire a page? | [`rules/README.md`](rules/README.md) — action → rule table |
+| I changed X — what else must change? | [`rules/site-architecture.md`](rules/site-architecture.md) |
+| Step-by-step recipes for common jobs | [`guides/common-tasks.md`](guides/common-tasks.md) |
+| What are the known open problems? | [`TODO.md`](TODO.md) |
 
-## Current build status (one line each — see the track's own spec for detail)
+## Adding a new track
 
-**Core backend path — C#, LINQ, OOP, .NET/ASP.NET Core, Web API, EF Core, SQL, Azure, and AWS are
-all through all 7 phases:**
-
-- **C#** — **all 7 phases complete, 60/60 pages written** (2026-09-16):
-  [`question-taxonomy.md`](superpowers/specs/csharp/question-taxonomy.md) →
-  [`roadmap.md`](superpowers/specs/csharp/roadmap.md) → 49 tiered/prioritized pages, live on the
-  site and on [`csharp/roadmap.html`](../csharp/roadmap.html). The 14 *original* Basic pages
-  (incl. the tier-navigation sidebar — see [`rules/tier-navigation.md`](rules/tier-navigation.md))
-  stay exactly as they were, **frozen**; the other 35 (Basic 15–18, all Intermediate, all
-  Advanced) are new and built to the same rules but not yet through the user's page-by-page
-  review the original 14 had. This track is the reference example for how every other track
-  goes through the pipeline. See
-  [`specs/csharp/overview.md`](superpowers/specs/csharp/overview.md).
-- **LINQ** — **all 7 phases complete, 59/59 pages written** (added 2026-10-10):
-  [`question-taxonomy.md`](superpowers/specs/linq/question-taxonomy.md) (8 concept groups,
-  sourced from the user's own detailed proposed roadmap, plus this track's own light Phase-2
-  gap-hunt: 3 small additions folded into existing pages) →
-  [`roadmap.md`](superpowers/specs/linq/roadmap.md) → 59 tiered/prioritized pages (Basic 14 /
-  Intermediate 17 / Advanced 28, the last 11 of which are a labeled "LINQ Scenarios" sub-block),
-  live on the site and on [`linq/roadmap.html`](../linq/roadmap.html). A separate top-level
-  category per the user's own explicit request, scoped to LINQ-the-language-feature (operators,
-  execution model, providers, SQL translation mechanics) rather than EF Core's own machinery or
-  raw SQL internals, which stay in their existing tracks and get cross-linked instead of
-  duplicated. Every diagram passed the mandatory automated verification script, run
-  independently against every single page. See
-  [`specs/linq/overview.md`](superpowers/specs/linq/overview.md).
-- **OOP** — **all 7 phases complete, 28/28 pages written** (2026-09-16; +1 Scenario Bank page
-  2026-10-13; +1 performance deep-dive page 2026-10-13):
-  [`question-taxonomy.md`](superpowers/specs/oops/question-taxonomy.md) →
-  [`roadmap.md`](superpowers/specs/oops/roadmap.md) → 15 tiered/prioritized pages, live on the
-  site and on [`oops/roadmap.html`](../oops/roadmap.html). Deliberately scenario-heavy per the
-  user's instruction (design/scenario questions, not "what is polymorphism" from zero). Every
-  diagram passed the mandatory automated verification script before this track was marked done —
-  see [`specs/oops/overview.md`](superpowers/specs/oops/overview.md).
-- **Design Patterns** — **all 7 phases complete, 13/13 pages written** (2026-10-13): a new
-  standalone track, separate from OOP, covering the classic Gang-of-Four catalog — curated down
-  to the 13 patterns that actually recur in real interviews (not all 23), grouped by
-  **Creational (3) / Structural (4) / Behavioral (6)** — the one deliberate exception to this
-  site's Basic/Intermediate/Advanced tier split, since a pattern's family isn't a difficulty level
-  (see [`rules/content-structure.md`](rules/content-structure.md)). Each page explains one pattern
-  from a pure-pattern angle (structure, participants, a worked C# example, a real-world tie-in);
-  OOP's own six existing pattern-adjacent pages (Singleton, Observer, Decorator, Strategy,
-  Factory vs. DI, Adapter vs. Facade) are left exactly where they are, written from an
-  OOP-design-principle angle, and cross-link to/from their matching page here rather than being
-  duplicated or migrated. Every diagram (UML-style structure diagrams, not this site's usual
-  flow/sequence style) passed the mandatory automated verification script, run independently
-  against every page. See [`specs/patterns/overview.md`](superpowers/specs/patterns/overview.md).
-- **.NET / ASP.NET Core** — **all 7 phases complete, 43/43 pages written** (2026-09-16; +2 more
-  on 2026-09-18 after the user reported Unit Testing had no coverage; +4 Scenario Bank pages
-  2026-10-13; +1 performance deep-dive page 2026-10-13):
-  [`question-taxonomy.md`](superpowers/specs/dotnet/question-taxonomy.md) →
-  [`roadmap.md`](superpowers/specs/dotnet/roadmap.md) → 25 tiered/prioritized pages, live on the
-  site and on [`dotnet/roadmap.html`](../dotnet/roadmap.html). MVC included as a grouped
-  subsection (not a separate track/folder), per the locked decision. Rescopes the old,
-  never-written ".NET Framework" slot — different technology, same folder slug (`dotnet/`). Every
-  diagram passed the mandatory automated verification script. See
-  [`specs/dotnet/overview.md`](superpowers/specs/dotnet/overview.md).
-- **Web API** — **all 7 phases complete, 45/45 pages written** (2026-09-16; +8 Scenario Bank
-  pages 2026-10-13; +1 performance deep-dive page 2026-10-13):
-  [`question-taxonomy.md`](superpowers/specs/webapi/question-taxonomy.md) →
-  [`roadmap.md`](superpowers/specs/webapi/roadmap.md) → 25 tiered/prioritized pages, live on the
-  site and on [`webapi/roadmap.html`](../webapi/roadmap.html). Deliberately scoped away from
-  general ASP.NET Core pipeline mechanics (that's the `dotnet/` track's job) — this track covers
-  only what's specific to designing/operating an HTTP API contract. Every diagram passed the
-  mandatory automated verification script. See
-  [`specs/webapi/overview.md`](superpowers/specs/webapi/overview.md).
-- **EF Core** — **all 7 phases complete, 35/35 pages written** (2026-09-16):
-  [`question-taxonomy.md`](superpowers/specs/efcore/question-taxonomy.md) →
-  [`roadmap.md`](superpowers/specs/efcore/roadmap.md) → 21 tiered/prioritized pages, live on the
-  site and on [`efcore/roadmap.html`](../efcore/roadmap.html). Scoped to EF Core as the ORM
-  layer — LINQ translation, tracking, loading, migrations — leaving raw SQL/database-engine
-  internals to the `sql/` track. Every diagram passed the mandatory automated verification
-  script. See [`specs/efcore/overview.md`](superpowers/specs/efcore/overview.md).
-- **SQL** — **all 7 phases complete, 53/53 pages written** (2026-09-17; 27 original + 12 added
-  from a post-Phase-7 active [gap-hunt](rules/gap-hunting.md); +2 Scenario Bank pages 2026-10-13;
-  +1 performance deep-dive page 2026-10-13):
-  [`question-taxonomy.md`](superpowers/specs/sql/question-taxonomy.md) →
-  [`roadmap.md`](superpowers/specs/sql/roadmap.md) → 39 tiered/prioritized pages, live on the
-  site and on [`sql/roadmap.html`](../sql/roadmap.html). Owns raw SQL/database-engine internals
-  — indexing, execution plans, isolation levels/locking, query optimization — leaving the ORM
-  layer to `efcore/`. Every diagram passed the mandatory automated verification script,
-  including a full independent re-sweep of the 12 gap-hunt additions. See
-  [`specs/sql/overview.md`](superpowers/specs/sql/overview.md).
-- **Azure** — **all 7 phases complete, 52/52 pages written** (2026-09-17; +2 Scenario Bank pages
-  2026-10-13; +1 performance deep-dive page 2026-10-13):
-  [`question-taxonomy.md`](superpowers/specs/azure/question-taxonomy.md) →
-  [`roadmap.md`](superpowers/specs/azure/roadmap.md) → 44 tiered/prioritized pages, live on the
-  site and on [`azure/roadmap.html`](../azure/roadmap.html). Deliberately simplified/
-  scenario-first per the user's later plan, not a full Azure-service encyclopedia — a Phase-2
-  active [gap-hunt](rules/gap-hunting.md) still found 16 real gaps (Entra ID, RBAC, containers,
-  Cosmos DB, IaC, Well-Architected Framework, and more) folded into the initial pass rather than
-  needing a later addendum. Every diagram passed the mandatory automated verification script,
-  run independently against every single page. The old, frozen three-tier roadmap (0 written) is
-  fully superseded. See [`specs/azure/overview.md`](superpowers/specs/azure/overview.md).
-- **AWS** — **all 7 phases complete, 50/50 pages written** (2026-09-17; +1 performance deep-dive
-  page 2026-10-13):
-  [`question-taxonomy.md`](superpowers/specs/aws/question-taxonomy.md) (44 concept groups, incl.
-  a Phase 2 gap-hunt that added 6 items, one a whole new group) →
-  [`roadmap.md`](superpowers/specs/aws/roadmap.md) → 44 tiered/prioritized pages, live on the
-  site and on [`aws/roadmap.html`](../aws/roadmap.html). Single track (not split by concern) per
-  the user's own instruction — IAM/security, networking, serverless, and containers live as
-  subsections inside Basic/Intermediate/Advanced. Two deliberate post-feedback fixes carried
-  through Phase 7 unchanged: a burnt-orange accent color (`#c2410c`, not AWS's own navy) and a
-  `roadmap.html` grouped by 11 cross-tier concept clusters rather than by tier. Every diagram
-  passed the mandatory automated verification script, run independently against every single
-  page (48 diagrams across 44 pages). See
-  [`specs/aws/overview.md`](superpowers/specs/aws/overview.md). *(Update 2026-10-07: C# Basic 1–14 were migrated to the new template — the “frozen” status no longer applies.)* *(2026-10-07: +11 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +11 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +13 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +11 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +14 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +11 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +5 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +5 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)*
-
-**Other tracks, outside the core backend path:**
-
-- **React** — **all 7 phases complete, 47/47 pages written** (41 original + 2 from a post-Phase-7
-  [gap-hunt](rules/gap-hunting.md), 2026-09-17):
-  [`question-taxonomy.md`](superpowers/specs/react/question-taxonomy.md) →
-  [`roadmap.md`](superpowers/specs/react/roadmap.md) → 43 tiered/prioritized pages, live on the
-  site and on [`react/roadmap.html`](../react/roadmap.html). Sourced from the user's own
-  detailed, already tier-organized outline rather than a short bullet list like every other
-  track's seed — unusually large (37 concept groups, 43 pages) as a direct result. Every diagram
-  passed the mandatory automated verification script, run independently against every single
-  page, including the 2 gap-hunt additions (`forwardRef`/`useImperativeHandle`; automatic
-  batching & `flushSync`). See [`specs/react/overview.md`](superpowers/specs/react/overview.md).
-- **Angular** — **all 7 phases complete, 46/46 pages written** (2026-09-17), a brand-new track
-  built from zero: [`question-taxonomy.md`](superpowers/specs/angular/question-taxonomy.md) →
-  [`roadmap.md`](superpowers/specs/angular/roadmap.md) → 43 tiered/prioritized pages, live on the
-  site and on [`angular/roadmap.html`](../angular/roadmap.html). Sourced from the user's own
-  detailed, already tier-organized outline, with a Phase-2 gap-hunt folded into the initial pass
-  (7 additions, incl. a new standalone Accessibility section). Deliberately covers both modern
-  Angular (Standalone, Signals, the new control flow, zoneless, SSR/hydration) and existing
-  enterprise Angular (`NgModule`s, Zone.js, RxJS, Reactive Forms) side by side, treating RxJS/
-  Signals/change detection as the track's conceptual spine rather than three ordinary topics.
-  `angular/roadmap.html` and the root tile's badge were wired at Phase 1, per the mandate this
-  track was the first to follow correctly. Every diagram passed the mandatory automated
-  verification script, run independently against every single page. See
-  [`specs/angular/overview.md`](superpowers/specs/angular/overview.md).
-- **Vue.js** — **all 7 phases complete, 62/62 pages written** (roadmap added 2026-10-11, pages
-  written 2026-10-11): [`question-taxonomy.md`](superpowers/specs/vuejs/question-taxonomy.md) (24
-  concept groups) → [`roadmap.md`](superpowers/specs/vuejs/roadmap.md) → 62 tiered/prioritized
-  pages (Basic 18 / Intermediate 22 / Advanced 22, the last 6 of which are a labeled "Vue.js
-  Scenarios" sub-block), live on the site and on [`vuejs/roadmap.html`](../vuejs/roadmap.html).
-  Scoped to Vue 3 the framework (templates/reactivity, Composition API, Vue Router, Pinia) —
-  Nuxt.js's own API surface and Vuex's own store syntax are explicitly deferred. Icon 💚, track
-  color Vue's official brand green `#42b883`. Every diagram independently re-verified, all
-  confirmed `issueCount: 0` (9 pager-text mismatches and 1 text-overflow diagram defect found and
-  fixed during that sweep). See [`specs/vuejs/overview.md`](superpowers/specs/vuejs/overview.md).
-- **Next.js** — **all 7 phases complete, 58/58 pages written** (roadmap added 2026-10-11, pages
-  written 2026-10-11): [`question-taxonomy.md`](superpowers/specs/nextjs/question-taxonomy.md)
-  (19 concept groups) → [`roadmap.md`](superpowers/specs/nextjs/roadmap.md) → 58
-  tiered/prioritized pages (Basic 15 / Intermediate 21 / Advanced 22, the last 6 of which are a
-  labeled "Next.js Scenarios" sub-block), live on the site and on
-  [`nextjs/roadmap.html`](../nextjs/roadmap.html). Scoped to Next.js the React-framework layer
-  (routing/rendering/caching/server-client model) — React itself is explicitly out of scope,
-  assumed knowledge from the `react/` track. Icon ⏭️, track color Next.js's own near-black brand
-  identity `#171717`. Version-accuracy risk is this track's biggest Phase 2 finding: the Next.js
-  15 caching-default reversal, Partial Prerendering's experimental status, and the async
-  request-API change were all verified via live web search against official sources before being
-  locked into the roadmap. Every diagram independently re-verified, all confirmed `issueCount: 0`
-  (3 pager-text mismatches and 2 stale "coming soon" pager placeholders found and fixed during
-  that sweep). See [`specs/nextjs/overview.md`](superpowers/specs/nextjs/overview.md).
-- **Python** — **all 7 phases complete, 47/47 pages written** (2026-09-18):
-  [`question-taxonomy.md`](superpowers/specs/python/question-taxonomy.md) (43 concept groups,
-  incl. a Phase 2 gap-hunt that added 8 items — `enum`, `collections`, walrus/`match`-`case`,
-  positional-only/keyword-only params, exception chaining, `itertools`, `pathlib` vs. `os.path`,
-  `__slots__`, free-threaded CPython) → [`roadmap.md`](superpowers/specs/python/roadmap.md) → 43
-  tiered/prioritized pages, live on the site and on
-  [`python/roadmap.html`](../python/roadmap.html), grouped by 11 cross-tier concept clusters
-  rather than by tier. Unique to this track: "predict the output" is a sixth question-variant
-  type (a short code snippet + "what does this print, and why?") used wherever behavior matters
-  more than definition — confirmed rendered as real code blocks on every `[predict]`-tagged page,
-  not reworded into plain definitional questions. Every diagram passed the mandatory automated
-  verification script, run independently against every single page (43 pages, 45 diagrams).
-  Not part of the ordered core-backend path — grouped with React/Angular/DSA/AI. See
-  [`specs/python/overview.md`](superpowers/specs/python/overview.md).
-- **AI** — **all 7 phases complete, 52/52 pages written** (2026-09-18):
-  [`question-taxonomy.md`](superpowers/specs/ai/question-taxonomy.md) (48 concept groups,
-  incl. a Phase 2 gap-hunt that added 3 items — provider-native prompt caching and
-  constrained/grammar-based decoding folded into existing pages; speculative decoding was *claimed* folded in but no page covered it, so it got its own page, `ai/advanced/15`, on 2026-10-07) →
-  [`roadmap.md`](superpowers/specs/ai/roadmap.md) → 48 tiered/prioritized pages, live on the site
-  and on [`ai/roadmap.html`](../ai/roadmap.html), grouped by tier rather than cross-tier concept
-  clusters. RAG is the track's single most-asked area per the source material, and the .NET/
-  Azure AI angle (Semantic Kernel, `IChatClient`, Azure OpenAI & Azure AI Search) is this site's
-  own differentiator. Every diagram passed the mandatory automated verification script, run
-  independently against every single page. Not part of the ordered core-backend path — grouped
-  with React/Angular/DSA/Python. See [`specs/ai/overview.md`](superpowers/specs/ai/overview.md).
-- **DSA** — **all 7 phases complete, 33/33 pages written** (2026-09-18):
-  [`question-taxonomy.md`](superpowers/specs/dsa/question-taxonomy.md) (30 concept groups: this
-  session's own 19-group draft, expanded to 30 after the user independently cross-checked it
-  against another vendor's DSA curriculum, plus a Phase 2 gap-hunt that added 2 items folded into
-  an existing page — reservoir sampling and Bloom filters) →
-  [`roadmap.md`](superpowers/specs/dsa/roadmap.md) → 30 tiered/prioritized pages, live on the site
-  and on [`dsa/roadmap.html`](../dsa/roadmap.html). Organized around reusable interview patterns
-  and trade-off judgment (its own "Pattern Recognition" and "Data Structure Trade-offs" pages)
-  rather than an algorithm encyclopedia — explicitly excludes suffix trees, max flow, computational
-  geometry, and similar research-depth topics. Every diagram passed the mandatory automated
-  verification script, run independently against every single page. Not part of the ordered
-  core-backend path — grouped with React/Angular/Python/AI. See
-  [`specs/dsa/overview.md`](superpowers/specs/dsa/overview.md).
-- **JavaScript** — **all 7 phases complete, 42/42 pages written** (2026-09-18):
-  [`question-taxonomy.md`](superpowers/specs/javascript/question-taxonomy.md) (37 groups the
-  user personally checked against current interview-prep material and shared directly, plus a
-  Phase 2 gap-hunt that added 1 page — Testing Fundamentals, since the user's own priority list
-  named "Testing" but no group actually covered it) →
-  [`roadmap.md`](superpowers/specs/javascript/roadmap.md) → 38 tiered/prioritized pages, live on
-  the site and on [`javascript/roadmap.html`](../javascript/roadmap.html). Organized around
-  mental models and behavior rather than a syntax reference, per the user's own governing rule
-  for this track. Six pages (Closures, `this`/`call`/`apply`/`bind`, Prototypes, Promises,
-  `async`/`await`, Event Loop) carry this track's deepest per-page treatment instead of being
-  split into two pages, per this site's own "one topic, one page" rule. Built while a second
-  concurrent session was independently building the same track on the shared machine — every
-  resulting duplicate/overlap was reconciled and re-verified. Every diagram passed the mandatory
-  automated verification script, run independently against every single page. Sits in the "🎨
-  Frontend" homepage section, not the ordered core-backend path. See
-  [`specs/javascript/overview.md`](superpowers/specs/javascript/overview.md).
-- **HTML & CSS** — **all 7 phases complete, 39/39 pages written** (2026-09-18):
-  [`question-taxonomy.md`](superpowers/specs/htmlcss/question-taxonomy.md) (32 groups the user
-  shared directly across HTML/CSS Fundamentals/Layout/Styling & UI/Advanced-Production sub-areas,
-  plus a Phase 2 gap-hunt that added 2 pages — Colors/Backgrounds/Gradients and Accessibility in
-  Practice, both named in the user's own overview tree but never given sub-bullets in the
-  detailed breakdown) → [`roadmap.md`](superpowers/specs/htmlcss/roadmap.md) → 34 tiered/
-  prioritized pages, live on the site and on [`htmlcss/roadmap.html`](../htmlcss/roadmap.html),
-  grouped by 5 cross-tier concept clusters (the user's own subject buckets, reused directly since
-  they were already well-formed) rather than by tier. Tier axis derived independently from
-  question type, not copied from those same subject buckets — Specificity, Positioning, and
-  Overflow & Stacking all moved to Intermediate despite reading as "CSS Fundamentals" in the
-  user's own tree. Governing content rule: every page connects back to "what does the browser
-  actually do" (HTML→DOM, CSS→CSSOM, DOM+CSSOM→Render Tree→Layout→Paint→Composite) instead of
-  reading as a list of tags and properties — `advanced/1.html` (Browser Rendering) owns the full
-  pipeline, other pages cross-reference it. Every diagram passed the mandatory automated
-  verification script, run independently against every single page. Sits in the "🎨 Frontend"
-  homepage section, not the ordered core-backend path. See
-  [`specs/htmlcss/overview.md`](superpowers/specs/htmlcss/overview.md). *(2026-10-07: +4 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +3 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +4 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +4 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +3 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +4 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)* *(2026-10-07: +5 gap pages added from the 2026-10-06 review — see the track's `roadmap.md` addendum.)*
-- **Java** — **all 7 phases complete, 88/88 pages written** (added 2026-10-10):
-  [`question-taxonomy.md`](superpowers/specs/java/question-taxonomy.md) (17 concept groups — 16
-  Java-concept groups + 1 scenario group — sourced from the user's own detailed proposed roadmap,
-  already organized into 3 tiers plus a dedicated 10-scenario section) →
-  [`roadmap.md`](superpowers/specs/java/roadmap.md) → 88 tiered/prioritized pages (Basic 24 /
-  Intermediate 28 / Advanced 36, the last 10 of which are a labeled "Java Scenarios" sub-block),
-  live on the site and on [`java/roadmap.html`](../java/roadmap.html). A standalone
-  general-purpose language track (like C#/Python), not part of the ordered core-backend path —
-  grouped with Python/DSA/AI under "🗂️ Other tracks." Scoped to core Java — the language, OOP
-  mechanics, the collections framework, streams/lambdas, the JVM, memory, and concurrency —
-  explicitly deferring Spring Boot/enterprise Java and Java I/O/NIO to a later pass. Every
-  diagram passed the mandatory automated verification script, run independently against every
-  single page (zero genuine defects; two unrelated pager-link bugs found and fixed separately).
-  See [`specs/java/overview.md`](superpowers/specs/java/overview.md).
-
-## Adding a new track's spec
-
-The moment a track's roadmap gets planned — even before any page in it is written — give it a
-folder under `docs/superpowers/specs/<track>/overview.md` and add it to that folder's index
-table. See [`docs/superpowers/specs/README.md`](superpowers/specs/README.md) for the exact
-format and process.
+Give it a folder under `docs/superpowers/specs/<track>/` the moment its roadmap is planned — see
+[`superpowers/specs/README.md`](superpowers/specs/README.md) — then follow
+[`guides/common-tasks.md`](guides/common-tasks.md#add-a-new-track) for the code/homepage wiring.
